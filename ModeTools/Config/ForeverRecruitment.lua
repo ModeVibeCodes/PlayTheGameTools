@@ -34,14 +34,14 @@ function M:CreateConfigPage(parent)
     Button("Native Who Fallback","Read Who Results",function() self:ReadWhoResults(true) end)
     page:Section("Contact")
     Input("Whisper Text (Enter saves)","message",200)
-    local note=W.Label(page:Row("Pilot Limits",110),"Each search and invite needs a click. Draft Whisper opens editable chat; Enter sends. Invite only requests delivery. If blocked, use Player Menu Link. Contacted and skipped players stay hidden until Clear History.",nil,0,-4,390,addon.Theme.muted);note:SetWordWrap(true)
+    local note=W.Label(page:Row("Pilot Limits",110),"Searches need a click. Draft Whisper opens editable chat; Enter sends. Player Menu Link prints a name in chat: right-click it and use the native guild invite option if available. Addon invites are blocked by Forever. Contacted and skipped players stay hidden until Clear History.",nil,0,-4,390,addon.Theme.muted);note:SetWordWrap(true)
     page:Section("Candidates")
     self.cells={}
     for i=1,8 do
-        local row=page:Row("Candidate "..i,118)
+        local row=page:Row("Candidate "..i,90)
         row.rowLabel:SetWidth(160)
         local cell={row=row};self.cells[i]=cell
-        for j,spec in ipairs({{"Draft Whisper",function(name) self:Draft(name) end},{"Invite",function(name) self:Invite(name) end},
+        for j,spec in ipairs({{"Draft Whisper",function(name) self:Draft(name) end},
             {"Player Menu Link",function(name) self:NativeLink(name) end},{"Mark Contacted",function(name) self:Remember(name,"contacted") end},
             {"Skip Player",function(name) self:Remember(name,"skip") end}}) do
             local action=spec[2];local b=W.Button(row,spec[1],145,26)
@@ -57,7 +57,7 @@ function M:CreateConfigPage(parent)
         for i,cell in ipairs(self.cells) do
             cell.name=visible[self.offset+i];local c=cell.name and self.candidates[cell.name]
             cell.row.rowLabel:SetText(c and (c.name.."\n"..c.level.." "..c.class.."\n"..c.zone) or "No candidate")
-            for j=1,5 do cell[j]:SetEnabled(c~=nil and self:Ready() and (j~=2 or not self.inviteBlocked)) end
+            for j=1,4 do cell[j]:SetEnabled(c~=nil and self:Ready()) end
         end
     end
     Button("Earlier Candidates","Previous Page",function() self.offset=math.max(0,self.offset-8) end)
