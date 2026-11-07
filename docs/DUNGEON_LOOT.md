@@ -26,6 +26,13 @@ uncertainty. Raids are excluded. No settings or compatibility IDs change.
 
 ## Player eligibility and quest-log progress
 
+On 2026-11-07 the owner confirmed the PR #8 completion, chain grouping,
+quest status, tile alignment and quick-jump revision works as intended in-game,
+and authorized merging it into main. Real screenshots remain pending. The
+checks below are retained for regression testing; this confirmation is not an
+exhaustive audit of every catalog fact or a release publication approval.
+
+
 Quest lists and expanded prerequisites automatically hide entries restricted to
 another faction or class. Both-faction quests stay visible. Class lists support
 more than one allowed class and use native class colors. The former faction
@@ -67,7 +74,7 @@ API signatures/events checked against Forever's generated
 and [QuestLogDocumentation.lua](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/QuestLogDocumentation.lua)
 on 2026-11-07. These read APIs do not change the independent native map renderer.
 
-Native review for this revision (pending):
+Native regression checks (owner confirmed the revision on 2026-11-07):
 
 1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
    **Action:** `/reload`, inspect Shadowfang Keep and another recorded dungeon
@@ -112,7 +119,7 @@ Lordaeron, BFD, Gnomeregan, RFD, Uldaman, BRD, LBRS, Stratholme and UBRS. Horde
 Ruins of Lordaeron now has six tasks: Unending Torment is one entry with stages
 97288 -> 97289 -> 97290, rather than two counted listings.
 
-Native follow-up checks (pending):
+Native follow-up regression checks (owner confirmed intended behavior on 2026-11-07):
 
 1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
    Ruins of Lordaeron -> Quests. **Action:** inspect Unending Torment and its

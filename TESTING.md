@@ -193,11 +193,13 @@ Restart the client to load the new TOC files; preserve SavedVariables.
 Player-quest revision: tests cover both factions, multiple classes and allowed
 class lists, prerequisite filtering, colored card totals, live pickup/abandon
 updates, unavailable API/identity states, event cleanup and SFK collection-stage
-aliases. Native count accuracy and text fit still need the exact checks in
+aliases. The owner confirmed the PR #8 revision works as intended in-game on
+2026-11-07 and authorized merging. Retain the exact regression checks in
 [Player eligibility and quest-log progress](docs/DUNGEON_LOOT.md#player-eligibility-and-quest-log-progress).
 Completion/layout revision: the new suite verifies native completion flags,
 Ruins' six-task total, preserved chain stages and controls, unrelated title/variant
 isolation, cycle guards, full source-ID coverage, status labels, title/footer
-anchors and bracket jumps. Native text fit, history accuracy and jump behavior
-still need the exact checks in docs/DUNGEON_LOOT.md.
+anchors and bracket jumps. The owner confirmed the revised behavior in-game;
+exact regression paths remain in docs/DUNGEON_LOOT.md. This does not establish
+every catalog fact or server availability.
 Screenshots: pending.
