@@ -23,6 +23,8 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   and optional time-to-level, money and profession summaries.
 - **Quick Access and Food Bar:** configurable profession/utility access, food
   selection and optional bandages with existing native click/combat guards.
+- **Threat Meter:** opt-in threat list for your current target with class-colored
+  bars and percentages; pets are optional and off by default.
 - **Guild Recruitment:** opt-in Who sweeps by level range and class (capped
   ranges are split and searched again), a Recruiter window (`/ptgr`) with a
   copy-name box for Guild > Add Member, optional whisper after a confirmed invite,

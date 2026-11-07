@@ -55,6 +55,7 @@ Modules\ForeverQuickAccess.lua
 Modules\ForeverFoodBarData.lua
 Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
+Modules\ThreatMeter.lua
 Modules\DungeonLootCatalog.lua
 Modules\DungeonLootCatalogItems.lua
 Modules\DungeonLootCatalogInstances.lua
@@ -89,6 +90,7 @@ Config\ForeverAccess.lua
 Config\ForeverQuickAccess.lua
 Config\ForeverFoodBar.lua
 Config\ForeverRecruitment.lua
+Config\ThreatMeter.lua
 Config\DungeonLootWidgets.lua
 Config\DungeonLoot.lua
 Core\Init.lua

@@ -47,6 +47,7 @@ function V:Normalize(source)
         end
     end
     if addon.ForeverRecruitment then addon.ForeverRecruitment.Initialize(profile.modules.foreverRecruitment) end
+    if addon.ThreatMeter then addon.ThreatMeter.Initialize(profile.modules.threatMeter) end
     if addon.ForeverQuickAccessData then addon.ForeverQuickAccessData.Initialize(profile.modules.foreverQuickAccess) end
     if addon.modules.potionTracker then addon.PotionSettings.Initialize(profile.modules.potionTracker) end
     if addon.modules.racialAwareness then addon.RacialAwarenessSettings.Initialize(profile.modules.racialAwareness) end

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a Threat Meter module (Quality of Life, off by default): a plain list of
+  threat on your current hostile target for you and your party or raid, tanking
+  first, then highest percentage. Optional Show Pets (off by default), Hide Out
+  of Combat while locked, Lock Threat Meter and Reset Position.
+
 - Made Dungeon Loot standalone: bundled the GPLv3 Lootified 1.2.0 data catalog
   with its full license, source attribution and editable Lua. Removed the
   DungeonJournal dependency and external artwork paths. Native world-coordinate
