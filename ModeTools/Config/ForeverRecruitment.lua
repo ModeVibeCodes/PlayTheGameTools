@@ -12,7 +12,7 @@ function M:ShowCopyBox(name)
     local cf=self.copyFrame
     if not cf then
         cf=CreateFrame("Frame","ModeToolsRecruitmentCopyFrame",UIParent)
-        cf:SetSize(320,104);cf:SetFrameStrata("DIALOG");cf:SetClampedToScreen(true)
+        cf:SetSize(320,104);cf:SetFrameStrata("FULLSCREEN_DIALOG");cf:SetClampedToScreen(true)
         cf:SetMovable(true);cf:EnableMouse(true);cf:RegisterForDrag("LeftButton")
         cf:SetScript("OnDragStart",cf.StartMoving);cf:SetScript("OnDragStop",cf.StopMovingOrSizing)
         W.Texture(cf,"Window")
@@ -57,7 +57,9 @@ end
 function M:CreateWindow()
     local f=CreateFrame("Frame","ModeToolsRecruitmentFrame",UIParent)
     self.window=f
-    f:SetSize(WINDOW_W,WINDOW_H);f:SetPoint("CENTER");f:SetFrameStrata("HIGH");f:SetClampedToScreen(true)
+    -- Same strata as the settings window (DIALOG); raised on show so it opens in front.
+    f:SetSize(WINDOW_W,WINDOW_H);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:SetClampedToScreen(true)
+    if f.SetToplevel then f:SetToplevel(true) end
     f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
     f:SetScript("OnDragStart",f.StartMoving);f:SetScript("OnDragStop",f.StopMovingOrSizing)
     f:Hide()
@@ -171,9 +173,18 @@ function M:RefreshWindow()
     f.invite:SetEnabled(ready and #self.candidates>0);f.next:SetEnabled(ready)
 end
 
-function M:ToggleWindow()
+function M:OpenWindow()
     if not self.window then self:CreateWindow() end
-    self.window:SetShown(not self.window:IsShown())
+    local f=self.window
+    -- Open beside the settings window when it is showing, otherwise centered.
+    f:ClearAllPoints()
+    if addon.configWindow and addon.configWindow:IsShown() then f:SetPoint("LEFT",addon.configWindow,"RIGHT",8,0)
+    else f:SetPoint("CENTER") end
+    f:Show()
+    if f.Raise then f:Raise() end
+end
+function M:ToggleWindow()
+    if self.window and self.window:IsShown() then self.window:Hide() else self:OpenWindow() end
 end
 
 SLASH_MODETOOLSRECRUIT1="/ptgr"
@@ -196,7 +207,7 @@ function M:CreateConfigPage(parent)
     end
 
     page:Section("Recruiter")
-    Button("Recruiter Window","Open Recruiter",function() self:ToggleWindow() end)
+    Button("Recruiter Window","Open Recruiter",function() self:OpenWindow() end)
     local status=W.Label(page:Row("Recruitment Status",72),"",nil,0,-4,390,T.muted);status:SetWordWrap(true)
     page.refreshers[#page.refreshers+1]=function() status:SetText(self.status or "") end
     local stats=W.Label(page:Row("Statistics",48),"",nil,0,-4,390,T.muted)
