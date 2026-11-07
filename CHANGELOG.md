@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Replaced the Recruitment module with the guild's standalone recruiter flow:
+  class x level-range Who searches that split capped ranges, a Recruiter window
+  (`/ptgr`), a Ctrl+C copy-name box for Guild > Add Member in place of the blocked
+  direct invite and chat drafts, optional whisper after a confirmed invite,
+  invite/join/decline statistics, a re-invite window (default 7 days) and a
+  never-invite list. Each manual Scan clears the candidate list. Existing level
+  range and message are kept; Mark Contacted entries now expire after the
+  re-invite window and Skip entries become never-invite entries. The zone filter
+  was removed.
 - Redesigned the settings window: flat graphite surfaces, 1px hairlines and square
   corners in place of the textured panels. One mint accent marks on, selected
   and focused states only. Headings and body text use neutral colors.

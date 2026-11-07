@@ -66,6 +66,67 @@ restored.execute('''
     addon:SetModuleEnabled('combatTimer',false)
     assert(not addon.modules.combatTimer.enabled)
 ''')
+recruit, _ = load()
+recruit.execute('''
+    local R=addon.ForeverRecruitment
+    ERR_GUILD_INVITE_S='You have invited %s to join your guild.'
+    ERR_GUILD_JOIN_S='%s has joined the guild.'
+    ERR_GUILD_DECLINE_S='%s declines your invitation to join the guild.'
+    function IsInGuild() return true end
+    function CanGuildInvite() return true end
+    whispers={}
+    function SendChatMessage(text,kind,_,target) whispers[#whispers+1]={text,kind,target} end
+    local results,sent={},{}
+    C_FriendList={SendWho=function(q) sent[#sent+1]=q end, SetWhoToUi=function() end,
+        GetNumWhoResults=function() return #results,results.total or #results end,
+        GetWhoInfo=function(i) return results[i] end}
+    addon:SetModuleEnabled('foreverRecruitment',true)
+    R:SetOption('minLevel',10);R:SetOption('maxLevel',19);R:SetOption('chunkSize',5)
+    for _,c in ipairs(R.CLASSES) do R.db.classes[c]=(c=='MAGE') end
+    R:ResetScan()
+    R:ToggleWindow();assert(R.window:IsShown())
+    R:Scan()
+    assert(sent[1]=='c-"Mage" 10-14' and R:QueueRemaining()==1,sent[1])
+    results={{fullName='Alpha',level=12,filename='MAGE',fullGuildName='',area='Elwynn'},
+        {fullName='Beta',level=13,filename='MAGE',fullGuildName='Guild',area='Elwynn'},
+        {fullName='Gamma',level=40,filename='MAGE',fullGuildName='',area='Elwynn'}}
+    results.total=60
+    FireEvent('WHO_LIST_UPDATE')
+    assert(#R.candidates==1 and R.candidates[1].name=='Alpha')
+    assert(R:QueueRemaining()==3 and R.queue[1].min==10 and R.queue[1].max==12,'capped range split')
+    Advance(6);R:Scan()
+    assert(#R.candidates==0 and #sent==2,'manual scan clears the list')
+    results={{fullName='Delta',level=11,filename='MAGE',fullGuildName='',area='Westfall'}}
+    FireEvent('WHO_LIST_UPDATE')
+    assert(#R.candidates==1)
+    R.db.whisperEnabled=true
+    R:InviteCandidate(1)
+    assert(#R.candidates==0 and R.copyFrame:IsShown() and R.copyFrame.eb:GetText()=='Delta')
+    assert(type(R.db.history.Delta)=='number' and R:RecentlyInvited('Delta'))
+    FireEvent('CHAT_MSG_SYSTEM','You have invited Delta to join your guild.')
+    assert(R.db.records.invited==1 and whispers[1][2]=='WHISPER' and whispers[1][3]=='Delta')
+    FireEvent('CHAT_MSG_SYSTEM','Delta has joined the guild.')
+    assert(R.db.records.joined==1)
+    Advance(6);R:Scan()
+    FireEvent('WHO_LIST_UPDATE')
+    assert(#R.candidates==0,'recently invited players are skipped')
+    results={{fullName='Echo',level=15,filename='MAGE',fullGuildName='',area='Duskwood'}}
+    Advance(6);R:Scan();FireEvent('WHO_LIST_UPDATE')
+    R:SkipCandidate(1,true)
+    assert(R.db.history.Echo=='skip' and R:IsBlacklisted('Echo'))
+    R.db.history.Legacy='contacted'
+    local text=addon.ProfileManager:Export(addon.ProfileManager.root.defaultProfile)
+    assert(text and not addon.ProfileCodec.Decode(text).profile.modules.foreverRecruitment.history,'history is not exported')
+    addon:ToggleConfig();addon:SelectConfigPage('foreverRecruitment')
+    assert(addon.configWindow.pages.foreverRecruitment==R.page)
+''')
+legacy = recruit.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
+migrated, _ = load(legacy)
+migrated.execute('''
+    local R=addon.ForeverRecruitment
+    assert(type(R.db.history.Legacy)=='number' and R.db.history.Echo=='skip','legacy contacted entries migrate')
+    assert(R.db.records.invited==1 and R.db.minLevel==10 and R.db.classes.MAGE==true)
+''')
 wrong, _ = load(project=1)
 wrong.execute('assert(not addon.initialized and ModeToolsDB==nil)')
 archive = archive_bytes(files)
