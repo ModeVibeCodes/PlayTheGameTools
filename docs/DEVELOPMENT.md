@@ -88,3 +88,15 @@ Loot Sparkles local testing uses codex/forever-loot-sparkles, including the
 accepted main changes through b8a411b. Disable ForeverLootSparkles/Lueur in the
 game AddOns UI and reload before enabling Gameplay Enhancements. Native
 validation and screenshots remain pending until the owner reports results.
+
+## Gameplay Enhancements feature tabs and Campfire Monitor
+
+The owner reports Loot Sparkles appears to work with functioning features. This
+scoped feedback permits the next requested feature, not blanket native acceptance.
+Gameplay Enhancements remains the ninth registered module; it now hosts independent
+Loot Sparkles and Campfire Monitor switches beneath its master. Three new Lua files
+bring the runtime to 93 chunks. See CAMPFIRE_MONITOR.md for research, native API
+limits and exact testing paths. Run tests/campfire_monitor.py and the existing
+smoke/sparkle checks plus the release builder. Changes are in the live-linked
+standalone checkout for local /reload testing; SavedVariables and junctions stay
+untouched. Campfire/tab-layout native acceptance and screenshots are pending.

@@ -4,9 +4,10 @@ local M,W,T=addon.LootSparkles,addon.ConfigWidgets,addon.InterfaceTheme
 
 function M:CreateConfigPage(parent)
     local page=W.Page(parent,480); self.page=page
-    page:Group("Loot Sparkles")
+    page:Section("Loot Sparkles",nil,false)
+    page:Group("Options")
     page.sparkleControls={}
-    for _,entry in ipairs({{"Quest Item Sparkles","questSparkles"},{"Ore Veins","ore"},
+    for _,entry in ipairs({{"Enable Loot Sparkles","sparklesEnabled"},{"Quest Item Sparkles","questSparkles"},{"Ore Veins","ore"},
         {"Herbs","herbs"},{"Quest Objects","questObjects"},{"Corpses With Loot","corpses"},
         {"Show Object Names","showNames"}}) do
         local key=entry[2]
@@ -27,5 +28,15 @@ function M:CreateConfigPage(parent)
     local note=W.Label(page:Row("How It Works",200),
         "Highlights the one nearby object selected by the game's Interact Key system, not every node. Enabling turns on Interact Key and object icons; you can change them afterwards. Custom sparkles pause in combat. Gold is in reach; dim is out of reach or unknown; grey means unavailable. A native nameplate may also appear. Disable Forever Loot Sparkles and Lueur before using this module. Turning this module off restores settings it still owns. Quest sparkle removal may require a full game restart, not /reload.",nil,0,-4,440,T.muted)
     note:SetWordWrap(true)
+    local campSection=page:Section("Campfire Monitor",nil,false)
+    addon.CampfireMonitor:AddConfig(page)
+    W.SectionTabs(page)
+    page.sectionTabs:SetPoint("TOPLEFT",0,0);page.sectionTabs:SetPoint("TOPRIGHT",-24,0)
+    page.scroll:ClearAllPoints();page.scroll:SetPoint("TOPLEFT",0,-40);page.scroll:SetPoint("BOTTOMRIGHT",-24,0)
+    page.scrollbar:ClearAllPoints();page.scrollbar:SetPoint("TOPRIGHT",-4,-44);page.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
+    page.OnSectionTabChanged=function(_,section)
+        if section~=campSection then addon.CampfireMonitor:StopPreview() end
+    end
+    page:SetScript("OnHide",function() addon.CampfireMonitor:StopPreview() end)
     page:Finish(); return page
 end

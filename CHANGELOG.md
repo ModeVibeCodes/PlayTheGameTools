@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Gameplay Enhancements now has separate Loot Sparkles and Campfire Monitor tabs with per-feature switches. Added an opt-in native campfire proximity icon/text monitor, earned bonus details, appearance/position controls, preview and a clearly labeled profession guide. Campfire native validation/screenshots pending.
+
 - Added default-off Loot Sparkles under Questing & Leveling -> Gameplay Enhancements, with quest/node/corpse switches, animated glints, optional object names/range text, appearance controls and owned client-setting restoration. Native validation and screenshots pending; see docs/LOOT_SPARKLES.md.
 - Added interface themes: Dashboard > Appearance > Interface Theme chooses
   Modern (default, unchanged) or Blizzard (stock dialog border and stone, red

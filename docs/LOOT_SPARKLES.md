@@ -163,3 +163,13 @@ builder (165 files). The local ZIP is a review artifact with the existing beta
 version, not a published release. Native behavior and screenshots remain pending.
 The original shared checkout and standalone main checkout were left untouched;
 implementation is isolated in `codex/forever-loot-sparkles` for PR review.
+
+## Owner feedback and feature tabs — November 7, 2026
+
+The owner reports that Loot Sparkles appears to work and has functioning features.
+The requested next iteration puts all its controls inside the Loot Sparkles tab
+under Gameplay Enhancements, alongside Campfire Monitor. Existing master/settings
+are retained; Enable Loot Sparkles is an independent feature switch defaulting on
+beneath that master. Current campfire/tab research and test steps are in
+[CAMPFIRE_MONITOR.md](CAMPFIRE_MONITOR.md). Earlier pending/live-isolation records
+above are historical; source now lives in the verified live-linked checkout.

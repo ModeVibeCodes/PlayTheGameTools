@@ -70,6 +70,8 @@ Modules\DungeonLoot.lua
 Modules\LootSparkles.lua
 Modules\LootSparklesTarget.lua
 Modules\LootSparklesDisplay.lua
+Modules\CampfireMonitor.lua
+Modules\CampfireMonitorDisplay.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -96,6 +98,7 @@ Config\ForeverRecruitment.lua
 Config\ThreatMeter.lua
 Config\DungeonLootWidgets.lua
 Config\DungeonLoot.lua
+Config\CampfireMonitor.lua
 Config\LootSparkles.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua
