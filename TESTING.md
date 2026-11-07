@@ -166,3 +166,10 @@ Initial WowUp install/update delivery remains untested until an explicitly appro
 public release exists. Test it with one guildmate before broader announcement.
 Public repository/release creation is a separate approval; no auto-publish workflow
 is supplied. A beta label does not restrict access to guildmates.
+
+## Dungeon Loot SFK pilot
+
+Run `python tests/dungeon_loot.py` in addition to the smoke test and build.
+See [exact native review steps](docs/DUNGEON_LOOT.md#native-review--pending).
+Requires the separately installed/enabled DungeonJournal; screenshots and native
+results are pending. Mock tests do not confirm actual drops or quest availability.

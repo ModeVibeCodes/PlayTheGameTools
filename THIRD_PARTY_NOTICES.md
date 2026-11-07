@@ -52,3 +52,14 @@ property. References to assets available in the game do not transfer ownership.
 The Play The Game Tools MIT grant does not relicense Blizzard assets or declare them public
 domain. No third-party font files are bundled; optional media providers are not
 redistributed by this package.
+
+## Optional DungeonJournal interoperability
+
+DungeonJournal (ForeverDungeonJournal) by Exehn / ExehnTV is a separate addon,
+listed as All Rights Reserved at https://www.curseforge.com/wow/addons/dungeonjournal.
+The Dungeon Loot pilot reads its exposed in-memory data when the user has it
+installed and enabled. No DungeonJournal code, database, prose, artwork or other
+assets are bundled in this repository or release ZIP. Source attribution and
+installed version appear in the browser. This is independent interoperability,
+not an endorsement or a grant to redistribute the upstream addon. See
+docs/DUNGEON_LOOT.md for schema compatibility and data uncertainty.

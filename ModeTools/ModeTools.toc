@@ -4,7 +4,7 @@
 ## Author: Mode
 ## Version: 0.2.0-beta.1
 ## SavedVariables: ModeToolsDB
-## OptionalDeps: LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
+## OptionalDeps: ForeverDungeonJournal, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
 ## X-ModeTools-Edition: Forever
 
 Core\Edition.lua
@@ -54,6 +54,8 @@ Modules\ForeverQuickAccess.lua
 Modules\ForeverFoodBarData.lua
 Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
+Modules\DungeonLootProvider.lua
+Modules\DungeonLoot.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -77,5 +79,6 @@ Config\ForeverAccess.lua
 Config\ForeverQuickAccess.lua
 Config\ForeverFoodBar.lua
 Config\ForeverRecruitment.lua
+Config\DungeonLoot.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua

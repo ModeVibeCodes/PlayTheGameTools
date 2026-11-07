@@ -94,3 +94,11 @@ Play The Game Tools original code is open source under [MIT](LICENSE). See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for training-catalog attribution
 and artwork ownership. WoW and Blizzard assets remain the property of Blizzard
 Entertainment. Play The Game Tools is an independent community addon.
+
+## Dungeon Loot pilot
+
+Questing & Leveling → Dungeon Loot provides a Shadowfang Keep loot and quest
+browser. It is off by default and currently requires the separately installed,
+enabled DungeonJournal data addon. Other dungeon names are shown for navigation;
+their details are outside this pilot. See [scope, data provenance and native
+checks](docs/DUNGEON_LOOT.md). Native validation and screenshots are pending.

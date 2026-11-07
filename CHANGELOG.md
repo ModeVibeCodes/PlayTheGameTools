@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added the off-by-default Dungeon Loot SFK pilot under Questing & Leveling:
+  dungeon index, boss/source loot with native item tooltips, and dungeon quests
+  with pickup/turn-in locations, prerequisites and rewards. Reads the separately
+  installed, enabled DungeonJournal at runtime; no third-party tables are bundled.
+  Includes name search and quest faction filtering. Native review is pending.
+  See docs/DUNGEON_LOOT.md.
+
 - The guild ding message now includes the time it took to level on the first
   level-up of a session. With Time to Level on, Class Training requests /played
   once per login or reload (the client prints its usual two /played lines) and

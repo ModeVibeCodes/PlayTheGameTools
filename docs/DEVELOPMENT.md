@@ -48,3 +48,16 @@ Use focused pull requests. Issues should include Forever build, addon version,
 class/level, exact reproduction and error text. Remove account data and personal
 paths before attaching logs. Maintainer approval is needed for native acceptance
 and releases; passing static checks alone is not a release acceptance claim.
+
+## Dungeon Loot feature work
+
+The SFK pilot adds a seventh registered module and three Lua files. Its owning
+document is [DUNGEON_LOOT.md](DUNGEON_LOOT.md), with source/provider limitations,
+focused checks and native review steps. Continue work on codex/dungeon-loot and
+update its draft PR; do not merge or publish directly to main.
+
+For this machine the owner verified an existing Forever AddOns junction to this
+checkout's ModeTools directory. Source edits and branch switches affect the next
+client load. Preserve that junction; do not apply the older copy-sync workflow.
+This owner-directed arrangement supersedes the general separate-install advice
+above for this machine only. Never change SavedVariables.
