@@ -21,3 +21,7 @@
 - Live sync, releases, pushes and collaborator invitations require user scope
   authorization. Source edits alone do not authorize deployment or publication.
 - Preserve licenses/notices and unknown user work. Never force-push or reset.
+
+- Make feature changes on focused non-main branches (use codex/ for Codex work).
+  Fetch and update main before branching; open a pull request for review. Never
+  push feature changes directly to main or merge a PR without explicit approval.

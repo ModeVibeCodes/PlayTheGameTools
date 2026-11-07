@@ -1,5 +1,15 @@
 # Play The Game Tools changelog
 
+## Recruitment native invitation handoff
+
+- Remove the direct Invite action after the Forever client reported
+  ADDON_ACTION_FORBIDDEN with UNKNOWN(). Candidate rows retain Player Menu Link,
+  editable whisper drafts and manual contact/skip history. No addon call sends
+  a guild invite; the player uses Blizzard's native menu if available.
+- Stop pending recruitment searches on UNKNOWN() or unreadable rejection events;
+  disable further direct searches for the session, without retrying automatically.
+- Native invitation receipt and screenshots remain pending.
+
 ## Unreleased
 
 - Redesigned the settings window: flat graphite surfaces, 1px hairlines and square

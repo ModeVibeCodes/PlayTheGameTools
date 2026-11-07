@@ -4,7 +4,7 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 -- Independent pilot; Olympus 2.5.1 was inspected, not copied.
 addon:RegisterCategory("guildTools",{title="Guild Tools"})
 local M={title="Recruitment",category="guildTools",defaultEnabled=false,
-    configDescription="Pilot: find guildless players, prepare whispers and request individual guild invites."}
+    configDescription="Pilot: find guildless players, prepare whispers and use native player menus."}
 addon.ForeverRecruitment=M
 addon:RegisterModule("foreverRecruitment",M)
 
@@ -152,19 +152,6 @@ function M:NativeLink(name)
     print("Play The Game Tools Recruitment: |Hplayer:"..name.."|h["..name.."]|h — right-click the name for the native player menu.")
     self:Refresh("Player link printed in chat. Right-click it and use the native guild invitation option if available.")
 end
-function M:Invite(name)
-    if not self:Ready() or self.inviteBlocked or not self.candidates[name] or self.db.history[name]=="skip" then return end
-    local guild=IsInGuild and IsInGuild();local permission=CanGuildInvite and CanGuildInvite()
-    if not Public(guild) or guild~=true or not Public(permission) or permission~=true then
-        self:Refresh("Guild membership and invite permission required.");return
-    end
-    if not C_GuildInfo or type(C_GuildInfo.Invite)~="function" then self:Refresh("Guild invitation API unavailable. Use Player Menu Link.");return end
-    if self.lastInvite and GetTime()-self.lastInvite<2 then self:Refresh("Wait 2 seconds before another invite request.");return end
-    self.lastInvite=GetTime()
-    self:Refresh("Invite requested for "..name.."; delivery and acceptance are unconfirmed.")
-    local ok=pcall(C_GuildInfo.Invite,name)
-    if not ok then self.inviteBlocked=true;self:Refresh("Invite rejected. Disabled for this session; use Player Menu Link.") end
-end
 function M:OnEnable()
     self.active=true
     if not self.events then self.events=CreateFrame("Frame") end
@@ -173,9 +160,15 @@ function M:OnEnable()
         if event=="PLAYER_REGEN_DISABLED" then self:StopScan();self:Refresh("Combat: scan cancelled; recruitment actions unavailable.")
         elseif event=="PLAYER_REGEN_ENABLED" then self:Refresh("Combat ended. Click Start Scan to begin a new sweep.")
         elseif event=="WHO_LIST_UPDATE" then self:ReadWhoResults(false)
-        elseif Text(owner,120) and owner=="ModeTools" and Text(operation,200) then
-            if operation:find("Invite",1,true) then self.inviteBlocked=true;self:Refresh("Forever blocked addon invitations. Disabled for this session; use Player Menu Link.")
-            elseif operation:find("SendWho",1,true) then self.scanBlocked=true;self.pending=nil;self:Refresh("Forever blocked addon searches. Use native Who, then Read Who Results.") end
+        elseif Text(owner,120) and owner=="ModeTools" then
+            -- Forbidden calls can be reported as UNKNOWN(), not their API name.
+            -- With a pending query, fail closed even if the operation is unreadable.
+            local search=Text(operation,200) and operation:find("SendWho",1,true)
+            local unknown=not Text(operation,200) or operation=="UNKNOWN()"
+            if search or (unknown and self.pending) then
+                self.scanBlocked=true;self:StopScan()
+                self:Refresh("Forever blocked an addon action. Searches stopped for this session; use native Who, then Read Who Results.")
+            end
         end
     end)
     self:Refresh("Ready. Click Start Scan; each Next Search requires its own click.")

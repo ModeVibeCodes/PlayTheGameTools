@@ -5,7 +5,7 @@ here for guild collaboration. The initial import is an independent snapshot;
 changes do not automatically synchronize with another repository or a live game.
 
 1. Fork this public repository, clone your fork, and branch from `main`.
-2. Use a focused branch, for example `feature/training-fix`. Keep one feature or
+2. Use a focused branch, for example `codex/training-fix`. Do not push feature updates directly to `main`. Keep one feature or
    fix per pull request and preserve working behavior and existing settings.
 3. Edit `ModeTools/Core`, `ModeTools/Config`, `ModeTools/Modules`, or
    `ModeTools/Media` directly. Add new Lua files to `ModeTools/ModeTools.toc` in
