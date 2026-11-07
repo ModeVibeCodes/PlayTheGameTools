@@ -34,6 +34,8 @@ function C:AddConfig(page)
     page:Group("Display")
     Toggle("Show Campfire Icon","showIcon");Toggle("Show Status Text","showText")
     Toggle("Show Your Camp Benefits","showBenefits")
+    Toggle("Compact Buff Text","compactBenefits")
+    Toggle("Separate Buff Window","separateBenefits")
     Toggle("Show Nearby Native Details","showNearbyDetails")
     Toggle("Show Profession Guide","showProfessionGuide")
     Toggle("Always Show Monitor","alwaysShow");Toggle("Show In Combat","showInCombat")
@@ -46,13 +48,27 @@ function C:AddConfig(page)
     function owner:SetAppearance(key,value) return C:SetOption(key,value) end
     W.ColorRow(page,owner,"Text Color","textColor")
     page:Group("Position")
+    local move=W.Button(page:Row("Window Placement",48),"Move Windows",160,28);move:SetPoint("LEFT")
+    move:SetScript("OnClick",function() self:SetPlacementMode(not self.placing);page:Refresh() end)
+    page.campfireMove=move
+    page.refreshers[#page.refreshers+1]=function() move.label:SetText(self.placing and "Finish Moving" or "Move Windows") end
     Toggle("Lock Campfire Monitor","locked")
     Slider("Horizontal Offset","x");Slider("Vertical Offset","y")
     local reset=W.Button(page:Row("Monitor Position",48),"Reset Position",160,28);reset:SetPoint("LEFT")
     reset:SetScript("OnClick",function()
-        if addon.LootSparkles:OutsideCombat() then self.db.x=0;self.db.y=-240;self:Refresh();page:Refresh() end
+        if addon.LootSparkles:OutsideCombat() then self:StopDrag();self.db.x=0;self.db.y=-240;self:Refresh();page:Refresh() end
     end);page.campfireReset=reset
+    page:Group("Buff Window")
+    Toggle("Lock Buff Window","benefitsLocked")
+    Slider("Buff Text Size","benefitsFontSize");Slider("Buff Window Width","benefitsWidth")
+    Slider("Buff Window Scale","benefitsScale","%");Slider("Buff Window Opacity","benefitsOpacity","%")
+    Slider("Buff Background Opacity","benefitsBackgroundOpacity","%")
+    Slider("Buff Horizontal Offset","benefitsX");Slider("Buff Vertical Offset","benefitsY")
+    local resetBuffs=W.Button(page:Row("Buff Window Position",48),"Reset Buff Position",160,28);resetBuffs:SetPoint("LEFT")
+    resetBuffs:SetScript("OnClick",function()
+        if addon.LootSparkles:OutsideCombat() then self:StopDrag();self.db.benefitsX=260;self.db.benefitsY=-240;self:Refresh();page:Refresh() end
+    end);page.campfireBuffReset=resetBuffs
     local note=W.Label(page:Row("Campfire Help",220),
-        "Unlock to drag the monitor outside combat; locking makes it click-through. Nearby status comes only from Campfire Nearby, not from lingering Camp Benefits. Your Camp Benefits lists your earned native buff details, which may include earlier camps. The profession guide shows possible contributions, not objects detected at this fire. Native aura data does not provide a complete inventory of nearby camp objects. Sit or craft at the camp to gain its benefits. Combat display is off by default; unreadable data is never reported as a nearby fire.",nil,0,-4,440,T.muted)
+        "Move Windows lets you drag the monitor and detached buffs outside combat, even when locked. Preview windows can also be dragged. Right-click either window or choose Finish Moving to stop. Separate Buff Window keeps earned buffs in their own window with a saved position and its own size and opacity. Compact Buff Text shortens readable native bonuses; unfamiliar text stays unchanged. Earned buffs can outlast the nearby fire. The profession guide lists possible contributions, not this camp's detected objects. Combat display is off by default.",nil,0,-4,440,T.muted)
     note:SetWordWrap(true)
 end

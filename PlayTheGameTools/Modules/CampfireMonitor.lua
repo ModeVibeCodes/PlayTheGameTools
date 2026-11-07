@@ -19,10 +19,14 @@ local function Field(t,key)
     if ok then return v end
 end
 C.ranges={fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
-    opacity={20,100,5},backgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
+    opacity={20,100,5},backgroundOpacity={0,100,5},benefitsX={-10000,10000,1},benefitsY={-10000,10000,1},
+    benefitsWidth={100,600,10},benefitsFontSize={10,24,1},benefitsScale={50,150,5},
+    benefitsOpacity={20,100,5},benefitsBackgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
 C.defaults={enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
     showProfessionGuide=false,alwaysShow=false,showInCombat=false,locked=true,fontSize=14,
-    iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240}
+    iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
+    benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
+    benefitsScale=100,benefitsOpacity=100,benefitsBackgroundOpacity=0}
 function C.Initialize(db)
     if db.campfire==nil then db.campfire={} end
     local settings=db.campfire
@@ -67,7 +71,8 @@ function C:Scan()
 end
 
 -- Preserve the client's own localized descriptions, amounts and bonus rows.
--- No English keyword parsing, amount guesses, tooltip-frame scraping or hooks.
+-- This raw reader does not infer stats; compact formatting happens separately.
+-- No tooltip-frame scraping, hooks or guessed stat amounts.
 function C:TooltipLines(aura)
     if not aura or not C_TooltipInfo then return {} end
     local ok,data
@@ -105,9 +110,83 @@ C.professions={
     {"Fishing","All stats"},{"Herbalism","Intellect"},{"Leatherworking","Rested experience"},
     {"Mining","Melee attack power"},{"Skinning","Critical strike chance"},{"Tailoring","Spirit"},
 }
+-- Compact only unambiguous English stat descriptions. Values always come from
+-- the current native tooltip; unfamiliar/localized text remains readable as-is.
+local stats={
+    {"critical","Crit"},{"critically","Crit"},{"crit","Crit"},{"all stats","Stats"},{"all attributes","Stats"},{"stats","Stats"},
+    {"resistance","Resists"},{"resistances","Resists"},{"attack power","AP"},{"spell damage","Spell Power"},
+    {"spell power","Spell Power"},{"healing","Healing"},{"strength","Strength"},
+    {"stamina","Stamina"},{"intellect","Int"},{"spirit","Spirit"},{"armor","Armor"},
+    {"rested","Rested XP"},{"mana","Mana"},
+}
+function C.CompactLine(line)
+    local body=line:match("^[^:]+:%s*(.+)$") or line
+    local prefix=(line:match("^([^:]+):") or ""):lower()
+    local segments=body:gsub(",%s+","\n"):gsub(";%s*","\n")
+    local results,unknown={},{}
+    for segment in segments:gmatch("[^\n]+") do
+        local lower=segment:lower();local label,ambiguous
+        for _,entry in ipairs(stats) do
+            if lower:find("%f[%a]"..entry[1].."%f[%A]") then
+                if label and label~=entry[2] then ambiguous=true end
+                label=entry[2]
+            end
+        end
+        if not label then
+            for _,entry in ipairs(stats) do
+                if prefix:find("%f[%a]"..entry[1].."%f[%A]") then
+                    if label and label~=entry[2] then ambiguous=true end
+                    label=entry[2]
+                end
+            end
+        end
+        local values={}
+        for value,percent in segment:gmatch("([%+%-]?%d[%d%.,]*)%s*(%%?)") do
+            value=value:gsub("^%+",""):gsub("[%.,]+$","")
+            values[#values+1]=value..percent
+        end
+        local short
+        if label and not ambiguous then
+            if #values==1 then short=values[1].." "..label
+            elseif #values==0 and label=="Rested XP" then short=label
+            elseif label=="Mana" and #values==2 then
+                local period=lower:match("every%s+(%d+)%s+sec")
+                if period and values[2]==period then short=values[1].." Mana / "..period.." sec" end
+            end
+        end
+        if short then results[#results+1]=short
+        else
+            local fragment=segment:match("^%s*(.-)%s*$")
+            if fragment~="" and fragment:lower()~="and" then unknown[#unknown+1]=fragment end
+        end
+    end
+    if #results==0 then return {line} end
+    for _,fragment in ipairs(unknown) do results[#results+1]=fragment end
+    return results
+end
+function C:BuildBenefitsText()
+    local s=self.snapshot or {}
+    if self.previewing then return "Preview buffs\n2% Crit\n8% Stats" end
+    if not s.benefits then
+        if self.placing then return "Camp buffs" end
+        return s.complete and "No Camp Benefits detected." or "Camp Benefits unavailable."
+    end
+    local lines=self:TooltipLines(s.benefits)
+    if #lines==0 then return "Native benefit details unavailable." end
+    if not self.db.compactBenefits then return table.concat(lines,"\n") end
+    local compact,seen={},{}
+    for _,line in ipairs(lines) do
+        for _,short in ipairs(self.CompactLine(line)) do
+            if not seen[short] then compact[#compact+1]=short;seen[short]=true end
+        end
+    end
+    return table.concat(compact,"\n")
+end
+
 function C:BuildText()
     local s,db=self.snapshot or {},self.db
     local title=self.previewing and "Preview: Campfire Nearby" or
+        (not self.active and self.placing and "Campfire Monitor") or
         (s.nearby and (s.welcoming and "Campfire Nearby - Resting" or "Campfire Nearby") or
         (s.known and "No nearby campfire" or (s.message or "Campfire status unavailable.")))
     local parts={}
@@ -116,15 +195,9 @@ function C:BuildText()
         local lines=self:TooltipLines(s.near)
         if #lines>0 then parts[#parts+1]="Nearby camp (native)";for _,line in ipairs(lines) do parts[#parts+1]=line end end
     end
-    if db.showBenefits then
-        if self.previewing then
-            parts[#parts+1]="Sample benefits";parts[#parts+1]="Stamina +12";parts[#parts+1]="Intellect +4"
-        elseif s.benefits then
-            parts[#parts+1]="Your Camp Benefits"
-            local lines=self:TooltipLines(s.benefits)
-            if #lines==0 then parts[#parts+1]="Native benefit details unavailable."
-            else for _,line in ipairs(lines) do parts[#parts+1]=line end end
-        else parts[#parts+1]=s.complete and "No Camp Benefits detected." or "Camp Benefits unavailable." end
+    if db.showBenefits and not db.separateBenefits then
+        if not db.compactBenefits and s.benefits then parts[#parts+1]="Your Camp Benefits" end
+        parts[#parts+1]=self:BuildBenefitsText()
     end
     if db.showProfessionGuide then
         parts[#parts+1]="Profession guide (possible features)"
@@ -143,11 +216,11 @@ function C:SetOption(key,value)
     return true
 end
 function C:Refresh()
-    if not self.active and not self.previewing then if self.frame then self.frame:Hide() end;return end
+    if not self.active and not self.previewing and not self.placing then self:HideDisplays();return end
     local combat=not P:OutsideCombat()
-    if combat and (not self.db.showInCombat or self.previewing) then
-        self.previewing=false;self.snapshot={known=false,message="Paused during combat."}
-        if self.frame then self:StopDrag();self.frame:Hide() end
+    if combat and (not self.db.showInCombat or self.previewing or self.placing) then
+        self.previewing=false;self.placing=false;self.snapshot={known=false,message="Paused during combat."}
+        self:StopDrag();self:HideDisplays()
     else
         self.snapshot=self.active and self:Scan() or {known=false}
         self:Render()
@@ -163,13 +236,20 @@ function C:SyncEnabled()
         self.events:RegisterEvent("PLAYER_ENTERING_WORLD")
         self.events:RegisterEvent("PLAYER_REGEN_ENABLED")
     end
-    if self.active or self.previewing then self.events:RegisterEvent("PLAYER_REGEN_DISABLED") end
+    if self.active or self.previewing or self.placing then self.events:RegisterEvent("PLAYER_REGEN_DISABLED") end
     self.events:SetScript("OnEvent",function(_,event,unit)
         if event=="UNIT_AURA" and (not Public(unit) or unit~="player") then return end
-        if event=="PLAYER_REGEN_DISABLED" then self:StopDrag();self.previewing=false end
+        if event=="PLAYER_REGEN_DISABLED" then
+            self:StopDrag();self.previewing=false;self.placing=false;self:SyncEnabled();return
+        end
         self:Refresh()
     end)
     self:Refresh()
+end
+function C:SetPlacementMode(enabled)
+    if enabled and not P:OutsideCombat() then return false end
+    if not enabled then self:StopDrag() end
+    self.placing=enabled==true;self:SyncEnabled();return true
 end
 function C:TogglePreview()
     if not P:OutsideCombat() then return false end

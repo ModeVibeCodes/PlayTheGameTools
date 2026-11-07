@@ -195,5 +195,5 @@ function M:OnDisable()
     self.nodes=false; self.running=false
     self.driver:SetScript("OnUpdate",nil)
     self:Configure(false); self:RestartNotice()
-    if addon.CampfireMonitor then addon.CampfireMonitor:StopPreview();addon.CampfireMonitor:SyncEnabled() end
+    if addon.CampfireMonitor then addon.CampfireMonitor:StopPreview();addon.CampfireMonitor:SetPlacementMode(false);addon.CampfireMonitor:SyncEnabled() end
 end

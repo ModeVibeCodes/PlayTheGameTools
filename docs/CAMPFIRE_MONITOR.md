@@ -12,8 +12,7 @@ the existing Quick Access/Food Bar subfeature lifecycle without changing shared
 navigation, the module registry, compatibility identifiers or SavedVariables.
 
 Campfire Monitor displays the native proximity status with an optional campfire
-icon and text. It can show **Your Camp Benefits**, copying readable localized
-native tooltip descriptions, and optional **Nearby camp (native)** details.
+icon and text. It can show **Your Camp Benefits**, using compact native-value stat lines by default, with full native text available, and optional **Nearby camp (native)** details.
 An optional twelve-profession guide explains possible contributions.
 
 **Limits:** earned Camp Benefits can include previous camps. They do not prove a
@@ -61,8 +60,9 @@ Verified reference identities, still requiring client acceptance here:
 
 The reader does not identify buffs by English names. Instance-ID tooltips are
 preferred, with documented indexed player/HELPFUL fallback when that accessor is
-absent. Tooltip text is displayed as native text, not parsed into guessed stats
-or assigned to unverified nearby objects. Secret fields, API errors and missing
+absent. Compact Buff Text shortens unambiguous English descriptions using actual native
+amounts. Localized, unfamiliar or ambiguous descriptions remain native text.
+No fixed guide amounts are substituted or assigned to unverified nearby objects. Secret fields, API errors and missing
 data are skipped. Complete public scans prove absence; an incomplete scan does
 not prove missing benefits. Bounded scans end at 255 auras. Missing APIs show an
 availability message rather than a fabricated success.
@@ -90,7 +90,7 @@ Within **Campfire Monitor**:
 - **Show Campfire Icon**, **Show Status Text**, **Show Your Camp Benefits**,
   **Show Nearby Native Details**, **Show Profession Guide**.
 - **Always Show Monitor** — permits absent/unknown status and earned buffs to
-  remain visible away from a camp. Otherwise the locked monitor requires proximity.
+  remain visible away from a camp. Otherwise it requires proximity or joined earned buffs to display.
 - **Show In Combat** — optional public-only updates; off by default.
 - **Font Size**, **Icon Size**, **Monitor Width**, **Monitor Scale**,
   **Monitor Opacity**, **Background Opacity**, **Text Color**.
@@ -134,7 +134,8 @@ exclude other players' names and chat.
    earned, then walk away. **Required state:** OOC, master/monitor on, preview off,
    Always Show Monitor off and monitor locked. **Confirmation:** icon/text appears
    only for confirmed proximity; earned details match readable native tooltip
-   lines; walking out of proximity hides the monitor even if earned benefits last.
+   lines; walking out of proximity clears the nearby claim. Joined earned buffs remain
+   visible; separate mode keeps the earned-buff list visible independently.
 4. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
    Enhancements → Campfire Monitor → Always Show Monitor / Show Profession Guide.
    **Action:** enable both and inspect away from a camp. **Required state:** OOC,
@@ -169,3 +170,62 @@ Static checkpoint: 93 Lua chunks compile/load; smoke, campfire, existing Loot
 Sparkles and Dungeon Loot UI regression suites pass. The deterministic builder
 produces 168 package files. These are source/package checks, not native campfire
 acceptance. Local live-file paths are verified through the preserved junction.
+
+
+## Movable compact buff windows — November 7, 2026
+
+The owner reported the window was not movable and requested short earned-buff
+lines, optionally joined or detached. Saved locks prevented normal dragging;
+aura/font redraws could also reapply anchors mid-drag. Move Windows and directly
+draggable Preview temporarily override mouse locks. Rendering now leaves dragged
+frames alone until drag stop saves their coordinates. Existing settings are
+retained; placement mode is session-only and is canceled by combat/master disable.
+
+**Compact Buff Text** defaults on. Native amounts produce lines such as 2% Crit,
+8% Stats, 12 Stamina and 4 Int. Unrecognized or ambiguous descriptions stay in
+their original form; no guessed amounts or guide values appear as earned buffs.
+Turning Compact Buff Text off restores full readable native descriptions.
+
+**Separate Buff Window** defaults off. Joined mode keeps earned buffs inside the
+monitor after leaving the fire, with the proximity status updated independently.
+Detached mode keeps a simple buff-only list while its earned aura persists, even
+when the proximity monitor hides. The list defaults to a transparent background
+and saves its own position independently of the monitor.
+
+New controls in Campfire Monitor:
+
+- Display → Compact Buff Text / Separate Buff Window.
+- Position → Window Placement → Move Windows / Finish Moving. Right-click either
+  window to finish. Preview windows are directly draggable even when locked.
+- Buff Window → Lock Buff Window / Buff Text Size / Buff Window Width / Buff
+  Window Scale / Buff Window Opacity / Buff Background Opacity / Buff Horizontal
+  Offset / Buff Vertical Offset / Buff Window Position → Reset Buff Position.
+
+Existing runtime files only: `/reload` loads this revision. No SavedVariables
+files or junctions were edited. Run `python tests/campfire_movement.py` (includes
+smoke and existing campfire fixtures), `python tests/loot_sparkles.py` and the
+release builder. Native movement/compact-text screenshots remain pending.
+
+1. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
+   Enhancements → Campfire Monitor → Position → Window Placement → Move Windows.
+   **Action:** `/reload`, click Move Windows, drag the monitor by its body/handle,
+   then right-click it or click Finish Moving. Preview is directly draggable too.
+   **Required state:** OOC; live feature enabled or explicit placement/preview.
+   **Confirmation:** smooth movement despite aura updates, saved position after
+   reload, and click-through when placement ends and the saved lock is on.
+2. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
+   Enhancements → Campfire Monitor → Display → Show Your Camp Benefits / Compact
+   Buff Text / Separate Buff Window. **Action:** enable all three after earning
+   camp buffs. **Required state:** OOC, Camp Benefits present, Preview off.
+   **Confirmation:** actual native amounts appear as short lines, such as 2% Crit
+   and 8% Stats when those are the earned bonuses. The detached list has no nearby
+   icon and remains after leaving the camp. Unreadable data never reuses stale
+   amounts; unfamiliar text remains readable.
+3. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
+   Enhancements → Campfire Monitor → Position → Window Placement → Move Windows;
+   Buff Window → Buff Window Position → Reset Buff Position. **Action:** move
+   both windows independently, finish, join/detach again, and reload OOC.
+   **Required state:** OOC, separate mode on while placing the buff window.
+   **Confirmation:** each position persists independently; joined mode shows one
+   window; Reset Buff Position affects only the detached list. Combat ends
+   placement and stops both windows' dragging without protected actions.

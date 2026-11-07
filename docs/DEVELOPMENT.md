@@ -100,3 +100,14 @@ limits and exact testing paths. Run tests/campfire_monitor.py and the existing
 smoke/sparkle checks plus the release builder. Changes are in the live-linked
 standalone checkout for local /reload testing; SavedVariables and junctions stay
 untouched. Campfire/tab-layout native acceptance and screenshots are pending.
+
+## Campfire movement and compact buffs
+
+Owner reported movement failure and requested simple earned-buff text with joined
+or separate placement. Move Windows and draggable previews now override saved
+mouse locks transiently, and aura/font refreshes leave dragged anchors alone.
+Compact native-value text defaults on; the optional transparent buff window has
+its own position/style. Earned buffs persist after leaving proximity. Existing
+runtime files only; local /reload applies it. Run tests/campfire_movement.py,
+loot_sparkles.py and the builder. Exact new native paths are in CAMPFIRE_MONITOR.md.
+Native validation/screenshots pending; no SavedVariables edits or junction changes.
