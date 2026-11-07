@@ -61,16 +61,13 @@ function P:Read()
     local ns = Table(_G.ForeverDungeonJournal_NS)
     local db = Table(ns.DB)
     local result = { catalog = {}, bosses = {}, quests = {}, available = false }
-    for name, dungeon in pairs(db) do
-        if Text(name) and type(dungeon) == "table" then result.catalog[#result.catalog + 1] = Text(name) end
-    end
-    local found
-    for _, name in ipairs(result.catalog) do if name == "Shadowfang Keep" then found = true end end
-    if not found then result.catalog[#result.catalog + 1] = "Shadowfang Keep" end
-    table.sort(result.catalog)
+    -- One supported dungeon until the native UI pilot is accepted.
+    result.catalog = { "Shadowfang Keep" }
+    result.card = { art = "Interface\\Glues\\LoadingScreens\\LoadScreenShadowFangKeep", faction = "Horde", suggestedLevel = "20–30" }
+    result.bossCount, result.rareCount = 0, 0
     local raw = db["Shadowfang Keep"]
     if type(raw) ~= "table" then
-        result.source = "DungeonJournal data unavailable. Enable ForeverDungeonJournal in the AddOns list, then /reload."
+        result.source = "Enable DungeonJournal in AddOns, then /reload to load loot and quests."
         return result
     end
     local version = "unknown version"
@@ -79,11 +76,18 @@ function P:Read()
         if ok then version = Text(value) or version end
     end
     result.available = true
-    result.source = "Source: installed DungeonJournal " .. version .. ". Community tables; current drops and quest availability are not independently confirmed."
+    result.source = "DungeonJournal " .. version
     result.location, result.level = Text(raw.location), Text(raw.level)
     for _, boss in ipairs(Table(raw.bosses)) do
         boss = Table(boss)
-        result.bosses[#result.bosses + 1] = { name = Text(boss.name) or "Unnamed encounter", items = Items(boss.loot) }
+        result.bosses[#result.bosses + 1] = { name = Text(boss.name) or "Unnamed encounter", items = Items(boss.loot),
+            displayID = ID(boss.displayID) or ID(Table(ns.STATIC_DISPLAY_IDS)[ID(boss.npcID)]),
+            rare = boss.rare == true,
+            extra = boss.trash == true or boss.recipeTab == true or boss.npcID == 3864 or boss.npcID == 4627 }
+        local entry = result.bosses[#result.bosses]
+        if not entry.extra then
+            if entry.rare then result.rareCount = result.rareCount + 1 else result.bossCount = result.bossCount + 1 end
+        end
     end
     for _, quest in ipairs(Table(raw.quests)) do
         result.quests[#result.quests + 1] = Quest(quest, ns)

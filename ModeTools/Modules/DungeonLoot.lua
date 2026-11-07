@@ -1,7 +1,7 @@
 local _, addon = ...
 if not addon.Edition or addon.Edition.name ~= "Forever" then return end
 local M = { title = "Dungeon Loot", category = "questingLeveling", defaultEnabled = false,
-    configDescription = "Browse dungeon boss loot and quests. Shadowfang Keep pilot." }
+    configDescription = "Find dungeon loot and plan your quests." }
 addon.DungeonLoot = M
 addon:RegisterModule("dungeonLoot", M)
 

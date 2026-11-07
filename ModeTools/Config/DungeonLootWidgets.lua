@@ -1,0 +1,151 @@
+local _, addon = ...
+local W, T = addon.ConfigWidgets, addon.InterfaceTheme
+local UI = {}
+addon.DungeonLootWidgets = UI
+local FACTIONS = { Alliance = "Interface\\TargetingFrame\\UI-PVP-Alliance", Horde = "Interface\\TargetingFrame\\UI-PVP-Horde" }
+
+function UI.Factions(host, faction)
+    host.factionIcons = host.factionIcons or {}
+    local factions = faction == "Both" and { "Alliance", "Horde" } or { faction }
+    for _, texture in ipairs(host.factionIcons) do texture:Hide() end
+    local count = 0
+    for _, name in ipairs(factions) do
+        if FACTIONS[name] then
+            count = count + 1
+            local texture = host.factionIcons[count] or host:CreateTexture(nil, "OVERLAY")
+            host.factionIcons[count] = texture
+            texture:SetTexture(FACTIONS[name]); texture:SetTexCoord(0, 0.6, 0, 0.6)
+            texture:SetSize(24, 24); texture:ClearAllPoints(); texture:SetPoint("TOPRIGHT", -10 - (count-1)*28, -10)
+            texture:Show()
+        end
+    end
+    return count * 28
+end
+function UI.Portrait(texture, entry)
+    texture:SetTexCoord(0, 1, 0, 1)
+    texture:SetTexture("Interface\\EncounterJournal\\UI-EJ-BOSS-Default")
+    if entry.displayID and type(SetPortraitTextureFromCreatureDisplayID) == "function" then
+        local ok = pcall(SetPortraitTextureFromCreatureDisplayID, texture, entry.displayID)
+        if not ok then texture:SetTexture("Interface\\EncounterJournal\\UI-EJ-BOSS-Default") end
+    elseif entry.icon then texture:SetTexture(entry.icon) end
+end
+function UI.New(page, module)
+    local pool = { page = page, module = module, used = 0 }
+    page.slots = {}
+    function pool:Reset()
+        self.used = 0
+        for _, slot in ipairs(page.slots) do slot.visible = false; slot.item = nil; slot.callback = nil end
+    end
+    function pool:Row()
+        self.used = self.used + 1
+        local slot = page.slots[self.used]
+        if not slot then
+            local control = page:Row("", 44)
+            control.rowLabel:Hide(); control.row.divider:Hide(); control:ClearAllPoints()
+            control:SetPoint("TOPLEFT", control.row, "TOPLEFT", 0, -4); control:SetPoint("BOTTOMRIGHT", control.row, "BOTTOMRIGHT", 0, 4)
+            local button = W.Button(control, "", 300, 38)
+            button:SetAllPoints(control); button.label:SetJustifyH("LEFT"); button.label:SetWordWrap(true)
+            local icon = button:CreateTexture(nil, "ARTWORK")
+            local subtitle = W.Label(button, "", nil, 12, -36, 280, T.secondary)
+            subtitle:SetWordWrap(true)
+            slot = { control = control, row = control.row, button = button, icon = icon, subtitle = subtitle, cells = {} }
+            page.slots[self.used] = slot
+            control.row.visibleWhen = function() return slot.visible end
+            button:SetScript("OnClick", function() if slot.callback and module.active then slot.callback() end end)
+            button:HookScript("OnEnter", function(owner)
+                if slot.item and module.active and GameTooltip then
+                    module:HideTooltip(); module.tooltipOwner = owner
+                    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT"); GameTooltip:SetHyperlink("item:" .. slot.item.id); GameTooltip:Show()
+                end
+            end)
+            button:HookScript("OnLeave", function(owner) if module.tooltipOwner == owner then module:HideTooltip() end end)
+        end
+        slot.visible = true
+        slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
+        for _, cell in ipairs(slot.cells) do cell:Hide() end
+        if slot.art then slot.art:Hide(); slot.topBand:Hide(); slot.bottomBand:Hide() end
+        return slot
+    end
+    function pool:Add(text, callback, item, color, icon, options)
+        options = options or {}
+        local slot = self:Row()
+        slot.callback, slot.item = callback, item
+        local button = slot.button
+        button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, -12)
+        local factionWidth = UI.Factions(button, options.faction)
+        button.label:SetPoint("TOPRIGHT", -12-factionWidth, -12)
+        button.label:SetText(text); button:SetLabelColor(color or T.text)
+        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or 12)
+        button:EnableMouse(callback ~= nil or item ~= nil)
+        button.fill:SetShown(callback ~= nil or item ~= nil); button.outline:SetShown(callback ~= nil or item ~= nil)
+        if item or options.portrait then
+            slot.icon:SetSize(options.portrait and 64 or 28, options.portrait and 64 or 28)
+            slot.icon:ClearAllPoints(); slot.icon:SetPoint("TOPLEFT", 10, -9)
+            if options.portrait then UI.Portrait(slot.icon, options.portrait) else slot.icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark") end
+            slot.icon:Show()
+            if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", 86, -24);button.label:SetPoint("TOPRIGHT", -12, -24) end
+        end
+        slot.subtitle:SetText(options.subtitle or "")
+        slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -8);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -8)
+        slot.subtitle:SetShown(options.subtitle ~= nil)
+        function slot.row:layoutChildren(width)
+            button.label:SetWidth(math.max(80, width - (item and 64 or 28) - factionWidth))
+            local height = button.label:GetStringHeight() + 30
+            if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 12 end
+            self:SetHeight(math.max(options.portrait and 90 or (options.heading and 48 or 44), height))
+        end
+        return slot
+    end
+    function pool:Dungeon(data, callback)
+        local card = data.card
+        local slot = self:Add("Shadowfang Keep", callback, nil, T.text, nil, { heading = true, faction = card.faction })
+        if not slot.art then
+            slot.art = slot.button:CreateTexture(nil, "BACKGROUND", nil, 1)
+            slot.art:SetAllPoints(slot.button)
+            slot.topBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.86)
+            slot.bottomBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.88)
+        end
+        slot.art:SetTexture(card.art);slot.art:SetTexCoord(0, 1, 0.12, 0.88);slot.art:Show()
+        slot.topBand:ClearAllPoints();slot.topBand:SetPoint("TOPLEFT");slot.topBand:SetPoint("TOPRIGHT");slot.topBand:SetHeight(48);slot.topBand:Show()
+        slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(62);slot.bottomBand:Show()
+        addon.Media:BindInterfaceFont(slot.button.label, GameFontHighlight, 20)
+        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 12);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 12)
+        local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. #data.quests .. " quests") or "Loot and quests unavailable"
+        slot.subtitle:SetText("Silverpine Forest · Horde territory\n" .. counts);slot.subtitle:Show()
+        function slot.row:layoutChildren(width) self:SetHeight(230);slot.button.label:SetWidth(math.max(80,width-70)) end
+        return slot
+    end
+    function pool:Grid(entries)
+        local slot = self:Row()
+        slot.callback, slot.item = nil, nil
+        slot.button:Hide()
+        for index, entry in ipairs(entries) do
+            local cell = slot.cells[index]
+            if not cell then
+                cell = W.Button(slot.control, "", 220, 92)
+                cell.portrait = cell:CreateTexture(nil, "ARTWORK")
+                cell.portrait:SetSize(56, 56); cell.portrait:SetPoint("LEFT", 10, 0)
+                cell.label:ClearAllPoints();cell.label:SetPoint("LEFT", 76, 10);cell.label:SetPoint("RIGHT", -10, 10)
+                cell.label:SetJustifyH("LEFT");cell.label:SetWordWrap(true)
+                cell.detail = W.Label(cell, "", nil, 0, 0, 120, T.muted)
+                cell.detail:ClearAllPoints();cell.detail:SetPoint("TOPLEFT", cell.label, "BOTTOMLEFT", 0, -6)
+                cell.detail:SetPoint("RIGHT", -10, 0)
+                cell:SetScript("OnClick", function(owner) if module.active and owner.entry then owner.entry.callback() end end)
+                slot.cells[index] = cell
+            end
+            cell.entry = entry;cell.label:SetText(entry.name);cell.detail:SetText(entry.detail)
+            UI.Portrait(cell.portrait, entry);cell:Show()
+        end
+        function slot.row:layoutChildren(width)
+            local columns = math.max(1, math.min(3, math.floor((width+10)/260)))
+            local cellWidth = (width - (columns-1)*10)/columns
+            self:SetHeight(math.ceil(#entries/columns)*102+8)
+            for index=1,#entries do
+                local cell=slot.cells[index];cell:ClearAllPoints();cell:SetSize(cellWidth,92)
+                cell:SetPoint("TOPLEFT", ((index-1)%columns)*(cellWidth+10), -math.floor((index-1)/columns)*102)
+            end
+        end
+        return slot
+    end
+    return pool
+end

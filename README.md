@@ -99,6 +99,5 @@ Entertainment. Play The Game Tools is an independent community addon.
 
 Questing & Leveling → Dungeon Loot provides a Shadowfang Keep loot and quest
 browser. It is off by default and currently requires the separately installed,
-enabled DungeonJournal data addon. Other dungeon names are shown for navigation;
-their details are outside this pilot. See [scope, data provenance and native
+enabled DungeonJournal data addon. Only the Shadowfang Keep artwork card is shown. See [scope, data provenance and native
 checks](docs/DUNGEON_LOOT.md). Native validation and screenshots are pending.

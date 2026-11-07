@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Refined Dungeon Loot into an SFK-only loading-screen card grouped by suggested
+  levels, with boss/rare/quest totals and a Horde territory emblem. Added native
+  boss portrait grids, quest faction emblems and grouped acquisition/reward
+  sections. Moved the compact Refresh control and attribution to General.
+  Other dungeon entries and repeated implementation descriptions were removed.
+
 - Added the off-by-default Dungeon Loot SFK pilot under Questing & Leveling:
   dungeon index, boss/source loot with native item tooltips, and dungeon quests
   with pickup/turn-in locations, prerequisites and rewards. Reads the separately

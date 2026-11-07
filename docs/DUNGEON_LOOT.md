@@ -1,73 +1,82 @@
 # Dungeon Loot — Shadowfang Keep pilot
 
-Dungeon Loot is an independent module under **Questing & Leveling**, alongside
-Class Training. It is off by default. Enable it with the Dungeon Loot page's
-header switch. The visible addon is Play The Game Tools; technical identifiers,
-slash commands and ModeToolsDB are unchanged.
+Dungeon Loot is under **Questing & Leveling**, alongside Class Training. It is off
+by default. Enable it with the Dungeon Loot page's header switch. The visible
+addon is Play The Game Tools; compatibility IDs and ModeToolsDB are unchanged.
 
-## Current scope
+## Current experience
 
-The dungeon index lists the dungeons supplied by the installed data addon.
-Shadowfang Keep is the only pilot with details. Other entries say **Not in this
-pilot** and open an explicit scope message. This is not a complete official
-Forever dungeon inventory.
+Only Shadowfang Keep appears. **Dungeons** shows a large Blizzard loading-screen
+card under **Suggested levels 20–30**, with its title across the top, Silverpine
+Forest location, Horde territory emblem, boss count and total quest count.
+The range follows the installed DungeonJournal 1.7.0 SFK record; it is a suggested
+bracket, not the entry requirement. External community ranges differ. No other
+dungeons or example ranges are populated pending acceptance of the SFK experience.
 
-SFK has Boss Loot and Quests views. Boss/source groups open their item lists;
-items show client icons and quality colors when available and native hover
-tooltips. Search names filters the current list. Quests show faction/class,
-required level, objectives, pickup and turn-in text, coordinates when recorded,
-notes, prerequisite steps with recorded acquisition details, and reward items.
-Quest faction offers All factions, Alliance and Horde; Both-faction quests remain
-visible in either faction filter. All classes are listed with their restrictions
-shown rather than silently omitted. There is no promise that a quest is currently
-offered to this character. No quest acceptance, turn-in, tracking or map-pin action
-is implemented. Coordinates are textual, accompanied by the source's location.
+The card opens **Boss Loot**, a responsive grid of native boss portraits. Clicking
+a portrait opens the loot list, with client item icons, quality colors and native
+hover tooltips. Rare encounters are labeled. **Other loot** contains the stable
+mobs, Arugal's Voidwalker and Trash Drops rather than counting them as bosses.
+The inspected source supplies **8 bosses + 1 rare**, 3 extra source groups and
+**7 quests**. These counts describe the installed source, not official completeness.
 
-## Data and ownership
+**Quests** shows clickable cards with faction emblems, class/level requirements
+and pickup location previews. The All factions / Alliance / Horde filter includes
+Both-faction quests appropriately. Details have clear sections: **Start here**,
+**Before you go**, **In the dungeon**, **Turn in** and **Rewards**. Prerequisite
+steps include their acquisition details when recorded. Coordinates are text with
+location labels. No quest acceptance, turn-in, tracking or map-pin action exists.
 
-This first pilot requires **ForeverDungeonJournal** to be installed and enabled.
-The optional TOC dependency establishes load order without preventing Play The
-Game Tools from loading when it is absent. The independent provider reads
-`ForeverDungeonJournal_NS.DB`, quest prerequisite details and quest start maps
-into a session-only normalized snapshot. It never calls the reference UI or
-writes its tables or SavedVariables. It does not ship, download, scrape, persist
-or export that addon's records, prose, artwork or code. The installed addon's
-version is visible on the page. Use Refresh Data to take a fresh snapshot and
-retry item metadata requests. Opening the page also refreshes the snapshot.
+**General** owns the small **Refresh** button, data attribution, and explanations
+of suggested levels and faction emblems. Source/version and implementation
+commentary no longer appear throughout the browser. Missing-data and loading
+messages remain where they help the player. Dungeon emblems indicate surrounding
+territory, not faction entry restrictions. Quest emblems indicate quest faction;
+the icon helper supports both emblems for neutral/combined entries.
 
-DungeonJournal by Exehn/ExehnTV is All Rights Reserved:
-https://www.curseforge.com/wow/addons/dungeonjournal
-The inspected installed version was 1.7.0. Its source history mixes Forever
-observations with Classic fallbacks. A listed item is a claim by that source,
-not independent confirmation of a current drop. Missing tables, an empty loot
-list and no filter matches have separate messages. No drop probabilities are
-provided. The provider's use of an exposed internal namespace is a compatibility
-risk; the focused test accepts a local reference directory to check its schema
-without bundling its records. Expanding coverage or removing the dependency needs
-separately verified data and appropriate redistribution terms. Wowhead links or
-public visibility alone do not establish permission to redistribute a database.
+## Data, art and API provenance
 
-## Architecture and API assumptions
+This pilot requires **ForeverDungeonJournal** to be installed and enabled.
+The optional TOC dependency establishes load order without blocking Play The Game
+Tools if absent. The provider reads its exposed namespace into an ephemeral
+normalized SFK snapshot. It never changes the source tables or SavedVariables.
+No reference-addon records, prose, code or artwork are shipped, downloaded,
+scraped, persisted or exported. DungeonJournal by Exehn/ExehnTV is All Rights
+Reserved: https://www.curseforge.com/wow/addons/dungeonjournal
+The installed source mixes Forever observations with Classic fallbacks. Missing
+records remain unknown; no drop rates or guaranteed quest availability are claimed.
+The internal namespace remains a compatibility risk. Expanding coverage or
+removing this dependency needs verified data and suitable redistribution terms.
 
-- Modules/DungeonLootProvider.lua: read-only source adapter and normalization.
-- Modules/DungeonLoot.lua: module lifecycle, session navigation and item metadata.
-- Config/DungeonLoot.lua: pooled rows, current theme/widgets, browser and tooltips.
-- Only the enable preference is saved in the existing profile. Source tables,
-  navigation, search and item caches are not persisted. No settings migration.
-- C_Item.GetItemInfo (legacy GetItemInfo fallback),
-  C_Item.RequestLoadItemDataByID and GET_ITEM_INFO_RECEIVED handle visible item
-  metadata, with at most one request per item until Refresh Data. No polling.
-- The item event listener is removed when disabled or the page is hidden.
-- GameTooltip:SetHyperlink provides native item inspection. No secure actions,
-  encounter-journal selection changes, global tooltip hooks or automated messages.
-- Blizzard generated ItemDocumentation on the wow-ui-source forever branch was
-  reviewed on 2026-11-07. Documented functions and mocks do not establish native
-  behavior, cache timing, quality accuracy, rendering or combat safety.
-  https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua
+The loading-screen texture is the client-owned
+`Interface/Glues/LoadingScreens/LoadScreenShadowFangKeep`, already referenced by
+the installed addon's SFK art metadata. No reference addon image is used. The
+territory/quest emblems are Blizzard's `Interface/TargetingFrame/UI-PVP-Alliance`
+and `UI-PVP-Horde` textures. Boss display IDs are read from the installed source's
+`STATIC_DISPLAY_IDS`/boss metadata at runtime, then rendered by native
+`SetPortraitTextureFromCreatureDisplayID(texture, displayID)`. No upstream baked
+portraits or model-resolver code is used. Missing IDs/API fall back to Blizzard's
+`Interface/EncounterJournal/UI-EJ-BOSS-Default`. Native availability and appearance
+still require in-game review.
 
-## Validation
+Blizzard's generated documentation on the `forever` branch was reviewed
+2026-11-07 for the portrait signature and item APIs:
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua
 
-Use Python 3.12+ with lupa.lua51 available:
+## Architecture and checks
+
+- Modules/DungeonLootProvider.lua: read-only SFK adapter, counts and metadata.
+- Modules/DungeonLoot.lua: lifecycle, session navigation and item metadata.
+- Config/DungeonLootWidgets.lua: pooled cards, faction emblems and portrait grids.
+- Config/DungeonLoot.lua: tabs, browser and grouped quest acquisition pages.
+- Only the enable preference is saved in the profile. No settings migration.
+- Item metadata uses C_Item.GetItemInfo (legacy fallback),
+  C_Item.RequestLoadItemDataByID and GET_ITEM_INFO_RECEIVED. Requests are bounded
+  per item until Refresh. No polling. The listener is removed when disabled or
+  the page is hidden. No secure actions, journal-selection changes or global hooks.
+
+With Python 3.12+ and lupa.lua51 available:
 
 ```
 python tests/smoke.py
@@ -76,49 +85,48 @@ python tests/dungeon_loot.py --reference-directory "<installed ForeverDungeonJou
 python tools/build_release.py
 ```
 
-The focused test uses synthetic records for callbacks, schema guards, upstream
-immutability, pending metadata, native-tooltip handoff, search/faction filters,
-row pooling, event lifecycle and enable-state profile roundtrip. The optional
-reference run executes only the reference's data Lua in the isolated Lua 5.1
-mock; no UI, SavedVariables or game interaction. The inspected 1.7.0 data supplied
-35 dungeon entries, 12 SFK boss/source groups and 7 quests. These are source
-counts, not native acceptance or a completeness claim.
+Focused checks cover the SFK-only card and counts, General-only refresh, native
+portrait handoff and fallback, two-emblem rendering, grid/list callbacks, source
+immutability, schema guards, metadata events, tooltips, filtering, row pooling,
+module lifecycle and enable-state profile roundtrip. Optional reference testing
+executes data files only in the isolated Lua 5.1 mock; it is not native acceptance.
 
-## Native review — pending
+## Native review — redesign pending
 
-The current machine's live ModeTools junction points to this checkout's ModeTools
-folder. No directory-copy sync was run. The pilot has Lua/TOC changes and uses
-existing Blizzard item icons; `/reload` should load it without a full restart.
-If the newly added optional dependency is not recognized, restart the client and
-report that result. Do not recreate the junction or change SavedVariables.
+The owner reviewed the initial pilot positively; this visual revision needs fresh
+native review and before/after screenshots. The existing Forever AddOns junction
+points to this checkout's ModeTools folder. No copy-sync, junction changes or
+SavedVariables edits. These are Lua/TOC changes using client-owned assets:
+`/reload` should load them. Report any client restart needed for new Lua/art.
 
-1. **Navigation:** AddOns list → DungeonJournal; then `/mode` → Questing & Leveling
-   → Dungeon Loot → header module switch. **Action:** keep DungeonJournal enabled,
-   `/reload`, open the page and turn Dungeon Loot on. **Required state:** Forever,
-   out of combat. **Confirmation:** the source version and dungeon index appear;
-   Class Training remains available beside Dungeon Loot.
+1. **Navigation:** `/mode` → Questing & Leveling → Dungeon Loot → Dungeons.
+   **Action:** keep DungeonJournal and Dungeon Loot enabled, `/reload`, then open
+   the page. **Required state:** Forever, out of combat. **Confirmation:** only
+   Shadowfang Keep appears under Suggested levels 20–30, as a large loading-screen
+   card with title, 8 bosses + 1 rare, 7 quests and a Horde territory emblem.
 2. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   All Dungeons → Shadowfang Keep — Pilot → Boss Loot → Rethilgore.
-   **Action:** open the boss and hover an item. **Required state:** out of combat;
-   allow the client to fetch uncached items. **Confirmation:** item rows and icons
-   appear; a native item tooltip opens. Pending metadata updates without polling.
+   Dungeons → Shadowfang Keep → Boss Loot → Rethilgore.
+   **Action:** click the boss portrait and hover an item; use < All bosses.
+   **Required state:** out of combat; allow item metadata to arrive.
+   **Confirmation:** boss portraits render, loot tooltips appear, and the return
+   control restores the grid. Other loot remains separate. Check narrow and wide
+   window sizes for portrait, title and loot-row fit.
 3. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
    Shadowfang Keep → Quests → Deathstalkers in Shadowfang.
-   **Action:** inspect its pickup/turn-in details and rewards; use < All quests,
-   Quest faction and Search names. **Required state:** out of combat; All factions
-   or Horde selected to see this quest. **Confirmation:** High Executor Hadrec is
-   listed for pickup, Deathstalker Vincent for turn-in, and only matching quests
-   remain. Check the class quests' notes and recorded prerequisites separately.
+   **Action:** inspect the five named detail sections; return with < All quests
+   and try Quest faction / Search names. **Required state:** out of combat;
+   All factions or Horde selected. **Confirmation:** Hadrec pickup and Vincent
+   turn-in text appear, faction icons and requirements are clear, and filters work.
+   Also inspect a class quest's long prerequisite chain for wrapping and scrolling.
 4. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   header module switch. **Action:** turn the module off, on, and `/reload`.
-   **Required state:** out of combat. **Confirmation:** off replaces browser content
-   with the enable message; on restores browsing; the enable preference persists.
-   Existing module settings remain intact.
+   General → Dungeon data → Refresh. **Action:** refresh, then return to Dungeons.
+   **Required state:** out of combat. **Confirmation:** Refresh is compact and
+   appears only in General; source attribution stays there. The dungeon card
+   still shows the same totals and artwork.
 5. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   All Dungeons → any entry marked Not in this pilot. **Action:** open it, then
-   return with All Dungeons. **Required state:** out of combat. **Confirmation:**
-   an explicit pilot-scope message appears rather than invented or empty loot.
+   header module switch. **Action:** disable, enable and `/reload`.
+   **Required state:** out of combat. **Confirmation:** browsing turns off/on and
+   enable preference persists; other module settings stay intact.
 
-Screenshots: pending. Keep the PR draft until the user confirms native behavior
-and supplies real Forever screenshots. Crop chat and other players' names. Review
-text fit, scrolling, tooltips and long class-quest chains before adding dungeons.
+Screenshots: pending. Keep the PR draft until native behavior and real Forever
+before/after captures are supplied. Crop chat and other players' names.

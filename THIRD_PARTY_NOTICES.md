@@ -60,6 +60,10 @@ listed as All Rights Reserved at https://www.curseforge.com/wow/addons/dungeonjo
 The Dungeon Loot pilot reads its exposed in-memory data when the user has it
 installed and enabled. No DungeonJournal code, database, prose, artwork or other
 assets are bundled in this repository or release ZIP. Source attribution and
-installed version appear in the browser. This is independent interoperability,
+installed version appear in General. This is independent interoperability,
 not an endorsement or a grant to redistribute the upstream addon. See
 docs/DUNGEON_LOOT.md for schema compatibility and data uncertainty.
+
+Dungeon Loot also references Blizzard's native SFK loading-screen texture,
+faction emblems and default boss icon, and asks the native portrait renderer
+to draw boss display IDs. No Blizzard image files are redistributed.
