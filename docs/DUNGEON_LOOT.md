@@ -22,6 +22,65 @@ release, with independently authored SFK additions. The snapshot predates some
 newest Forever content. See ../CATALOG_SOURCES.md for provenance, licensing and
 uncertainty. Raids are excluded. No settings or compatibility IDs change.
 
+## Player eligibility and quest-log progress
+
+Quest lists and expanded prerequisites automatically hide entries restricted to
+another faction or class. Both-faction quests stay visible. Class lists support
+more than one allowed class and use native class colors. The former faction
+selector is a compact automatic Alliance/Horde badge; manual filtering cannot
+expose the opposite faction.
+
+Every browsable card with known quest records shows **You have X/Y possible
+quests**, where Y is the number of distinct recorded quests matching the current
+faction/class and X is the number in the player's quest log. Blue means none,
+gold means some, green means all. A second line such as **Rogue quests: 1/2 in
+your log** appears only when that character has recorded class-specific quests.
+Preview and missing-data cards retain their explicit unavailable states.
+
+The SFK pilot lists Test of Righteousness and Horn of Xelthos by their final
+reward step. Their known dungeon collection steps (1654 / 78261) also count as
+picked up for those entries (1806 / 78307), once per entry. Unrelated prerequisite
+quests do not count as dungeon pickups. Counts do not depend on the search box.
+Y remains a faction/class catalog total: it does not promise that the player
+currently meets level, race, reputation or prerequisite conditions, and does not
+remove already completed quests. Existing source completeness warnings apply.
+
+The provider reads `UnitFactionGroup("player")`, the class filename from
+`UnitClass("player")`, and `C_QuestLog.IsOnQuest(questID)` through protected calls
+with public-value validation. Unique quest-log queries are cached within each
+update across all cards. `QUEST_LOG_UPDATE` is registered only while enabled and
+the browser page is shown; only changed totals redraw the UI. Showing the page
+refreshes identity and counts. No polling or quest-log writes are added. Missing,
+failing or restricted APIs show an unavailable state instead of a false zero;
+quests needing an unknown identity are withheld until it can be read. Card
+restriction headers stay cheap; maps/rewards are still normalized on selection.
+
+API signatures/events checked against Forever's generated
+[UnitDocumentation.lua](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua)
+and [QuestLogDocumentation.lua](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/QuestLogDocumentation.lua)
+on 2026-11-07. These read APIs do not change the independent native map renderer.
+
+Native review for this revision (pending):
+
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** `/reload`, inspect Shadowfang Keep and another recorded dungeon
+   while comparing with the quest log. **Required state:** Forever, OOC, Dungeon
+   Loot enabled; DungeonJournal/Questie disabled. **Confirmation:** X/Y matches
+   the character's recorded faction/class quests, class-only pickup status uses
+   the character's class color, and text fits over the existing dungeon image.
+2. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   Shadowfang Keep -> Quests. **Action:** inspect the list and expand a visible
+   quest's Prerequisites button if present. **Required state:** OOC; repeat on an
+   opposite-faction or different-class character if available. **Confirmation:**
+   other-faction/class quests are absent, neutral quests remain, and the compact
+   faction badge matches the character without overlapping search.
+3. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** pick up/abandon a recorded eligible dungeon quest, then return to
+   the cards; repeat with the page already visible if the NPC interaction allows.
+   **Required state:** OOC. **Confirmation:** the numerator changes without using
+   General -> Refresh; denominator remains stable, and blue/gold/green status
+   follows none/some/all. A completed quest awaiting turn-in remains in the log.
+
 ## Browser and appearance
 
 Cards retain the accepted 180px scene, title, territory emblem, boss/rare totals,
@@ -143,6 +202,7 @@ python tests/dungeon_loot.py
 python tests/dungeon_loot_map.py
 python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
+python tests/dungeon_loot_player.py
 python tools/build_release.py
 ```
 

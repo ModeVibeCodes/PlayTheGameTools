@@ -31,10 +31,8 @@ function M:CreateConfigPage(parent)
         page.listPane.scrollbar:SetValue(0);page:Refresh()
     end)
     page.search:SetScript("OnEscapePressed",function(box) box:ClearFocus() end)
-    page.faction=W.Select(toolbar,128,function() return {
-        {id="all",label="All factions"},{id="Alliance",label="Alliance"},{id="Horde",label="Horde"}
-    } end,function() return self.view.faction,self.view.faction=="all" and "All factions" or self.view.faction end,
-    function(value) self.view.faction=value;page.listPane.scrollbar:SetValue(0);page:Refresh() end)
+    page.faction=W.Button(toolbar,"Faction unknown",128,28)
+    page.faction:EnableMouse(false)
     page.faction:ClearAllPoints();page.faction:SetPoint("TOPRIGHT");page.faction:SetSize(128,28)
     page.faction.label:ClearAllPoints();page.faction.label:SetPoint("TOPLEFT",8,0);page.faction.label:SetPoint("BOTTOMRIGHT",-8,0);page.faction.label:SetJustifyV("MIDDLE")
     page.context=W.Label(page,"",nil,12,-80,500,T.text)
@@ -109,7 +107,7 @@ function M:CreateConfigPage(parent)
     end
     local function QuestDetail(q)
         Add(q.name,nil,nil,T.text,nil,{heading=true,gradient="quest",faction=q.faction})
-        Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..addon.DungeonLootWidgets.ClassText(q.classOnly),nil,nil,T.muted)
+        Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..addon.DungeonLootWidgets.ClassesText(q),nil,nil,T.muted)
         if q.warning then Add(q.warning,nil,nil,T.primary) end
         if q.note then Add(q.note,nil,nil,T.secondary) end
         if q.description and q.description~=q.note then Add(q.description,nil,nil,T.secondary) end
@@ -176,7 +174,8 @@ function M:CreateConfigPage(parent)
         self.general:SetSelected(v.tab=="general")
         self.loot:SetEnabled(M.active and v.dungeon~=nil and data.available);self.quests:SetEnabled(M.active and v.dungeon~=nil and data.available)
         for _,button in ipairs(buttons) do button.underline:SetShown(button.selected==true) end
-        self.faction:Refresh()
+        self.faction:EnableMouse(false)
+        self.faction.label:SetText(data and data.player and data.player.faction or "Faction unknown")
         if not M.active then
             rootRows:Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
         elseif v.tab=="general" then
@@ -219,7 +218,7 @@ function M:CreateConfigPage(parent)
                 end
             else
                 for index,q in ipairs(data.quests) do
-                    local faction=v.faction=="all" or not q.faction or q.faction=="Both" or q.faction==v.faction
+                    local faction=addon.DungeonLootProvider:Eligible(q,data.player)==true
                     if faction and M:Matches(q.name) then entries[#entries+1]={index=index,entry=q} end
                 end
             end
@@ -241,14 +240,14 @@ function M:CreateConfigPage(parent)
                     options.subtitle=entry.rare and "Rare encounter" or (#entry.items.." items")
                 else
                     options.faction=entry.faction
-                    options.subtitle=(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..(entry.classOnly and (" · "..addon.DungeonLootWidgets.ClassText(entry.classOnly)) or "")..(#entry.chain>0 and " · Chain" or "")
+                    options.subtitle=(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..((entry.classOnly or #entry.classes>0) and (" · "..addon.DungeonLootWidgets.ClassesText(entry)) or "")..(#entry.chain>0 and " · Chain" or "")
                 end
                 leftRows:Add(entry.name,function() M:SelectEntry(key,index) end,nil,T.text,nil,options)
             end
             if not selected then
                 local message
                 if key=="boss" then message=#data.bosses==0 and "No bosses recorded for this dungeon." or "No bosses match your search."
-                else message=#data.quests==0 and "No quests recorded for this dungeon." or "No quests match your filters." end
+                else message=#data.quests==0 and "No quests recorded for this dungeon." or "No quests match your character or search." end
                 leftRows:Add(message);Add(message)
             elseif key=="boss" then
                 Add(selected.name,nil,nil,T.text,nil,{heading=true,gradient="boss",portrait=selected})

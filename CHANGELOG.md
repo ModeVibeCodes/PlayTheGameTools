@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Dungeon Loot now automatically hides quests and prerequisites for the opposite
+  faction or another class. Dungeon cards show the character's quest-log count
+  out of faction/class-eligible catalog quests, plus pickup progress for their
+  class-specific quests. Counts update while the browser is visible; the faction
+  control is now an automatic identity badge. SFK collection stages count toward
+  their listed reward-step quest without double-counting the chain.
+
 - Finished renaming from ModeTools: the addon folder, TOC, settings variable
   (`PTGToolsDB`) and frame names now use Play The Game Tools names. Open
   configuration with `/ptg`; `/modetools` and `/mode` were removed. Settings are

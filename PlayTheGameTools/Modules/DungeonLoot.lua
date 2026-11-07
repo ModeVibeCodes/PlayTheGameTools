@@ -7,10 +7,16 @@ addon:RegisterModule("dungeonLoot", M)
 
 local function Public(v) return not (issecretvalue and issecretvalue(v)) end
 function M:OnInitialize()
-    self.view = { tab = "loot", search = "", faction = "all" }
+    self.view = { tab = "loot", search = "" }
     self.requested, self.attempted, self.tooltipInstances = {}, {}, {}
     self.events = CreateFrame("Frame")
     self.events:SetScript("OnEvent", function(_, event, id)
+        if event=="QUEST_LOG_UPDATE" then
+            if self.active and self.page and self.page:IsShown() and self.data then
+                if addon.DungeonLootProvider:UpdateQuestState(self.data) then self.page:Refresh() end
+            end
+            return
+        end
         if Public(id) and type(id) == "number" and (event == "TOOLTIP_DATA_UPDATE" and self.tooltipInstances[id] or event == "GET_ITEM_INFO_RECEIVED" and self.requested[id]) then
             if event == "GET_ITEM_INFO_RECEIVED" then self.requested[id] = nil end
             if self.active and self.page and self.page:IsShown() then self.page:Refresh() end
@@ -21,6 +27,7 @@ function M:SyncEvents()
     self.events:UnregisterAllEvents()
     if self.active and self.page and self.page:IsShown() then
         self.events:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+        self.events:RegisterEvent("QUEST_LOG_UPDATE")
         if C_TooltipInfo and type(C_TooltipInfo.GetItemByID) == "function" then self.events:RegisterEvent("TOOLTIP_DATA_UPDATE") end
     end
 end

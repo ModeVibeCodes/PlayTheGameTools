@@ -3,6 +3,7 @@ from smoke import load
 
 lua, _ = load()
 lua.execute('''
+    function UnitFactionGroup() return "Horde" end
     local M=addon.DungeonLoot
     assert(not M.enabled and M.category=='questingLeveling')
     addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
@@ -43,7 +44,7 @@ lua.execute('''
             objective='Fixture objective',faction='Horde',requires=10,note='Long optional fixture note',rewardChoice=true,
             startMap={label='Fixture NPC',x=.123,y=.456},rewardItems={{100003,'Fixture Reward',2}},
             rewards='Choose: Fixture Reward\\n100 XP'},
-            {id=100004,name='Other Quest',faction='Alliance',objective='Other objective'}}}},
+            {id=100004,name='Other Quest',faction='Both',objective='Other objective'}}}},
         STATIC_DISPLAY_IDS={[100006]=1234},QUEST_PREREQ_CHAINS={[100002]={{id=100005,name='Fixture prerequisite'}}},
         QUEST_PREREQ_DETAILS={[100005]={pickup='Prereq NPC',objective='Prereq objective'}}}
     addon.DungeonLootCatalog.Read=function() return source end
@@ -96,9 +97,9 @@ lua.execute('''
     Click('Other Quest',left)
     assert(M.view.quest==2 and Contains('Other objective',page.detailPane) and Contains('Fixture Quest',left))
     assert(not M.view.showNotes and not M.view.showPrerequisites and not Contains('< All quests'))
-    M.view.faction='Horde';page:Refresh();assert(M.view.quest==1 and not Contains('Other Quest',left))
+    page.search:SetText('Fixture Quest');assert(M.view.quest==1 and not Contains('Other Quest',left))
     page.search:SetText('no match');assert(Contains('No quests match') and M.view.quest==nil)
-    page.search:SetText('');M.view.faction='all';page:Refresh()
+    page.search:SetText('');page:Refresh()
     local slots=#page.detailPane.slots
     for i=1,10 do Click('Other Quest',left);Click('Fixture Quest',left);Click('Prerequisites (1)',page.detailPane) end
     assert(#page.detailPane.slots==slots,'detail pool stays bounded')

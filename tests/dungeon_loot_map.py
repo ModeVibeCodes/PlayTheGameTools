@@ -3,6 +3,7 @@ from smoke import load
 
 lua,_=load()
 lua.execute('''
+    function UnitClass() return "Mage","MAGE",8 end
     local M,L,Map=addon.DungeonLoot,addon.DungeonLootLocations,addon.DungeonLootMap
     local records={spawns={[42]={{10,20},{30,40}}},waypoints={[42]={{{10,20},{20,30},{30,40}}}}}
     local original=addon.ProfileCodec.Encode(records)
@@ -211,6 +212,7 @@ lua.execute('''
     for _,hasQuest in ipairs({false,true}) do
         IsQuestFlaggedCompleted=function() error('completion must not gate custom markers') end
         C_QuestLog.IsOnQuest=function() questQueries=questQueries+1;return hasQuest end
+        local beforeOpen=questQueries
         canvas:SetSize(0,0)
         assert(Map:Open(L:Targets(1098,'pickup')[1],'pickup'))
         assert(not pin:IsShown(),'wait for usable canvas dimensions')
@@ -222,9 +224,10 @@ lua.execute('''
         Map:Dismiss()
         for _,fn in ipairs(pending) do fn() end;pending={}
         assert(not pin:IsShown())
-        WorldMapFrame:Hide()
+        assert(questQueries==beforeOpen,'marker opening/rendering/dismissal never reads the quest log')
+        WorldMapFrame:Hide() -- Reopening settings refreshes the dungeon card counts.
     end
-    assert(nativeOpens==2 and questQueries==0)
+    assert(nativeOpens==2)
     assert(Map:Open(L:Targets(1098,'pickup')[1],'pickup'))
     Map:Dismiss()
     for _,fn in ipairs(pending) do fn() end

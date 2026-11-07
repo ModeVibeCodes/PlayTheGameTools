@@ -176,6 +176,7 @@ python tests/dungeon_loot.py
 python tests/dungeon_loot_map.py
 python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
+python tests/dungeon_loot_player.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -187,3 +188,10 @@ or quest availability. See [exact native review paths](docs/DUNGEON_LOOT.md#nati
 The owner accepted SFK; standalone catalog review and screenshots remain pending.
 Disable DungeonJournal, Questie and QuestieDB for the native baseline checks.
 Restart the client to load the new TOC files; preserve SavedVariables.
+
+Player-quest revision: tests cover both factions, multiple classes and allowed
+class lists, prerequisite filtering, colored card totals, live pickup/abandon
+updates, unavailable API/identity states, event cleanup and SFK collection-stage
+aliases. Native count accuracy and text fit still need the exact checks in
+[Player eligibility and quest-log progress](docs/DUNGEON_LOOT.md#player-eligibility-and-quest-log-progress).
+Screenshots: pending.

@@ -34,11 +34,20 @@ function C:Location(loc,text,name,entrance)
     local inside=loc.zone or text
     if inside then return L:Interior(inside,name,entrance) end
 end
+-- Cheap restriction metadata for every card; never resolves maps or rewards.
+function C:QuestHeader(id)
+    local q=self.Data.Quests[id] or {}
+    local classes={}
+    for _,token in ipairs(Array(q.classes)) do classes[#classes+1]=token:upper() end
+    return {id=id,faction=({A="Alliance",H="Horde",B="Both"})[q.side],
+        classes=classes,classOnly=#classes==1 and classes[1] or nil,logIDs=self.QuestLogAliases and self.QuestLogAliases[id]}
+end
 function C:Quest(id,context)
     local q=self.Data.Quests[id]
     if not q then return {id=id,name="Quest "..id,warning="Details are not recorded for this prerequisite."} end
     local start,finish=Array(q.start),Array(q.finish)
-    local result={id=id,name=q.name,level=q.level,requires=q.min,objective=q.obj,
+    local header=self:QuestHeader(id)
+    local result={id=id,name=q.name,level=q.level,requires=q.min,objective=q.obj,classes=header.classes,logIDs=header.logIDs,
         faction=({A="Alliance",H="Horde",B="Both"})[q.side] or "Both",
         pickup=LocationText(start,q.startText),turnin=LocationText(finish,q.finishText)}
     if q.classes and #q.classes==1 then result.classOnly=q.classes[1]:upper() end
@@ -98,7 +107,7 @@ function C:Read(selected)
             if instance.trash and #instance.trash>0 then entry.bosses[#entry.bosses+1]={name="Trash drops",trash=true,loot=Items(instance.trash,self.Data)} end
             local ids=self.Data.InstanceQuests[instance.key] or {}
             entry.questDataIncomplete=instance.status=="pending" and #ids==0
-            for _,id in ipairs(ids) do entry.quests[#entry.quests+1]={id=id} end
+            for _,id in ipairs(ids) do entry.quests[#entry.quests+1]=self:QuestHeader(id) end
             ns.DB[name]=entry
             ns.DUNGEON_HOME_ART[name],ns.DUNGEON_HOME_TEXCOORD[name]=self:Artwork(instance)
             if selected==name then

@@ -51,6 +51,11 @@ function UI.ClassText(token)
     local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[token]
     return c and ("|cff"..Hex(c.r,c.g,c.b)..name.."|r") or name
 end
+function UI.ClassesText(q)
+    local names={}
+    for _,token in ipairs(q.classes or {}) do names[#names+1]=UI.ClassText(token) end
+    return #names>0 and table.concat(names,", ") or UI.ClassText(q.classOnly)
+end
 function UI.New(page, module)
     local pool = { page = page, module = module, used = 0 }
     page.slots = {}
@@ -88,6 +93,7 @@ function UI.New(page, module)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
         for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
         for _, cell in ipairs(slot.cells) do cell:Hide() end
+        if slot.questProgress then slot.questProgress:Hide() end
         if slot.art then slot.art:Hide(); slot.topBand:Hide(); slot.bottomBand:Hide() end
         return slot
     end
@@ -178,6 +184,10 @@ function UI.New(page, module)
             slot.art:SetAllPoints(slot.button)
             slot.topBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.55)
             slot.bottomBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.55)
+            slot.questProgress=W.Label(slot.button,"",nil,14,-50,400,T.text)
+            slot.questProgress:SetPoint("TOPRIGHT",-14,-50)
+            slot.questProgress:SetJustifyV("TOP");slot.questProgress:SetWordWrap(true)
+            slot.questProgress:SetShadowColor(0,0,0,1);slot.questProgress:SetShadowOffset(1,-1)
         end
         slot.art:ClearAllPoints();slot.art:SetTexture(card.art)
         if card.iconOnly then
@@ -189,9 +199,22 @@ function UI.New(page, module)
         addon.Media:BindInterfaceFont(slot.button.label, GameFontHighlight, 20)
         for _,glow in ipairs(slot.headerGlow or {}) do local face=slot.button.label:GetFont();glow:SetFont(face,20,"OUTLINE") end
         slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 8);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 8)
-        local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. (data.questCountKnown==false and "Quests not recorded" or (data.questCount .. " quests"))) or (data.previewOnly and "Data not available yet" or "Loot and quests unavailable")
+        local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. (data.questCountKnown==false and "Quests not recorded" or ((data.questState and data.questState.known and data.questState.total or "?") .. " quests"))) or (data.previewOnly and "Data not available yet" or "Loot and quests unavailable")
+        local progress=""
+        local state=data.questState
+        if data.available and data.questCountKnown~=false and state then
+            local tint=state.inLog==state.total and state.total>0 and "|cff79d98c" or (state.inLog>0 and "|cffFADA5E" or "|cff9fccfa")
+            if not state.known then progress="\n|cff9fccfaCharacter quest eligibility unavailable|r"
+            elseif not state.logKnown then progress="\n|cff9fccfaQuest log unavailable · "..state.total.." possible quests|r"
+            else progress="\n"..tint.."You have "..state.inLog.."/"..state.total.." possible quests|r" end
+            if state.known and state.classTotal>0 then
+                progress=progress.."\n"..UI.ClassText(module.data.player.class).." quests: "..
+                    (state.logKnown and ((state.classInLog==state.classTotal and "|cff79d98c" or "|cffFADA5E")..state.classInLog.."/"..state.classTotal.." in your log|r") or (state.classTotal.." possible"))
+            end
+        end
         slot.subtitle:SetText(card.suggestedLevel.." · "..data.location.." · "..(card.faction=="Both" and "Neutral / contested territory" or (card.faction and (card.faction.." territory") or "Territory unknown")).."\n"..counts);slot.subtitle:Show()
-        function slot.row:layoutChildren(width) self:SetHeight(180);slot.button.label:SetWidth(math.max(80,width-70)) end
+        slot.questProgress:SetText((progress:gsub("^\n","")));slot.questProgress:SetShown(progress~="")
+        function slot.row:layoutChildren(width) self:SetHeight(180);slot.questProgress:SetWidth(math.max(80,width-28));slot.button.label:SetWidth(math.max(80,width-70)) end
         return slot
     end
     return pool
