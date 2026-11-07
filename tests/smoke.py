@@ -50,6 +50,18 @@ lua.execute('''
     SlashCmdList.PLAYTHEGAMETOOLS()
     assert(addon.configWindow.title:GetText()=='Play The Game Tools')
     assert(addon.configWindow.moduleHeader.title:GetText()=='Dashboard')
+    -- Opening redraws text set while a shared font may still be loading
+    -- (mock timers fire immediately: two passes, each clearing and re-setting).
+    local nav=addon.configWindow.navigationButtons.dashboard.label
+    assert(nav:GetText()=='Dashboard' and nav.textWrites>=5,'sidebar text redrawn')
+    assert(addon.configWindow.title:GetText()=='Play The Game Tools' and addon.configWindow.title.textWrites>=5,'title redrawn')
+    local field=CreateFrame('EditBox',nil,UIParent);field:SetText('typed')
+    local changes=0;field:SetScript('OnTextChanged',function() changes=changes+1 end)
+    addon.Media:BindInterfaceFont(field,GameFontHighlight)
+    assert(addon.Media:RedrawInterfaceText() and field:GetText()=='typed' and changes==0,'edit boxes untouched')
+    local writes=nav.textWrites;testCombat=true
+    assert(addon.Media:RedrawInterfaceText()==false and nav.textWrites==writes,'no redraw in combat')
+    testCombat=false;addon.Media:UnbindInterfaceFont(field)
     assert(addon.configWindow.pages.dashboard.welcomeTexts[1]=='Welcome to Play The Game Tools!')
     for _,id in ipairs(addon.moduleOrder) do
         addon:SelectConfigPage(id)
@@ -67,6 +79,60 @@ restored.execute('''
     assert(addon.modules.combatTimer.enabled)
     addon:SetModuleEnabled('combatTimer',false)
     assert(not addon.modules.combatTimer.enabled)
+    -- Interface theme: Modern by default; a choice is saved and needs a reload.
+    local T=addon.InterfaceTheme
+    assert(addon.db.window.theme=='modern' and T.id=='modern' and not T.blizzardArt)
+    SlashCmdList.PLAYTHEGAMETOOLS()
+    local themes=addon.configWindow.pages.dashboard.themeButtons
+    assert(#themes==2 and themes[1].selected and not themes[2].selected,'theme choice')
+    themes[2].scripts.OnClick()
+    assert(addon.db.window.theme=='blizzard' and addon.ReloadManager.requests.interfaceTheme,'theme reload request')
+    assert(themes[2].selected and T.id=='modern','theme applies only after reload')
+    themes[1].scripts.OnClick()
+    assert(addon.db.window.theme=='modern' and not addon.ReloadManager.requests.interfaceTheme)
+    themes[2].scripts.OnClick()
+''')
+themed, _ = load(restored.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
+themed.execute('''
+    local T,W=addon.InterfaceTheme,addon.ConfigWidgets
+    local ART=W.BlizzardArt
+    assert(T.id=='blizzard' and T.blizzardArt and T.heading[1]>T.heading[3]+0.5,'gold headings')
+    assert(T.text[1]<1 and T.text[2]<1 and T.panel[4]==1,'soft body text, opaque popups')
+    SlashCmdList.PLAYTHEGAMETOOLS()
+    local window=addon.configWindow
+    assert(window.blizzardBackdrop=='dialog' and window.backdrop.edgeFile==ART.dialogBorder and window.backdrop.bgFile==nil)
+    assert(window.canvas.shown~=false and window.canvas.color[4]==1,'opaque canvas under the dialog border')
+    for _,id in ipairs(addon.moduleOrder) do addon:SelectConfigPage(id); assert(window.pages[id],id) end
+    addon:SelectConfigPage('dashboard')
+    assert(window.closeButton.blizzardArt.middle.texture==ART.buttonUp)
+    window.closeButton:SetSelected(true)
+    assert(window.closeButton.blizzardArt.middle.texture==ART.buttonDown)
+    window.closeButton:SetEnabled(false)
+    assert(window.closeButton.blizzardArt.left.texture==ART.buttonDisabled)
+    window.closeButton:SetEnabled(true);window.closeButton:SetSelected(false)
+    local toggle=window.moduleHeader.toggle
+    assert(toggle.fill.texture==ART.checkbox and toggle.knob.texture==ART.check)
+    assert(window.navigationButtons.dashboard.blizzardHighlight.shown)
+    -- Stock game font, drop shadows, and segmented choices without push-button art.
+    assert(window.title.font[1]==GameFontNormalLarge.font[1] and window.title.shadowOffset[1]==1,'stock font with shadow')
+    assert(window.pages.dashboard.themeButtons[1].blizzardArt==nil,'choices stay flat')
+    local themes=window.pages.dashboard.themeButtons
+    assert(themes[2].selected and not addon.ReloadManager.requests.interfaceTheme)
+''')
+missing, _ = load(themed.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
+missing.execute('''
+    -- Refused stock files keep the flat drawing.
+    local ART=addon.ConfigWidgets.BlizzardArt
+    testMissingTextures={[ART.buttonUp]=true,[ART.checkbox]=true,[ART.input]=true,[ART.sliderThumb]=true}
+    SlashCmdList.PLAYTHEGAMETOOLS()
+    for _,id in ipairs(addon.moduleOrder) do addon:SelectConfigPage(id) end
+    local window=addon.configWindow
+    assert(window.closeButton.blizzardArt==nil and window.closeButton.outline.edges[1].shown~=false)
+    assert(window.moduleHeader.toggle.switchOutline.edges and window.moduleHeader.toggle.knob.texture==nil)
+    testMissingTextures=nil
+    -- An unknown saved id renders Modern and is never rewritten.
+    addon.db.window.theme='future'
+    assert(addon:ApplyInterfaceTheme(addon.db.window.theme)=='modern' and addon.db.window.theme=='future')
 ''')
 adopted, _ = load(state, variable='ModeToolsDB')
 adopted.execute('''
@@ -196,9 +262,11 @@ threat.execute('''
     RAID_CLASS_COLORS={WARRIOR={r=0.78,g=0.61,b=0.43},MAGE={r=0.41,g=0.8,b=0.94}}
     addon:SetModuleEnabled('threatMeter',true)
     local f=M.frame
-    assert(f:IsShown() and f.title:GetText()=='Threat: Boar')
+    assert(f:IsShown() and f.title:GetText()=='Boar' and not f.empty:IsShown())
     assert(#M.entries==2 and M.entries[1].name=='Fixture' and M.entries[2].name=='Ally','pets hidden by default')
     assert(f.rows[1].percentText:GetText()=='80%' and f.rows[2]:IsShown() and not f.rows[3]:IsShown())
+    assert(f.rows[1].edge:IsShown() and not f.rows[2].edge:IsShown(),'your own row is marked')
+    assert(f.hint:IsShown(),'drag hint while unlocked')
     M:SetOption('showPets',true)
     assert(#M.entries==4 and M.entries[1].name=='Fixture' and M.entries[2].name=='Wolf (Fixture)','tanking first, then highest')
     assert(M.entries[4].name=='Imp (Ally)')
@@ -213,7 +281,7 @@ threat.execute('''
     function UnitThreatSituation(u) if u=='party1' then return 1 end;if u=='partypet1' then return secret end end
     function UnitCanAttack() return secret end
     M:Update()
-    assert(f.title:GetText()=='Threat: Boar','secret hostility is treated as possibly hostile')
+    assert(f.title:GetText()=='Boar','secret hostility is treated as possibly hostile')
     local byName={};for i,e in ipairs(M.entries) do byName[e.name]={i,e} end
     assert(select(2,M.Display(byName.Ally[2]))=='High' and byName.Ally[1]==2,'status fallback ranks above lower threat')
     assert(select(2,M.Display(byName['Imp (Ally)'][2]))=='Hidden')
@@ -231,9 +299,11 @@ threat.execute('''
     M:Update()
     assert(M.entries[1].name=='Wolf (Fixture)' and M.entries[1].aggro,'mob target first')
     assert(M.entries[2].name=='Ally' and M.entries[3].name=='Fixture','raw threat order')
+    assert(f.rows[3].warn==true and f.rows[3].edge:IsShown(),'you are close to pulling')
     UnitDetailedThreatSituation=detailed;UnitIsUnit=nil;units.targettarget=nil;units.player[4]=true
     units.target=nil;FireEvent('PLAYER_TARGET_CHANGED')
-    assert(#M.entries==0 and f.title:GetText()=='Threat: no target' and not f.rows[1]:IsShown())
+    assert(#M.entries==0 and f.title:GetText()=='Threat' and not f.rows[1]:IsShown())
+    assert(f.empty:IsShown() and f.empty:GetText()==M.MESSAGES.noTarget)
     M:SetOption('locked',true);M:SetOption('hideOutOfCombat',true)
     assert(not f:IsShown(),'hidden out of combat when locked')
     testCombat=true;units.target={'Boar'};FireEvent('PLAYER_REGEN_DISABLED')
@@ -254,7 +324,7 @@ reloaded.execute('''
     addon:SetModuleEnabled('threatMeter',true)
     assert(not M.frame:IsShown(),'locked and hidden out of combat')
     M:SetOption('locked',false)
-    assert(M.frame:IsShown() and M.frame.title:GetText()=='Threat: unavailable on this client')
+    assert(M.frame:IsShown() and M.frame.empty:GetText()==M.MESSAGES.unavailable)
 ''')
 wrong, _ = load(project=1)
 wrong.execute('assert(not addon.initialized and PTGToolsDB==nil)')

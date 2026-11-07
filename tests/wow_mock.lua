@@ -230,7 +230,8 @@ function methods:CreateTexture(_, layer)
     textures[#textures + 1] = texture
     return texture
 end
-function methods:CreateFontString() return Object(self) end
+function methods:CreateFontString() local text = Object(self); text.kind = "FontString"; return text end
+function methods:GetObjectType() return self.kind end
 UIParent = Object()
 UIParent.width, UIParent.height = 1280, 800
 GameFontHighlight = Object()
