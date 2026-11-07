@@ -1,6 +1,6 @@
 # Standalone Forever development
 
-The editable addon is `ModeTools/`, displayed in WoW as Play The Game Tools.
+The editable addon is `PlayTheGameTools/`, displayed in WoW as Play The Game Tools.
 It contains all current Forever production Lua and runtime media. The repository
 starts with fresh history; no Retail modules, development-machine settings or
 mixed-edition Git history are imported. Development prototypes are separate addons
@@ -39,8 +39,8 @@ baseline for subsequent feature changes.
 
 ## Installation and collaboration
 
-Keep the addon folder named `ModeTools` and preserve `ModeToolsDB` and the existing
-`/modetools` and `/mode` commands. Extract only the built ZIP into the Forever
+Keep the addon folder named `PlayTheGameTools` and preserve `PTGToolsDB` and the
+`/ptg` and `/ptgr` commands. Extract only the built ZIP into the Forever
 AddOns directory with WoW closed. Do not install the repository root, tests,
 developer tools, or GitHub's source ZIP as the addon.
 
@@ -60,7 +60,7 @@ all-dungeon expansion on 2026-11-07. The owner authorized merging PR #6 on 2026-
 and screenshots remain pending; this authorization does not publish a release.
 
 For this machine the owner verified an existing Forever AddOns junction to this
-checkout's ModeTools directory. Source edits and branch switches affect the next
+checkout's PlayTheGameTools directory. Source edits and branch switches affect the next
 client load. Preserve that junction; do not apply the older copy-sync workflow.
 This owner-directed arrangement supersedes the general separate-install advice
 above for this machine only. Never change SavedVariables.

@@ -141,7 +141,7 @@ lua.execute('''
     addon:SetModuleEnabled('dungeonLoot',false);assert(Contains('Enable Dungeon Loot') and next(M.events.events)==nil)
     addon:SetModuleEnabled('dungeonLoot',true)
 ''')
-state = lua.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
+state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored, _ = load(state)
 restored.execute("assert(addon.DungeonLoot.enabled)")
 # The complete bundled catalog is exercised by dungeon_loot_catalog.py.

@@ -7,7 +7,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
-ADDON = ROOT / 'ModeTools'
+ADDON = ROOT / 'PlayTheGameTools'
 DOCUMENTS = ('README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'TESTING.md', 'CATALOG_SOURCES.md', 'LICENSES/GPL-3.0.txt')
 MEDIA = {'.tga', '.blp', '.png', '.jpg', '.jpeg', '.ogg', '.mp3', '.wav', '.ttf', '.otf'}
 
@@ -30,9 +30,9 @@ def source_path(name):
 
 def payload():
     ordinary(ADDON)
-    toc = (ADDON / 'ModeTools.toc').read_text(encoding='utf-8-sig')
+    toc = (ADDON / 'PlayTheGameTools.toc').read_text(encoding='utf-8-sig')
     for field in ('## Interface: 16001', '## Title: Play The Game Tools',
-                  '## X-ModeTools-Edition: Forever', '## SavedVariables: ModeToolsDB'):
+                  '## X-PlayTheGameTools-Edition: Forever', '## SavedVariables: PTGToolsDB, ModeToolsDB'):
         if field not in toc.splitlines():
             raise ValueError(f'Missing Forever identity: {field}')
     order = [s.strip().replace('\\', '/') for s in toc.splitlines() if s.strip() and not s.lstrip().startswith('#')]
@@ -46,8 +46,8 @@ def payload():
     nodes = list(template)
     ns = '{http://www.blizzard.com/wow/ui/}'
     if (template.tag != ns + 'Ui' or len(nodes) != 1 or nodes[0].tag != ns + 'Frame'
-            or nodes[0].attrib != {'name': 'ModeToolsDungeonLootMapPinTemplate', 'virtual': 'true',
-                                   'enableMouse': 'true', 'mixin': 'ModeToolsDungeonLootMapPinMixin'}
+            or nodes[0].attrib != {'name': 'PlayTheGameToolsDungeonLootMapPinTemplate', 'virtual': 'true',
+                                   'enableMouse': 'true', 'mixin': 'PlayTheGameToolsDungeonLootMapPinMixin'}
             or len(nodes[0]) != 0):
         raise ValueError('Unexpected map pin template contents')
     actual_xml = {p.relative_to(ADDON).as_posix() for p in ADDON.rglob('*.xml')}
@@ -57,7 +57,7 @@ def payload():
     for name in order:
         if not re.fullmatch(r'(?:Core|Config|Modules)/.+\.lua', name):
             raise ValueError(f'Unsupported runtime source: {name}')
-    files = {'ModeTools.toc': (ADDON / 'ModeTools.toc').read_bytes()}
+    files = {'PlayTheGameTools.toc': (ADDON / 'PlayTheGameTools.toc').read_bytes()}
     files.update({name: source_path(name).read_bytes() for name in runtime})
     for path in (ADDON / 'Media').rglob('*'):
         ordinary(path)
@@ -77,7 +77,7 @@ def archive_bytes(files):
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in sorted(files.items()):
-            info = zipfile.ZipInfo('ModeTools/' + name, (2026, 1, 1, 0, 0, 0))
+            info = zipfile.ZipInfo('PlayTheGameTools/' + name, (2026, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = 3
             info.external_attr = 0o100644 << 16
@@ -94,8 +94,8 @@ def main():
     ordinary(target)
     data = archive_bytes(files)
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
-        assert sorted(archive.namelist()) == sorted('ModeTools/' + n for n in files)
-        assert all(archive.read('ModeTools/' + n) == d for n, d in files.items())
+        assert sorted(archive.namelist()) == sorted('PlayTheGameTools/' + n for n in files)
+        assert all(archive.read('PlayTheGameTools/' + n) == d for n, d in files.items())
     if target.exists() and target.read_bytes() != data:
         raise ValueError('Different artifact already exists; preserve it or bump the version')
     target.parent.mkdir(parents=True, exist_ok=True)

@@ -4,7 +4,7 @@
 
 Play The Game Tools brings useful everyday tools into one modular addon with a unified dark
 configuration interface. Enable the features you want, adjust their appearance,
-and keep your settings between sessions. Open configuration with `/modetools`.
+and keep your settings between sessions. Open configuration with `/ptg`.
 
 This distribution is for **WoW Forever only**. It does not include Retail gameplay
 modules. The project display name is Play The Game Tools; the addon is named Play The Game Tools.
@@ -38,7 +38,7 @@ This is the standalone public **Forever-only** source repository for the Play Th
 Game guild. Clone or fork [ModeVibeCodes/PlayTheGameTools](https://github.com/ModeVibeCodes/PlayTheGameTools).
 See [CONTRIBUTING.md](CONTRIBUTING.md) for branches and pull requests and
 [the development guide](docs/DEVELOPMENT.md) for tests, packaging and installation.
-All addon code is editable under `ModeTools/`; this checkout needs no other repository.
+All addon code is editable under `PlayTheGameTools/`; this checkout needs no other repository.
 There is no automatic synchronization with another checkout or live installation.
 
 ## Install
@@ -46,8 +46,8 @@ There is no automatic synchronization with another checkout or live installation
 Once a release has been published, download the `PlayTheGameTools-<version>-forever.zip`
 asset from this repository's Releases page. Close WoW and extract it into your
 Forever client's `Interface/AddOns` directory. The result must be
-`Interface/AddOns/ModeTools/ModeTools.toc`. Start WoW and enable Play The Game Tools in AddOns.
-Keep the folder named `ModeTools` and preserve `ModeToolsDB`: these internal compatibility names keep existing settings and media working. The visible addon title is Play The Game Tools. Existing `/modetools` and `/mode` commands remain supported.
+`Interface/AddOns/PlayTheGameTools/PlayTheGameTools.toc`. Start WoW and enable Play The Game Tools in AddOns.
+Upgrading from a build installed as `Interface/AddOns/ModeTools`: with WoW closed, delete that folder and install this one, then rename `WTF/Account/<ACCOUNT>/SavedVariables/ModeTools.lua` to `PlayTheGameTools.lua`. If a `PlayTheGameTools.lua` already exists there, it belongs to the retired standalone recruiter of the same folder name; back it up first. Your settings are adopted on the next login and nothing is reset.
 
 For client-managed installation after publication, choose Forever in WowUp, open
 Get Addons → Install from URL, and use this repository's URL. Select the appropriate

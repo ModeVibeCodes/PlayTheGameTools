@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Finished renaming from ModeTools: the addon folder, TOC, settings variable
+  (`PTGToolsDB`) and frame names now use Play The Game Tools names. Open
+  configuration with `/ptg`; `/modetools` and `/mode` were removed. Settings are
+  adopted automatically once SavedVariables/ModeTools.lua is renamed to
+  PlayTheGameTools.lua.
 - Added a Threat Meter module (Quality of Life, off by default): a plain list of
   threat on your current hostile target for you and your party or raid, tanking
   first, then highest percentage. Optional Show Pets (off by default), Hide Out
