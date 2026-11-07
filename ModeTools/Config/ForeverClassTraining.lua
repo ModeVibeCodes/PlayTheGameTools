@@ -28,9 +28,9 @@ function M:CreateConfigPage(parent)
             self.pendingDing,self.pendingGuildDing=nil,nil
             self.guildDingDraft=nil
             self.guildDingStatus=nil
-            self.lastLevelClock,self.lastClockLevel,self.levelDuration=nil,nil,nil
+            self:ResetLevelTime()
             if self.dingWindow then self.dingWindow:Hide() end
-        end
+        elseif key=="levelAlerts" then self:RequestLevelPlayed() end
         self:SyncTrainingDisplays()
     end
     page:ToggleGrid({

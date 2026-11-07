@@ -129,6 +129,30 @@ recruit.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('foreverRecruitment')
     assert(addon.configWindow.pages.foreverRecruitment==R.page)
 ''')
+ding, _ = load()
+ding.execute('''
+    local M=addon.ForeverClassTraining
+    local requests,level=0,9
+    function IsLoggedIn() return true end
+    function UnitLevel(unit) assert(unit=='player'); return level end
+    function RequestTimePlayed() requests=requests+1 end
+    addon:SetModuleEnabled('foreverClassTraining',false)
+    addon:SetModuleEnabled('foreverClassTraining',true)
+    assert(M.active and requests==1,'one /played request on enable')
+    FireEvent('PLAYER_ENTERING_WORLD')
+    assert(requests==1,'no repeat /played request per session')
+    FireEvent('TIME_PLAYED_MSG',90000,3000)
+    Advance(725);level=10;FireEvent('PLAYER_LEVEL_UP',10)
+    assert(M:GuildDingText(10)=='Ding 10, that took me 1h 02m 05s',M:GuildDingText(10))
+    Advance(61);level=11;FireEvent('PLAYER_LEVEL_UP',11)
+    assert(M:GuildDingText(11)=='Ding 11, that took me 1m 01s',M:GuildDingText(11))
+    M:SetPopupOption('showLevelTime',false)
+    assert(M:GuildDingText(11)=='Ding 11','time omitted when Time to Level is off')
+    M:SetPopupOption('showLevelTime',true)
+    assert(requests==2,'re-request after Time to Level is turned back on')
+    Advance(30);level=12;FireEvent('PLAYER_LEVEL_UP',12)
+    assert(M:GuildDingText(12)=='Ding 12','no time without a /played baseline')
+''')
 legacy = recruit.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
 migrated, _ = load(legacy)
 migrated.execute('''

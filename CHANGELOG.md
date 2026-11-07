@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The guild ding message now includes the time it took to level on the first
+  level-up of a session. With Time to Level on, Class Training requests /played
+  once per login or reload (the client prints its usual two /played lines) and
+  adds the server's time played at that level. The level-up window's Time to
+  level line uses the same value. If /played is unavailable it falls back to
+  the in-session clock as before.
 - Replaced the Recruitment module with the guild's standalone recruiter flow:
   class x level-range Who searches that split capped ranges, a Recruiter window
   (`/ptgr`), a Ctrl+C copy-name box for Guild > Add Member in place of the blocked

@@ -13,7 +13,7 @@ function M:SelectPlayerCatalog()
     self.className=available and (type(name)=="string" and name or class) or nil
     if changed then
         self.snapshot,self.rows,self.spellLabels,self.spellIcons=nil,nil,nil,nil
-        self.pendingDing,self.lastLevelClock,self.lastClockLevel,self.levelDuration=nil,nil,nil,nil
+        self.pendingDing=nil;self:ResetLevelTime()
         self.pendingGuildDing=nil;self.guildDingDraft=nil;self.guildDingStatus=nil
         if self.dingWindow then self.dingWindow:Hide() end
         if self.CloseTrainingFlyout then self:CloseTrainingFlyout() end
@@ -25,7 +25,7 @@ function M:OnInitialize() self:SelectPlayerCatalog() end
 
 local events = {"PLAYER_ENTERING_WORLD", "PLAYER_LEVEL_UP", "SPELLS_CHANGED",
     "LEARNED_SPELL_IN_SKILL_LINE", "PLAYER_TALENT_UPDATE", "ACTIVE_TALENT_GROUP_CHANGED",
-    "TRAIT_CONFIG_UPDATED", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "SPELL_DATA_LOAD_RESULT", "TRAINER_SHOW", "TRAINER_UPDATE", "UI_SCALE_CHANGED", "DISPLAY_SIZE_CHANGED", "PLAYER_MONEY"}
+    "TRAIT_CONFIG_UPDATED", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "SPELL_DATA_LOAD_RESULT", "TRAINER_SHOW", "TRAINER_UPDATE", "UI_SCALE_CHANGED", "DISPLAY_SIZE_CHANGED", "PLAYER_MONEY", "TIME_PLAYED_MSG"}
 
 function M:ScanSpellbook(snapshot)
     local G = P.NewGuard(_G)
@@ -93,8 +93,10 @@ function M:OnEnable()
     self.active = true
     self.generation = (self.generation or 0) + 1
     if not self.eventFrame then self.eventFrame = CreateFrame("Frame") end
-    self.eventFrame:SetScript("OnEvent", function(_, event, id)
+    self.eventFrame:SetScript("OnEvent", function(_, event, id, levelTime)
         if event=="PLAYER_MONEY" then self:UpdateFlyoutMoney();return end
+        if event=="TIME_PLAYED_MSG" then self:RecordPlayedTime(levelTime);return end
+        if event=="PLAYER_ENTERING_WORLD" then self:RequestLevelPlayed() end
         if event == "PLAYER_REGEN_DISABLED" then
             self.dirty=true
             self:CloseTrainingFlyout()
@@ -123,6 +125,7 @@ function M:OnEnable()
     end)
     for _, event in ipairs(events) do self.eventFrame:RegisterEvent(event) end
     self:RefreshTraining()
+    self:RequestLevelPlayed()
 end
 
 function M:OnDisable()
@@ -131,7 +134,7 @@ function M:OnDisable()
     self.queued, self.dirty, self.snapshot, self.rows = nil, nil, nil, nil
     self.pendingDing = nil
     self.pendingGuildDing=nil;self.guildDingDraft=nil;self.guildDingStatus=nil
-    self.lastLevelClock,self.lastClockLevel,self.levelDuration=nil,nil,nil
+    self:ResetLevelTime()
     if self.shortcut then self.shortcut:Hide() end
     if self.dingWindow then self.dingWindow:Hide() end
     self:CloseTrainingFlyout()
