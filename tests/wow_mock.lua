@@ -173,6 +173,7 @@ function methods:SetOrientation(value) self.orientation = value end
 function methods:SetValueStep(step) self.step = step end
 function methods:SetObeyStepOnDrag(value) self.obeyStep = value end
 function methods:SetMinMaxValues(low, high) self.low, self.high = low, high end
+function methods:GetMinMaxValues() return self.low or 0, self.high or 0 end
 function methods:GetValue() return self.value or 0 end
 function methods:SetValue(value, userInput)
     -- Modeled mouse drag snapping; native rounding still requires client testing.

@@ -13,20 +13,34 @@ addon.Theme = {
     spacing = { small = 8, medium = 16, large = 24 },
 }
 
+local function RGB(r, g, b, a) return { r / 255, g / 255, b / 255, a or 1 } end
 
 -- Configuration-only palette. Gameplay consumers keep addon.Theme unchanged.
+-- Graphite neutrals with one mint accent. The accent marks state only
+-- (on, selected, focused); headings and body copy stay neutral.
 addon.InterfaceTheme = {
-    primary = { 214 / 255, 193 / 255, 155 / 255, 1 }, -- champagne #D6C19B
-    enabled = { 128 / 255, 239 / 255, 128 / 255, 1 },
-    off = { 0.91, 0.38, 0.36, 1 },
-    unavailable = { 0.48, 0.49, 0.50, 1 },
-    highlight = { 0.98, 0.93, 0.83, 1 },
-    secondary = { 0.74, 0.70, 0.63, 1 },
-    surface = { 0.29, 0.28, 0.26, 1 },
-    background = { 32 / 255, 32 / 255, 32 / 255, 1 },
-    panel = { 44 / 255, 44 / 255, 44 / 255, 1 },
-    text = { 0.89, 0.88, 0.85, 1 },
-    muted = { 0.65, 0.64, 0.60, 1 },
-    ink = { 0.09, 0.085, 0.075, 1 },
+    -- Accent and state
+    primary = RGB(127, 219, 151),      -- #7FDB97 mint, kin to the gameplay #80EF80
+    enabled = RGB(127, 219, 151),
+    off = RGB(128, 133, 141),          -- neutral: "off" is a state, not an error
+    unavailable = RGB(80, 84, 91),
+    highlight = RGB(242, 243, 244),
+    ink = RGB(12, 26, 16),             -- text placed on the accent
+    -- Surfaces, darkest to lightest
+    background = RGB(15, 16, 18),      -- window canvas
+    sidebar = RGB(20, 21, 24),
+    panel = RGB(24, 25, 29),           -- popups, dialogs
+    surface = RGB(31, 33, 37),         -- resting controls
+    hover = RGB(38, 40, 45),
+    field = RGB(11, 12, 14),           -- text inputs sit below the canvas
+    -- Hairlines
+    line = RGB(36, 38, 43),
+    lineStrong = RGB(58, 61, 68),
+    -- Type
+    text = RGB(231, 232, 234),
+    secondary = RGB(169, 173, 180),
+    muted = RGB(128, 133, 141),
+    -- One spacing scale and one font scale for every settings surface.
     spacing = addon.Theme.spacing,
+    fontSize = { small = 11, body = 12, group = 13, section = 15, page = 18, display = 20 },
 }

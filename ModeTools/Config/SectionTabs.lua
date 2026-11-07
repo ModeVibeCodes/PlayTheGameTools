@@ -13,6 +13,10 @@ function W.SectionTabs(page, order)
     assert(#sections == #page.sections, "Play The Game Tools: settings tabs must include every section.")
     local strip = CreateFrame("Frame", nil, page)
     strip:SetHeight(34)
+    -- Underline tabs rest on one baseline hairline across the strip.
+    strip.baseline = W.Fill(strip, T.line, "BACKGROUND")
+    strip.baseline:ClearAllPoints(); strip.baseline:SetPoint("BOTTOMLEFT", 0, 2); strip.baseline:SetPoint("BOTTOMRIGHT", 0, 2)
+    strip.baseline:SetHeight(1)
     local viewport = CreateFrame("ScrollFrame", nil, strip)
     viewport:SetPoint("TOPLEFT", 0, 0); viewport:SetPoint("BOTTOMRIGHT", 0, 0)
     local content = CreateFrame("Frame", nil, viewport); content:SetSize(1, 32); viewport:SetScrollChild(content)
@@ -34,7 +38,7 @@ function W.SectionTabs(page, order)
             button.label:SetWidth(0)
             local measured = button.label:GetStringWidth()
             if (issecretvalue and issecretvalue(measured)) or type(measured) ~= "number" or measured~=measured or measured<0 or measured==math.huge then measured = #section.title * 8 end
-            local width = math.max(76, math.ceil(measured) + 24)
+            local width = math.max(64, math.ceil(measured) + 28)
             button:ClearAllPoints(); button:SetPoint("TOPLEFT", x, 0); button:SetSize(width, 30)
             button.label:SetWidth(width-24);button.label:SetWordWrap(false)
             button.tabX, button.tabWidth = x, width
@@ -73,10 +77,11 @@ function W.SectionTabs(page, order)
         if addon.CloseFontDropdown then addon:CloseFontDropdown() end
     end
     for i, section in ipairs(sections) do
-        local button = W.Button(content, section.title, 100, 30, "choice")
+        local button = W.Button(content, section.title, 100, 30, "underline")
         button.underline = W.Fill(button, T.primary, "OVERLAY")
-        button.underline:ClearAllPoints(); button.underline:SetPoint("BOTTOMLEFT", 6, 0)
-        button.underline:SetPoint("BOTTOMRIGHT", -6, 0); button.underline:SetHeight(2)
+        button.underline:ClearAllPoints(); button.underline:SetPoint("BOTTOMLEFT", 10, 0)
+        button.underline:SetPoint("BOTTOMRIGHT", -10, 0); button.underline:SetHeight(2)
+        button.underline:Hide()
         button:SetScript("OnClick", function() page:SelectSectionTab(section) end)
         strip.buttons[i] = button
     end

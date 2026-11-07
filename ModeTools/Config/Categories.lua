@@ -4,9 +4,12 @@ local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 -- Compact category tab strip; each module keeps its own cached settings page.
 function addon:CreateCategoryNavigation(parent, navigationButtons)
     local view = CreateFrame("Frame", nil, parent)
-    view:SetPoint("TOPLEFT", 12, 4)
-    view:SetPoint("TOPRIGHT", -12, 4)
+    view:SetPoint("TOPLEFT", 0, 0)
+    view:SetPoint("TOPRIGHT", 0, 0)
     view:SetHeight(36)
+    view.baseline = W.Fill(view, T.line, "BACKGROUND")
+    view.baseline:ClearAllPoints(); view.baseline:SetPoint("BOTTOMLEFT", 0, 1); view.baseline:SetPoint("BOTTOMRIGHT", 0, 1)
+    view.baseline:SetHeight(1)
     local viewport=CreateFrame("ScrollFrame",nil,view)
     viewport:SetPoint("TOPLEFT");viewport:SetPoint("BOTTOMRIGHT")
     local strip = CreateFrame("Frame", nil, viewport)
@@ -26,10 +29,10 @@ function addon:CreateCategoryNavigation(parent, navigationButtons)
             button.label:SetWidth(0)
             local measured=button.label:GetStringWidth()
             if (issecretvalue and issecretvalue(measured)) or type(measured)~="number" or measured~=measured or measured<0 or measured==math.huge then measured=#(addon.modules[id].tabTitle or addon.modules[id].title)*9 end
-            local width=math.max(150,math.ceil(measured)+76)
+            local width=math.max(120,math.ceil(measured)+64)
             button:ClearAllPoints()
             button:SetPoint("TOPLEFT",x,0);button:SetSize(width,34)
-            button.label:SetWidth(width-76)
+            button.label:SetWidth(width-64)
             button.tabX,button.tabWidth=x,width;x=x+width+4
         end
         strip:SetWidth(math.max(1,x-4));self.maximum=math.max(0,x-4-viewport:GetWidth());self:Scroll(offset)
@@ -50,28 +53,26 @@ function addon:CreateCategoryNavigation(parent, navigationButtons)
             local module = addon.modules[id]
             local button = self.buttons[id]
             if not button then
-                button = W.Button(strip, module.tabTitle or module.title, 200, 30, "tab")
+                button = W.Button(strip, module.tabTitle or module.title, 200, 30, "underline")
                 button.label:ClearAllPoints()
                 button.label:SetPoint("LEFT", 12, 0)
-                button.label:SetPoint("RIGHT", -54, 0)
+                button.label:SetPoint("RIGHT", -48, 0)
                 button.label:SetJustifyH("LEFT")
                 button.label:SetWordWrap(false)
-                button.status = W.Label(button, "", nil, 0, 0, 24, T.muted)
-                button.status:ClearAllPoints(); button.status:SetPoint("RIGHT", -8, 0)
-                button.indicator = W.Texture(button, "RoundMarker", "OVERLAY")
-                button.indicator:ClearAllPoints(); button.indicator:SetPoint("RIGHT", -38, 0)
-                button.indicator:SetSize(8, 8)
+                button.status = W.Label(button, "", nil, 0, 0, 30, T.muted)
+                button.status:ClearAllPoints(); button.status:SetPoint("RIGHT", -12, 0)
+                button.status:SetJustifyH("RIGHT")
+                addon.Media:BindInterfaceFont(button.status, GameFontHighlight, T.fontSize.small)
                 button.underline=W.Fill(button,T.primary,"OVERLAY")
-                button.underline:ClearAllPoints();button.underline:SetPoint("BOTTOMLEFT",6,0);button.underline:SetPoint("BOTTOMRIGHT",-6,0);button.underline:SetHeight(2)
+                button.underline:ClearAllPoints();button.underline:SetPoint("BOTTOMLEFT",10,0);button.underline:SetPoint("BOTTOMRIGHT",-10,0);button.underline:SetHeight(2)
+                button.underline:Hide()
                 function button:RefreshModuleState()
-                    local enabled=addon.modules[id].enabled
-                    self.fill:SetDesaturated(false)
-                    self.moduleEnabled=enabled
-                    self:SetLabelColor(self.selected and T.primary or T.text)
-                    self.activeGlow:SetAlpha(self.selected and 0.65 or 0.12)
-                    self.activeGlow:SetShown(self:IsEnabled() and (self.selected or enabled))
+                    self.moduleEnabled=addon.modules[id].enabled
+                    self:SetLabelColor(self.selected and T.text or (self.hovered and T.text or T.secondary))
                     self.underline:SetShown(self.selected==true)
                 end
+                button:HookScript("OnEnter",function(self) self:RefreshModuleState() end)
+                button:HookScript("OnLeave",function(self) self:RefreshModuleState() end)
                 button:SetScript("OnClick", function() addon:SelectConfigPage(id) end)
                 self.buttons[id], navigationButtons[id] = button, button
             end

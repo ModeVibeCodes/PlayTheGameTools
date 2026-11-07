@@ -1,5 +1,16 @@
 # Play The Game Tools changelog
 
+## Unreleased
+
+- Redesigned the settings window: flat graphite surfaces, 1px hairlines and square
+  corners in place of the textured panels. One mint accent marks on, selected
+  and focused states only. Headings and body text use neutral colors.
+- New page header with the page title, a one-line description and the module
+  switch. The window title no longer repeats the page name.
+- Dashboard module rows show each module's description. Sidebar, section tabs and
+  category tabs use a left accent bar or underline for the selected item.
+- Settings, behavior, frame names, commands and SavedVariables are unchanged.
+
 ## 0.2.0-beta.1 — Forever beta candidate
 
 - Renamed Forever to Play The Game Tools for the Play The Game guild. Presentation

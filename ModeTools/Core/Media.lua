@@ -70,48 +70,8 @@ M.Textures = {
     RoundMarker = { file = "Round_Marker.tga", rounded = true },
 }
 
-
--- Configuration art only; gameplay Media:ApplyTexture consumers are unchanged.
-M.InterfaceTextures = {
-    Window = { file = "Atelier/Window.tga", slice = 16, rounded = true },
-    Header = { file = "Atelier/Header.tga", slice = 16, rounded = true },
-    Sidebar = { file = "Atelier/Opaque_Secondary.tga" },
-    RaisedPanel = { file = "Atelier/Primary_Surface.tga" },
-    InsetPanel = { file = "Atelier/Opaque_Secondary.tga" },
-    BorderSilver = { file = "Atelier/Border.tga", slice = 16, transparent = true },
-    ButtonDefault = { file = "Atelier/Button_Default.tga", slice = 12, rounded = true },
-    ButtonHover = { file = "Atelier/Button_Hover.tga", slice = 12, rounded = true },
-    ButtonPressed = { file = "Atelier/Button_Pressed.tga", slice = 12, rounded = true },
-    ButtonDisabled = { file = "Atelier/Button_Disabled.tga", slice = 12, rounded = true },
-    ButtonActive = { file = "Atelier/Button_Active.tga", slice = 12, rounded = true },
-    ButtonSecondary = { file = "Atelier/Button_Secondary.tga", slice = 12, rounded = true },
-    TabDefault = { file = "Atelier/Tab_Default.tga", slice = 12, rounded = true },
-    TabSelected = { file = "Atelier/Tab_Selected.tga", slice = 12, rounded = true },
-    AccentMint = { file = "Atelier/Title_Divider.tga", transparent = true },
-    AccentLavender = { file = "Atelier/Title_Divider.tga", transparent = true },
-    UnderlineMint = { file = "Atelier/Title_Divider.tga", transparent = true },
-    ToggleOff = { file = "Atelier/Toggle_Off.tga", rounded = true },
-    ToggleMint = { file = "Atelier/Toggle_On.tga", rounded = true },
-    CheckboxOff = { file = "Atelier/Checkbox_Off.tga" },
-    CheckboxMint = { file = "Atelier/Checkbox_On.tga" },
-    InputField = { file = "Atelier/Input_Field.tga", slice = 12, rounded = true },
-    SliderTrack = { file = "Atelier/Slider_Track.tga", slice = 12, rounded = true },
-    ScrollThumb = { file = "Atelier/Scroll_Thumb.tga", slice = 4, rounded = true },
-    SliderThumb = { file = "Atelier/Slider_Thumb.tga", rounded = true },
-    AtelierFocus = { file = "Atelier/Focused_Glow.tga", transparent = true },
-    AtelierEdge = { file = "Atelier/Edge_Light.tga", transparent = true },
-    AtelierBloom = { file = "Atelier/Title_Bloom.tga", transparent = true },
-    AtelierSelection = { file = "Atelier/Selection_Glow.tga", transparent = true },
-}
-
-function M:GetInterfaceTexture(key)
-    local asset = self.InterfaceTextures[key] or self.Textures[key]
-    if asset then return self.textureBase .. asset.file, asset end
-end
-
-function M:ApplyInterfaceTexture(texture, key, fallback)
-    return self:ApplyTexture(texture, key, fallback, self.InterfaceTextures[key])
-end
+-- The settings interface is drawn from flat fills (Config/Widgets.lua) and
+-- no longer reads bundled configuration art.
 
 -- Return path and read-only rendering metadata; unknown names return nil.
 function M:GetTexture(name)
@@ -119,8 +79,8 @@ function M:GetTexture(name)
     if asset then return self.textureBase .. asset.file, asset end
 end
 
-function M:ApplyTexture(texture, key, fallback, interfaceAsset)
-    local asset = assert(interfaceAsset or self.Textures[key], "Play The Game Tools: unknown texture " .. tostring(key))
+function M:ApplyTexture(texture, key, fallback)
+    local asset = assert(self.Textures[key], "Play The Game Tools: unknown texture " .. tostring(key))
     if texture.ClearTextureSlice then texture:ClearTextureSlice() end
     texture:SetTexCoord(0, 1, 0, 1)
     local usable = (not asset.slice or texture.SetTextureSliceMargins ~= nil)

@@ -20,11 +20,10 @@ function W.Page(parent, minimumWidth)
     local bar = CreateFrame("Slider", nil, page)
     bar:SetPoint("TOPRIGHT", -4, -4)
     bar:SetPoint("BOTTOMRIGHT", -4, 4)
-    bar:SetWidth(8)
+    bar:SetWidth(4)
     bar:SetOrientation("VERTICAL")
     bar:SetValueStep(24)
-    W.Fill(bar, T.surface, nil, 0, 0.15)
-    W.ScrollThumb(bar, 32)
+    W.ScrollThumb(bar, 40)
     bar:SetScript("OnValueChanged", function(_, value)
         if page.lastScrollValue~=value and addon.CloseFontDropdown then addon:CloseFontDropdown() end
         page.lastScrollValue=value;scroll:SetVerticalScroll(value)
@@ -92,33 +91,25 @@ function W.Page(parent, minimumWidth)
         if self.cursor > 0 then self.cursor = self.cursor + 24 end
         local header = CreateFrame("Frame", nil, content)
         header:SetPoint("TOPLEFT", 0, -self.cursor)
-        header:SetSize(400, description and 68 or 38)
+        header:SetSize(400, description and 62 or 36)
         self.rows[#self.rows + 1] = header
         local section = { title = title, expanded = true, header = header }
         self.sections[#self.sections + 1] = section
         self.activeSection = section
         header.section, header.sectionHeader = section, true
-        header.gapBefore = #self.sections > 1 and 16 or 0
+        header.gapBefore = #self.sections > 1 and 24 or 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, section = section, row = header, kind = "section" }
-        local bloom = W.Texture(header, "AtelierBloom", "BORDER", 0, 0.65)
-        bloom:ClearAllPoints()
-        bloom:SetPoint("TOPLEFT")
-        bloom:SetPoint("TOPRIGHT")
-        bloom:SetHeight(32)
-        local heading = W.Heading(header, title, 20, 0, -4, 360, T.primary)
-        heading:SetPoint("TOPRIGHT", -92, -4)
+        -- Plain heading on the canvas; rows below carry their own dividers.
+        local heading = W.Heading(header, title, T.fontSize.section, 0, -8, 360, T.text)
+        heading:SetPoint("TOPRIGHT", -92, -8)
+        header.heading = heading
         if collapsible ~= false then
-            section.button = W.Button(header, "Collapse", 76, 26, "secondary")
-            section.button:SetPoint("TOPRIGHT", -8, -1)
+            section.button = W.Button(header, "Collapse", 76, 24, "secondary")
+            section.button:SetPoint("TOPRIGHT", 0, -4)
             section.button:SetScript("OnClick", function() self:SetSectionExpanded(section, not section.expanded) end)
         end
-        local line = W.Texture(header, "AccentLavender", "ARTWORK")
-        line:ClearAllPoints()
-        line:SetPoint("TOPLEFT", 0, -29)
-        line:SetPoint("TOPRIGHT", -8, -29)
-        line:SetHeight(1)
         if description then
-            local note = W.Label(header, description, nil, 0, -34, 360, T.text)
+            local note = W.Label(header, description, nil, 0, -34, 360, T.muted)
             note:SetPoint("TOPRIGHT", -8, -34)
         end
         self.cursor = self.cursor + header:GetHeight()
@@ -129,15 +120,18 @@ function W.Page(parent, minimumWidth)
         local row = CreateFrame("Frame", nil, content)
         row:SetPoint("TOPLEFT", 0, -self.cursor)
         row:SetSize(400, height)
-        W.Texture(row, "InsetPanel", nil, 0, 0.55)
-        local label = W.Label(row, title, nil, 14, -17, 158)
+        -- Rows sit directly on the canvas, separated by a single top hairline.
+        row.divider = W.Fill(row, T.line, "BORDER")
+        row.divider:ClearAllPoints(); row.divider:SetPoint("TOPLEFT"); row.divider:SetPoint("TOPRIGHT")
+        row.divider:SetHeight(1)
+        local label = W.Label(row, title, nil, 0, -17, 172)
         label:SetWordWrap(true)
         local controls = CreateFrame("Frame", nil, row)
         controls:SetPoint("TOPLEFT", 184, -10)
         controls:SetPoint("BOTTOMRIGHT", -14, 10)
         self.rows[#self.rows + 1] = row
         row.section = self.activeSection
-        row.gapAfter = 4
+        row.gapAfter = 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, keywords = keywords, section = self.activeSection, row = row, kind = "setting" }
         controls.row, controls.rowLabel = row, label
         self.cursor = self.cursor + height + 4
@@ -146,13 +140,13 @@ function W.Page(parent, minimumWidth)
     function page:Group(title)
         local row = CreateFrame("Frame", nil, content)
         row:SetSize(400, 32)
-        row.section, row.gapBefore, row.gapAfter = self.activeSection, 8, 2
+        row.section, row.gapBefore, row.gapAfter = self.activeSection, 12, 0
         local heading=title:gsub("(%a)([%w]*)",function(first,rest) return first:upper()..rest end)
-        row.subsectionHeading=W.Heading(row, heading, 15, 4, -5, 360, T.secondary)
+        row.subsectionHeading=W.Heading(row, heading, T.fontSize.group, 0, -10, 360, T.secondary)
         self.rows[#self.rows + 1] = row
         self.cursor = self.cursor + 42
     end
-    -- Full-cell click targets and per-setting search entries; wraps to 1–3 columns.
+    -- Full-cell click targets and per-setting search entries; wraps to 1-3 columns.
     function page:ToggleGrid(items, options)
         local controls = self:Row("", 38)
         local row = controls.row
@@ -164,11 +158,14 @@ function W.Page(parent, minimumWidth)
             local cell = CreateFrame("Button", nil, controls)
             cell:EnableMouse(true); cell:RegisterForClicks("LeftButtonUp")
             local toggle = W.Button(cell, "", 30, 30, "checkbox")
-            toggle:SetPoint("TOPLEFT", 6, -4)
-            local label = W.Label(cell, item.label, nil, 40, -11, 120)
+            toggle:SetPoint("TOPLEFT", -7, -6)
+            local label = W.Label(cell, item.label, nil, 28, -13, 120)
             label:SetWordWrap(true)
             local function Click() item.set(not item.get()); self:Refresh() end
             cell:SetScript("OnClick", Click); toggle:SetScript("OnClick", Click)
+            -- The whole cell is the hit target, so hovering it lights the box too.
+            cell:HookScript("OnEnter", function() toggle.hovered = true; toggle:RefreshAppearance() end)
+            cell:HookScript("OnLeave", function() toggle.hovered = false; toggle:RefreshAppearance() end)
             self.refreshers[#self.refreshers + 1] = function() toggle:SetSelected(item.get()) end
             self.searchEntries[#self.searchEntries + 1] = {label=item.label,section=self.activeSection,row=row,kind="setting"}
             cells[i] = {frame=cell,button=toggle,label=label}
@@ -180,7 +177,7 @@ function W.Page(parent, minimumWidth)
             for i, cell in ipairs(cells) do
                 cell.frame:ClearAllPoints(); cell.frame:SetSize(cellWidth, 42)
                 cell.frame:SetPoint("TOPLEFT", ((i-1)%columns)*cellWidth, -math.floor((i-1)/columns)*42)
-                cell.label:SetWidth(cellWidth-46)
+                cell.label:SetWidth(cellWidth-36)
             end
         end
         self.toggleGrids = self.toggleGrids or {}; self.toggleGrids[#self.toggleGrids+1] = cells
