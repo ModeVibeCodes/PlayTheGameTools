@@ -106,7 +106,7 @@ function M:SelectEntry(kind, index)
     self.mapStatus=nil
     self:HideTooltip()
     self.view[kind] = index
-    self.view.showPrerequisites, self.view.showNotes = false, false
+    self.view.showPrerequisites, self.view.showNotes, self.view.stageID = false, false, nil
     if self.page then
         self.page.detailPane.scrollbar:SetValue(0)
         self.page:Refresh()
@@ -126,7 +126,7 @@ function M:Navigate(dungeon, tab, boss, quest)
     if boss then self.view.boss = boss end
     if quest then self.view.quest = quest end
     self.view.search = ""
-    self.view.showPrerequisites, self.view.showNotes = false, false
+    self.view.showPrerequisites, self.view.showNotes, self.view.stageID = false, false, nil
     if self.page then
         self.page.search:SetText("")
         self.page.listPane.scrollbar:SetValue(0)

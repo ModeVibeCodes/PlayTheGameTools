@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added clear In your log / Completed labels to Dungeon Loot quest lists/details.
+  Dungeon tiles now recognize character completion history, show All quests
+  completed when every eligible task is finished, and put larger pickup counts
+  at bottom right. Grouped repeated titles only when mandatory prerequisite
+  links prove the same chain; all stages remain available through compact stage
+  buttons. Removed 15 duplicated catalog listings (Ruins: six Horde tasks).
+  Centered dungeon titles with adjacent faction emblems, reversed/underlined
+  Suggested Starting Levels headings and added a compact level-bracket jump strip.
+
 - Dungeon Loot now automatically hides quests and prerequisites for the opposite
   faction or another class. Dungeon cards show the character's quest-log count
   out of faction/class-eligible catalog quests, plus pickup progress for their

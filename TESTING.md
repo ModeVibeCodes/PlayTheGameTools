@@ -177,6 +177,7 @@ python tests/dungeon_loot_map.py
 python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
 python tests/dungeon_loot_player.py
+python tests/dungeon_loot_completion.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -194,4 +195,9 @@ class lists, prerequisite filtering, colored card totals, live pickup/abandon
 updates, unavailable API/identity states, event cleanup and SFK collection-stage
 aliases. Native count accuracy and text fit still need the exact checks in
 [Player eligibility and quest-log progress](docs/DUNGEON_LOOT.md#player-eligibility-and-quest-log-progress).
+Completion/layout revision: the new suite verifies native completion flags,
+Ruins' six-task total, preserved chain stages and controls, unrelated title/variant
+isolation, cycle guards, full source-ID coverage, status labels, title/footer
+anchors and bracket jumps. Native text fit, history accuracy and jump behavior
+still need the exact checks in docs/DUNGEON_LOOT.md.
 Screenshots: pending.

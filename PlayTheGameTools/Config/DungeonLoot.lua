@@ -19,6 +19,17 @@ function M:CreateConfigPage(parent)
     page.loot=Tab("Boss Loot",function() self:Navigate(self.view.dungeon,"loot") end)
     page.quests=Tab("Quests",function() self:Navigate(self.view.dungeon,"quests") end)
     page.general=Tab("General",function() self:Navigate(nil,"general") end)
+    local jump=CreateFrame("Frame",nil,page)
+    page.jumpBar=jump;page.jumpButtons={};page.bracketRows={}
+    for _,range in ipairs({"10–19","20–29","30–39","40–49","50–60","Unknown"}) do
+        local key=range
+        local b=W.Button(jump,range,54,24)
+        b:SetScript("OnClick",function()
+            local row=page.bracketRows[key]
+            if row then page.rootPane:Layout();page.rootPane.scrollbar:SetValue(math.max(0,(row.offset or 0)-4)) end
+        end)
+        page.jumpButtons[#page.jumpButtons+1]=b;b.bracket=key
+    end
     local toolbar=CreateFrame("Frame",nil,page)
     toolbar:SetPoint("TOPLEFT",0,-42);toolbar:SetPoint("TOPRIGHT",0,-42);toolbar:SetHeight(30)
     page.search=CreateFrame("EditBox",nil,toolbar)
@@ -105,8 +116,21 @@ function M:CreateConfigPage(parent)
         if q.startItem then Item(q.startItem,"Starts quest: ") end
         MapButtons(q.pickupTargets,"pickup")
     end
-    local function QuestDetail(q)
+    local function Status(q)
+        local state=M.data.questStates and M.data.questStates[q.id]
+        if not state then return "" end
+        if state.completed then return "|cff79d98cCompleted|r" end
+        if state.inLog then return "|cffFADA5EIn your log|r" end
+        return state.logKnown and "Not in your log" or "Quest status unavailable"
+    end
+    local function QuestDetail(record)
+        local q=record.currentStage or record
+        for _,stage in ipairs(record.stages or {}) do if stage.id==M.view.stageID then q=stage end end
         Add(q.name,nil,nil,T.text,nil,{heading=true,gradient="quest",faction=q.faction})
+        Add(Status(record),nil,nil,T.secondary)
+        if #record.stages>1 then
+            rightRows:Stages(record.stages,q.id,function(id) M.view.stageID=id;page:Refresh() end)
+        end
         Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..addon.DungeonLootWidgets.ClassesText(q),nil,nil,T.muted)
         if q.warning then Add(q.warning,nil,nil,T.primary) end
         if q.note then Add(q.note,nil,nil,T.secondary) end
@@ -151,7 +175,15 @@ function M:CreateConfigPage(parent)
         self.search:ClearAllPoints();self.search:SetPoint("TOPLEFT",toolbar,"TOPLEFT",0,0)
         if questTab then self.search:SetPoint("TOPRIGHT",self.faction,"TOPLEFT",-10,0)
         else self.search:SetPoint("TOPRIGHT",toolbar,"TOPRIGHT",0,0) end
-        root:SetPoint("TOPLEFT",0,-84);root:SetPoint("BOTTOMRIGHT")
+        local home=M.active and M.view.dungeon==nil and M.view.tab~="general"
+        jump:SetShown(home)
+        jump:ClearAllPoints();jump:SetPoint("TOPLEFT",0,-78);jump:SetPoint("TOPRIGHT",0,-78);jump:SetHeight(26)
+        local x=0
+        for _,b in ipairs(self.jumpButtons) do
+            b:SetShown(home and self.bracketRows[b.bracket]~=nil)
+            if b:IsShown() then b:ClearAllPoints();b:SetPoint("TOPLEFT",x,0);x=x+math.min(64,(width-20)/6)+4;b:SetWidth(math.min(64,(width-20)/6)) end
+        end
+        root:SetPoint("TOPLEFT",0,home and -110 or -84);root:SetPoint("BOTTOMRIGHT")
         local top=(M.active and M.view.dungeon and M.view.tab~="general") and -112 or -84
         local leftWidth=math.max(160,math.min(300,width*0.37))
         left:SetPoint("TOPLEFT",0,top);left:SetPoint("BOTTOMLEFT");left:SetWidth(leftWidth)
@@ -189,13 +221,15 @@ function M:CreateConfigPage(parent)
             -- Keep the refresh target compact rather than filling the settings page.
             refresh.button:ClearAllPoints();refresh.button:SetPoint("TOPLEFT");refresh.button:SetSize(86,28)
         elseif not v.dungeon then
+            self.bracketRows={}
             local shown,group=0,nil
             for _,dungeon in ipairs(data.cards) do
                 if M:Matches(dungeon.name) then
                     local lower=dungeon.levelLow and (math.floor(dungeon.levelLow/10)*10)
                     local bracket=lower and (lower>=50 and "50–60" or (lower.."–"..(lower+9))) or "Unknown"
                     if bracket~=group then
-                        rootRows:Add("Suggested starting levels "..bracket,nil,nil,T.secondary,nil,{heading=true});group=bracket
+                        local heading=rootRows:Add("Suggested Starting Levels "..bracket,nil,nil,T.secondary,nil,{heading=true,gradient="bracket",underline=true})
+                        self.bracketRows[bracket]=heading.row;group=bracket
                     end
                     local name=dungeon.name
                     local open
@@ -227,7 +261,7 @@ function M:CreateConfigPage(parent)
             for _,entry in ipairs(entries) do if entry.index==v[key] then selected=entry.entry end end
             if not selected then
                 v[key]=entries[1] and entries[1].index or nil;selected=entries[1] and entries[1].entry
-                v.showPrerequisites,v.showNotes=false,false
+                v.showPrerequisites,v.showNotes,v.stageID=false,false,nil
                 right.scrollbar:SetValue(0)
             end
             local extrasHeading=false
@@ -240,7 +274,7 @@ function M:CreateConfigPage(parent)
                     options.subtitle=entry.rare and "Rare encounter" or (#entry.items.." items")
                 else
                     options.faction=entry.faction
-                    options.subtitle=(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..((entry.classOnly or #entry.classes>0) and (" · "..addon.DungeonLootWidgets.ClassesText(entry)) or "")..(#entry.chain>0 and " · Chain" or "")
+                    options.subtitle=Status(entry).." · "..(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..((entry.classOnly or #entry.classes>0) and (" · "..addon.DungeonLootWidgets.ClassesText(entry)) or "")..((#entry.chain>0 or #entry.stages>1) and " · Chain" or "")
                 end
                 leftRows:Add(entry.name,function() M:SelectEntry(key,index) end,nil,T.text,nil,options)
             end
