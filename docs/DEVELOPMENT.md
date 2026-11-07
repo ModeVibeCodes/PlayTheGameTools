@@ -51,7 +51,7 @@ and releases; passing static checks alone is not a release acceptance claim.
 
 ## Dungeon Loot feature work
 
-The SFK pilot adds a seventh registered module and six Lua files. Its owning
+The SFK pilot adds a seventh registered module and seven Lua files. Its owning
 document is [DUNGEON_LOOT.md](DUNGEON_LOOT.md), with source/provider limitations,
 focused checks and native review steps. Continue work on codex/dungeon-loot and
 update its draft PR; do not merge or publish directly to main.

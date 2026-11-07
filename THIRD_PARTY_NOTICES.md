@@ -75,3 +75,8 @@ and Questie's ZoneDB map-ID conversion API for quest locations and patrol paths.
 QuestieDB and Questie retain their own authorship and licenses; no code, databases,
 records or artwork from those addons are redistributed. Quest-like markers use
 Blizzard's native GossipFrame and WorldMap textures; rendering is independent.
+
+The owned SFK location catalog is a manually curated set of rounded planning
+facts with public references listed in docs/DUNGEON_LOOT.md. No source-page prose,
+artwork or addon database is bundled. Approximate/interior-proxy labels distinguish
+these estimates from native observations or optional recorded patrols.

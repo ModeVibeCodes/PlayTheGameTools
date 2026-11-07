@@ -35,7 +35,10 @@ function UI.Gradient(text)
     local out={}
     for index,char in ipairs(chars) do
         local t=(index-1)/math.max(1,#chars-1)
-        out[index]="|cff"..Hex(.50+.32*t,.86-.08*t,.65+.30*t)..char.."|r"
+        local r,g,b
+        if t<=.5 then local u=t*2;r,g,b=1-.03*u,.78-.30*u,.42+.22*u
+        else local u=(t-.5)*2;r,g,b=.97-.36*u,.48+.09*u,.64+.36*u end
+        out[index]="|cff"..Hex(r,g,b)..char.."|r"
     end
     return table.concat(out)
 end
@@ -79,6 +82,7 @@ function UI.New(page, module)
         slot.visible = true
         slot.button:ClearAllPoints();slot.button:SetAllPoints(slot.control)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
+        for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
         for _, cell in ipairs(slot.cells) do cell:Hide() end
         if slot.art then slot.art:Hide(); slot.topBand:Hide(); slot.bottomBand:Hide() end
         return slot
@@ -102,6 +106,18 @@ function UI.New(page, module)
             if options.portrait then UI.Portrait(slot.icon, options.portrait) else slot.icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark") end
             slot.icon:Show()
             if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", options.compact and 60 or 86, options.compact and -10 or -24);button.label:SetPoint("TOPRIGHT", -12, options.compact and -10 or -24) end
+        end
+        if options.heading then
+            slot.headerGlow=slot.headerGlow or {}
+            local offsets={{-1,0},{1,0},{0,-1},{0,1}}
+            local face,size=button.label:GetFont()
+            for index,offset in ipairs(offsets) do
+                local glow=slot.headerGlow[index] or button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+                slot.headerGlow[index]=glow
+                glow:SetFont(face,size,"OUTLINE");glow:SetAlpha(.12);glow:SetJustifyH("LEFT");glow:SetJustifyV("TOP");glow:SetWordWrap(true)
+                glow:ClearAllPoints();glow:SetPoint("TOPLEFT",button.label,"TOPLEFT",offset[1],offset[2]);glow:SetPoint("TOPRIGHT",button.label,"TOPRIGHT",offset[1],offset[2])
+                glow:SetText(button.label:GetText());glow:Show()
+            end
         end
         slot.subtitle:SetText(options.subtitle or "")
         slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -6);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -6)
@@ -127,6 +143,7 @@ function UI.New(page, module)
         slot.topBand:ClearAllPoints();slot.topBand:SetPoint("TOPLEFT");slot.topBand:SetPoint("TOPRIGHT");slot.topBand:SetHeight(40);slot.topBand:Show()
         slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(52);slot.bottomBand:Show()
         addon.Media:BindInterfaceFont(slot.button.label, GameFontHighlight, 20)
+        for _,glow in ipairs(slot.headerGlow or {}) do local face=slot.button.label:GetFont();glow:SetFont(face,20,"OUTLINE") end
         slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 12);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 12)
         local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. #data.quests .. " quests") or "Loot and quests unavailable"
         slot.subtitle:SetText("Silverpine Forest · Horde territory\n" .. counts);slot.subtitle:Show()

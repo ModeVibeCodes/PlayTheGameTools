@@ -106,3 +106,9 @@ Dungeon Loot's experimental quest-map buttons use recorded pickup locations and
 optional installed QuestieDB/Questie APIs for starters, finishers, direct objectives
 and ordered patrol paths. Native map behavior needs pilot review; coordinates
 are never guessed. See the owning Dungeon Loot guide for exact checks.
+
+SFK pickup and turn-in map pins now have an owned approximate-location catalog
+and work without Questie/QuestieDB. Interior quest portions use an explicitly
+labeled outdoor entrance marker. Right-click the labeled icon to dismiss it.
+DungeonJournal is still the pilot's loot/quest-list provider; Questie enrichment
+is optional. Location references and native checks: docs/DUNGEON_LOOT.md.

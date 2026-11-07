@@ -65,6 +65,17 @@ function L:Targets(id,kind,fallback)
             end
         end
     end
+    local owned=addon.DungeonLootLocationData:Targets(id,kind)
+    if #owned>0 then
+        -- Keep owned planning pins stable. Optional sources may add a recorded
+        -- patrol only for the same named entity on the same UI map.
+        for _,point in ipairs(owned) do
+            for _,extra in ipairs(targets) do
+                if point.mapID==extra.mapID and point.label==extra.label and #extra.paths>0 then point.paths=extra.paths;break end
+            end
+        end
+        return owned
+    end
     if #targets==0 then local point=self:Point(fallback);if point then targets[1]=point end end
     return targets
 end

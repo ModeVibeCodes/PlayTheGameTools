@@ -16,6 +16,11 @@ function Map:Clear()
     for _,pin in ipairs(self.markers) do pin:Hide() end
     for _,line in ipairs(self.lines) do line:Hide() end
 end
+function Map:Dismiss()
+    local restore=self.returnToConfig
+    self:Clear();self.returnToConfig=restore
+    if GameTooltip then GameTooltip:Hide() end
+end
 function Map:Render()
     for _,pin in ipairs(self.markers) do pin:Hide() end
     for _,line in ipairs(self.lines) do line:Hide() end
@@ -28,21 +33,32 @@ function Map:Render()
         self.overlay=CreateFrame("Frame",nil,canvas);self.overlay:SetAllPoints(canvas)
         self.overlay:SetFrameLevel(canvas:GetFrameLevel()+50);self.overlay:EnableMouse(false)
     end
-    local layer=self.overlay;layer:Show()
+    local layer=self.overlay
+    layer:SetFrameStrata(type(map.GetFrameStrata)=="function" and map:GetFrameStrata() or "HIGH")
+    layer:SetFrameLevel(math.max(canvas:GetFrameLevel(),map:GetFrameLevel())+200);layer:Show()
     local points=target.points
     if #points==0 then points={{target.x,target.y}} end
     for index,point in ipairs(points) do
         local pin=self.markers[index]
         if not pin then
-            pin=CreateFrame("Button",nil,layer);pin:SetSize(28,28)
-            pin.icon=pin:CreateTexture(nil,"OVERLAY");pin.icon:SetAllPoints(pin)
+            pin=CreateFrame("Button",nil,layer);pin:SetSize(40,40);pin:EnableMouse(true);pin:RegisterForClicks("RightButtonUp")
+            pin.back=pin:CreateTexture(nil,"BORDER");pin.back:SetAllPoints(pin);pin.back:SetColorTexture(.08,.04,.14,.92)
+            pin.rim=pin:CreateTexture(nil,"BACKGROUND");pin.rim:SetPoint("TOPLEFT",-2,2);pin.rim:SetPoint("BOTTOMRIGHT",2,-2);pin.rim:SetColorTexture(1,.72,.26,.9)
+            pin.caption=pin:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+            pin.caption:SetPoint("TOP",pin,"BOTTOM",0,-4);pin.caption:SetWidth(200);pin.caption:SetJustifyH("CENTER")
+            pin.caption:SetTextColor(1,.86,.5,1);pin.caption:SetShadowColor(0,0,0,1);pin.caption:SetShadowOffset(1,-1)
+            pin:SetScript("OnClick",function(_,button) if button=="RightButton" then self:Dismiss() end end)
+            pin.icon=pin:CreateTexture(nil,"OVERLAY");pin.icon:SetPoint("TOPLEFT",4,-4);pin.icon:SetPoint("BOTTOMRIGHT",-4,4)
             pin:SetScript("OnEnter",function(owner)
                 if GameTooltip then GameTooltip:SetOwner(owner,"ANCHOR_RIGHT");GameTooltip:SetText(owner.label);GameTooltip:Show() end
             end)
             pin:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
             self.markers[index]=pin
         end
-        pin.label=target.label..(#target.paths>0 and " — recorded patrol" or "")
+        pin:SetFrameStrata(type(map.GetFrameStrata)=="function" and map:GetFrameStrata() or "HIGH");pin:SetFrameLevel(layer:GetFrameLevel()+1)
+        pin.label=target.label..(target.approximate and " — approximate location" or "")..(#target.paths>0 and " — recorded patrol" or "")
+        pin.label=pin.label..(target.detail and ("\n"..target.detail) or "").."\nRight-click to dismiss."
+        pin.caption:SetText(target.label..(target.approximate and "\nApproximate location" or ""))
         pin.icon:SetTexture(self.kind=="pickup" and "Interface\\GossipFrame\\AvailableQuestIcon" or self.kind=="turnin" and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\WorldMap\\Skull_64")
         pin:ClearAllPoints();pin:SetPoint("CENTER",layer,"TOPLEFT",width*point[1],-height*point[2]);pin:Show()
     end

@@ -64,6 +64,7 @@ function M:CreateConfigPage(parent)
         for _,target in ipairs(targets or {}) do
             local location=target
             local label="Map "..(kind=="pickup" and "pickup" or kind=="turnin" and "turn-in" or "objective").." — "..target.label
+            if target.approximate then label=label.." [approx.]" end
             if #target.paths>0 then label=label.." (patrol)" end
             Add(label,function()
                 local ok,reason=addon.DungeonLootMap:Open(location,kind)

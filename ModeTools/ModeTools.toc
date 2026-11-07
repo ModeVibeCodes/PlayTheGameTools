@@ -54,6 +54,7 @@ Modules\ForeverQuickAccess.lua
 Modules\ForeverFoodBarData.lua
 Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
+Modules\DungeonLootLocationData.lua
 Modules\DungeonLootLocations.lua
 Modules\DungeonLootProvider.lua
 Modules\DungeonLootMap.lua

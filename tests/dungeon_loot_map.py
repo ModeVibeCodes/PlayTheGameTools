@@ -83,12 +83,40 @@ lua.execute('''
     assert(noteIndex and objectiveIndex and noteIndex<objectiveIndex and mapButton)
     mapButton:GetScript('OnClick')(mapButton)
     assert(Map.target and #Map.target.paths==1,'actual map action callback')
+    local hasGlow=false
+    for _,slot in ipairs(page.detailPane.slots) do
+        if slot.visible and slot.headerGlow then
+            assert(#slot.headerGlow==4 and slot.headerGlow[1]:IsShown() and slot.headerGlow[1].alpha==.12)
+            hasGlow=true;break
+        end
+    end
+    assert(hasGlow)
     local gradient=addon.DungeonLootWidgets.Gradient('Objective')
     assert(Plain(gradient)=='Objective' and select(2,gradient:gsub('|cff',''))==9)
+    assert(gradient:find('|cffffc76b',1,true) and gradient:find('|cff9c91ff',1,true),'warm amber-to-violet gradient')
     LibQuestieDB=nil;QuestieLoader=nil
     assert(#L:Targets(100002,'turnin')==0)
     assert(#L:Targets(100002,'pickup',{mapID=1421,x=.4,y=.5,label='Recorded pickup'})==1)
     assert(#L:Targets(100002,'pickup',{mapID=1421,x=2,y=.5})==0)
     assert(original==addon.ProfileCodec.Encode(records))
+    -- All seven visible SFK quests have owned pickup/turn-in estimates without Questie.
+    for _,id in ipairs({1098,1740,1013,1014,1806,95140,78307}) do
+        for _,kind in ipairs({'pickup','turnin'}) do
+            local owned=L:Targets(id,kind)
+            assert(#owned==1 and owned[1].approximate and #owned[1].paths==0)
+        end
+    end
+    local owned=L:Targets(1098,'turnin')[1]
+    assert(owned.mapID==1421 and owned.label:find('inside SFK',1,true) and owned.detail:find('Entrance marker only',1,true))
+    owned.x=.1;assert(L:Targets(1098,'turnin')[1].x==.45,'owned records return fresh copies')
+    assert(#L:Targets(95140,'objective')==0,'unknown final kill is not invented')
+    assert(Map:Open(L:Targets(1098,'pickup')[1],'pickup'))
+    local pin=Map.markers[1]
+    assert(pin:IsShown() and pin:GetWidth()==40 and pin.caption:GetText():find('Approximate location',1,true))
+    assert(pin.clickRegistration=='RightButtonUp' and pin:GetFrameLevel()>canvas:GetFrameLevel()+50)
+    pin:GetScript('OnClick')(pin,'LeftButton');assert(Map.target)
+    pin:GetScript('OnClick')(pin,'RightButton')
+    assert(not pin:IsShown() and Map.target==nil and WorldMapFrame:IsShown(),'right click removes only our overlay, not the map')
+    WorldMapFrame:Hide();assert(addon.configWindow:IsShown(),'dismiss keeps return-to-settings behavior')
 ''')
 print('PASS quest map pins, ordered patrol geometry, combat guards, cleanup, read-only source, notes, class/chain styling and toolbar anchors (mock only)')

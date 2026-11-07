@@ -27,7 +27,7 @@ item tooltip line is treated as its title and omitted from the body. Specialized
 native graphics/comparisons stay in the hover UI.
 
 Quest titles/subtitles have corrected height/padding and explicit top alignment.
-Headers use a mint-to-blue text gradient. Notes, descriptions and warnings appear
+Headers use an amber-to-rose-to-violet text gradient with a faint static glow. Notes, descriptions and warnings appear
 near the title without a notes toggle. Class names use localized Blizzard names
 and RAID_CLASS_COLORS. List rows show Chain when prerequisite steps are recorded.
 Objective, Starts at, Turn in and reward sections stay concise; Prerequisites (N)
@@ -44,17 +44,29 @@ The (patrol) suffix means an ordered path is recorded. Missing buttons mean no
 usable coordinates, not confirmed absence of the entity. Direct NPC and object
 objectives are supported; item-drop and kill-credit associations are not inferred.
 
-The optional, separately enabled QuestieDB (inspected 1.0.11) and Questie supply
-locations through their installed public APIs: LibQuestieDB.Quest's startedBy,
-finishedBy and objectives; Npc/Object name, spawns and waypoints; and
-QuestieLoader:ImportModule("ZoneDB"):GetUiMapIdByAreaId. The installed Types and
-src/api.lua establish getter and coordinate shapes. Percent coordinates and
-ordered paths are normalized into new session-only data. DungeonJournal's
-structured pickup maps are a fallback. No location is guessed from prose.
+An owned, manually curated SFK planning catalog now supplies pickup and turn-in
+pins for all seven visible quests **without Questie or QuestieDB**. It also covers
+selected direct objectives and two associated chain steps. Points are rounded,
+marked **[approx.]** on buttons and **Approximate location** on markers, and return
+fresh copies. Locations inside SFK intentionally use the outdoor entrance on the
+Silverpine map, with an **Entrance marker only** explanation of where to go inside.
+No exact floor/NPC position is implied. The final Old Fire-Eye kill remains unknown
+in this catalog; no objective point is invented. Forging/payment phases map to
+Jordan/Dead Drop rather than incorrectly marking the earlier dungeon collection.
 
-Native map canvas data-provider callbacks manage an independent overlay: yellow
-native ! / ? markers, objective skulls and yellow recorded patrol segments. Only
-the clicked target is shown. Multiple spawn points are never joined as a patrol;
+The optional installed QuestieDB/Questie APIs remain enrichment for gaps and
+recorded patrols. Owned pins take priority; an optional ordered patrol attaches
+only for the same named entity on the same map. No route is manufactured from
+estimates or spawn clusters. Public entity getters and ZoneDB conversion follow
+the inspected installed APIs. DungeonJournal's structured pickup maps remain an
+additional fallback for uncataloged chain steps. Loot and quest list data still
+come from the separately enabled DungeonJournal; this location work does not
+remove that separate pilot dependency.
+
+Native map canvas data-provider callbacks manage an independent overlay: high-contrast
+40px bordered quest/objective icons with labels, plus recorded patrol segments. Only
+the clicked target is shown. Right-clicking its marker dismisses the owned icons
+and route without closing the map; closing later still returns to settings. Multiple spawn points are never joined as a patrol;
 separate paths remain separate; an invalid point invalidates its path. No Questie
 artwork or route-rendering code is copied. Changing maps hides the overlay; closing
 the map clears it. Settings hide while the map is open and return on close outside
@@ -99,7 +111,7 @@ Primary Blizzard source reviewed 2026-11-07 on the forever branch:
 
 ## Architecture and checks
 
-Modules/DungeonLootProvider.lua normalizes SFK data; DungeonLootLocations.lua reads
+Modules/DungeonLootProvider.lua normalizes SFK data; DungeonLootLocationData.lua owns approximate points; DungeonLootLocations.lua reads
 optional location APIs; DungeonLootMap.lua owns map overlays; DungeonLoot.lua owns
 lifecycle and item metadata. Config/DungeonLootWidgets.lua pools themed rows;
 Config/DungeonLoot.lua owns lists/details. Only module enable is saved in profiles.
@@ -138,17 +150,16 @@ evidence of Play The Game Tools.
    chooser. **Required state:** Forever, out of combat, DungeonJournal enabled.
    **Confirmation:** text/icons do not clip; headers have a gradient; notes are
    visible near the top; search and the smaller faction selector do not overlap.
-2. **Navigation:** same quest → Map pickup — High Executor Hadrec.
+2. **Navigation:** same quest → Map pickup — High Executor Hadrec [approx.].
    **Action:** click the pickup button, then close the map. **Required state:**
    out of combat. **Confirmation:** Silverpine opens with a yellow quest marker;
    settings do not obscure it and return on close. Missing capability/rejection
    produces an actionable status instead of a claimed successful pin.
-3. **Navigation:** same quest → Map turn-in — Deathstalker Vincent.
-   **Action:** click, zoom/change maps, then close. **Required state:** out of
-   combat; optional QuestieDB/Questie enabled and a recorded finisher.
-   **Confirmation:** the source's dungeon map and ? marker appear; markers never
-   linger on another map or after close. If no finisher coordinate is supplied,
-   no button appears; report the gap rather than using pickup coordinates.
+3. **Navigation:** same quest → Map turn-in — Deathstalker Vincent (inside SFK)
+   [approx.]. **Action:** click, zoom/change maps, then close. **Required state:**
+   out of combat; Questie is not required. **Confirmation:** the owned Silverpine
+   entrance marker appears with an explanation to enter for the courtyard. It
+   does not imply exact interior coordinates; map changes/close clear it.
 4. **Navigation:** Quests → a recorded Map pickup / Map turn-in / Map objective
    button ending (patrol). **Action:** click it. **Required state:** out of combat,
    optional location sources enabled and a recorded ordered path for that entity.
@@ -168,3 +179,57 @@ evidence of Play The Game Tools.
 
 Screenshots: pending. Keep PR #6 draft until user-confirmed native checks and real
 Forever before/after captures of the changed addon. Crop other players' names/chat.
+
+## Owned location catalog provenance (checked 2026-11-07)
+
+These are a small set of independently curated, rounded planning facts, not a
+copy of an addon database or page prose. They are not native sightings. Maps are
+Blizzard UI map IDs; coordinates below are approximate percentages.
+
+| Location | UI map | Planning point | Use |
+| --- | --- | --- | --- |
+| High Executor Hadrec | Silverpine 1421 | 43, 41 | Deathstalkers pickup |
+| Doan Karhan | Barrens 1413 | 49, 57 | Orb pickup/return |
+| Keeper Bel'dugur | Undercity 1458 | 54, 55 | Book pickup/return |
+| Dalar Dawnweaver | Silverpine 1421 | 44, 40 | Arugal pickup/return |
+| Jordan Stilwell | Dun Morogh 1426 | 52, 37 | Paladin chain pickup/return/forging |
+| Lumina Windsinger | Silverpine 1421 | 43, 41 | Horde paladin pickup/return; crypt after escort |
+| Dead Drop | Silverpine 1421 | 47, 71 | Rogue pickup/return/payment |
+| SFK entrance | Silverpine 1421 | 45, 68 | Entrance-only proxy for interior quest portions |
+
+Public reference observations, cross-checked where available; no illustrations or
+narrative wording reused:
+- https://eternadex.com/en/dungeons/shadowfang-keep/quests/ — Hadrec, Doan, Jordan and recipients.
+- https://muchamielwow.github.io/en/mazmorras/castillo-de-colmillo-oscuro/ — entrance, pickups and interior room descriptions.
+- https://eternadex.com/en/npc/keeper-beldugur/ — Undercity location and Book start/end association.
+- https://warcraft.wiki.gg/wiki/Lumina_Windsinger — Sepulcher crypt location after the Fenris escort.
+- https://eternadex.com/en/npc/dead-drop/ — Pyrewood pickup/return area.
+- https://www.wowhead.com/forever/quest=1013/the-book-of-ur — interior book location cross-check.
+- https://www.wowhead.com/forever/quest=78307/the-horn-of-xelthos — payment-step distinction.
+
+### Current native review additions
+
+- **Navigation:** AddOns → Questie / QuestieDB; then `/mode` → Questing & Leveling
+  → Dungeon Loot → Shadowfang Keep → Quests → Deathstalkers in Shadowfang →
+  Map pickup — High Executor Hadrec [approx.]. **Action:** disable Questie and
+  QuestieDB, `/reload`, then click the map button. **Required state:** Forever,
+  out of combat; DungeonJournal and Dungeon Loot enabled. **Confirmation:** a
+  high-contrast labeled quest icon appears near the Sepulcher, clearly marked
+  approximate. The owned estimate works without either Questie addon.
+- **Navigation:** the resulting world-map marker. **Action:** right-click it, then
+  close the map. **Required state:** map open. **Confirmation:** only this addon's
+  markers/route disappear; the map stays open, and closing it returns to settings.
+- **Navigation:** Quests → Deathstalkers in Shadowfang → Map turn-in — Deathstalker
+  Vincent (inside SFK) [approx.]. **Action:** click with Questie still disabled.
+  **Required state:** out of combat. **Confirmation:** the marker is at the outdoor
+  SFK entrance; its tooltip explicitly explains the interior courtyard destination.
+  It does not claim to pinpoint Vincent on a dungeon floor.
+- **Navigation:** Dungeon Loot → Shadowfang Keep → Quests → any quest detail.
+  **Action:** inspect section headings. **Required state:** out of combat.
+  **Confirmation:** amber/rose/violet colors and a restrained static glow, with
+  readable normal text and unchanged native item-quality colors.
+
+Focused tests now verify all seven owned pickup/return pairs with optional
+providers absent, copy isolation, interior-proxy labeling, unknown-objective
+handling, warm gradient/glow, marker elevation/labeling and right-click dismissal.
+Native marker visibility, exact planning-point placement and glow remain pending.

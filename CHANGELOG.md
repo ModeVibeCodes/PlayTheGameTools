@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Dungeon Loot headers now use amber/rose/violet with a subtle static glow. Map
+  targets use larger contrasting labeled icons, dismissible by right-click.
+  Added an owned, attributed SFK pickup/turn-in planning catalog for all seven
+  quests, usable without Questie. Estimates are labeled; interior destinations
+  use explicit entrance proxies. Optional sources may still enrich patrols.
+
 - Refined Dungeon Loot quest alignment, gradient headings, always-visible notes,
   class colors and Chain indicators. Fixed the search/faction anchor overlap.
   Added experimental OOC quest-map buttons with native !/? markers and ordered
