@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added default-off Loot Sparkles under Questing & Leveling -> Gameplay Enhancements, with quest/node/corpse switches, animated glints, optional object names/range text, appearance controls and owned client-setting restoration. Native validation and screenshots pending; see docs/LOOT_SPARKLES.md.
+
 - Added clear In your log / Completed labels to Dungeon Loot quest lists/details.
   Dungeon tiles now recognize character completion history, show All quests
   completed when every eligible task is finished, and put larger pickup counts

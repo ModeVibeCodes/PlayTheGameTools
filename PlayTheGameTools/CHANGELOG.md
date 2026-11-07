@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added default-off Loot Sparkles under Questing & Leveling -> Gameplay Enhancements, with quest/node/corpse switches, animated glints, optional object names/range text, appearance controls and owned client-setting restoration. Native validation and screenshots pending; see docs/LOOT_SPARKLES.md.
+
 - Finished renaming from ModeTools: the addon folder, TOC, settings variable
   (`PTGToolsDB`) and frame names now use Play The Game Tools names. Open
   configuration with `/ptg`; `/modetools` and `/mode` were removed. Settings are

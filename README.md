@@ -29,6 +29,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   ranges are split and searched again), a Recruiter window (`/ptgr`) with a
   copy-name box for Guild > Add Member, optional whisper after a confirmed invite,
   a re-invite window, a never-invite list and invite/join/decline statistics.
+- **Loot Sparkles:** opt-in Gameplay Enhancements under Questing & Leveling; clearer quest objects, herbs, ore and lootable corpses with optional names and range text. Custom indicators pause in combat.
 - **Shared configuration:** independent module switches, saved settings, appearance
   controls and positioning/preview tools where supported by the module.
 

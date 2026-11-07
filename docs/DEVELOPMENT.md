@@ -64,3 +64,11 @@ checkout's PlayTheGameTools directory. Source edits and branch switches affect t
 client load. Preserve that junction; do not apply the older copy-sync workflow.
 This owner-directed arrangement supersedes the general separate-install advice
 above for this machine only. Never change SavedVariables.
+
+## Loot Sparkles feature branch
+
+The ninth module is Gameplay Enhancements (Loot Sparkles); four new Lua files
+bring the runtime to 90 Lua chunks. See [research, architecture and native checks](LOOT_SPARKLES.md).
+Run `python tests/loot_sparkles.py` alongside the smoke suite and builder.
+Native validation/screenshots are pending. No live branch switch, sync or release
+is part of creating this PR. Existing main-checkout junctions remain untouched.
