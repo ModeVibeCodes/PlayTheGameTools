@@ -44,10 +44,10 @@ function UI.New(page, module)
             control.rowLabel:Hide(); control.row.divider:Hide(); control:ClearAllPoints()
             control:SetPoint("TOPLEFT", control.row, "TOPLEFT", 0, -4); control:SetPoint("BOTTOMRIGHT", control.row, "BOTTOMRIGHT", 0, 4)
             local button = W.Button(control, "", 300, 38)
-            button:SetAllPoints(control); button.label:SetJustifyH("LEFT"); button.label:SetWordWrap(true)
+            button:SetAllPoints(control); button.label:SetJustifyH("LEFT"); button.label:SetJustifyV("TOP");button.label:SetWordWrap(true)
             local icon = button:CreateTexture(nil, "ARTWORK")
             local subtitle = W.Label(button, "", nil, 12, -36, 280, T.secondary)
-            subtitle:SetWordWrap(true)
+            subtitle:SetWordWrap(true);subtitle:SetJustifyV("TOP")
             slot = { control = control, row = control.row, button = button, icon = icon, subtitle = subtitle, cells = {} }
             page.slots[self.used] = slot
             control.row.visibleWhen = function() return slot.visible end
@@ -70,19 +70,19 @@ function UI.New(page, module)
     function pool:Add(text, callback, item, color, icon, options)
         options = options or {}
         local slot = self:Row()
-        slot.callback, slot.item = callback, item
+        slot.callback, slot.item, slot.expandedItem = callback, item, options.expandedItem == true
         local button = slot.button
-        button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, -12)
+        button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, item and -10 or -12)
         local factionWidth = UI.Factions(button, options.faction)
-        button.label:SetPoint("TOPRIGHT", -12-factionWidth, -12)
+        button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
         button.label:SetText(text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
-        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or 12)
+        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.expandedItem and 14 or 12))
         button:EnableMouse(callback ~= nil or item ~= nil)
         button.fill:SetShown(callback ~= nil or item ~= nil); button.outline:SetShown(callback ~= nil or item ~= nil)
         if item or options.portrait then
             slot.icon:SetSize(options.portrait and (options.compact and 40 or 64) or 28, options.portrait and (options.compact and 40 or 64) or 28)
-            slot.icon:ClearAllPoints(); slot.icon:SetPoint("TOPLEFT", 10, -9)
+            slot.icon:ClearAllPoints(); slot.icon:SetPoint("TOPLEFT", 10, -10)
             if options.portrait then UI.Portrait(slot.icon, options.portrait) else slot.icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark") end
             slot.icon:Show()
             if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", options.compact and 60 or 86, options.compact and -10 or -24);button.label:SetPoint("TOPRIGHT", -12, options.compact and -10 or -24) end
@@ -94,7 +94,7 @@ function UI.New(page, module)
             button.label:SetWidth(math.max(80, width - (options.portrait and (options.compact and 76 or 104) or (item and 64 or 28)) - factionWidth))
             local height = button.label:GetStringHeight() + 22
             if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 8 end
-            self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (options.heading and 36 or 38), height))
+            self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (options.heading and 36 or 38)), height + (item and 8 or 0)))
         end
         return slot
     end
@@ -107,14 +107,14 @@ function UI.New(page, module)
             slot.topBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.86)
             slot.bottomBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.88)
         end
-        slot.art:SetTexture(card.art);slot.art:SetTexCoord(0, 1, 0.12, 0.88);slot.art:Show()
-        slot.topBand:ClearAllPoints();slot.topBand:SetPoint("TOPLEFT");slot.topBand:SetPoint("TOPRIGHT");slot.topBand:SetHeight(48);slot.topBand:Show()
-        slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(62);slot.bottomBand:Show()
+        slot.art:SetTexture(card.art);slot.art:SetTexCoord(0.04, 0.96, 0.28, 0.78);slot.art:Show()
+        slot.topBand:ClearAllPoints();slot.topBand:SetPoint("TOPLEFT");slot.topBand:SetPoint("TOPRIGHT");slot.topBand:SetHeight(40);slot.topBand:Show()
+        slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(52);slot.bottomBand:Show()
         addon.Media:BindInterfaceFont(slot.button.label, GameFontHighlight, 20)
         slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 12);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 12)
         local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. #data.quests .. " quests") or "Loot and quests unavailable"
         slot.subtitle:SetText("Silverpine Forest · Horde territory\n" .. counts);slot.subtitle:Show()
-        function slot.row:layoutChildren(width) self:SetHeight(230);slot.button.label:SetWidth(math.max(80,width-70)) end
+        function slot.row:layoutChildren(width) self:SetHeight(180);slot.button.label:SetWidth(math.max(80,width-70)) end
         return slot
     end
     return pool

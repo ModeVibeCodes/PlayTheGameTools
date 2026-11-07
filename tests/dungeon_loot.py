@@ -59,7 +59,8 @@ lua.execute('''
     page.reload:GetScript('OnClick')(page.reload)
     page.home:GetScript('OnClick')(page.home)
     local _,card=Find('Shadowfang Keep')
-    assert(card.art:IsShown() and card.row:GetHeight()==230)
+    assert(card.art:IsShown() and card.row:GetHeight()==180)
+    assert(card.art.texCoord[1]==.04 and card.art.texCoord[3]==.28 and card.art.texCoord[4]==.78)
     assert(Contains('1 bosses + 1 rare') and Contains('2 quests') and not Contains('Another Dungeon'))
     Click('Shadowfang Keep')
     assert(page.listPane:IsShown() and page.detailPane:IsShown() and not page.rootPane:IsShown())
@@ -104,6 +105,38 @@ lua.execute('''
     assert(#page.detailPane.slots==slots,'detail pool stays bounded')
     assert(before==addon.ProfileCodec.Encode(source),'source tables remain unchanged')
     page.loot:GetScript('OnClick')(page.loot);assert(M.view.boss==1,'selection retained across tabs')
+    local tooltipCalls,stat=0,'+7 Strength'
+    C_TooltipInfo={GetItemByID=function(id)
+        tooltipCalls=tooltipCalls+1
+        return {dataInstanceID=id+50000,lines={{leftText='Fixture item title'},
+            {leftText='Binds when picked up'},
+            {leftText='Shoulder',rightText='Leather'},
+            {leftText=stat,leftColor={GetRGB=function() return 0,1,0 end}},
+            {leftText={secret=true},rightText={secret=true}}}}
+    end}
+    M:SyncEvents();assert(M.events.events.TOOLTIP_DATA_UPDATE)
+    local list=source.DB['Shadowfang Keep'].bosses[2].loot
+    for i=1,6 do list[i]={100100+i,'Boundary Item '..i,'Shoulder, Leather',2} end
+    M:ReadData();tooltipCalls=0;M:SelectEntry('boss',2)
+    assert(tooltipCalls==0,'six-item boss stays condensed without tooltip-data queries')
+    local _,compact=Find('Boundary Item 1',page.detailPane)
+    assert(not compact.expandedItem and compact.row:GetHeight()>=54)
+    assert(compact.button.label.justifyV=='TOP' and compact.subtitle.justifyV=='TOP')
+    local anchor=compact.icon.points[#compact.icon.points]
+    assert(anchor[1]=='TOPLEFT' and anchor[5]==-10,'item icon top padding')
+    list[6]=nil;M:ReadData();tooltipCalls=0;M:SelectEntry('boss',2)
+    assert(tooltipCalls==5,'five-item boss shows inline tooltip data')
+    local _,expanded=Find('Boundary Item 1',page.detailPane)
+    assert(expanded.expandedItem and expanded.subtitle:GetText():find('+7 Strength',1,true))
+    assert(expanded.subtitle:GetText():find('Shoulder   Leather',1,true))
+    assert(expanded.subtitle:GetText():find('|cff00ff00',1,true),'native stat color preserved')
+    stat='+8 Agility';FireEvent('TOOLTIP_DATA_UPDATE',150101)
+    assert(Contains('+8 Agility',page.detailPane),'visible tooltip updates render without polling')
+    local previous=tooltipCalls;FireEvent('TOOLTIP_DATA_UPDATE',999999)
+    assert(tooltipCalls==previous,'unrelated tooltip updates ignored')
+    C_TooltipInfo.GetItemByID=function() error('unavailable') end
+    page:Refresh();assert(Contains('Hover for full item details.',page.detailPane))
+    C_TooltipInfo=nil;M:SyncEvents();assert(not M.events.events.TOOLTIP_DATA_UPDATE)
     page:Hide();assert(next(M.events.events)==nil)
     page:Show();assert(M.events.events.GET_ITEM_INFO_RECEIVED)
     addon:SetModuleEnabled('dungeonLoot',false);assert(Contains('Enable Dungeon Loot') and next(M.events.events)==nil)

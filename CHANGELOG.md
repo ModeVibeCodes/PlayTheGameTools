@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Top-aligned Dungeon Loot item icons/text with enough row height. Bosses with up
+  to five items now show client tooltip text inline; six or more stay compact.
+  Native tooltip-data updates refresh visible details without polling. Shortened
+  and tightened the SFK loading-screen crop to exclude its logo/loading bar.
+
 - Dungeon Loot now keeps a persistent boss/quest list beside its selected detail
   pane. The first entry opens automatically; switching entries updates loot or
   quest details in place and preserves list scroll. Quest details are condensed

@@ -46,13 +46,18 @@ function M:CreateConfigPage(parent)
     W.Fill(left,T.sidebar);W.Fill(right,T.panel)
     local function Add(...) return rightRows:Add(...) end
     local function Heading(text) Add(text,nil,nil,T.secondary,nil,{heading=true}) end
-    local function Item(item,prefix)
+    local function Item(item,prefix,expanded)
         local name,icon,quality,loaded=self:ItemInfo(item)
         local color=T.text
         if quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality] then
             local c=ITEM_QUALITY_COLORS[quality];color={c.r,c.g,c.b,1}
         end
-        Add((prefix or "")..name..(item.slot and ("\n"..item.slot) or "")..(loaded and "" or "  (loading details)"),nil,item,color,icon)
+        local options
+        local text=(prefix or "")..name
+        if expanded then
+            options={expandedItem=true,subtitle=self:ItemDetails(item) or ((item.slot and (item.slot.."\n") or "").."Hover for full item details.")}
+        else text=text..(item.slot and ("\n"..item.slot) or "") end
+        Add(text..(loaded and "" or "  (loading details)"),nil,item,color,icon,options)
     end
     local function Acquisition(q)
         local text=q.pickup or "Location unknown"
@@ -116,7 +121,7 @@ function M:CreateConfigPage(parent)
     function page:Refresh()
         if self.refreshing then return end
         self.refreshing=true
-        M:HideTooltip();rootRows:Reset();leftRows:Reset();rightRows:Reset()
+        M:HideTooltip();M.tooltipInstances={};rootRows:Reset();leftRows:Reset();rightRows:Reset()
         local v=M.view
         local data=M.active and (M.data or M:ReadData()) or nil
         local browser=M.active and data.available and v.dungeon~=nil and v.tab~="general"
@@ -186,7 +191,7 @@ function M:CreateConfigPage(parent)
                 leftRows:Add(message);Add(message)
             elseif key=="boss" then
                 Add(selected.name,nil,nil,T.text,nil,{heading=true,portrait=selected})
-                for _,item in ipairs(selected.items) do Item(item) end
+                for _,item in ipairs(selected.items) do Item(item,nil,#selected.items<=5) end
                 if #selected.items==0 then Add("Loot unknown.") end
             else QuestDetail(selected) end
         end

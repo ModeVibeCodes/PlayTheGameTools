@@ -7,7 +7,7 @@ addon is Play The Game Tools; compatibility IDs and ModeToolsDB are unchanged.
 ## Current experience
 
 Only Shadowfang Keep appears. **Dungeons** shows a large Blizzard loading-screen
-card under **Suggested levels 20–30**, with its title across the top, Silverpine
+shorter, tightly cropped card under **Suggested levels 20–30**, with its title across the top, Silverpine
 Forest location, Horde territory emblem, boss count and total quest count.
 The range follows the installed DungeonJournal 1.7.0 SFK record; it is a suggested
 bracket, not the entry requirement. External community ranges differ. No other
@@ -21,6 +21,24 @@ or intermediate grid is required. Each pane scrolls independently. **Other loot*
 keeps the stable mobs, Arugal's Voidwalker and Trash Drops separate from the boss
 count. The inspected source supplies **8 bosses + 1 rare**, 3 extra source groups
 and **7 quests**; these are source counts, not an official completeness claim.
+
+Bosses with **up to five items** show public client tooltip lines immediately
+beneath each item name, including native text colors. **Six or more items** use
+compact name/slot rows. Quest reward rows remain compact. Names and icons share
+10px top padding, text is explicitly top-justified and item rows have at least
+54px of height so icons cannot overrun the bottom. Hover tooltips remain available.
+Inline data comes from `C_TooltipInfo.GetItemByID`; missing/restricted data is not
+inferred and falls back to a hover-details hint. Only the selected small loot list
+is queried; its `TOOLTIP_DATA_UPDATE` instance IDs refresh details without polling.
+The first tooltip line is treated as the item title and omitted from the body to
+avoid repetition. This is textual tooltip presentation, not a full embedded native
+tooltip widget; specialized graphics and comparison widgets stay in the hover UI.
+The generated Forever TooltipInfo documentation was reviewed on 2026-11-07:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/TooltipInfoDocumentation.lua
+
+The dungeon card height is now 180px (previously 230px), with source texture UVs
+0.04–0.96 horizontally and 0.28–0.78 vertically. This excludes the logo and loading
+bar regions; exact native framing still requires visual review.
 
 **Quests** uses the same two-pane layout: compact faction/class/level rows on the
 left; **Objective**, **Starts at**, **Turn in** and reward item cards on the right.
@@ -139,6 +157,16 @@ Lua-only changes should load with `/reload`; no full client restart is expected.
    General → Refresh, then Dungeons. **Action:** refresh and return to the card.
    **Required state:** out of combat. **Confirmation:** Refresh stays compact;
    the full-width artwork card is restored with unchanged source totals.
+
+6. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
+   Shadowfang Keep → Boss Loot → Rethilgore, then Other loot → Fel Steed / Shadow
+   Charger. **Action:** compare the item lists, then return to Dungeons.
+   **Required state:** Forever, out of combat; allow client item data to arrive.
+   **Confirmation:** Rethilgore's short list shows item details inline and hover
+   tooltips; the stable source's longer list remains compact. Icons and text align
+   at the top without bottom clipping. The smaller SFK card shows dungeon scenery
+   without the WoW logo or loading bar. Source changes can alter item counts; the
+   fixed display threshold is up to five detailed cards, six or more compact rows.
 
 Screenshots: pending. Keep the PR draft for native review and real Forever
 before/after captures of the changed addon. Crop chat and other players' names.
