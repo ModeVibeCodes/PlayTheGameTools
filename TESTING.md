@@ -10,14 +10,14 @@ Use the attached `PlayTheGameTools-0.2.0-beta.1-forever.zip`, not GitHub's sourc
 Installation is a filesystem step, not a Play The Game Tools UI control. Close WoW, back up
 your existing Play The Game Tools addon folder and your own settings separately, and extract
 the ZIP into an isolated Forever test installation if available. Keep one
-`ModeTools` folder; never merge this into Retail. For an existing installation,
+`PlayTheGameTools` folder; never merge this into Retail. For an existing installation,
 move its old addon folder to a backup location outside AddOns first, rather than
-merging stale files into the new folder. Preserve WTF/SavedVariables. If using the
+merging stale files into the new folder. Preserve WTF/SavedVariables; when upgrading from the old `ModeTools` folder, rename SavedVariables/ModeTools.lua to PlayTheGameTools.lua. If using the
 maintainer's existing managed live installation, request the maintainer's verified
 installation procedure instead of changing it manually.
 
 1. **Navigation:** Forever character selection → AddOns → Play The Game Tools.
-   **Action:** Enable the candidate and log in; open `/modetools`.
+   **Action:** Enable the candidate and log in; open `/ptg`.
    **Required state:** Candidate installed with game closed, fresh client start.
    **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and version
    0.2.0-beta.1; configuration opens without a Lua error or wrong-edition message.
@@ -29,7 +29,7 @@ installation procedure instead of changing it manually.
    positions remain. Do not delete your settings to make a failed upgrade pass.
 3. **Navigation:** Play The Game Tools → Timers → Combat Timer; Play The Game Tools → Quality of Life
    → Automation / Class Training.
-   **Action:** Visit each page and close/reopen configuration with `/modetools`.
+   **Action:** Visit each page and close/reopen configuration with `/ptg`.
    **Required state:** OOC; no feature needs enabling merely to inspect pages.
    **Confirmation:** Pages render, text/art/scrolling work; no absent Retail module
    or prototype is advertised as usable. Optional media addons are not required.

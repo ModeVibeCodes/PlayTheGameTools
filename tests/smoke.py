@@ -9,7 +9,7 @@ from build_release import ROOT, payload, archive_bytes
 from lupa.lua51 import LuaRuntime
 
 
-def load(encoded=None, project=18):
+def load(encoded=None, project=18, variable='PTGToolsDB', before=None):
     files, order, toc = payload()
     lua = LuaRuntime(unpack_returned_tuples=True)
     lua.execute((ROOT / 'tests/wow_mock.lua').read_text(encoding='utf-8'))
@@ -29,12 +29,14 @@ def load(encoded=None, project=18):
     addon = lua.table()
     execute = lua.eval('function(s,n,...) local f,e=loadstring(s,n); assert(f,e); return f(...) end')
     for name in order:
-        execute(files[name].decode('utf-8-sig'), name, 'ModeTools', addon)
+        execute(files[name].decode('utf-8-sig'), name, 'PlayTheGameTools', addon)
     lua.globals().addon = addon
     if encoded is not None:
         lua.globals().encoded = encoded
-        lua.execute('ModeToolsDB=addon.ProfileCodec.Decode(encoded)')
-    lua.execute("FireEvent('ADDON_LOADED','ModeTools'); FireEvent('PLAYER_LOGIN')")
+        lua.execute(variable + '=addon.ProfileCodec.Decode(encoded)')
+    if before is not None:
+        lua.execute(before)
+    lua.execute("FireEvent('ADDON_LOADED','PlayTheGameTools'); FireEvent('PLAYER_LOGIN')")
     return lua, addon
 
 
@@ -44,8 +46,8 @@ lua.execute('''
     assert(addon.initialized and #addon.moduleOrder==8 and #addon.categoryOrder==4)
     assert(addon.Edition.name=='Forever' and addon.developmentPhase=='Forever Beta')
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)
-    assert(SLASH_MODETOOLS1=='/modetools' and SLASH_MODETOOLS2=='/mode')
-    SlashCmdList.MODETOOLS()
+    assert(SLASH_PLAYTHEGAMETOOLS1=='/ptg' and SLASH_PLAYTHEGAMETOOLS2==nil)
+    SlashCmdList.PLAYTHEGAMETOOLS()
     assert(addon.configWindow.title:GetText()=='Play The Game Tools')
     assert(addon.configWindow.moduleHeader.title:GetText()=='Dashboard')
     assert(addon.configWindow.pages.dashboard.welcomeTexts[1]=='Welcome to Play The Game Tools!')
@@ -58,13 +60,26 @@ lua.execute('''
     addon:SetModuleEnabled('combatTimer',true)
     assert(addon.modules.combatTimer.enabled)
 ''')
-state = lua.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
+state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored, _ = load(state)
 restored.execute('''
     assert(addon.db.window.x==123 and addon.db.window.y==45)
     assert(addon.modules.combatTimer.enabled)
     addon:SetModuleEnabled('combatTimer',false)
     assert(not addon.modules.combatTimer.enabled)
+''')
+adopted, _ = load(state, variable='ModeToolsDB')
+adopted.execute('''
+    assert(ModeToolsDB==nil and type(PTGToolsDB)=='table','pre-rename settings adopted')
+    assert(addon.db.window.x==123 and addon.db.window.y==45)
+    assert(addon.modules.combatTimer.enabled)
+''')
+# The retired standalone recruiter shared this folder name; its stray global is ignored.
+foreign, _ = load(state, variable='ModeToolsDB',
+                  before="PlayTheGameToolsDB={reinviteDays=7,stats={joined=1},invited={}}")
+foreign.execute('''
+    assert(ModeToolsDB==nil and addon.db.window.x==123 and addon.modules.combatTimer.enabled)
+    assert(PlayTheGameToolsDB.reinviteDays==7 and PlayTheGameToolsDB.window==nil,'recruiter table untouched')
 ''')
 recruit, _ = load()
 recruit.execute('''
@@ -153,7 +168,7 @@ ding.execute('''
     Advance(30);level=12;FireEvent('PLAYER_LEVEL_UP',12)
     assert(M:GuildDingText(12)=='Ding 12','no time without a /played baseline')
 ''')
-legacy = recruit.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
+legacy = recruit.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 migrated, _ = load(legacy)
 migrated.execute('''
     local R=addon.ForeverRecruitment
@@ -230,7 +245,7 @@ threat.execute('''
     addon:SetModuleEnabled('threatMeter',false)
     assert(not f:IsShown())
 ''')
-saved = threat.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
+saved = threat.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 reloaded, _ = load(saved)
 reloaded.execute('''
     local M=addon.ThreatMeter
@@ -242,12 +257,12 @@ reloaded.execute('''
     assert(M.frame:IsShown() and M.frame.title:GetText()=='Threat: unavailable on this client')
 ''')
 wrong, _ = load(project=1)
-wrong.execute('assert(not addon.initialized and ModeToolsDB==nil)')
+wrong.execute('assert(not addon.initialized and PTGToolsDB==nil)')
 archive = archive_bytes(files)
 assert archive == archive_bytes(files)
 with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
-    assert sorted(zipped.namelist()) == sorted('ModeTools/' + n for n in files)
+    assert sorted(zipped.namelist()) == sorted('PlayTheGameTools/' + n for n in files)
     for name, data in files.items():
-        assert zipped.read('ModeTools/' + name) == data
+        assert zipped.read('PlayTheGameTools/' + name) == data
 assert not any(p in n.split('/') for n in files for p in ('WTF','SavedVariables','.git','tests','tools'))
-print(f'PASS {len(order)} Lua chunks, Forever startup, all module pages, title/commands, profile roundtrip, wrong-client block, deterministic ZIP')
+print(f'PASS {len(order)} Lua chunks, Forever startup, all module pages, title/commands, profile roundtrip, pre-rename settings adoption, wrong-client block, deterministic ZIP')

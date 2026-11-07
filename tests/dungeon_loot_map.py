@@ -53,11 +53,11 @@ lua.execute('''
         pin:SetPoint('CENTER',canvas,'TOPLEFT',canvas:GetWidth()*x/pin:GetScale(),-canvas:GetHeight()*y/pin:GetScale())
     end
     function WorldMapFrame:AcquirePin(template,...)
-        assert(template=='ModeToolsDungeonLootMapPinTemplate')
+        assert(template=='PlayTheGameToolsDungeonLootMapPinTemplate')
         local pin=table.remove(freePins)
         if not pin then
             pin=CreateFrame('Frame',nil,canvas)
-            for k,v in pairs(ModeToolsDungeonLootMapPinMixin) do pin[k]=v end
+            for k,v in pairs(PlayTheGameToolsDungeonLootMapPinMixin) do pin[k]=v end
             pin:OnLoad()
             pin:SetScript('OnMouseUp',function(owner,button,inside) if inside then owner:OnMouseClickAction(button) end end)
         end
@@ -72,7 +72,7 @@ lua.execute('''
         freePins[#freePins+1]=pin
     end
     function WorldMapFrame:RemoveAllPinsByTemplate(template)
-        assert(template=='ModeToolsDungeonLootMapPinTemplate')
+        assert(template=='PlayTheGameToolsDungeonLootMapPinTemplate')
         local pins={};for pin in pairs(activePins) do pins[#pins+1]=pin end
         for _,pin in ipairs(pins) do self:RemovePin(pin) end
     end

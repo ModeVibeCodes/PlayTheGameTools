@@ -162,7 +162,7 @@ SavedVariables edits. Restart the client for the added TOC files. Disable Dungeo
 and QuestieDB for baseline review. Screenshots: pending;
 the owner authorized merging with this native-review limitation recorded.
 
-1. **Navigation:** `/mode` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
    **Action:** `/reload`, browse the groups and search for Ragefire Chasm, The
    Deadmines, Hall of Thanes, Scarlet Monastery, then clear search.
    **Required state:** Forever, OOC, Dungeon Loot enabled; external data addons disabled.
@@ -177,7 +177,7 @@ the owner authorized merging with this native-review limitation recorded.
    Shadowfang -> 1. Starts at -> View on Map. **Action:** click and right-click
    the pin; close the map. **Required state:** OOC. **Confirmation:** accepted
    blue-bordered pin and short tooltip remain functional; closing restores settings.
-4. **Navigation:** `/mode` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+4. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
    Shadowfang Keep -> Quests -> The Book of Ur -> 1. Starts at -> Copy Coordinates.
    **Action:** copy with Ctrl+C and paste into a text editor; then inspect
    3. Turn in -> View on Map. **Required state:** Forever, OOC, external data

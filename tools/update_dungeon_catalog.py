@@ -30,7 +30,7 @@ def imported(archive):
             if text.count(binding) != 1:
                 raise ValueError('Unexpected namespace binding')
             text = text.replace(binding, 'local _, addon = ...\nlocal LJ = addon.DungeonLootCatalog\nif not LJ then return end')
-            result['ModeTools/Modules/DungeonLootCatalog' + name + '.lua'] = (BANNER + text).encode('utf-8')
+            result['PlayTheGameTools/Modules/DungeonLootCatalog' + name + '.lua'] = (BANNER + text).encode('utf-8')
         licenses = [p for p in source.namelist() if p.endswith('/LICENSE')]
         if len(licenses) != 1:
             raise ValueError('Expected exactly one LICENSE')
