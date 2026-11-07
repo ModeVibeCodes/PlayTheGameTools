@@ -67,3 +67,11 @@ docs/DUNGEON_LOOT.md for schema compatibility and data uncertainty.
 Dungeon Loot also references Blizzard's native SFK loading-screen texture,
 faction emblems and default boss icon, and asks the native portrait renderer
 to draw boss display IDs. No Blizzard image files are redistributed.
+
+## Optional QuestieDB / Questie location APIs
+
+Dungeon Loot reads the user's separately installed QuestieDB public entity getters
+and Questie's ZoneDB map-ID conversion API for quest locations and patrol paths.
+QuestieDB and Questie retain their own authorship and licenses; no code, databases,
+records or artwork from those addons are redistributed. Quest-like markers use
+Blizzard's native GossipFrame and WorldMap textures; rendering is independent.

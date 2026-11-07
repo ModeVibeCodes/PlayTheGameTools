@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Refined Dungeon Loot quest alignment, gradient headings, always-visible notes,
+  class colors and Chain indicators. Fixed the search/faction anchor overlap.
+  Added experimental OOC quest-map buttons with native !/? markers and ordered
+  patrol lines from optional installed QuestieDB/Questie data. Missing coordinates
+  stay unknown; source tables and other addons are not modified.
+
 - Top-aligned Dungeon Loot item icons/text with enough row height. Bosses with up
   to five items now show client tooltip text inline; six or more stay compact.
   Native tooltip-data updates refresh visible details without polling. Shortened

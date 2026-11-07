@@ -29,6 +29,7 @@ function M:OnEnable()
     self:SyncEvents()
 end
 function M:OnDisable()
+    if addon.DungeonLootMap then addon.DungeonLootMap:Clear() end
     self.active = false
     self.events:UnregisterAllEvents()
     self:HideTooltip()
@@ -93,6 +94,7 @@ function M:ReadData()
     return self.data
 end
 function M:SelectEntry(kind, index)
+    self.mapStatus=nil
     self:HideTooltip()
     self.view[kind] = index
     self.view.showPrerequisites, self.view.showNotes = false, false

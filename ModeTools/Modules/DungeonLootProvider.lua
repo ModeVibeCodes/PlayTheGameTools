@@ -41,6 +41,9 @@ local function Quest(raw, ns, step, stepID, stepName)
     for _, field in ipairs(fields) do q[field] = Text(raw[field]) end
     q.start = Map(raw.startMap or raw.map or Table(ns.QUEST_START_MAPS)[q.id])
     q.finish = Map(raw.turninMap)
+    q.pickupTargets=addon.DungeonLootLocations:Targets(q.id,"pickup",raw.startMap or raw.map or Table(ns.QUEST_START_MAPS)[q.id])
+    q.turninTargets=addon.DungeonLootLocations:Targets(q.id,"turnin",raw.turninMap)
+    q.objectiveTargets=addon.DungeonLootLocations:Targets(q.id,"objective")
     q.items = Items(raw.rewardItems, true)
     q.rewardChoice = raw.rewardChoice == true
     q.startItem = Items(raw.startItem and {raw.startItem}, true)[1]

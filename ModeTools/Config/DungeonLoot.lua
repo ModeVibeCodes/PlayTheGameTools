@@ -28,11 +28,12 @@ function M:CreateConfigPage(parent)
         page.listPane.scrollbar:SetValue(0);page:Refresh()
     end)
     page.search:SetScript("OnEscapePressed",function(box) box:ClearFocus() end)
-    page.faction=W.Select(toolbar,160,function() return {
+    page.faction=W.Select(toolbar,128,function() return {
         {id="all",label="All factions"},{id="Alliance",label="Alliance"},{id="Horde",label="Horde"}
     } end,function() return self.view.faction,self.view.faction=="all" and "All factions" or self.view.faction end,
     function(value) self.view.faction=value;page.listPane.scrollbar:SetValue(0);page:Refresh() end)
-    page.faction:SetPoint("TOPRIGHT")
+    page.faction:ClearAllPoints();page.faction:SetPoint("TOPRIGHT");page.faction:SetSize(128,28)
+    page.faction.label:ClearAllPoints();page.faction.label:SetPoint("TOPLEFT",8,0);page.faction.label:SetPoint("BOTTOMRIGHT",-8,0);page.faction.label:SetJustifyV("MIDDLE")
     local function Pane(minimum)
         local pane=W.Page(page,minimum)
         pane:ClearAllPoints()
@@ -59,6 +60,18 @@ function M:CreateConfigPage(parent)
         else text=text..(item.slot and ("\n"..item.slot) or "") end
         Add(text..(loaded and "" or "  (loading details)"),nil,item,color,icon,options)
     end
+    local function MapButtons(targets,kind)
+        for _,target in ipairs(targets or {}) do
+            local location=target
+            local label="Map "..(kind=="pickup" and "pickup" or kind=="turnin" and "turn-in" or "objective").." — "..target.label
+            if #target.paths>0 then label=label.." (patrol)" end
+            Add(label,function()
+                local ok,reason=addon.DungeonLootMap:Open(location,kind)
+                M.mapStatus=not ok and reason or nil
+                page:Refresh()
+            end)
+        end
+    end
     local function Acquisition(q)
         local text=q.pickup or "Location unknown"
         if q.start then text=text.."\n"..q.start end
@@ -66,14 +79,18 @@ function M:CreateConfigPage(parent)
         if q.startHint then text=text.."\n"..q.startHint end
         Add(text)
         if q.startItem then Item(q.startItem,"Starts quest: ") end
+        MapButtons(q.pickupTargets,"pickup")
     end
     local function QuestDetail(q)
         Add(q.name,nil,nil,T.text,nil,{heading=true,faction=q.faction})
-        Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..(q.classOnly or "All classes"),nil,nil,T.muted)
+        Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..addon.DungeonLootWidgets.ClassText(q.classOnly),nil,nil,T.muted)
         if q.warning then Add(q.warning,nil,nil,T.primary) end
-        Heading("Objective");Add(q.objective or "Objective unknown.")
+        if q.note then Add(q.note,nil,nil,T.secondary) end
+        if q.description and q.description~=q.note then Add(q.description,nil,nil,T.secondary) end
+        if M.mapStatus then Add(M.mapStatus,nil,nil,T.primary) end
+        Heading("Objective");Add(q.objective or "Objective unknown.");MapButtons(q.objectiveTargets,"objective")
         Heading("Starts at");Acquisition(q)
-        Heading("Turn in");Add((q.turnin or "Location unknown")..(q.finish and ("\n"..q.finish) or ""))
+        Heading("Turn in");Add((q.turnin or "Location unknown")..(q.finish and ("\n"..q.finish) or ""));MapButtons(q.turninTargets,"turnin")
         Heading(q.rewardChoice and "Choose one reward" or "Rewards")
         for _,item in ipairs(q.items) do Item(item) end
         -- Avoid repeating every item name in the prose reward summary.
@@ -92,16 +109,11 @@ function M:CreateConfigPage(parent)
                     Acquisition(step)
                     if step.objective then Add(step.objective) end
                     if step.turnin then Add("Turn in: "..step.turnin) end
+                    MapButtons(step.turninTargets,"turnin")
                     if step.note then Add(step.note) end
                     if step.description then Add(step.description) end
                 end
             end
-        end
-        if q.note or q.description then
-            Add(M.view.showNotes and "Hide notes" or "Quest notes",function()
-                M.view.showNotes=not M.view.showNotes;page:Refresh()
-            end)
-            if M.view.showNotes then Add(table.concat({q.note or "",q.description or ""},"\n")) end
         end
     end
     function page:Layout()
@@ -111,7 +123,10 @@ function M:CreateConfigPage(parent)
         end
         local questTab=M.active and M.view.dungeon~=nil and M.view.tab=="quests"
         self.faction:SetShown(questTab)
-        self.search:ClearAllPoints();self.search:SetPoint("TOPLEFT");self.search:SetPoint("TOPRIGHT",questTab and -172 or 0,0)
+        self.faction:ClearAllPoints();self.faction:SetPoint("TOPRIGHT",toolbar,"TOPRIGHT",0,0);self.faction:SetSize(128,28)
+        self.search:ClearAllPoints();self.search:SetPoint("TOPLEFT",toolbar,"TOPLEFT",0,0)
+        if questTab then self.search:SetPoint("TOPRIGHT",self.faction,"TOPLEFT",-10,0)
+        else self.search:SetPoint("TOPRIGHT",toolbar,"TOPRIGHT",0,0) end
         root:SetPoint("TOPLEFT",0,-84);root:SetPoint("BOTTOMRIGHT")
         local leftWidth=math.max(160,math.min(300,width*0.37))
         left:SetPoint("TOPLEFT",0,-84);left:SetPoint("BOTTOMLEFT");left:SetWidth(leftWidth)
@@ -182,7 +197,7 @@ function M:CreateConfigPage(parent)
                     options.subtitle=entry.rare and "Rare encounter" or (#entry.items.." items")
                 else
                     options.faction=entry.faction
-                    options.subtitle=(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..(entry.classOnly and (" · "..entry.classOnly) or "")
+                    options.subtitle=(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..(entry.classOnly and (" · "..addon.DungeonLootWidgets.ClassText(entry.classOnly)) or "")..(#entry.chain>0 and " · Chain" or "")
                 end
                 leftRows:Add(entry.name,function() M:SelectEntry(key,index) end,nil,T.text,nil,options)
             end

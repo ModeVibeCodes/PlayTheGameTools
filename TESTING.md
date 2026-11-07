@@ -173,3 +173,8 @@ Run `python tests/dungeon_loot.py` in addition to the smoke test and build.
 See [exact native review steps](docs/DUNGEON_LOOT.md#native-review--pending).
 Requires the separately installed/enabled DungeonJournal; screenshots and native
 results are pending. Mock tests do not confirm actual drops or quest availability.
+
+Run `python tests/dungeon_loot_map.py` for the quest-map API contract, route
+geometry, cleanup/combat guards, notes/class styling and toolbar anchors. Native
+map rendering and actual source patrol availability still require user review;
+see docs/DUNGEON_LOOT.md for exact paths and limitations.

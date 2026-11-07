@@ -9,13 +9,14 @@ lua.execute('''
     assert(not M.enabled and M.category=='questingLeveling')
     addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
     local page=M.page
+    local function Clean(text) return (text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") end
     local function Texts(pane)
         local out={}
         for _,host in ipairs({page.rootPane,page.listPane,page.detailPane}) do
             if host:IsShown() and (not pane or host==pane) then
                 for _,slot in ipairs(host.slots) do if slot.visible then
-                    out[#out+1]=slot.button.label:GetText()
-                    if slot.subtitle:IsShown() then out[#out+1]=slot.subtitle:GetText() end
+                    out[#out+1]=Clean(slot.button.label:GetText())
+                    if slot.subtitle:IsShown() then out[#out+1]=Clean(slot.subtitle:GetText()) end
                 end end
             end
         end
@@ -26,7 +27,7 @@ lua.execute('''
         for _,host in ipairs({page.rootPane,page.listPane,page.detailPane}) do
             if host:IsShown() and (not pane or pane==host) then
                 for _,slot in ipairs(host.slots) do
-                    if slot.visible and (not clickable or slot.callback) and slot.button.label:GetText():find(text,1,true) then return slot.button,slot end
+                    if slot.visible and (not clickable or slot.callback) and Clean(slot.button.label:GetText()):find(text,1,true) then return slot.button,slot end
                 end
             end
         end
@@ -91,9 +92,9 @@ lua.execute('''
     assert(M.view.quest==1 and Contains('Other Quest',left) and Contains('Fixture objective',page.detailPane))
     assert(Contains('Starts at') and Contains('Fixture End NPC') and Contains('Choose one reward'))
     assert(Contains('12.3, 45.6') and Contains('100 XP'))
-    assert(not Contains('Long optional fixture note') and not Contains('Prereq NPC'))
+    assert(Contains('Long optional fixture note') and not Contains('Prereq NPC'))
     Click('Prerequisites (1)',page.detailPane);assert(Contains('Prereq NPC'))
-    Click('Quest notes',page.detailPane);assert(Contains('Long optional fixture note'))
+
     Click('Other Quest',left)
     assert(M.view.quest==2 and Contains('Other objective',page.detailPane) and Contains('Fixture Quest',left))
     assert(not M.view.showNotes and not M.view.showPrerequisites and not Contains('< All quests'))
@@ -101,7 +102,7 @@ lua.execute('''
     page.search:SetText('no match');assert(Contains('No quests match') and M.view.quest==nil)
     page.search:SetText('');M.view.faction='all';page:Refresh()
     local slots=#page.detailPane.slots
-    for i=1,10 do Click('Other Quest',left);Click('Fixture Quest',left);Click('Prerequisites (1)',page.detailPane);Click('Quest notes',page.detailPane) end
+    for i=1,10 do Click('Other Quest',left);Click('Fixture Quest',left);Click('Prerequisites (1)',page.detailPane) end
     assert(#page.detailPane.slots==slots,'detail pool stays bounded')
     assert(before==addon.ProfileCodec.Encode(source),'source tables remain unchanged')
     page.loot:GetScript('OnClick')(page.loot);assert(M.view.boss==1,'selection retained across tabs')

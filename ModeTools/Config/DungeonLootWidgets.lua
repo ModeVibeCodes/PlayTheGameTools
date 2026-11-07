@@ -29,6 +29,22 @@ function UI.Portrait(texture, entry)
         if not ok then texture:SetTexture("Interface\\EncounterJournal\\UI-EJ-BOSS-Default") end
     elseif entry.icon then texture:SetTexture(entry.icon) end
 end
+local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.5),math.floor(g*255+.5),math.floor(b*255+.5)) end
+function UI.Gradient(text)
+    local chars={};for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars+1]=char end
+    local out={}
+    for index,char in ipairs(chars) do
+        local t=(index-1)/math.max(1,#chars-1)
+        out[index]="|cff"..Hex(.50+.32*t,.86-.08*t,.65+.30*t)..char.."|r"
+    end
+    return table.concat(out)
+end
+function UI.ClassText(token)
+    if not token then return "All classes" end
+    local name=LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token] or (token:sub(1,1)..token:sub(2):lower())
+    local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[token]
+    return c and ("|cff"..Hex(c.r,c.g,c.b)..name.."|r") or name
+end
 function UI.New(page, module)
     local pool = { page = page, module = module, used = 0 }
     page.slots = {}
@@ -75,7 +91,7 @@ function UI.New(page, module)
         button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, item and -10 or -12)
         local factionWidth = UI.Factions(button, options.faction)
         button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
-        button.label:SetText(text); button:SetLabelColor(color or T.text)
+        button.label:SetText(options.heading and UI.Gradient(text) or text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
         addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.expandedItem and 14 or 12))
         button:EnableMouse(callback ~= nil or item ~= nil)
@@ -88,13 +104,13 @@ function UI.New(page, module)
             if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", options.compact and 60 or 86, options.compact and -10 or -24);button.label:SetPoint("TOPRIGHT", -12, options.compact and -10 or -24) end
         end
         slot.subtitle:SetText(options.subtitle or "")
-        slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -8);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -8)
+        slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -6);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -6)
         slot.subtitle:SetShown(options.subtitle ~= nil)
         function slot.row:layoutChildren(width)
             button.label:SetWidth(math.max(80, width - (options.portrait and (options.compact and 76 or 104) or (item and 64 or 28)) - factionWidth))
-            local height = button.label:GetStringHeight() + 22
-            if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 8 end
-            self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (options.heading and 36 or 38)), height + (item and 8 or 0)))
+            local height = button.label:GetStringHeight() + 32
+            if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 6 end
+            self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (options.heading and 40 or (options.subtitle and 56 or 40))), height + (item and 8 or 0)))
         end
         return slot
     end

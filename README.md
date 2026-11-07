@@ -101,3 +101,8 @@ Questing & Leveling → Dungeon Loot provides a Shadowfang Keep loot and quest
 browser. It is off by default and currently requires the separately installed,
 enabled DungeonJournal data addon. Only the Shadowfang Keep artwork card is shown. See [scope, data provenance and native
 checks](docs/DUNGEON_LOOT.md). Native validation and screenshots are pending.
+
+Dungeon Loot's experimental quest-map buttons use recorded pickup locations and
+optional installed QuestieDB/Questie APIs for starters, finishers, direct objectives
+and ordered patrol paths. Native map behavior needs pilot review; coordinates
+are never guessed. See the owning Dungeon Loot guide for exact checks.
