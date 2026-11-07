@@ -13,19 +13,28 @@ The range follows the installed DungeonJournal 1.7.0 SFK record; it is a suggest
 bracket, not the entry requirement. External community ranges differ. No other
 dungeons or example ranges are populated pending acceptance of the SFK experience.
 
-The card opens **Boss Loot**, a responsive grid of native boss portraits. Clicking
-a portrait opens the loot list, with client item icons, quality colors and native
-hover tooltips. Rare encounters are labeled. **Other loot** contains the stable
-mobs, Arugal's Voidwalker and Trash Drops rather than counting them as bosses.
-The inspected source supplies **8 bosses + 1 rare**, 3 extra source groups and
-**7 quests**. These counts describe the installed source, not official completeness.
+The card opens **Boss Loot** with a persistent portrait list on the left and the
+selected boss's loot on the right. The first matching boss is selected immediately.
+Clicking another boss changes the right pane in place, highlights that boss, resets
+only the detail scroll, and preserves the left list's position. No boss back button
+or intermediate grid is required. Each pane scrolls independently. **Other loot**
+keeps the stable mobs, Arugal's Voidwalker and Trash Drops separate from the boss
+count. The inspected source supplies **8 bosses + 1 rare**, 3 extra source groups
+and **7 quests**; these are source counts, not an official completeness claim.
 
-**Quests** shows clickable cards with faction emblems, class/level requirements
-and pickup location previews. The All factions / Alliance / Horde filter includes
-Both-faction quests appropriately. Details have clear sections: **Start here**,
-**Before you go**, **In the dungeon**, **Turn in** and **Rewards**. Prerequisite
-steps include their acquisition details when recorded. Coordinates are text with
-location labels. No quest acceptance, turn-in, tracking or map-pin action exists.
+**Quests** uses the same two-pane layout: compact faction/class/level rows on the
+left; **Objective**, **Starts at**, **Turn in** and reward item cards on the right.
+The source's choice flag controls the **Choose one reward** heading. Item names
+are not repeated in the prose reward summary. **Prerequisites (N)** and **Quest
+notes** expand longer acquisition/chain details on demand; important warnings stay
+visible. Picking a new quest collapses those extras and resets its detail scroll.
+Both-faction quests remain visible in the Alliance/Horde filter. Changing search
+or faction selects the first remaining match when needed, or shows an explicit
+empty state. Returning between Boss Loot and Quests preserves their selections.
+Coordinates remain textual; no map, sharing, tracking or quest actions were added.
+The supplied DungeonJournal screenshots guide the interaction, not this addon's
+styling, implementation or feature scope. Its images are not bundled or presented
+as screenshots of the changed Play The Game Tools UI.
 
 **General** owns the small **Refresh** button, data attribution, and explanations
 of suggested levels and faction emblems. Source/version and implementation
@@ -68,8 +77,8 @@ Blizzard's generated documentation on the `forever` branch was reviewed
 
 - Modules/DungeonLootProvider.lua: read-only SFK adapter, counts and metadata.
 - Modules/DungeonLoot.lua: lifecycle, session navigation and item metadata.
-- Config/DungeonLootWidgets.lua: pooled cards, faction emblems and portrait grids.
-- Config/DungeonLoot.lua: tabs, browser and grouped quest acquisition pages.
+- Config/DungeonLootWidgets.lua: pooled cards, compact portrait rows and emblems.
+- Config/DungeonLoot.lua: fixed tabs, independently scrolling lists/details and quest disclosure.
 - Only the enable preference is saved in the profile. No settings migration.
 - Item metadata uses C_Item.GetItemInfo (legacy fallback),
   C_Item.RequestLoadItemDataByID and GET_ITEM_INFO_RECEIVED. Requests are bounded
@@ -86,47 +95,50 @@ python tools/build_release.py
 ```
 
 Focused checks cover the SFK-only card and counts, General-only refresh, native
-portrait handoff and fallback, two-emblem rendering, grid/list callbacks, source
+portrait handoff and fallback, two-emblem rendering, list/detail callbacks, source
 immutability, schema guards, metadata events, tooltips, filtering, row pooling,
 module lifecycle and enable-state profile roundtrip. Optional reference testing
 executes data files only in the isolated Lua 5.1 mock; it is not native acceptance.
 
-## Native review — redesign pending
+## Native review — two-pane revision pending
 
-The owner reviewed the initial pilot positively; this visual revision needs fresh
-native review and before/after screenshots. The existing Forever AddOns junction
-points to this checkout's ModeTools folder. No copy-sync, junction changes or
-SavedVariables edits. These are Lua/TOC changes using client-owned assets:
-`/reload` should load them. Report any client restart needed for new Lua/art.
+The owner reviewed the prior pilot positively and supplied DungeonJournal
+interaction examples. These are reference screenshots, not native evidence of
+this revision. The existing Forever AddOns junction targets this checkout's
+ModeTools folder. No copy-sync, junction changes or SavedVariables edits.
+Lua-only changes should load with `/reload`; no full client restart is expected.
 
-1. **Navigation:** `/mode` → Questing & Leveling → Dungeon Loot → Dungeons.
-   **Action:** keep DungeonJournal and Dungeon Loot enabled, `/reload`, then open
-   the page. **Required state:** Forever, out of combat. **Confirmation:** only
-   Shadowfang Keep appears under Suggested levels 20–30, as a large loading-screen
-   card with title, 8 bosses + 1 rare, 7 quests and a Horde territory emblem.
+1. **Navigation:** `/mode` → Questing & Leveling → Dungeon Loot → Dungeons →
+   Shadowfang Keep. **Action:** `/reload`, open the dungeon, then select Rethilgore
+   and Razorclaw the Butcher from the left list. **Required state:** Forever,
+   out of combat, DungeonJournal and Dungeon Loot enabled. **Confirmation:** the
+   first boss is selected immediately; either click replaces the right-hand loot
+   without hiding the list or requiring a back button. Portraits and hover item
+   tooltips remain available. Scroll down the boss list and confirm switching
+   bosses preserves that list position while resetting only the loot pane.
 2. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   Dungeons → Shadowfang Keep → Boss Loot → Rethilgore.
-   **Action:** click the boss portrait and hover an item; use < All bosses.
-   **Required state:** out of combat; allow item metadata to arrive.
-   **Confirmation:** boss portraits render, loot tooltips appear, and the return
-   control restores the grid. Other loot remains separate. Check narrow and wide
-   window sizes for portrait, title and loot-row fit.
+   Shadowfang Keep → Quests → Deathstalkers in Shadowfang. **Action:** switch to
+   The Book of Ur directly from the left list. **Required state:** out of combat;
+   All factions or Horde selected. **Confirmation:** compact Objective, Starts at,
+   Turn in and reward cards change in place; the quest list remains visible.
 3. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   Shadowfang Keep → Quests → Deathstalkers in Shadowfang.
-   **Action:** inspect the five named detail sections; return with < All quests
-   and try Quest faction / Search names. **Required state:** out of combat;
-   All factions or Horde selected. **Confirmation:** Hadrec pickup and Vincent
-   turn-in text appear, faction icons and requirements are clear, and filters work.
-   Also inspect a class quest's long prerequisite chain for wrapping and scrolling.
+   Shadowfang Keep → Quests → The Horn of Xelthos → Prerequisites (1) / Quest notes.
+   **Action:** open the displayed prerequisite-count button and Quest notes, then
+   select a different quest. **Required state:** out of combat; All factions.
+   **Confirmation:** long details expand only when requested and collapse for the
+   next quest. The inspected source lists one prerequisite here. No prerequisite
+   button is shown when the source records no prerequisites.
 4. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   General → Dungeon data → Refresh. **Action:** refresh, then return to Dungeons.
-   **Required state:** out of combat. **Confirmation:** Refresh is compact and
-   appears only in General; source attribution stays there. The dungeon card
-   still shows the same totals and artwork.
+   Shadowfang Keep → Quests → All factions dropdown / Search names field.
+   **Action:** choose Alliance, then search for a nonexistent quest. Clear search
+   and return to All factions. **Required state:** out of combat. **Confirmation:**
+   list and detail stay consistent, excluded selections are replaced by a matching
+   quest, and no-match messages replace stale details. Both panes wrap and scroll
+   independently at the current settings-window width.
 5. **Navigation:** Play The Game Tools → Questing & Leveling → Dungeon Loot →
-   header module switch. **Action:** disable, enable and `/reload`.
-   **Required state:** out of combat. **Confirmation:** browsing turns off/on and
-   enable preference persists; other module settings stay intact.
+   General → Refresh, then Dungeons. **Action:** refresh and return to the card.
+   **Required state:** out of combat. **Confirmation:** Refresh stays compact;
+   the full-width artwork card is restored with unchanged source totals.
 
-Screenshots: pending. Keep the PR draft until native behavior and real Forever
-before/after captures are supplied. Crop chat and other players' names.
+Screenshots: pending. Keep the PR draft for native review and real Forever
+before/after captures of the changed addon. Crop chat and other players' names.

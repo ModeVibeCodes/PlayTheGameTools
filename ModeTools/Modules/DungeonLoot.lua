@@ -59,13 +59,28 @@ function M:ReadData()
     self.data = addon.DungeonLootProvider:Read()
     return self.data
 end
+function M:SelectEntry(kind, index)
+    self:HideTooltip()
+    self.view[kind] = index
+    self.view.showPrerequisites, self.view.showNotes = false, false
+    if self.page then
+        self.page.detailPane.scrollbar:SetValue(0)
+        self.page:Refresh()
+    end
+end
 function M:Navigate(dungeon, tab, boss, quest)
     self:HideTooltip()
+    local sameDungeon = self.view.dungeon == dungeon
     self.view.dungeon, self.view.tab = dungeon, tab or "loot"
-    self.view.boss, self.view.quest, self.view.search = boss, quest, ""
+    if not sameDungeon then self.view.boss, self.view.quest = nil, nil end
+    if boss then self.view.boss = boss end
+    if quest then self.view.quest = quest end
+    self.view.search = ""
+    self.view.showPrerequisites, self.view.showNotes = false, false
     if self.page then
         self.page.search:SetText("")
-        self.page.scrollbar:SetValue(0)
+        self.page.listPane.scrollbar:SetValue(0)
+        self.page.detailPane.scrollbar:SetValue(0)
         self.page:Refresh()
     end
 end

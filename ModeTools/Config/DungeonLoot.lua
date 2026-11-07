@@ -2,174 +2,199 @@ local _, addon = ...
 local M, W, T = addon.DungeonLoot, addon.ConfigWidgets, addon.InterfaceTheme
 
 function M:CreateConfigPage(parent)
-    local page = W.Page(parent, 320)
+    local page = CreateFrame("Frame", nil, parent)
+    page.searchEntries = {}
     self.page = page
-    local rows = addon.DungeonLootWidgets.New(page, self)
-    local nav = page:Row("", 44)
-    nav.rowLabel:Hide();nav:ClearAllPoints();nav:SetPoint("TOPLEFT",nav.row,"TOPLEFT",0,-4);nav:SetPoint("BOTTOMRIGHT",nav.row,"BOTTOMRIGHT",0,4)
+    local nav = CreateFrame("Frame", nil, page)
+    nav:SetPoint("TOPLEFT");nav:SetPoint("TOPRIGHT");nav:SetHeight(36)
     local buttons = {}
     local function Tab(text, callback)
-        local button=W.Button(nav,text,80,32,"underline")
-        button:SetScript("OnClick",callback);buttons[#buttons+1]=button
-        return button
+        local b=W.Button(nav,text,90,32,"underline")
+        b:SetScript("OnClick",callback);buttons[#buttons+1]=b;return b
     end
     page.home=Tab("Dungeons",function() self:Navigate(nil) end)
     page.loot=Tab("Boss Loot",function() self:Navigate(self.view.dungeon,"loot") end)
     page.quests=Tab("Quests",function() self:Navigate(self.view.dungeon,"quests") end)
     page.general=Tab("General",function() self:Navigate(nil,"general") end)
-    function nav.row:layoutChildren(width)
-        for i,button in ipairs(buttons) do
-            button:ClearAllPoints();button:SetSize((width-12)/4,32);button:SetPoint("TOPLEFT",(i-1)*(width+4)/4,0)
-        end
-    end
-    local input=page:Row("Search names",48)
-    input.row.visibleWhen=function() return self.active and self.view.tab~="general" and not self.view.quest end
-    page.search=CreateFrame("EditBox",nil,input)
-    page.search:SetPoint("TOPLEFT");page.search:SetPoint("TOPRIGHT");page.search:SetHeight(28)
+    local toolbar=CreateFrame("Frame",nil,page)
+    toolbar:SetPoint("TOPLEFT",0,-42);toolbar:SetPoint("TOPRIGHT",0,-42);toolbar:SetHeight(30)
+    page.search=CreateFrame("EditBox",nil,toolbar)
+    page.search:SetPoint("TOPLEFT");page.search:SetHeight(28)
     page.search:SetAutoFocus(false);page.search:SetMaxLetters(80);page.search:SetFontObject(GameFontHighlight)
-    page.search:SetTextInsets(6,6,0,0);W.Texture(page.search,"InputField")
-    page.search:SetScript("OnTextChanged",function(box) self.view.search=box:GetText() or "";page.scrollbar:SetValue(0);page:Refresh() end)
+    page.search:SetTextInsets(8,8,0,0);W.Texture(page.search,"InputField")
+    page.searchHint=W.Label(page.search,"Search names",nil,8,-7,130,T.muted)
+    page.search:SetScript("OnTextChanged",function(box)
+        self.view.search=box:GetText() or "";page.searchHint:SetShown(self.view.search=="")
+        page.listPane.scrollbar:SetValue(0);page:Refresh()
+    end)
     page.search:SetScript("OnEscapePressed",function(box) box:ClearFocus() end)
-    local filter=page:Row("Quest faction",48)
-    page.faction=W.Select(filter,180,function() return {
+    page.faction=W.Select(toolbar,160,function() return {
         {id="all",label="All factions"},{id="Alliance",label="Alliance"},{id="Horde",label="Horde"}
     } end,function() return self.view.faction,self.view.faction=="all" and "All factions" or self.view.faction end,
-    function(value) self.view.faction=value;self.view.quest=nil;page:Refresh() end)
-    filter.row.visibleWhen=function() return self.active and self.view.dungeon=="Shadowfang Keep" and self.view.tab=="quests" and not self.view.quest end
-    local refresh=page:Row("Dungeon data",40)
-    refresh.row.visibleWhen=function() return self.view.tab=="general" end
-    page.reload=W.Button(refresh,"Refresh",86,24)
-    page.reload:SetPoint("TOPLEFT");page.reload:SetScript("OnClick",function() self.attempted={};self:ReadData();page:Refresh() end)
-
-    local function Add(...) return rows:Add(...) end
+    function(value) self.view.faction=value;page.listPane.scrollbar:SetValue(0);page:Refresh() end)
+    page.faction:SetPoint("TOPRIGHT")
+    local function Pane(minimum)
+        local pane=W.Page(page,minimum)
+        pane:ClearAllPoints()
+        return pane,addon.DungeonLootWidgets.New(pane,self)
+    end
+    local root,rootRows=Pane(280)
+    page.rootPane=root
+    local left,leftRows=Pane(140)
+    local right,rightRows=Pane(180)
+    page.listPane,page.detailPane=left,right
+    W.Fill(left,T.sidebar);W.Fill(right,T.panel)
+    local function Add(...) return rightRows:Add(...) end
     local function Heading(text) Add(text,nil,nil,T.secondary,nil,{heading=true}) end
-    local function Item(item, prefix, unfiltered)
+    local function Item(item,prefix)
         local name,icon,quality,loaded=self:ItemInfo(item)
-        if not unfiltered and not self:Matches(name.." "..item.name) then return false end
         local color=T.text
         if quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality] then
             local c=ITEM_QUALITY_COLORS[quality];color={c.r,c.g,c.b,1}
         end
-        Add((prefix or "")..name..(item.slot and ("  ·  "..item.slot) or "")..(loaded and "" or "  (loading details)"),nil,item,color,icon)
-        return true
+        Add((prefix or "")..name..(item.slot and ("\n"..item.slot) or "")..(loaded and "" or "  (loading details)"),nil,item,color,icon)
     end
     local function Acquisition(q)
-        Add("Pick up: "..(q.pickup or "Location unknown"))
-        if q.start then Add(q.start) end
-        if q.startItem then Item(q.startItem,"Quest-starting item: ",true) end
-        if q.startObject then Add("Quest-starting object: "..q.startObject) end
-        if q.startHint then Add(q.startHint) end
+        local text=q.pickup or "Location unknown"
+        if q.start then text=text.."\n"..q.start end
+        if q.startObject then text=text.."\n"..q.startObject end
+        if q.startHint then text=text.."\n"..q.startHint end
+        Add(text)
+        if q.startItem then Item(q.startItem,"Starts quest: ") end
     end
     local function QuestDetail(q)
         Add(q.name,nil,nil,T.text,nil,{heading=true,faction=q.faction})
-        Add((q.classOnly or "All classes").."  ·  "..(q.requires and ("Requires level "..q.requires) or "Required level unknown").."  ·  "..(q.faction or "Faction unknown"),nil,nil,T.muted)
-        Heading("Start here");Acquisition(q)
-        Heading("Before you go")
-        if #q.chain>0 then
-            for index,step in ipairs(q.chain) do
-                Add(index..". "..step.name,nil,nil,T.primary)
-                Acquisition(step)
-                if step.objective then Add(step.objective) end
-                if step.turnin then Add("Turn in: "..step.turnin) end
-                if step.note then Add(step.note) end
-                if step.description then Add(step.description) end
-            end
-        else Add("No prerequisites recorded.",nil,nil,T.muted) end
+        Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..(q.classOnly or "All classes"),nil,nil,T.muted)
         if q.warning then Add(q.warning,nil,nil,T.primary) end
-        Heading("In the dungeon")
-        if q.objective then Add(q.objective) end
-        if q.note then Add(q.note) end
-        if q.description then Add(q.description) end
-        Heading("Turn in")
-        Add(q.turnin or "Location unknown")
-        if q.finish then Add(q.finish) end
-        Heading("Rewards")
-        if q.rewards then Add(q.rewards) end
-        if q.rewardSummary and q.rewardSummary~="" then Add(q.rewardSummary) end
-        for _,item in ipairs(q.items) do Item(item,nil,true) end
-        if #q.items==0 and not q.rewards then Add("Rewards unknown.",nil,nil,T.muted) end
-    end
-    local function Bosses(data, extras)
-        local entries={}
-        for index,entry in ipairs(data.bosses) do
-            if entry.extra==extras and self:Matches(entry.name) then
-                local selected=index
-                entries[#entries+1]={name=entry.name,displayID=entry.displayID,icon=entry.icon,
-                    detail=(entry.rare and "Rare encounter · " or "")..#entry.items.." items",
-                    callback=function() self:Navigate("Shadowfang Keep","loot",selected) end}
+        Heading("Objective");Add(q.objective or "Objective unknown.")
+        Heading("Starts at");Acquisition(q)
+        Heading("Turn in");Add((q.turnin or "Location unknown")..(q.finish and ("\n"..q.finish) or ""))
+        Heading(q.rewardChoice and "Choose one reward" or "Rewards")
+        for _,item in ipairs(q.items) do Item(item) end
+        -- Avoid repeating every item name in the prose reward summary.
+        local rewards=q.rewards
+        if #q.items>0 then rewards=rewards and rewards:match("\n(.+)$") end
+        if rewards then Add(rewards,nil,nil,T.muted)
+        elseif q.rewardSummary and q.rewardSummary~="" then Add(q.rewardSummary,nil,nil,T.muted) end
+        if #q.items==0 and not rewards then Add("Rewards unknown.",nil,nil,T.muted) end
+        if #q.chain>0 then
+            Add((M.view.showPrerequisites and "Hide prerequisites" or "Prerequisites").." ("..#q.chain..")",function()
+                M.view.showPrerequisites=not M.view.showPrerequisites;page:Refresh()
+            end)
+            if M.view.showPrerequisites then
+                for index,step in ipairs(q.chain) do
+                    Add(index..". "..step.name,nil,nil,T.primary)
+                    Acquisition(step)
+                    if step.objective then Add(step.objective) end
+                    if step.turnin then Add("Turn in: "..step.turnin) end
+                    if step.note then Add(step.note) end
+                    if step.description then Add(step.description) end
+                end
             end
         end
-        if #entries>0 then rows:Grid(entries) end
-        return #entries
+        if q.note or q.description then
+            Add(M.view.showNotes and "Hide notes" or "Quest notes",function()
+                M.view.showNotes=not M.view.showNotes;page:Refresh()
+            end)
+            if M.view.showNotes then Add(table.concat({q.note or "",q.description or ""},"\n")) end
+        end
+    end
+    function page:Layout()
+        local width=self:GetWidth()
+        for index,b in ipairs(buttons) do
+            b:ClearAllPoints();b:SetSize((width-12)/4,32);b:SetPoint("TOPLEFT",(index-1)*(width+4)/4,0)
+        end
+        local questTab=M.active and M.view.dungeon~=nil and M.view.tab=="quests"
+        self.faction:SetShown(questTab)
+        self.search:ClearAllPoints();self.search:SetPoint("TOPLEFT");self.search:SetPoint("TOPRIGHT",questTab and -172 or 0,0)
+        root:SetPoint("TOPLEFT",0,-84);root:SetPoint("BOTTOMRIGHT")
+        local leftWidth=math.max(160,math.min(300,width*0.37))
+        left:SetPoint("TOPLEFT",0,-84);left:SetPoint("BOTTOMLEFT");left:SetWidth(leftWidth)
+        right:SetPoint("TOPLEFT",left,"TOPRIGHT",12,0);right:SetPoint("BOTTOMRIGHT")
+        root:Layout();left:Layout();right:Layout()
     end
     function page:Refresh()
         if self.refreshing then return end
         self.refreshing=true
-        M:HideTooltip();rows:Reset()
+        M:HideTooltip();rootRows:Reset();leftRows:Reset();rightRows:Reset()
         local v=M.view
         local data=M.active and (M.data or M:ReadData()) or nil
+        local browser=M.active and data.available and v.dungeon~=nil and v.tab~="general"
+        root:SetShown(not browser);left:SetShown(browser);right:SetShown(browser)
+        toolbar:SetShown(M.active and v.tab~="general")
         self.home:SetSelected(v.dungeon==nil and v.tab~="general")
-        self.loot:SetSelected(v.dungeon~=nil and v.tab=="loot")
-        self.quests:SetSelected(v.dungeon~=nil and v.tab=="quests")
+        self.loot:SetSelected(v.dungeon~=nil and v.tab=="loot");self.quests:SetSelected(v.dungeon~=nil and v.tab=="quests")
         self.general:SetSelected(v.tab=="general")
-        self.loot:SetEnabled(M.active and v.dungeon=="Shadowfang Keep")
-        self.quests:SetEnabled(M.active and v.dungeon=="Shadowfang Keep")
-        self.reload:SetEnabled(M.active);self.faction:Refresh()
+        self.loot:SetEnabled(M.active and v.dungeon=="Shadowfang Keep");self.quests:SetEnabled(M.active and v.dungeon=="Shadowfang Keep")
+        self.faction:Refresh()
         if not M.active then
-            Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
+            rootRows:Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
         elseif v.tab=="general" then
-            Heading("General")
-            Add(data.source,nil,nil,T.muted)
-            Add("Loot and quest availability can change. Suggested levels are a guide, not an entry requirement.",nil,nil,T.muted)
-            Add("Faction emblems on dungeon cards show the surrounding territory. Quest emblems show who can take each quest.",nil,nil,T.muted)
+            rootRows:Add("General",nil,nil,T.secondary,nil,{heading=true})
+            rootRows:Add(data.source,nil,nil,T.muted)
+            rootRows:Add("Loot and quest availability can change. Suggested levels are a guide, not an entry requirement.",nil,nil,T.muted)
+            rootRows:Add("Dungeon emblems show the surrounding territory; quest emblems show who can take the quest.",nil,nil,T.muted)
+            local refresh=rootRows:Add("Refresh",function() M.attempted={};M:ReadData();page:Refresh() end)
+            self.reload=refresh.button;self.reload:SetWidth(86)
+            -- Keep the refresh target compact rather than filling the settings page.
+            refresh.button:ClearAllPoints();refresh.button:SetPoint("TOPLEFT");refresh.button:SetSize(86,28)
         elseif not v.dungeon then
-            Heading("Suggested levels "..data.card.suggestedLevel)
-            if M:Matches("Shadowfang Keep") then rows:Dungeon(data,function() M:Navigate("Shadowfang Keep") end)
-            else Add("No dungeons match your search.") end
-            if not data.available then Add(data.source,nil,nil,T.muted) end
-        elseif not data.available then
-            Heading("Shadowfang Keep");Add(data.source,nil,nil,T.muted)
-        elseif v.tab=="loot" then
-            local boss=v.boss and data.bosses[v.boss]
-            if boss then
-                Add("< All bosses",function() M:Navigate("Shadowfang Keep","loot") end)
-                Add(boss.name,nil,nil,T.text,nil,{heading=true,portrait=boss})
-                Heading("Loot")
-                local count=0
-                for _,item in ipairs(boss.items) do if Item(item) then count=count+1 end end
-                if count==0 then Add(#boss.items==0 and "Loot unknown." or "No items match your search.") end
-            else
-                Heading("Shadowfang Keep · Bosses")
-                local regular=Bosses(data,false)
-                local hasExtra=false
-                for _,entry in ipairs(data.bosses) do if entry.extra and M:Matches(entry.name) then hasExtra=true end end
-                if hasExtra then Heading("Other loot");Bosses(data,true) end
-                if regular==0 and not hasExtra then Add("No bosses match your search.") end
-            end
-        elseif v.tab=="quests" then
-            local quest=v.quest and data.quests[v.quest]
-            if quest then
-                Add("< All quests",function() M:Navigate("Shadowfang Keep","quests") end)
-                QuestDetail(quest)
-            else
-                Heading("Shadowfang Keep · Quests")
-                local count=0
-                for index,q in ipairs(data.quests) do
-                    local faction=v.faction=="all" or not q.faction or q.faction=="Both" or q.faction==v.faction
-                    if faction and M:Matches(q.name) then
-                        local selected=index
-                        Add(q.name,function() M:Navigate("Shadowfang Keep","quests",nil,selected) end,nil,T.text,nil,
-                            {faction=q.faction,subtitle=(q.classOnly or "All classes").." · "..(q.requires and ("Level "..q.requires.."+") or "Level unknown").."\n"..(q.pickup or "Pickup location unknown")})
-                        count=count+1
+            rootRows:Add("Suggested levels "..data.card.suggestedLevel,nil,nil,T.secondary,nil,{heading=true})
+            if M:Matches("Shadowfang Keep") then rootRows:Dungeon(data,function() M:Navigate("Shadowfang Keep") end)
+            else rootRows:Add("No dungeons match your search.") end
+            if not data.available then rootRows:Add(data.source,nil,nil,T.muted) end
+        elseif not data.available then rootRows:Add(data.source,nil,nil,T.muted)
+        else
+            local entries={}
+            leftRows:Add(v.tab=="loot" and "Bosses" or "Quests",nil,nil,T.secondary,nil,{heading=true})
+            if v.tab=="loot" then
+                for _,extras in ipairs({false,true}) do
+                    for index,boss in ipairs(data.bosses) do
+                        if boss.extra==extras and M:Matches(boss.name) then entries[#entries+1]={index=index,entry=boss} end
                     end
                 end
-                if count==0 then Add("No quests match your filters.") end
+            else
+                for index,q in ipairs(data.quests) do
+                    local faction=v.faction=="all" or not q.faction or q.faction=="Both" or q.faction==v.faction
+                    if faction and M:Matches(q.name) then entries[#entries+1]={index=index,entry=q} end
+                end
             end
+            local key=v.tab=="loot" and "boss" or "quest"
+            local selected
+            for _,entry in ipairs(entries) do if entry.index==v[key] then selected=entry.entry end end
+            if not selected then
+                v[key]=entries[1] and entries[1].index or nil;selected=entries[1] and entries[1].entry
+                v.showPrerequisites,v.showNotes=false,false
+                right.scrollbar:SetValue(0)
+            end
+            local extrasHeading=false
+            for _,record in ipairs(entries) do
+                local entry,index=record.entry,record.index
+                local options={compact=true,selected=v[key]==index}
+                if key=="boss" then
+                    if entry.extra and not extrasHeading then leftRows:Add("Other loot",nil,nil,T.secondary,nil,{heading=true});extrasHeading=true end
+                    options.portrait=entry
+                    options.subtitle=entry.rare and "Rare encounter" or (#entry.items.." items")
+                else
+                    options.faction=entry.faction
+                    options.subtitle=(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..(entry.classOnly and (" · "..entry.classOnly) or "")
+                end
+                leftRows:Add(entry.name,function() M:SelectEntry(key,index) end,nil,T.text,nil,options)
+            end
+            if not selected then
+                local message=key=="boss" and "No bosses match your search." or "No quests match your filters."
+                leftRows:Add(message);Add(message)
+            elseif key=="boss" then
+                Add(selected.name,nil,nil,T.text,nil,{heading=true,portrait=selected})
+                for _,item in ipairs(selected.items) do Item(item) end
+                if #selected.items==0 then Add("Loot unknown.") end
+            else QuestDetail(selected) end
         end
         self:Layout();self.refreshing=nil
     end
+    page:SetScript("OnSizeChanged",function() page:Layout() end)
     page:SetScript("OnShow",function() if self.active then self:ReadData() end;self:SyncEvents();page:Refresh() end)
     page:SetScript("OnHide",function() self:SyncEvents();self:HideTooltip() end)
-    page:Finish()
+    page:Refresh()
     return page
 end

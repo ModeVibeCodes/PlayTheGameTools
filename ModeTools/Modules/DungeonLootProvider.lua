@@ -42,6 +42,7 @@ local function Quest(raw, ns, step, stepID, stepName)
     q.start = Map(raw.startMap or raw.map or Table(ns.QUEST_START_MAPS)[q.id])
     q.finish = Map(raw.turninMap)
     q.items = Items(raw.rewardItems, true)
+    q.rewardChoice = raw.rewardChoice == true
     q.startItem = Items(raw.startItem and {raw.startItem}, true)[1]
     q.startObject = Text(Table(raw.startObject)[1])
     q.startHint = Text(Table(raw.startItem)[4]) or Text(Table(raw.startObject)[3])

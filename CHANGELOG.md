@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Dungeon Loot now keeps a persistent boss/quest list beside its selected detail
+  pane. The first entry opens automatically; switching entries updates loot or
+  quest details in place and preserves list scroll. Quest details are condensed
+  to objective, pickup, turn-in and rewards, with expandable notes/prerequisites.
+  Removed boss/quest back navigation and redundant reward prose.
+
 - Refined Dungeon Loot into an SFK-only loading-screen card grouped by suggested
   levels, with boss/rare/quest totals and a Horde territory emblem. Added native
   boss portrait grids, quest faction emblems and grouped acquisition/reward
