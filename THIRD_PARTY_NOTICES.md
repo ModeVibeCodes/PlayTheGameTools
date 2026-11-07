@@ -52,3 +52,33 @@ property. References to assets available in the game do not transfer ownership.
 The Play The Game Tools MIT grant does not relicense Blizzard assets or declare them public
 domain. No third-party font files are bundled; optional media providers are not
 redistributed by this package.
+
+## Bundled Dungeon Loot catalog
+
+DungeonLootCatalogItems.lua, DungeonLootCatalogInstances.lua and
+DungeonLootCatalogQuests.lua derive from Lootified 1.2.0 by Alen (TepsiPepsi),
+GPLv3, including data attributed upstream to CMaNGOS classic-db (GPLv3).
+Each file retains provenance comments and records its namespace modification.
+The full unmodified license is in LICENSES/GPL-3.0.txt. Editable Lua source ships
+in the package. Combined distributions containing this catalog are provided under
+GPLv3; Mode's original MIT notices and grants remain intact. No warranty applies.
+See CATALOG_SOURCES.md for the pinned archive, hash, source URLs and exclusions.
+
+No DungeonJournal database, code, prose or artwork is bundled or required.
+No Lootified UI, fonts, emblems, maps or other image assets are included.
+Dungeon cards and portraits reference native Blizzard client artwork only.
+Original SFK additions are independently authored factual summaries, with sources
+listed in CATALOG_SOURCES.md. Blizzard retains its game text, names and artwork.
+
+## Optional QuestieDB / Questie location APIs
+
+Dungeon Loot reads the user's separately installed QuestieDB public entity getters
+and Questie's ZoneDB map-ID conversion API for quest locations and patrol paths.
+QuestieDB and Questie retain their own authorship and licenses; no code, databases,
+records or artwork from those addons are redistributed. Quest-like markers use
+Blizzard's native GossipFrame and WorldMap textures; rendering is independent.
+
+The owned SFK location catalog is a manually curated set of rounded planning
+facts with public references listed in docs/DUNGEON_LOOT.md. No source-page prose,
+artwork or addon database is bundled. Approximate/interior-proxy labels distinguish
+these estimates from native observations or optional recorded patrols.

@@ -4,8 +4,9 @@
 ## Author: Mode
 ## Version: 0.2.0-beta.1
 ## SavedVariables: ModeToolsDB
-## OptionalDeps: LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
+## OptionalDeps: QuestieDB, Questie, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
 ## X-ModeTools-Edition: Forever
+## X-License: GPL-3.0-only (bundled distribution; original MIT grants retained)
 
 Core\Edition.lua
 Core\Database.lua
@@ -55,6 +56,17 @@ Modules\ForeverFoodBarData.lua
 Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
 Modules\ThreatMeter.lua
+Modules\DungeonLootCatalog.lua
+Modules\DungeonLootCatalogItems.lua
+Modules\DungeonLootCatalogInstances.lua
+Modules\DungeonLootCatalogQuests.lua
+Modules\DungeonLootCatalogOverrides.lua
+Modules\DungeonLootLocationData.lua
+Modules\DungeonLootLocations.lua
+Modules\DungeonLootProvider.lua
+Modules\DungeonLootMap.lua
+Modules\DungeonLootMapPins.xml
+Modules\DungeonLoot.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -79,5 +91,7 @@ Config\ForeverQuickAccess.lua
 Config\ForeverFoodBar.lua
 Config\ForeverRecruitment.lua
 Config\ThreatMeter.lua
+Config\DungeonLootWidgets.lua
+Config\DungeonLoot.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua

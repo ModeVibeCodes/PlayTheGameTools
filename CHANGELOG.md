@@ -6,6 +6,79 @@
   threat on your current hostile target for you and your party or raid, tanking
   first, then highest percentage. Optional Show Pets (off by default), Hide Out
   of Combat while locked, Lock Threat Meter and Reset Position.
+
+- Made Dungeon Loot standalone: bundled the GPLv3 Lootified 1.2.0 data catalog
+  with its full license, source attribution and editable Lua. Removed the
+  DungeonJournal dependency and external artwork paths. Native world-coordinate
+  conversion supports recorded pickup/return locations without Questie. Retained
+  SFK class quests and the accepted UI; incomplete/newer records remain labeled.
+
+- Expanded the accepted SFK browser to every recorded Forever dungeon/wing:
+  31 playable entries and four non-clickable previews in the current source.
+  Added sorted suggested-starting-level groups, per-dungeon scenes/counts/region
+  emblems, a fixed dungeon context header and independent selection routing.
+  Selected-dungeon normalization keeps item/location work bounded. Recorded
+  giver-name joins and explicit entrance proxies improve map/copy coverage;
+  missing or ambiguous locations remain unavailable. No upstream media copied; data bundling is described above.
+
+- Replaced invisible loose map markers with managed native map pins using an
+  addon-owned XML template, normalized positioning, zoom compensation and the
+  native topmost frame level. Added pool lifecycle/load-order validation and
+  actionable marker errors, including failures inside map refresh callbacks.
+
+- Tightened SFK quest spacing, added glowing gray NPC subheaders and retained
+  useful location hints. Objective map actions are removed. Pickup/turn-in actions
+  now pair View on Map with Copy Coordinates (preselected field, Ctrl+C).
+  Added blue-gradient tab underlines and cleaner centered map symbols with blue
+  borders and a short hide tooltip. Lightened/shrank dungeon card text bands.
+
+- Updated Dungeon Loot map opening/layout handling with the native zone-opening
+  API, bounded redraws and canvas rebinding. Custom markers remain independent
+  of quest ownership. Added compact View on Map buttons, removed approximation
+  suffixes, numbered quest steps, and applied the requested blue/red/gold gradients.
+
+- Dungeon Loot headers now use amber/rose/violet with a subtle static glow. Map
+  targets use larger contrasting labeled icons, dismissible by right-click.
+  Added an owned, attributed SFK pickup/turn-in planning catalog for all seven
+  quests, usable without Questie. Points remain planning estimates; interior destinations
+  use explicit entrance proxies. Optional sources may still enrich patrols.
+
+- Refined Dungeon Loot quest alignment, gradient headings, always-visible notes,
+  class colors and Chain indicators. Fixed the search/faction anchor overlap.
+  Added experimental OOC quest-map buttons with native !/? markers and ordered
+  patrol lines from optional installed QuestieDB/Questie data. Missing coordinates
+  stay unknown; source tables and other addons are not modified.
+
+- Top-aligned Dungeon Loot item icons/text with enough row height. Bosses with up
+  to five items now show client tooltip text inline; six or more stay compact.
+  Native tooltip-data updates refresh visible details without polling. Shortened
+  and tightened the SFK loading-screen crop to exclude its logo/loading bar.
+
+- Dungeon Loot now keeps a persistent boss/quest list beside its selected detail
+  pane. The first entry opens automatically; switching entries updates loot or
+  quest details in place and preserves list scroll. Quest details are condensed
+  to objective, pickup, turn-in and rewards, with expandable notes/prerequisites.
+  Removed boss/quest back navigation and redundant reward prose.
+
+- Refined Dungeon Loot into an SFK-only loading-screen card grouped by suggested
+  levels, with boss/rare/quest totals and a Horde territory emblem. Added native
+  boss portrait grids, quest faction emblems and grouped acquisition/reward
+  sections. Moved the compact Refresh control and attribution to General.
+  Other dungeon entries and repeated implementation descriptions were removed.
+
+- Added the off-by-default Dungeon Loot SFK pilot under Questing & Leveling:
+  dungeon index, boss/source loot with native item tooltips, and dungeon quests
+  with pickup/turn-in locations, prerequisites and rewards. Reads the separately
+  installed, enabled DungeonJournal at runtime; no third-party tables are bundled.
+  Includes name search and quest faction filtering. Native review is pending.
+  See docs/DUNGEON_LOOT.md.
+
+- The guild ding message now includes the time it took to level on the first
+  level-up of a session. With Time to Level on, Class Training requests /played
+  once per login or reload (the client prints its usual two /played lines) and
+  adds the server's time played at that level. The level-up window's Time to
+  level line uses the same value. If /played is unavailable it falls back to
+  the in-session clock as before.
 - Replaced the Recruitment module with the guild's standalone recruiter flow:
   class x level-range Who searches that split capped ranges, a Recruiter window
   (`/ptgr`), a Ctrl+C copy-name box for Guild > Add Member in place of the blocked

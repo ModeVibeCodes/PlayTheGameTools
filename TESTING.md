@@ -68,6 +68,17 @@ separate result from the existing-settings upgrade check above.
    **Confirmation:** Preview is readable, optional summaries follow preferences,
    and settings survive reload. Record actual Level-Up Alerts separately on the
    next naturally occurring level gain; preview does not validate that event.
+5. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training →
+   Level Up Window section → Guild Ding Message and Time to Level toggles; then the
+   level-up window's Guild Message button.
+   **Action:** With both toggles on, log in or `/reload` and note the native
+   "Time played this level" chat line. Gain a level OOC, click Guild Message.
+   **Required state:** In a guild with guild chat permission; OOC; empty chat box.
+   **Confirmation:** Exactly one /played print per login or reload. The prepared
+   `/g` draft reads "Ding <level>, that took me <time>", where time is close to
+   the previous "Time played this level" plus the time since. The level-up
+   window's Time to level line shows the same duration. With Time to Level off,
+   the draft reads "Ding <level>" only.
 
 Repeat the class comparison on other available classes without claiming untested
 classes passed. Priest race/Mage faction filters, pet/tome/quest acquisition and
@@ -155,3 +166,24 @@ Initial WowUp install/update delivery remains untested until an explicitly appro
 public release exists. Test it with one guildmate before broader announcement.
 Public repository/release creation is a separate approval; no auto-publish workflow
 is supplied. A beta label does not restrict access to guildmates.
+
+## Dungeon Loot
+
+Run the smoke test/build and these focused checks:
+
+```
+python tests/dungeon_loot.py
+python tests/dungeon_loot_map.py
+python tests/dungeon_loot_catalog.py
+python tests/dungeon_loot_standalone.py
+```
+
+The catalog suite traverses all bundled browsable dungeons, every boss/source and
+quest pane, preview non-interactivity, read-only provider state, independent
+selections/search, artwork metadata, conservative location joins and lazy reads.
+Map checks cover native pin pooling, zoom/levels, cleanup, missing templates and
+provider failures. Mock tests establish neither native rendering nor actual drops
+or quest availability. See [exact native review paths](docs/DUNGEON_LOOT.md#native-review--expansion-pending).
+The owner accepted SFK; standalone catalog review and screenshots remain pending.
+Disable DungeonJournal, Questie and QuestieDB for the native baseline checks.
+Restart the client to load the new TOC files; preserve SavedVariables.

@@ -115,22 +115,53 @@ function M:SetPopupOption(key,value)
     local G=P.NewGuard(_G);local range=ranges[key]
     if flags[key] then if not G:Public(value) or type(value)~="boolean" then return false end
     elseif not range or not G:Integer(value,range[1],range[2]) or value%range[3]~=0 then return false end
-    if key=="showLevelTime" and value~=self.db[key] then self.lastLevelClock,self.lastClockLevel,self.levelDuration=nil,nil,nil end
+    local levelTimeChanged=key=="showLevelTime" and value~=self.db[key]
+    if levelTimeChanged then self:ResetLevelTime() end
     self.db[key]=value
+    if levelTimeChanged then self:RequestLevelPlayed() end
     if self.dingWindow and self.dingWindow:IsShown() and self:OutsideCombat() then
         self:ShowDing(self.displayLevel,self.displayRows,self.displayPreview)
     end
     return true
 end
 
+local function ValidSeconds(G,value)
+    return G:Public(value) and type(value)=="number" and value==value and value>=0 and value<1e12
+end
+
+function M:ResetLevelTime()
+    self.lastLevelClock,self.lastClockLevel,self.levelDuration=nil,nil,nil
+    self.playedBase,self.playedRequested=nil,nil
+end
+
+-- One native /played request per session; the chat frame prints its usual lines.
+function M:RequestLevelPlayed()
+    if self.playedRequested or not self.active or self.db.levelAlerts==false or not self:PopupValue("showLevelTime") then return end
+    local G=P.NewGuard(_G);local ok,loggedIn=G:Call(IsLoggedIn)
+    if not ok or loggedIn~=true then return end
+    self.playedRequested=true
+    G:Call(RequestTimePlayed)
+end
+
+-- TIME_PLAYED_MSG: server time played at the current level, anchored to GetTime.
+function M:RecordPlayedTime(levelTime)
+    local G=P.NewGuard(_G);local ok,now=G:Call(GetTime);local valid,level=G:Call(UnitLevel,"player")
+    if ok and valid and ValidSeconds(G,levelTime) and ValidSeconds(G,now) and G:Integer(level,1,1000) then
+        self.playedBase={level=level,seconds=levelTime,clock=now}
+    else self.playedBase=nil end
+end
+
 function M:RecordLevelTime(level)
     if not self:PopupValue("showLevelTime") or self.lastClockLevel==level then return end
     local G=P.NewGuard(_G);local ok,now=G:Call(GetTime)
     self.levelDuration=nil
-    if ok and G:Public(now) and type(now)=="number" and now==now and now>=0 and now<1e12 then
-        if self.lastClockLevel==level-1 and self.lastLevelClock and now>=self.lastLevelClock then self.levelDuration=now-self.lastLevelClock end
+    if ok and ValidSeconds(G,now) then
+        local base=self.playedBase
+        if base and base.level==level-1 and now>=base.clock then self.levelDuration=base.seconds+(now-base.clock)
+        elseif self.lastClockLevel==level-1 and self.lastLevelClock and now>=self.lastLevelClock then self.levelDuration=now-self.lastLevelClock end
         self.lastLevelClock,self.lastClockLevel=now,level
-    else self.lastLevelClock,self.lastClockLevel=nil,nil end
+        self.playedBase={level=level,seconds=0,clock=now}
+    else self.lastLevelClock,self.lastClockLevel,self.playedBase=nil,nil,nil end
 end
 
 function M:GuildDingText(level)
@@ -154,7 +185,7 @@ function M:PopupDetails(preview)
         if duration then
             duration=math.floor(duration)
             lines[#lines+1]=string.format("Time to level  %dh %02dm %02ds%s",math.floor(duration/3600),math.floor(duration/60)%60,duration%60,preview and " · Sample" or "")
-        else lines[#lines+1]="Time to level  —  (needs two level-ups this session)" end
+        else lines[#lines+1]="Time to level  —  (unavailable: /played not received)" end
     end
     if self:PopupValue("showPlayerMoney") then
         local ok,money=G:Call(GetMoney)
