@@ -23,8 +23,10 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   and optional time-to-level, money and profession summaries.
 - **Quick Access and Food Bar:** configurable profession/utility access, food
   selection and optional bandages with existing native click/combat guards.
-- **Guild Recruitment:** opt-in Who search and candidate tracking, editable chat
-  drafts, manual invite controls, and saved recruitment preferences.
+- **Guild Recruitment:** opt-in Who sweeps by level range and class (capped
+  ranges are split and searched again), a Recruiter window (`/ptgr`) with a
+  copy-name box for Guild > Add Member, optional whisper after a confirmed invite,
+  a re-invite window, a never-invite list and invite/join/decline statistics.
 - **Shared configuration:** independent module switches, saved settings, appearance
   controls and positioning/preview tools where supported by the module.
 

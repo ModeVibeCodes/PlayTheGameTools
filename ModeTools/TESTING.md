@@ -118,7 +118,32 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Required state:** OOC.
    **Confirmation:** Explicitly unavailable/deferred; dialogue stays manual.
 
-## E. Reporting and release gate
+## E. Guild Recruitment
+
+1. **Navigation:** Play The Game Tools â†’ Guild Tools â†’ Recruitment.
+   **Action:** Turn the page switch on, set Minimum Level / Maximum Level, pick one
+   class, click Open Recruiter, then click Scan in the Recruiter window.
+   **Required state:** OOC, in a guild with invite permission.
+   **Confirmation:** One Who search runs; the Who window closes again if it was not
+   already open; unguilded players in range appear in the list with class colors.
+2. **Navigation:** Recruiter window (Open Recruiter or `/ptgr`).
+   **Action:** With candidates listed, click Scan again after the countdown.
+   **Required state:** Candidates present, Scan button not counting down.
+   **Confirmation:** The list empties before the next search's results appear.
+3. **Navigation:** Recruiter window.
+   **Action:** Click Invite on a row, press Ctrl+C, open Guild â†’ Add Member,
+   paste and confirm. Repeat with Whisper After Invite on.
+   **Required state:** OOC, invite permission, a willing test player.
+   **Confirmation:** The copy box shows the name; the game invites without a
+   blocked-action message; Statistics show Invited +1 (and Joined/Declined after
+   the reply); the whisper is sent only when Whisper After Invite is on.
+4. **Navigation:** Recruiter window, then Guild Tools â†’ Recruitment â†’ History.
+   **Action:** Click X on a row, scan again, then click Clear Never-Invite List.
+   **Required state:** OOC.
+   **Confirmation:** The X'd player no longer appears until the list is cleared;
+   invited players stay hidden for the Re-invite After (days) window.
+
+## F. Reporting and release gate
 
 Return the results by chunk, e.g. `A1 PASS, A2 FAIL: preference reset after reload`.
 Include actual version/build/class and error text. No automated native test button
