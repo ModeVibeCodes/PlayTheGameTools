@@ -152,7 +152,7 @@ threat.execute('''
     function GetNumSubgroupMembers() return 1 end
     function UnitDetailedThreatSituation(u,mob)
         assert(mob=='target');local x=units[u]
-        if x and x[3] then return x[4]==true,3,x[3],x[3],x[3]*100 end
+        if x and x[3] then return x[4]==true,x[4] and 3 or 0,x[3],x[3],x[3]*100 end
     end
     RAID_CLASS_COLORS={WARRIOR={r=0.78,g=0.61,b=0.43},MAGE={r=0.41,g=0.8,b=0.94}}
     addon:SetModuleEnabled('threatMeter',true)
@@ -163,6 +163,36 @@ threat.execute('''
     M:SetOption('showPets',true)
     assert(#M.entries==4 and M.entries[1].name=='Fixture' and M.entries[2].name=='Wolf (Fixture)','tanking first, then highest')
     assert(M.entries[4].name=='Imp (Ally)')
+    -- Secret fields fall back to threat status; secrets are never compared.
+    local secret={secret=true}
+    local detailed=UnitDetailedThreatSituation
+    UnitDetailedThreatSituation=function(u,mob)
+        if u=='party1' then return secret,secret,secret,secret,secret end
+        if u=='partypet1' then return secret,secret,secret,secret,secret end
+        return detailed(u,mob)
+    end
+    function UnitThreatSituation(u) if u=='party1' then return 1 end;if u=='partypet1' then return secret end end
+    function UnitCanAttack() return secret end
+    M:Update()
+    assert(f.title:GetText()=='Threat: Boar','secret hostility is treated as possibly hostile')
+    local byName={};for i,e in ipairs(M.entries) do byName[e.name]={i,e} end
+    assert(select(2,M.Display(byName.Ally[2]))=='High' and byName.Ally[1]==2,'status fallback ranks above lower threat')
+    assert(select(2,M.Display(byName['Imp (Ally)'][2]))=='Hidden')
+    UnitDetailedThreatSituation=detailed;UnitThreatSituation=nil
+    function UnitCanAttack(_,u) return u=='target' end
+    -- Raw threat orders rows; the mob's target holds aggro.
+    units.player[4]=false
+    UnitDetailedThreatSituation=function(u,mob)
+        if u=='party1' then return false,1,90,120,5000 end
+        if u=='player' then return false,1,95,100,4000 end
+        return detailed(u,mob)
+    end
+    units.targettarget={'Wolf'}
+    function UnitIsUnit(a,b) return a=='targettarget' and b=='pet' end
+    M:Update()
+    assert(M.entries[1].name=='Wolf (Fixture)' and M.entries[1].aggro,'mob target first')
+    assert(M.entries[2].name=='Ally' and M.entries[3].name=='Fixture','raw threat order')
+    UnitDetailedThreatSituation=detailed;UnitIsUnit=nil;units.targettarget=nil;units.player[4]=true
     units.target=nil;FireEvent('PLAYER_TARGET_CHANGED')
     assert(#M.entries==0 and f.title:GetText()=='Threat: no target' and not f.rows[1]:IsShown())
     M:SetOption('locked',true);M:SetOption('hideOutOfCombat',true)

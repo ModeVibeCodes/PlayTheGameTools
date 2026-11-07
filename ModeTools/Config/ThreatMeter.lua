@@ -11,8 +11,8 @@ function M:CreateConfigPage(parent)
         {label="Hide Out of Combat",get=function() return self.db.hideOutOfCombat end,set=function(v) self:SetOption("hideOutOfCombat",v) end},
     })
     page.threatControls={showPets=cells[1],hideOutOfCombat=cells[2]}
-    local note=W.Label(page:Row("Threat Meter",80),
-        "Lists threat on your current hostile target for you and your group, highest first. 100% is holding aggro. Hide Out of Combat applies only while the meter is locked.",
+    local note=W.Label(page:Row("Threat Meter",96),
+        "Lists threat on your current hostile target for you and your group, highest first. 100% is holding aggro; if the client hides a percentage, the row shows Aggro, High, Low or Hidden. Hide Out of Combat applies only while the meter is locked.",
         nil,0,-4,440,T.muted)
     note:SetWordWrap(true)
     page:Group("Position")

@@ -100,21 +100,22 @@ function M:CreateFrame()
         f.rows[i]=bar
     end
     self.elapsed=0
+    -- Threat events fire in bursts and miss some group members, so the list is
+    -- refreshed on a fixed interval while shown instead of per threat event.
     f:SetScript("OnUpdate",function(_,elapsed)
-        -- Threat events do not cover every group member, so poll while shown.
         self.elapsed=self.elapsed+elapsed
         if self.elapsed>=self.UPDATE_INTERVAL then self.elapsed=0;self:Update() end
     end)
-    f:SetScript("OnEvent",function(_,event,unit)
-        if event=="UNIT_THREAT_LIST_UPDATE" and unit~="target" then return end
-        self:Update()
-    end)
+    f:SetScript("OnEvent",function() self:Update() end)
     self:ApplyPosition()
 end
 
+-- Forever can return secret values field by field. A secret is never compared
+-- or tested; a secret hostility answer is treated as "possibly hostile".
 function M:HasTarget()
-    return Truthy(UnitExists,"target") and Truthy(UnitCanAttack,"player","target")
-        and not Truthy(UnitIsDeadOrGhost,"target")
+    if not Truthy(UnitExists,"target") or Truthy(UnitIsDeadOrGhost,"target") then return false end
+    local hostile=Call(UnitCanAttack,"player","target")
+    return not Public(hostile) or hostile==true
 end
 
 -- Units in the player's group (and their pets, if enabled), without duplicates.
@@ -154,29 +155,75 @@ local function Name(unit)
     return "Unknown"
 end
 
+local function Connected(unit)
+    local connected=Call(UnitIsConnected,unit)
+    return not Public(connected) or connected~=false
+end
+
+-- One threat row, or nil when the client reports nothing for this unit.
+function M:Entry(u)
+    if Truthy(UnitIsDeadOrGhost,u.unit) or not Connected(u.unit) then return end
+    local tanking,status,scaled,_,raw=Call(UnitDetailedThreatSituation,u.unit,"target")
+    local hidden=not Public(tanking) or not Public(status) or not Public(scaled) or not Public(raw)
+    if not Number(status,0,3) then
+        status=Call(UnitThreatSituation,u.unit,"target")
+        hidden=hidden or not Public(status)
+    end
+    local e={tanking=Public(tanking) and tanking==true,
+        status=Number(status,0,3) and status or nil,
+        percent=Number(scaled,0,1000) and math.min(100,scaled) or nil,
+        raw=Number(raw,0,1e15) and raw or nil}
+    if not (e.percent or e.status or e.tanking or hidden) then return end
+    e.hidden=hidden and not e.percent and not e.status
+    e.name=Name(u.unit)
+    if u.owner then
+        e.name=e.name.." ("..Name(u.owner)..")"
+        e.color=PET_COLOR
+    else
+        local _,classFile=Call(UnitClass,u.unit)
+        local c=Public(classFile) and type(classFile)=="string" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
+        e.color=c and {c.r,c.g,c.b} or DEFAULT_COLOR
+    end
+    e.unit=u.unit
+    return e
+end
+
+local function Rank(e)
+    if e.aggro then return 3 end
+    if e.tanking or (e.status or 0)>=2 then return 2 end
+    if e.status==1 then return 1 end
+    return 0
+end
+
 function M:Collect()
     local entries={}
-    for _,u in ipairs(self:Units()) do
-        local tanking,_,scaled=Call(UnitDetailedThreatSituation,u.unit,"target")
-        if Number(scaled,0,1000) then
-            local color=PET_COLOR
-            if not u.owner then
-                local _,classFile=Call(UnitClass,u.unit)
-                local c=Public(classFile) and type(classFile)=="string" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
-                color=c and {c.r,c.g,c.b} or DEFAULT_COLOR
-            end
-            local name=Name(u.unit)
-            if u.owner then name=name.." ("..Name(u.owner)..")" end
-            entries[#entries+1]={name=name,percent=math.min(100,scaled),
-                tanking=Public(tanking) and tanking==true,color=color}
+    for _,u in ipairs(self:Units()) do entries[#entries+1]=self:Entry(u) end
+    -- The mob's own target holds aggro, when the client exposes it.
+    if Truthy(UnitExists,"targettarget") then
+        for _,e in ipairs(entries) do
+            if Truthy(UnitIsUnit,"targettarget",e.unit) then e.aggro=true;break end
         end
     end
+    -- Raw threat orders melee and ranged correctly; percent is the fallback.
     table.sort(entries,function(a,b)
-        if a.tanking~=b.tanking then return a.tanking end
-        if a.percent~=b.percent then return a.percent>b.percent end
+        local ra,rb=Rank(a),Rank(b)
+        if ra~=rb then return ra>rb end
+        if (a.raw~=nil)~=(b.raw~=nil) then return a.raw~=nil end
+        if a.raw and a.raw~=b.raw then return a.raw>b.raw end
+        if (a.percent~=nil)~=(b.percent~=nil) then return a.percent~=nil end
+        if a.percent and a.percent~=b.percent then return a.percent>b.percent end
         return a.name<b.name
     end)
     return entries
+end
+
+-- Bar fill and label; without a percentage, the threat status is shown instead.
+function M.Display(e)
+    if e.percent then return e.percent,string.format("%d%%",math.floor(e.percent+0.5)) end
+    if e.aggro or e.tanking or (e.status or 0)>=2 then return 100,"Aggro" end
+    if e.status==1 then return 90,"High" end
+    if e.hidden then return 0,"Hidden" end
+    return 25,"Low"
 end
 
 function M:InCombat()
@@ -205,10 +252,11 @@ function M:Update()
     for i,bar in ipairs(f.rows) do
         local e=entries[i]
         if e then
-            bar:SetValue(e.percent)
+            local fill,label=M.Display(e)
+            bar:SetValue(fill)
             bar:SetStatusBarColor(e.color[1],e.color[2],e.color[3],0.85)
             bar.nameText:SetText(e.name)
-            bar.percentText:SetText(string.format("%d%%",math.floor(e.percent+0.5)))
+            bar.percentText:SetText(label)
             bar:Show()
         else
             bar:Hide()
@@ -218,8 +266,8 @@ function M:Update()
     f:Show()
 end
 
-local EVENTS={"PLAYER_TARGET_CHANGED","UNIT_THREAT_LIST_UPDATE","UNIT_THREAT_SITUATION_UPDATE",
-    "GROUP_ROSTER_UPDATE","UNIT_PET","PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED","PLAYER_ENTERING_WORLD"}
+local EVENTS={"PLAYER_TARGET_CHANGED","GROUP_ROSTER_UPDATE","UNIT_PET",
+    "PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED","PLAYER_ENTERING_WORLD"}
 
 function M:OnInitialize()
     self.Initialize(self.db)
