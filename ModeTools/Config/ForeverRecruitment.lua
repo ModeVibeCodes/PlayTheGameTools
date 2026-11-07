@@ -3,7 +3,7 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 local M,W,T=addon.ForeverRecruitment,addon.ConfigWidgets,addon.InterfaceTheme
 
 local ROW_HEIGHT=22
-local WINDOW_W,WINDOW_H=470,540
+local WINDOW_W,WINDOW_H=470,660
 
 ---------------------------------------------------------------------------
 -- Copy-name box: the name is pre-highlighted so Ctrl+C copies it.
@@ -65,7 +65,7 @@ function M:CreateWindow()
     f:Hide()
     if UISpecialFrames then table.insert(UISpecialFrames,"ModeToolsRecruitmentFrame") end
     W.Texture(f,"Window")
-    f.title=W.Heading(f,"Recruiter",T.fontSize.section,16,-14,300,T.text)
+    f.title=W.Heading(f,"Recruiter",T.fontSize.section,16,-14,150,T.text)
 
     local close=W.Button(f,"Close",64,24,"secondary");close:SetPoint("TOPRIGHT",-12,-10)
     close:SetScript("OnClick",function() f:Hide() end)
@@ -75,7 +75,77 @@ function M:CreateWindow()
         if addon.SelectConfigPage then addon:SelectConfigPage(M.id) end
     end)
 
-    local scan=W.Button(f,"Scan",104,28);scan:SetPoint("TOPLEFT",16,-50)
+    -- Module switch, so recruiting can be turned on without the settings window.
+    local power=W.Button(f,"",44,24,"toggle");power:SetPoint("RIGHT",settings,"LEFT",-10,0)
+    power:SetScript("OnClick",function() if M:OutsideCombat() then addon:SetModuleEnabled(M.id,not M.enabled);M:RefreshWindow() end end)
+    f.power=power
+    local powerLabel=W.Label(f,"",nil,0,0,70,T.muted);powerLabel:ClearAllPoints()
+    powerLabel:SetPoint("RIGHT",power,"LEFT",-6,0);powerLabel:SetJustifyH("RIGHT")
+    f.refreshers={}
+    local function Refresher(fn) f.refreshers[#f.refreshers+1]=fn end
+    Refresher(function()
+        power:SetSelected(M.enabled==true);powerLabel:SetText(M.enabled and "Enabled" or "Disabled")
+        powerLabel:SetTextColor(unpack(W.StateColor(M.enabled==true)))
+    end)
+
+    -- Search settings: level range, levels per search, classes and whisper.
+    local function Numeric(key,low,high,width)
+        local input=W.NumericInput(f,function() return M.db[key] end,function(v) M:SetOption(key,v) end,low,high,width or 44)
+        Refresher(function() input:Refresh() end);return input
+    end
+    local levelLabel=W.Label(f,"Level range",nil,16,-56,90,T.secondary)
+    local minInput=Numeric("minLevel",1,function() return M.db.maxLevel end)
+    minInput:SetPoint("TOPLEFT",104,-50)
+    local to=W.Label(f,"to",nil,0,0,20,T.secondary);to:ClearAllPoints();to:SetPoint("LEFT",minInput,"RIGHT",6,0)
+    local maxInput=Numeric("maxLevel",function() return M.db.minLevel end,60)
+    maxInput:SetPoint("LEFT",minInput,"RIGHT",28,0)
+    local chunkLabel=W.Label(f,"Levels per search",nil,0,0,120,T.secondary);chunkLabel:ClearAllPoints()
+    chunkLabel:SetPoint("LEFT",maxInput,"RIGHT",24,0)
+    local chunkInput=Numeric("chunkSize",1,60);chunkInput:SetPoint("LEFT",chunkLabel,"RIGHT",4,0)
+    f.minInput,f.maxInput,f.chunkInput=minInput,maxInput,chunkInput
+
+    local function CheckBox(text,get,set,x,y,r,g,b)
+        local cell=CreateFrame("Button",nil,f);cell:SetSize(140,24);cell:SetPoint("TOPLEFT",x,y)
+        cell:EnableMouse(true);cell:RegisterForClicks("LeftButtonUp")
+        local box=W.Button(cell,"",24,24,"checkbox");box:SetPoint("LEFT",-4,0)
+        local label=W.Label(cell,text,nil,22,-5,116)
+        if r then label:SetTextColor(r,g,b) end
+        local function Click() set(not get()) end
+        cell:SetScript("OnClick",Click);box:SetScript("OnClick",Click)
+        cell:HookScript("OnEnter",function() box.hovered=true;box:RefreshAppearance() end)
+        cell:HookScript("OnLeave",function() box.hovered=false;box:RefreshAppearance() end)
+        Refresher(function() box:SetSelected(get()) end)
+        return cell,label
+    end
+    W.Label(f,"Classes",nil,16,-94,90,T.secondary)
+    local all=W.Button(f,"All",56,22,"secondary");all:SetPoint("TOPLEFT",104,-90)
+    all:SetScript("OnClick",function() for _,c in ipairs(M.CLASSES) do M.db.classes[c]=true end;M:ResetScan();M:Refresh() end)
+    local none=W.Button(f,"None",56,22,"secondary");none:SetPoint("LEFT",all,"RIGHT",6,0)
+    none:SetScript("OnClick",function() for _,c in ipairs(M.CLASSES) do M.db.classes[c]=false end;M:ResetScan();M:Refresh() end)
+    f.classChecks={}
+    for i,classFile in ipairs(M.CLASSES) do
+        local r,g,b=M:ClassColor(classFile)
+        f.classChecks[i]=CheckBox(M:ClassName(classFile),function() return M:IsClassEnabled(classFile) end,
+            function(value) M:SetClassEnabled(classFile,value) end,20+((i-1)%3)*146,-120-math.floor((i-1)/3)*26,r,g,b)
+    end
+
+    local whisperLabel
+    f.whisperCheck,whisperLabel=CheckBox("Whisper this message after each confirmed invite",function() return M.db.whisperEnabled end,
+        function(value) M:SetOption("whisperEnabled",value) end,20,-204)
+    f.whisperCheck:SetWidth(WINDOW_W-40);whisperLabel:SetWidth(WINDOW_W-70)
+    local message=CreateFrame("EditBox",nil,f);message:SetSize(WINDOW_W-48,26);message:SetPoint("TOPLEFT",24,-232)
+    message:SetFontObject(GameFontHighlight);message:SetAutoFocus(false);message:SetMaxLetters(200);message:SetTextInsets(6,6,0,0)
+    addon.Media:BindInterfaceFont(message,GameFontHighlight)
+    W.Texture(message,"InputField")
+    local function ResetMessage() message:SetText(M.db.message);message:ClearFocus() end
+    message:SetScript("OnEnterPressed",function() M:SetOption("message",message:GetText());ResetMessage() end)
+    message:SetScript("OnEditFocusLost",function() if message:GetText()~=M.db.message then M:SetOption("message",message:GetText()) end end)
+    message:SetScript("OnEscapePressed",ResetMessage)
+    Refresher(function() if not message:HasFocus() then message:SetText(M.db.message) end end)
+    f.message=message
+
+    local TOP=-274 -- action buttons, status and list sit below the settings
+    local scan=W.Button(f,"Scan",104,28);scan:SetPoint("TOPLEFT",16,TOP)
     scan:SetScript("OnClick",function() M:Scan() end)
     Tooltip(scan,"Scan","Clears the candidate list, then runs the next Who search.")
     local invite=W.Button(f,"Invite Next",104,28);invite:SetPoint("LEFT",scan,"RIGHT",6,0)
@@ -87,11 +157,11 @@ function M:CreateWindow()
     clear:SetScript("OnClick",function() M:ClearCandidates() end)
     f.scan,f.invite,f.next,f.clear=scan,invite,nextButton,clear
 
-    f.status=W.Label(f,"",nil,16,-90,WINDOW_W-32,T.secondary);f.status:SetWordWrap(true)
-    f.listHeader=W.Label(f,"",nil,16,-124,WINDOW_W-32,T.text)
+    f.status=W.Label(f,"",nil,16,TOP-40,WINDOW_W-32,T.secondary);f.status:SetWordWrap(true)
+    f.listHeader=W.Label(f,"",nil,16,TOP-74,WINDOW_W-32,T.text)
 
     local list=CreateFrame("Frame",nil,f)
-    list:SetPoint("TOPLEFT",12,-144);list:SetPoint("BOTTOMRIGHT",-12,36)
+    list:SetPoint("TOPLEFT",12,TOP-94);list:SetPoint("BOTTOMRIGHT",-12,36)
     W.Texture(list,"InsetPanel")
     local scroll=CreateFrame("ScrollFrame",nil,list)
     scroll:SetPoint("TOPLEFT",4,-4);scroll:SetPoint("BOTTOMRIGHT",-14,4)
@@ -154,6 +224,7 @@ end
 function M:RefreshWindow()
     local f=self.window
     if not f or not f:IsShown() or not self.candidates then return end
+    for _,refresh in ipairs(f.refreshers) do refresh() end
     f.status:SetText(self.status or "")
     for i,c in ipairs(self.candidates) do
         local row=GetRow(f,i)

@@ -85,6 +85,15 @@ recruit.execute('''
     for _,c in ipairs(R.CLASSES) do R.db.classes[c]=(c=='MAGE') end
     R:ResetScan()
     R:ToggleWindow();assert(R.window:IsShown())
+    local f=R.window
+    assert(#f.classChecks==9 and f.power.selected==true)
+    f.classChecks[1].scripts.OnClick();assert(R.db.classes.WARRIOR==true,'window class checkbox')
+    f.classChecks[1].scripts.OnClick();assert(R.db.classes.WARRIOR==false)
+    f.minInput:SetText('12');f.minInput.scripts.OnEnterPressed(f.minInput);assert(R.db.minLevel==12,'window level input')
+    f.minInput:SetText('10');f.minInput.scripts.OnEnterPressed(f.minInput);assert(R.db.minLevel==10)
+    f.message:SetText('Join us');f.message.scripts.OnEnterPressed(f.message);assert(R.db.message=='Join us')
+    f.whisperCheck.scripts.OnClick();assert(R.db.whisperEnabled==true);f.whisperCheck.scripts.OnClick()
+    f.power.scripts.OnClick();assert(not R.enabled);f.power.scripts.OnClick();assert(R.enabled)
     R:Scan()
     assert(sent[1]=='c-"Mage" 10-14' and R:QueueRemaining()==1,sent[1])
     results={{fullName='Alpha',level=12,filename='MAGE',fullGuildName='',area='Elwynn'},
