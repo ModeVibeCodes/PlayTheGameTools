@@ -41,7 +41,7 @@ def load(encoded=None, project=18):
 files, order, _ = payload()
 lua, addon = load()
 lua.execute('''
-    assert(addon.initialized and #addon.moduleOrder==6 and #addon.categoryOrder==4)
+    assert(addon.initialized and #addon.moduleOrder==7 and #addon.categoryOrder==4)
     assert(addon.Edition.name=='Forever' and addon.developmentPhase=='Forever Beta')
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)
     assert(SLASH_MODETOOLS1=='/modetools' and SLASH_MODETOOLS2=='/mode')
@@ -135,6 +135,57 @@ migrated.execute('''
     local R=addon.ForeverRecruitment
     assert(type(R.db.history.Legacy)=='number' and R.db.history.Echo=='skip','legacy contacted entries migrate')
     assert(R.db.records.invited==1 and R.db.minLevel==10 and R.db.classes.MAGE==true)
+''')
+threat, _ = load()
+threat.execute('''
+    local M=addon.ThreatMeter
+    assert(not M.enabled and M.db.showPets==false,'off by default, pets off by default')
+    local units={player={'Fixture','WARRIOR',80,true},pet={'Wolf',nil,95},
+        party1={'Ally','MAGE',60},partypet1={'Imp',nil,30},target={'Boar'}}
+    function UnitExists(u) return units[u]~=nil end
+    function UnitGUID(u) return 'GUID-'..u end
+    function UnitName(u) return units[u] and units[u][1] end
+    function UnitClass(u) local x=units[u];return x and x[1],x and x[2] end
+    function UnitCanAttack(_,u) return u=='target' end
+    function UnitIsDeadOrGhost() return false end
+    function IsInRaid() return false end
+    function GetNumSubgroupMembers() return 1 end
+    function UnitDetailedThreatSituation(u,mob)
+        assert(mob=='target');local x=units[u]
+        if x and x[3] then return x[4]==true,3,x[3],x[3],x[3]*100 end
+    end
+    RAID_CLASS_COLORS={WARRIOR={r=0.78,g=0.61,b=0.43},MAGE={r=0.41,g=0.8,b=0.94}}
+    addon:SetModuleEnabled('threatMeter',true)
+    local f=M.frame
+    assert(f:IsShown() and f.title:GetText()=='Threat: Boar')
+    assert(#M.entries==2 and M.entries[1].name=='Fixture' and M.entries[2].name=='Ally','pets hidden by default')
+    assert(f.rows[1].percentText:GetText()=='80%' and f.rows[2]:IsShown() and not f.rows[3]:IsShown())
+    M:SetOption('showPets',true)
+    assert(#M.entries==4 and M.entries[1].name=='Fixture' and M.entries[2].name=='Wolf (Fixture)','tanking first, then highest')
+    assert(M.entries[4].name=='Imp (Ally)')
+    units.target=nil;FireEvent('PLAYER_TARGET_CHANGED')
+    assert(#M.entries==0 and f.title:GetText()=='Threat: no target' and not f.rows[1]:IsShown())
+    M:SetOption('locked',true);M:SetOption('hideOutOfCombat',true)
+    assert(not f:IsShown(),'hidden out of combat when locked')
+    testCombat=true;units.target={'Boar'};FireEvent('PLAYER_REGEN_DISABLED')
+    assert(f:IsShown() and #M.entries==4)
+    testCombat=false
+    addon:ToggleConfig();addon:SelectConfigPage('threatMeter')
+    assert(addon.configWindow.pages.threatMeter==M.page)
+    M.page.threatControls.showPets.frame.scripts.OnClick();assert(M.db.showPets==false)
+    addon:SetModuleEnabled('threatMeter',false)
+    assert(not f:IsShown())
+''')
+saved = threat.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
+reloaded, _ = load(saved)
+reloaded.execute('''
+    local M=addon.ThreatMeter
+    assert(M.db.locked==true and M.db.hideOutOfCombat==true and M.db.showPets==false)
+    UnitDetailedThreatSituation=nil
+    addon:SetModuleEnabled('threatMeter',true)
+    assert(not M.frame:IsShown(),'locked and hidden out of combat')
+    M:SetOption('locked',false)
+    assert(M.frame:IsShown() and M.frame.title:GetText()=='Threat: unavailable on this client')
 ''')
 wrong, _ = load(project=1)
 wrong.execute('assert(not addon.initialized and ModeToolsDB==nil)')

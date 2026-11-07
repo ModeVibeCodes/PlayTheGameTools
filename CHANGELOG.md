@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a Threat Meter module (Quality of Life, off by default): a plain list of
+  threat on your current hostile target for you and your party or raid, tanking
+  first, then highest percentage. Optional Show Pets (off by default), Hide Out
+  of Combat while locked, Lock Threat Meter and Reset Position.
 - Replaced the Recruitment module with the guild's standalone recruiter flow:
   class x level-range Who searches that split capped ranges, a Recruiter window
   (`/ptgr`), a Ctrl+C copy-name box for Guild > Add Member in place of the blocked

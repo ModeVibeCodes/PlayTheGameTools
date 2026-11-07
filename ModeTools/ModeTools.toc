@@ -54,6 +54,7 @@ Modules\ForeverQuickAccess.lua
 Modules\ForeverFoodBarData.lua
 Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
+Modules\ThreatMeter.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -77,5 +78,6 @@ Config\ForeverAccess.lua
 Config\ForeverQuickAccess.lua
 Config\ForeverFoodBar.lua
 Config\ForeverRecruitment.lua
+Config\ThreatMeter.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua
