@@ -167,6 +167,22 @@ public release exists. Test it with one guildmate before broader announcement.
 Public repository/release creation is a separate approval; no auto-publish workflow
 is supplied. A beta label does not restrict access to guildmates.
 
+## Interface themes
+
+Run `python tests/smoke.py`; it covers the saved choice, the reload request, every
+settings page built under Blizzard, refused stock artwork falling back to the flat
+drawing, and an unknown saved theme rendering Modern without being rewritten.
+Stock artwork, fonts, text fit and contrast require these in-game checks.
+
+| Check | Navigation | Action | Required state | Confirmation |
+| --- | --- | --- | --- | --- |
+| T1 Choose Blizzard | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Blizzard**, then **Reload** in the window header | Out of combat | Header **Reload** shows pending before the click; after reload `/ptg` shows the gold dialog border, opaque dark stone, red header buttons, stock checkboxes and gold headings |
+| T2 Text fit | Blizzard active; open each sidebar entry | Read sidebar items, Dashboard module rows, dropdowns and search results | Out of combat | No clipped or overlapping labels in the game font |
+| T3 Selectors and inputs | Blizzard active; Dashboard → Appearance, a module's Positioning section, the search box | Click options; type in the search box | Out of combat | Selected option has a gold outline; input borders show no square corners |
+| T4 Return to Modern | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Modern**, then **Reload** | Out of combat | Window matches the previous graphite look exactly |
+| T5 Fresh-launch labels | Quit WoW fully, relaunch | Type `/ptg` as soon as you are in the world | Out of combat | Sidebar labels and the window title are visible, at worst after about a second |
+| T6 Threat Meter | Quality of Life → Threat Meter enabled | Target an enemy; unlock the meter | Any | Header strip, class-coloured bars, accent edge on your row; "Drag to move" while unlocked |
+
 ## Dungeon Loot
 
 Run the smoke test/build and these focused checks:

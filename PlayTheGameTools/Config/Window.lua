@@ -142,6 +142,15 @@ local function Dashboard(parent)
         page.cursor = page.cursor + 56
         end
     end
+    -- Frames keep the theme they were drawn with, so a change applies on reload.
+    page:Section("Appearance", "Theme changes apply after reloading the interface.", false)
+    local themes, choices = addon.InterfaceThemes, {}
+    for _, id in ipairs(themes.order) do choices[#choices + 1] = { label = themes[id].label, value = id, width = 108 } end
+    local themeButtons, refreshTheme = W.Exclusive(page:Row("Interface Theme", 48, { "theme", "appearance", "modern", "blizzard", "default" }),
+        choices, function() return addon:ResolveInterfaceTheme(addon.db.window.theme) end,
+        function(value) addon:SetInterfaceTheme(value) end)
+    page.themeButtons = themeButtons
+    page.refreshers[#page.refreshers + 1] = refreshTheme
     page:Finish()
     return page
 end
@@ -167,6 +176,33 @@ function addon:CreateConfig()
     columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 1, -1)
     columnEdge:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 1, 1); columnEdge:SetWidth(1)
     window.sidebarColumn = column
+    -- Blizzard theme: the stock dialog box replaces the canvas and hairline
+    -- frame; the sidebar column and its edge sit inside the dialog border.
+    if T.blizzardArt and W.BlizzardBackdrop(window, "dialog") then
+        -- The stock dialog stone is partly transparent, so it sits on an
+        -- opaque canvas held inside the border.
+        window.border:SetShown(false)
+        local canvas = window.canvas
+        canvas:ClearAllPoints()
+        canvas:SetPoint("TOPLEFT", 11, -12); canvas:SetPoint("BOTTOMRIGHT", -12, 11)
+        W.Paint(canvas, T.background, 1)
+        if canvas.SetDrawLayer then canvas:SetDrawLayer("BACKGROUND", -2) end
+        local stone = window:CreateTexture(nil, "BACKGROUND", nil, -1)
+        stone:SetAllPoints(canvas)
+        if stone.SetHorizTile and stone:SetTexture(W.BlizzardArt.dialogBackground, "REPEAT", "REPEAT") ~= false then
+            stone:SetHorizTile(true); stone:SetVertTile(true)
+        else stone:Hide() end
+        window.blizzardStone = stone
+        column:ClearAllPoints()
+        column:SetPoint("TOPLEFT", 11, -12); column:SetPoint("BOTTOMLEFT", 11, 11)
+        column:SetWidth(SIDEBAR_WIDTH - 10)
+        columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 1, -12)
+        columnEdge:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 1, 11); columnEdge:SetWidth(1)
+    end
+
+    -- The stock dialog border is about 12px deep; Blizzard content keeps a
+    -- clear margin inside it instead of sitting on its inner edge.
+    local edge = window.blizzardBackdrop and 8 or 0
 
     -- A non-interactive header owns disjoint drag and button regions.
     local header = CreateFrame("Frame", nil, window)
@@ -179,10 +215,10 @@ function addon:CreateConfig()
     window.headerArt:ClearAllPoints()
     window.headerArt:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
     window.headerArt:SetHeight(1)
-    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20, -21, SIDEBAR_WIDTH - 24, T.text)
+    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20 + edge, -21, SIDEBAR_WIDTH - 24 - edge, T.text)
     window.title:SetWordWrap(false)
     local controls = CreateFrame("Frame", nil, header)
-    controls:SetPoint("TOPRIGHT", -16, -14)
+    controls:SetPoint("TOPRIGHT", -16 - edge, -14 - edge / 2)
     controls:SetSize(360, 28)
     controls:SetFrameLevel(header:GetFrameLevel() + 1)
     controls:EnableMouse(false)
@@ -229,9 +265,9 @@ function addon:CreateConfig()
     window.previewButton, window.editButton, window.closeButton = preview, edit, close
 
     local sidebar = CreateFrame("Frame", nil, window)
-    sidebar:SetPoint("TOPLEFT", 12, -HEADER_HEIGHT - 4)
-    sidebar:SetPoint("BOTTOMLEFT", 12, 12)
-    sidebar:SetWidth(SIDEBAR_WIDTH - 22)
+    sidebar:SetPoint("TOPLEFT", 12 + edge, -HEADER_HEIGHT - 4)
+    sidebar:SetPoint("BOTTOMLEFT", 12 + edge, 12 + edge)
+    sidebar:SetWidth(SIDEBAR_WIDTH - 22 - edge)
     local navigation = W.Page(sidebar, 0)
     navigation:ClearAllPoints()
     navigation:SetPoint("TOPLEFT", 0, -44)
@@ -239,7 +275,7 @@ function addon:CreateConfig()
 
     local body = CreateFrame("Frame", nil, window)
     body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 30, -16)
-    body:SetPoint("BOTTOMRIGHT", -28, 16)
+    body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
     local moduleHeader = W.ModuleHeader(body)
     window.moduleHeader = moduleHeader
     local pageHost = CreateFrame("Frame", nil, body)
@@ -320,7 +356,7 @@ function addon:CreateConfig()
         Select(id)
     end
     local function AddNavigation(id, label, developer)
-        local button = W.Button(developer and sidebar or navigation.content, label, developer and SIDEBAR_WIDTH - 22 or 184, 34, "tab")
+        local button = W.Button(developer and sidebar or navigation.content, label, developer and SIDEBAR_WIDTH - 22 - edge or 184, 34, "tab")
         if developer then button:SetPoint("BOTTOMLEFT", sidebar, "BOTTOMLEFT", 0, 0)
         else button:SetPoint("TOPLEFT", 0, -navigation.cursor) end
         button.label:ClearAllPoints()
@@ -411,6 +447,8 @@ function addon:CreateConfig()
     window:SetScript("OnShow", function()
         if self.ReloadManager.prompt then self.ReloadManager.prompt:Hide() end
         self:UpdateWindowBounds(); Select(selected)
+        -- Fills in labels left blank by a font still loading on a fresh launch.
+        addon.Media:ScheduleTextRedraw()
     end)
     window:SetScript("OnHide", function()
         if self.FrameAnchors then self.FrameAnchors:Stop() end

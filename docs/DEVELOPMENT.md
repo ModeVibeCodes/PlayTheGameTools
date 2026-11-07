@@ -72,3 +72,19 @@ bring the runtime to 90 Lua chunks. See [research, architecture and native check
 Run `python tests/loot_sparkles.py` alongside the smoke suite and builder.
 Native validation/screenshots are pending. No live branch switch, sync or release
 is part of creating this PR. Existing main-checkout junctions remain untouched.
+
+### Local reload workflow
+
+The desktop Forever AddOns/PlayTheGameTools junction loads the standalone
+checkout at A:/WoW-Development/PlayTheGameTools/PlayTheGameTools. A PR created
+in another worktree does not update that live source. For explicitly requested
+local testing, validate the feature, preserve dirty work, and switch the clean
+live-linked checkout to the feature branch. Keep the existing junction and
+SavedVariables intact. Subsequent runtime edits in that checkout are read on
+/reload; adding newly discovered files may require one full client restart if
+the running client does not discover the updated TOC/file inventory.
+
+Loot Sparkles local testing uses codex/forever-loot-sparkles, including the
+accepted main changes through b8a411b. Disable ForeverLootSparkles/Lueur in the
+game AddOns UI and reload before enabling Gameplay Enhancements. Native
+validation and screenshots remain pending until the owner reports results.

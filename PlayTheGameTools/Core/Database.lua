@@ -35,7 +35,7 @@ local defaults = {
             locked = true, showOutOfCombat = false,
         },
     },
-    window = { x = 0, y = 0 },
+    window = { x = 0, y = 0, theme = "modern" },
 }
 if addon.Edition and addon.Edition.name == "Forever" then
     -- Only supported modules receive defaults; retain dormant Retail/unknown keys.
@@ -44,7 +44,7 @@ if addon.Edition and addon.Edition.name == "Forever" then
             foreverAutomation = { enabled = false, autoLoot = false,
                 autoAccept = true, autoTurnIn = true, bypassModifier = "shift",
                 sellJunk = true, sellGrayEquipment = false, repair = true, maxRepairCostPercent = 35,
-                autoGossip = true } }, window = { x = 0, y = 0 } }
+                autoGossip = true } }, window = { x = 0, y = 0, theme = "modern" } }
 end
 
 -- Fill missing keys only; retain unknown keys for future migrations.

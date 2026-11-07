@@ -48,7 +48,14 @@ end
 function W.CrispText(region)
     -- Supported native pixel rounding; no global UI scale or font engine changes.
     if region.SetRoundLayoutToNearestPixel then region:SetRoundLayoutToNearestPixel(true) end
-    region:SetShadowOffset(0, 0)
+    if T.blizzardArt then
+        -- Stock interface text carries a soft drop shadow; it keeps gold and
+        -- parchment legible on the textured stone without raising contrast.
+        region:SetShadowColor(0, 0, 0, 0.85)
+        region:SetShadowOffset(1, -1)
+    else
+        region:SetShadowOffset(0, 0)
+    end
 end
 
 local function Paint(texture, color, alpha)
@@ -93,6 +100,83 @@ function W.Outline(frame, color, layer, inset, alpha)
     return outline
 end
 
+-- Stock interface artwork for the Blizzard theme. These are long-standing
+-- shared client files (the same ones the stock panel button, tooltip, dialog,
+-- checkbox and input box templates draw). Every consumer keeps its flat
+-- drawing underneath or as the fallback when a file is refused.
+local ART = {
+    buttonUp = "Interface\\Buttons\\UI-Panel-Button-Up",
+    buttonDown = "Interface\\Buttons\\UI-Panel-Button-Down",
+    buttonDisabled = "Interface\\Buttons\\UI-Panel-Button-Disabled",
+    buttonHighlight = "Interface\\Buttons\\UI-Panel-Button-Highlight",
+    checkbox = "Interface\\Buttons\\UI-CheckBox-Up",
+    checkboxHighlight = "Interface\\Buttons\\UI-CheckBox-Highlight",
+    check = "Interface\\Buttons\\UI-CheckBox-Check",
+    checkDisabled = "Interface\\Buttons\\UI-CheckBox-Check-Disabled",
+    input = "Interface\\Common\\Common-Input-Border",
+    sliderThumb = "Interface\\Buttons\\UI-SliderBar-Button-Horizontal",
+    rowHighlight = "Interface\\QuestFrame\\UI-QuestLogTitleHighlight",
+    dialogBackground = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    dialogBorder = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tooltipBackground = "Interface\\Tooltips\\UI-Tooltip-Background",
+    tooltipBorder = "Interface\\Tooltips\\UI-Tooltip-Border",
+}
+W.BlizzardArt = ART
+
+-- Left/middle/right slices of a stock 3-slice texture. Returns nil when the
+-- client refuses the file so callers keep their flat drawing.
+local SLICE_KEYS = { "left", "middle", "right" }
+local function ThreeSlice(frame, layer, file, edge, coords)
+    local parts = {}
+    for index, name in ipairs(SLICE_KEYS) do
+        local texture = frame:CreateTexture(nil, layer)
+        parts[name] = texture
+        if texture:SetTexture(file) == false then
+            for _, key in ipairs(SLICE_KEYS) do if parts[key] then parts[key]:Hide() end end
+            return nil
+        end
+        local c = coords[index]
+        texture:SetTexCoord(c[1], c[2], c[3], c[4])
+    end
+    parts.left:SetPoint("TOPLEFT"); parts.left:SetPoint("BOTTOMLEFT"); parts.left:SetWidth(edge)
+    parts.right:SetPoint("TOPRIGHT"); parts.right:SetPoint("BOTTOMRIGHT"); parts.right:SetWidth(edge)
+    parts.middle:SetPoint("TOPLEFT", parts.left, "TOPRIGHT", 0, 0); parts.middle:SetPoint("BOTTOMRIGHT", parts.right, "BOTTOMLEFT", 0, 0)
+    function parts:SetFile(path) for _, key in ipairs(SLICE_KEYS) do self[key]:SetTexture(path) end end
+    function parts:SetAlpha(alpha) for _, key in ipairs(SLICE_KEYS) do self[key]:SetAlpha(alpha) end end
+    return parts
+end
+local BUTTON_SLICES = { { 0, 0.09375, 0, 0.6875 }, { 0.09375, 0.53125, 0, 0.6875 }, { 0.53125, 0.625, 0, 0.6875 } }
+local INPUT_SLICES = { { 0, 0.0625, 0, 0.625 }, { 0.0625, 0.9375, 0, 0.625 }, { 0.9375, 1, 0, 0.625 } }
+
+-- Native backdrop on the frame itself, so it draws beneath the frame's own
+-- children. Plain frames receive the documented BackdropTemplateMixin.
+-- "dialog" is the stock dialog border; anything else is the stock tooltip
+-- edge over an opaque panel fill.
+function W.BlizzardBackdrop(frame, kind)
+    if not frame.SetBackdrop then
+        if type(Mixin) ~= "function" or type(BackdropTemplateMixin) ~= "table" then return false end
+        Mixin(frame, BackdropTemplateMixin)
+        if frame.OnBackdropSizeChanged then frame:HookScript("OnSizeChanged", frame.OnBackdropSizeChanged) end
+    end
+    local dialog = kind == "dialog"
+    local ok = pcall(frame.SetBackdrop, frame, {
+        -- The dialog owner draws its own opaque canvas and stone (Window.lua).
+        bgFile = not dialog and ART.tooltipBackground or nil,
+        edgeFile = dialog and ART.dialogBorder or ART.tooltipBorder,
+        tile = true, tileSize = dialog and 32 or 16, edgeSize = dialog and 32 or 16,
+        insets = dialog and { left = 11, right = 12, top = 12, bottom = 11 } or { left = 4, right = 4, top = 4, bottom = 4 },
+    })
+    if not ok then return false end
+    if dialog then
+        frame:SetBackdropColor(1, 1, 1, 1)
+    else
+        frame:SetBackdropColor(T.panel[1], T.panel[2], T.panel[3], T.panel[4])
+        frame:SetBackdropBorderColor(T.lineStrong[1], T.lineStrong[2], T.lineStrong[3], 1)
+    end
+    frame.blizzardBackdrop = kind
+    return true
+end
+
 -- Flat skin. Every legacy art key resolves to solid fills and hairlines, so
 -- callers that still name a key keep working without bundled artwork.
 local SKIN = {
@@ -120,6 +204,14 @@ W.Skin = SKIN
 
 function W.Texture(frame, key, layer, inset, alpha)
     local skin = assert(SKIN[key], "Play The Game Tools: unknown texture " .. tostring(key))
+    if T.blizzardArt then
+        -- Window surfaces take the stock tooltip backdrop; their silver edge is
+        -- then already drawn. Without a backdrop both keep the flat drawing.
+        if (key == "Window" and (frame.blizzardBackdrop or W.BlizzardBackdrop(frame, "tooltip")))
+            or (key == "BorderSilver" and frame.blizzardBackdrop) then
+            return W.Fill(frame, T.background, layer, inset, 0)
+        end
+    end
     local texture
     if skin.fill or skin.clear then
         texture = W.Fill(frame, skin.fill and T[skin.fill] or T.background, layer, inset, skin.clear and 0 or alpha)
@@ -129,6 +221,17 @@ function W.Texture(frame, key, layer, inset, alpha)
     end
     if skin.line then
         texture.outline = W.Outline(frame, T[skin.line], skin.fill and "BORDER" or layer, inset, alpha)
+    end
+    if key == "InputField" and T.blizzardArt then
+        local art = ThreeSlice(frame, "BORDER", ART.input, 8, INPUT_SLICES)
+        if art then
+            -- The stock input border replaces the hairline and its focus tint;
+            -- a square fill would poke out past its rounded ends.
+            texture.outline:SetShown(false)
+            Paint(texture, T.field, 0)
+            texture.blizzardArt = art
+            return texture
+        end
     end
     if skin.focus and frame.HookScript and frame.HasFocus then
         -- Inputs show an accent hairline while they own keyboard focus.
@@ -150,11 +253,11 @@ function W.Label(parent, text, font, x, y, width, color)
     return label
 end
 
--- Headings carry hierarchy through size and neutral color; the accent is
--- reserved for state, so an accent request is rendered in the text color.
+-- Headings carry hierarchy through size and the theme's heading color (the
+-- text color in Modern, gold in Blizzard); the accent is reserved for state.
 function W.Heading(parent, text, size, x, y, width, color)
     color = InterfaceColor(color)
-    if color == nil or color == T.primary then color = T.text end
+    if color == nil or color == T.primary or color == T.text then color = T.heading end
     local label = W.Label(parent, text, "GameFontNormalLarge", x, y, width, color)
     addon.Media:BindInterfaceFont(label, GameFontNormalLarge, size)
     return label
@@ -189,8 +292,18 @@ local BUTTON = {
         label = "muted", hoverLabel = "text", selectedLabel = "text",
     },
 }
+-- List rows draw exactly like plain buttons in Modern; in Blizzard they are
+-- stock list rows rather than push buttons.
+BUTTON.row = BUTTON.button
+-- Blizzard: styles drawn with the stock push-button art, and styles that
+-- receive the stock list highlight bar. Segmented choices stay flat: a row of
+-- red buttons is loud, and the pressed art alone barely shows which is chosen.
+local PUSH = { button = true, primary = true, secondary = true }
+local LIST = { tab = true, row = true }
 
 local function Color(key) return key and T[key] end
+-- Stock push-button label gold (NORMAL_FONT_COLOR); reads on the red art.
+local BUTTON_GOLD = { 1, 0.82, 0, 1 }
 
 function W.Button(parent, text, width, height, style)
     local button = CreateFrame("Button", nil, parent)
@@ -219,11 +332,44 @@ function W.Button(parent, text, width, height, style)
     button.label:SetText(text)
     addon.Media:BindInterfaceFont(button.label, GameFontHighlight)
     W.CrispText(button.label)
+    if T.blizzardArt and PUSH[style] then
+        button.blizzardArt = ThreeSlice(button, "BACKGROUND", ART.buttonUp, 12, BUTTON_SLICES)
+        if button.blizzardArt then
+            local glow = button:CreateTexture(nil, "HIGHLIGHT")
+            glow:SetAllPoints()
+            glow:SetTexture(ART.buttonHighlight)
+            glow:SetTexCoord(0, 0.625, 0, 0.6875)
+            glow:SetBlendMode("ADD")
+            button.blizzardButtonHighlight = glow
+        end
+    elseif T.blizzardArt and LIST[style] then
+        local glow = button:CreateTexture(nil, "ARTWORK")
+        glow:SetAllPoints()
+        glow:Hide()
+        if glow:SetTexture(ART.rowHighlight) ~= false then
+            glow:SetBlendMode("ADD")
+            -- Warm the stock bar so it reads as gold rather than a white flare.
+            glow:SetVertexColor(1, 0.82, 0.45)
+            button.blizzardHighlight = glow
+        end
+    end
+    -- Stock push button: gold label, white on hover or while held selected.
+    local function RefreshPush(self, available, hovered, pressed, selected)
+        local down = pressed or selected
+        self.blizzardArt:SetFile((not available and ART.buttonDisabled) or (down and ART.buttonDown) or ART.buttonUp)
+        Paint(self.fill, T.background, 0)
+        self.outline:SetShown(false)
+        self.activeGlow:Hide()
+        local color = self.labelColor or ((hovered or selected) and T.highlight or BUTTON_GOLD)
+        if not available then color = T.unavailable end
+        self.label:SetTextColor(color[1], color[2], color[3], color[4] or 1)
+    end
     function button:RefreshAppearance()
         local available = self:IsEnabled()
         local hovered = available and self.hovered
         local pressed = hovered and self.pressed
         local selected = available and self.selected == true
+        if self.blizzardArt then return RefreshPush(self, available, hovered, pressed, selected) end
         local fill = recipe.fill
         local line = recipe.line
         local label = recipe.label
@@ -254,6 +400,12 @@ function W.Button(parent, text, width, height, style)
         self.label:SetTextColor(color[1], color[2], color[3], color[4] or 1)
         self.activeGlow:SetShown(selected and style ~= "primary" and style ~= "underline")
         if self.selectionEdge then self.selectionEdge:SetShown(selected) end
+        if self.blizzardHighlight then
+            -- Stock list rows: the highlight bar shows on hover and holds while selected.
+            self.blizzardHighlight:SetShown(hovered or selected)
+            self.blizzardHighlight:SetAlpha(selected and 0.45 or 0.25)
+            self.activeGlow:Hide()
+        end
     end
     function button:SetLabelColor(color)
         self.labelColor = color
@@ -280,7 +432,55 @@ end
 
 -- Square switch (toggle) and checkbox. Both are sharp-cornered to match the
 -- rest of the shell; state is carried by fill, not by artwork.
+-- Blizzard: toggles and checkboxes are both the stock check button.
+local function BlizzardCheck(button, text)
+    local box = button:CreateTexture(nil, "BACKGROUND")
+    if box:SetTexture(ART.checkbox) == false then box:Hide(); return nil end
+    box:SetPoint("CENTER"); box:SetSize(26, 26)
+    -- Drawn by state rather than the HIGHLIGHT layer so a hovered grid cell
+    -- lights its box too.
+    local glow = button:CreateTexture(nil, "OVERLAY")
+    glow:SetPoint("CENTER"); glow:SetSize(26, 26)
+    glow:SetTexture(ART.checkboxHighlight); glow:SetBlendMode("ADD"); glow:Hide()
+    local mark = button:CreateTexture(nil, "ARTWORK")
+    mark:SetPoint("CENTER"); mark:SetSize(26, 26)
+    mark:SetTexture(ART.check)
+    button.fill, button.knob = box, mark
+    -- Inert stand-ins so shared consumers can still address these regions.
+    button.switchOutline = W.Outline(button, T.background, "BORDER", 0, 0)
+    button.switchOutline:SetShown(false)
+    button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0)
+    button.activeGlow:Hide()
+    button.label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    button.label:SetPoint("CENTER")
+    button.label:SetText(text)
+    addon.Media:BindInterfaceFont(button.label, GameFontHighlight)
+    W.CrispText(button.label)
+    function button:RefreshAppearance()
+        local available = self:IsEnabled()
+        mark:SetTexture(available and ART.check or ART.checkDisabled)
+        mark:SetShown(self.selected == true)
+        box:SetAlpha(available and 1 or 0.5)
+        glow:SetShown(available and self.hovered == true)
+        local color = self.labelColor or T.text
+        self.label:SetTextColor(color[1], color[2], color[3], available and (color[4] or 1) or 0.5)
+    end
+    function button:SetLabelColor(color) self.labelColor = color; self:RefreshAppearance() end
+    local nativeSetEnabled = button.SetEnabled
+    function button:SetEnabled(enabled) nativeSetEnabled(self, enabled); self:RefreshAppearance() end
+    function button:SetSelected(selected) self.selected = selected; self:RefreshAppearance() end
+    button:HookScript("OnEnter",function(self) self.hovered=true;self:RefreshAppearance() end)
+    button:HookScript("OnLeave",function(self) self.hovered=false;self:RefreshAppearance() end)
+    button:HookScript("OnHide",function(self) self.hovered=false;self:RefreshAppearance() end)
+    button:RefreshAppearance()
+    return button
+end
+
 function W.Switch(button, text, height, style)
+    if T.blizzardArt then
+        local check = BlizzardCheck(button, text)
+        if check then return check end
+    end
     local toggle = style == "toggle"
     local h = toggle and 18 or 16
     local w = toggle and 34 or 16
@@ -479,9 +679,12 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     thumb:ClearAllPoints()
     thumb:SetSize(8, 16)
     thumb:SetVertexColor(unpack(T.text))
+    -- Blizzard: the stock slider knob, untinted.
+    local stockThumb = T.blizzardArt and thumb:SetTexture(ART.sliderThumb) ~= false
+    if stockThumb then thumb:SetSize(32, 32); thumb:SetVertexColor(1, 1, 1, 1) end
     slider:SetThumbTexture(thumb)
     local hovered
-    local function Tint(color) thumb:SetVertexColor(unpack(color)) end
+    local function Tint(color) if not stockThumb then thumb:SetVertexColor(unpack(color)) end end
     local function Progress()
         local low, high = slider:GetMinMaxValues()
         local width = slider:GetWidth()

@@ -3,6 +3,16 @@
 ## Unreleased
 
 - Added default-off Loot Sparkles under Questing & Leveling -> Gameplay Enhancements, with quest/node/corpse switches, animated glints, optional object names/range text, appearance controls and owned client-setting restoration. Native validation and screenshots pending; see docs/LOOT_SPARKLES.md.
+- Added interface themes: Dashboard > Appearance > Interface Theme chooses
+  Modern (default, unchanged) or Blizzard (stock dialog border and stone, red
+  push buttons, stock checkboxes, input borders and slider knob, the game font
+  with drop shadows, and softened gold/parchment text). The choice is saved per
+  profile and applies after reloading the interface.
+- Restyled the Threat Meter panel: graphite panel with a hairline border and
+  header strip, flat class-coloured bars, the interface font and plain empty
+  states. Your own row carries an accent edge that turns amber near pulling.
+- Settings labels left blank on the first open after a fresh game launch (the
+  sidebar and window title) now fill themselves in shortly after the window opens.
 
 - Added clear In your log / Completed labels to Dungeon Loot quest lists/details.
   Dungeon tiles now recognize character completion history, show All quests
