@@ -11,10 +11,16 @@ addon:RegisterModule("threatMeter",M)
 
 M.MAX_ROWS=10
 M.UPDATE_INTERVAL=0.5
-local WIDTH,HEADER,ROW,PAD=200,18,16,3
-local BAR_TEXTURE="Interface\\TargetingFrame\\UI-StatusBar"
-local PET_COLOR={0.55,0.6,0.65}
+-- Same graphite surfaces and hairlines as the settings window. Mint marks one
+-- state only, your own row; it turns amber when you are close to pulling.
+local WIDTH,HEADER,ROW,GAP,PAD=220,22,18,2,4
+local FLAT="Interface\\Buttons\\WHITE8X8"
+local WARN={232/255,176/255,75/255}
+local PET_COLOR={0.5,0.53,0.58}
 local DEFAULT_COLOR={0.6,0.6,0.6}
+local MESSAGES={unavailable="Threat data isn't available on this client.",
+    noTarget="Target an enemy to see threat.",noThreat="No threat on this target yet."}
+M.MESSAGES=MESSAGES
 
 local function Public(v) return not (issecretvalue and issecretvalue(v)) end
 local function Number(v,low,high) return Public(v) and type(v)=="number" and v==v and v>=low and v<=high end
@@ -72,30 +78,74 @@ function M:StopDrag()
     self:ApplyPosition()
 end
 
+local function Paint(texture,color,alpha) texture:SetColorTexture(color[1],color[2],color[3],alpha or 1) end
+
+local function Text(parent,size,color,justify)
+    local text=parent:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+    addon.Media:BindInterfaceFont(text,GameFontHighlight,size)
+    text:SetTextColor(color[1],color[2],color[3],1)
+    text:SetJustifyH(justify or "LEFT");text:SetWordWrap(false)
+    return text
+end
+
+-- Four 1px edges; the vertical ones stop short so corners never double up.
+local function Outline(frame)
+    local edges={}
+    for _,p in ipairs({{"TOPLEFT",0,0,"TOPRIGHT",0,0,true},{"BOTTOMLEFT",0,0,"BOTTOMRIGHT",0,0,true},
+        {"TOPLEFT",0,-1,"BOTTOMLEFT",0,1},{"TOPRIGHT",0,-1,"BOTTOMRIGHT",0,1}}) do
+        local edge=frame:CreateTexture(nil,"BORDER")
+        edge:SetPoint(p[1],p[2],p[3]);edge:SetPoint(p[4],p[5],p[6])
+        if p[7] then edge:SetHeight(1) else edge:SetWidth(1) end
+        edges[#edges+1]=edge
+    end
+    return {edges=edges,SetColor=function(o,color) for _,e in ipairs(o.edges) do Paint(e,color) end end}
+end
+
 function M:CreateFrame()
     if self.frame then return end
+    local T=addon.InterfaceTheme
     local f=CreateFrame("Frame","PlayTheGameToolsThreatMeterFrame",UIParent)
     self.frame=f
-    f:Hide();f:SetSize(WIDTH,HEADER+PAD*2);f:SetFrameStrata("MEDIUM");f:SetClampedToScreen(true)
+    f:Hide();f:SetSize(WIDTH,HEADER+1+PAD*2+ROW);f:SetFrameStrata("MEDIUM");f:SetClampedToScreen(true)
     f:SetMovable(true);f:RegisterForDrag("LeftButton")
     f:SetScript("OnDragStart",function()
         if self.active and not self.db.locked then f:StartMoving();f.dragging=true end
     end)
     f:SetScript("OnDragStop",function() self:StopDrag() end)
     f:SetScript("OnHide",function() self:StopDrag() end)
-    local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();bg:SetColorTexture(0,0,0,0.5)
-    f.title=f:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
-    f.title:SetPoint("TOPLEFT",PAD+2,-PAD-2);f.title:SetWidth(WIDTH-PAD*2-4);f.title:SetJustifyH("LEFT")
+    -- The border brightens under the pointer while the meter can be dragged.
+    f:SetScript("OnEnter",function() if not self.db.locked then f.border:SetColor(T.secondary) end end)
+    f:SetScript("OnLeave",function() f.border:SetColor(T.lineStrong) end)
+
+    local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();Paint(bg,T.panel,0.94)
+    f.border=Outline(f);f.border:SetColor(T.lineStrong)
+    local header=f:CreateTexture(nil,"BORDER")
+    header:SetPoint("TOPLEFT",1,-1);header:SetPoint("TOPRIGHT",-1,-1);header:SetHeight(HEADER);Paint(header,T.surface)
+    local rule=f:CreateTexture(nil,"BORDER")
+    rule:SetPoint("TOPLEFT",1,-1-HEADER);rule:SetPoint("TOPRIGHT",-1,-1-HEADER);rule:SetHeight(1);Paint(rule,T.line)
+    f.title=Text(f,12,T.text)
+    f.title:SetPoint("TOPLEFT",PAD+5,-1);f.title:SetSize(WIDTH-PAD*2-90,HEADER)
+    f.hint=Text(f,10,T.muted,"RIGHT")
+    f.hint:SetPoint("TOPRIGHT",-PAD-5,-1);f.hint:SetSize(80,HEADER);f.hint:SetText("Drag to move")
+    f.empty=Text(f,11,T.muted)
+    f.empty:SetPoint("TOPLEFT",PAD+5,-(HEADER+1+PAD));f.empty:SetSize(WIDTH-PAD*2-10,ROW)
+
     f.rows={}
     for i=1,self.MAX_ROWS do
         local bar=CreateFrame("StatusBar",nil,f)
         bar:SetSize(WIDTH-PAD*2,ROW)
-        bar:SetPoint("TOPLEFT",PAD,-(PAD+HEADER+(i-1)*(ROW+1)))
-        bar:SetStatusBarTexture(BAR_TEXTURE);bar:SetMinMaxValues(0,100)
-        bar.nameText=bar:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-        bar.nameText:SetPoint("LEFT",4,0);bar.nameText:SetWidth(WIDTH-PAD*2-52);bar.nameText:SetJustifyH("LEFT")
-        bar.percentText=bar:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-        bar.percentText:SetPoint("RIGHT",-4,0);bar.percentText:SetJustifyH("RIGHT")
+        bar:SetPoint("TOPLEFT",PAD,-(HEADER+1+PAD+(i-1)*(ROW+GAP)))
+        bar:SetStatusBarTexture(FLAT);bar:SetMinMaxValues(0,100)
+        local track=bar:CreateTexture(nil,"BACKGROUND");track:SetAllPoints();Paint(track,T.field)
+        bar.edge=bar:CreateTexture(nil,"OVERLAY")
+        bar.edge:SetPoint("TOPLEFT");bar.edge:SetPoint("BOTTOMLEFT");bar.edge:SetWidth(2)
+        bar.nameText=Text(bar,11,T.text)
+        bar.nameText:SetPoint("LEFT",7,0);bar.nameText:SetWidth(WIDTH-PAD*2-56)
+        bar.percentText=Text(bar,11,T.text,"RIGHT")
+        bar.percentText:SetPoint("RIGHT",-6,0);bar.percentText:SetWidth(44)
+        for _,text in ipairs({bar.nameText,bar.percentText}) do
+            text:SetShadowColor(0,0,0,0.9);text:SetShadowOffset(1,-1)
+        end
         bar:Hide()
         f.rows[i]=bar
     end
@@ -121,14 +171,16 @@ end
 -- Units in the player's group (and their pets, if enabled), without duplicates.
 function M:Units()
     local list,seen={},{}
+    local me=Call(UnitGUID,"player")
+    if not (Public(me) and type(me)=="string") then me=nil end
     local function Add(unit,owner)
         if not Truthy(UnitExists,unit) then return end
         local guid=Call(UnitGUID,unit)
         if Public(guid) and type(guid)=="string" then
             if seen[guid] then return end
             seen[guid]=true
-        end
-        list[#list+1]={unit=unit,owner=owner}
+        else guid=nil end
+        list[#list+1]={unit=unit,owner=owner,player=unit=="player" or (me~=nil and guid==me)}
     end
     local pets=self.db.showPets
     if Truthy(IsInRaid) then
@@ -184,7 +236,7 @@ function M:Entry(u)
         local c=Public(classFile) and type(classFile)=="string" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
         e.color=c and {c.r,c.g,c.b} or DEFAULT_COLOR
     end
-    e.unit=u.unit
+    e.unit,e.player=u.unit,u.player
     return e
 end
 
@@ -238,31 +290,40 @@ function M:Update()
     local show=self.active and (not self.db.locked or not self.db.hideOutOfCombat or self:InCombat())
     f:EnableMouse(self.active and not self.db.locked or false)
     if not show then self.entries={};f:Hide();return end
-    local entries={}
+    local entries,message={},nil
     if not self:Available() then
-        f.title:SetText("Threat: unavailable on this client")
+        message=MESSAGES.unavailable
     elseif hasTarget then
         entries=self:Collect()
-        f.title:SetText("Threat: "..Name("target"))
+        if #entries==0 then message=MESSAGES.noThreat end
     else
-        f.title:SetText("Threat: no target")
+        message=MESSAGES.noTarget
     end
     self.entries=entries
+    f.title:SetText(hasTarget and self:Available() and Name("target") or "Threat")
+    f.hint:SetShown(not self.db.locked)
+    f.empty:SetText(message or "");f.empty:SetShown(message~=nil)
+    local T=addon.InterfaceTheme
     local shown=math.min(#entries,self.MAX_ROWS)
     for i,bar in ipairs(f.rows) do
         local e=entries[i]
         if e then
             local fill,label=M.Display(e)
             bar:SetValue(fill)
-            bar:SetStatusBarColor(e.color[1],e.color[2],e.color[3],0.85)
+            bar:SetStatusBarColor(e.color[1],e.color[2],e.color[3],e.player and 0.9 or 0.7)
             bar.nameText:SetText(e.name)
             bar.percentText:SetText(label)
+            local holding=e.aggro or e.tanking or (e.status or 0)>=2
+            bar.warn=e.player and not holding and fill>=90 or false
+            if e.player then Paint(bar.edge,bar.warn and WARN or T.primary) end
+            bar.edge:SetShown(e.player==true)
             bar:Show()
         else
             bar:Hide()
         end
     end
-    f:SetHeight(PAD*2+HEADER+shown*(ROW+1))
+    local body=shown>0 and shown*ROW+(shown-1)*GAP or ROW
+    f:SetHeight(HEADER+1+PAD*2+body)
     f:Show()
 end
 

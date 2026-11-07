@@ -152,6 +152,9 @@ function M:RefreshBorders()
 end
 
 function M:GetInterfaceFont(fallbackPath)
+    -- The Blizzard theme keeps the stock game fonts its artwork is drawn for.
+    local theme = addon.InterfaceTheme
+    if theme and theme.blizzardArt then return fallbackPath or GameFontHighlight:GetFont() end
     return self:GetFont("Expressway") or fallbackPath or GameFontHighlight:GetFont()
 end
 
@@ -229,6 +232,35 @@ function M:BindInterfaceFont(region, fontObject, fontSize)
     self:ApplyInterfaceFont(region, spec)
 end
 function M:UnbindInterfaceFont(region) self.regions[region] = nil end
+
+-- A shared-media font file can still be loading the first time it is used in
+-- a game session; text set during that window stays blank until it is set
+-- again. Re-apply the font and re-set the text of every bound FontString.
+-- EditBoxes are skipped: re-setting their text would fire their handlers.
+function M:RedrawInterfaceText()
+    if InCombat() then return false end
+    for region, spec in pairs(self.regions) do
+        if region.GetObjectType and region:GetObjectType() == "FontString" then
+            self:ApplyInterfaceFont(region, spec)
+            local text = region:GetText()
+            if type(text) == "string" and text ~= "" then region:SetText(""); region:SetText(text) end
+        end
+    end
+    return true
+end
+
+-- Redraws shortly after a surface opens, and once more a second later, so a
+-- font that finishes loading after the first pass is still picked up.
+function M:ScheduleTextRedraw()
+    if not (C_Timer and C_Timer.After) then return end
+    self.redrawEpoch = (self.redrawEpoch or 0) + 1
+    local epoch = self.redrawEpoch
+    for _, delay in ipairs({ 0.2, 1 }) do
+        C_Timer.After(delay, function()
+            if self.redrawEpoch == epoch then self:RedrawInterfaceText() end
+        end)
+    end
+end
 
 function M:RefreshFonts()
     self:AttachLibrary()

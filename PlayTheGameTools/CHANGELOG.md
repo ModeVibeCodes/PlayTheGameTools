@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Added interface themes: Dashboard > Appearance > Interface Theme chooses
+  Modern (default, unchanged) or Blizzard (stock dialog border and stone, red
+  push buttons, stock checkboxes, input borders and slider knob, the game font
+  with drop shadows, and softened gold/parchment text). The choice is saved per
+  profile and applies after reloading the interface.
+- Restyled the Threat Meter panel: graphite panel with a hairline border and
+  header strip, flat class-coloured bars, the interface font and plain empty
+  states. Your own row carries an accent edge that turns amber near pulling.
+- Settings labels left blank on the first open after a fresh game launch (the
+  sidebar and window title) now fill themselves in shortly after the window opens.
+
 - Finished renaming from ModeTools: the addon folder, TOC, settings variable
   (`PTGToolsDB`) and frame names now use Play The Game Tools names. Open
   configuration with `/ptg`; `/modetools` and `/mode` were removed. Settings are

@@ -22,6 +22,8 @@ events:SetScript("OnEvent", function(self, _, loadedName)
     if addon.Edition and not addon.Edition:CheckClient() then return end
     addon.Media:AttachLibrary()
     addon:InitializeDatabase()
+    -- Before modules or settings build frames; a theme change applies on the next reload.
+    addon:ApplyInterfaceTheme(addon.db.window.theme)
     local ok,reason=pcall(addon.InitializeModules,addon)
     if not ok then addon.ProfileManager:InitializationFailed(reason);error(reason) end
     addon.ProfileManager:CommitInitialization()
