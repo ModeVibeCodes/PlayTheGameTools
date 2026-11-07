@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Campfire elements now use shared Edit Mode handles, coordinates and saved positions. Added an orange/red Camp Buffs heading, native countdown with white-to-green/yellow/red urgency gradients, distinct stat colors and spell-ID filtering. Centered the camp icon above its status; no unsupported yards/navigation are fabricated.
+
 - Fixed campfire movement with Move Windows and draggable previews; aura/font refreshes no longer reset dragged anchors. Added compact earned-buff lines and optional independently positioned buff text that remains while its earned buffs last.
 
 - Gameplay Enhancements now has separate Loot Sparkles and Campfire Monitor tabs with per-feature switches. Added an opt-in native campfire proximity icon/text monitor, earned bonus details, appearance/position controls, preview and a clearly labeled profession guide. Campfire native validation/screenshots pending.

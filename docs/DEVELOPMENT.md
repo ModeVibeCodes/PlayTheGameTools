@@ -111,3 +111,15 @@ its own position/style. Earned buffs persist after leaving proximity. Existing
 runtime files only; local /reload applies it. Run tests/campfire_movement.py,
 loot_sparkles.py and the builder. Exact new native paths are in CAMPFIRE_MONITOR.md.
 Native validation/screenshots pending; no SavedVariables edits or junction changes.
+
+## Campfire Edit Mode and timer presentation
+
+Campfire Monitor/Camp Buffs now register in the shared Position Manager under
+the existing Gameplay Enhancements module. The existing Edit Mode workspace
+handles both, with hidden membership for disabled/joined elements and preserved
+positions. No shared Edit Mode/core changes. Camp Buffs has gradient header and
+native public countdown, 10/2-minute warning/critical defaults, per-stat colors
+and ID filtering. Centered icon uses status only; no supported camp coordinates
+were verified, so yards/arrows are omitted. Run tests/campfire_editmode.py,
+campfire_movement.py, loot_sparkles.py and the builder. Existing runtime files
+only; /reload loads local source. Native rendering/movement/screenshots pending.

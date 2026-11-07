@@ -18,11 +18,11 @@ local function Field(t,key)
     local ok,v=Call(function() return t[key] end)
     if ok then return v end
 end
-C.ranges={fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
+C.ranges={timerWarningMinutes={1,60,1},timerCriticalMinutes={1,30,1},fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
     opacity={20,100,5},backgroundOpacity={0,100,5},benefitsX={-10000,10000,1},benefitsY={-10000,10000,1},
     benefitsWidth={100,600,10},benefitsFontSize={10,24,1},benefitsScale={50,150,5},
     benefitsOpacity={20,100,5},benefitsBackgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
-C.defaults={enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
+C.defaults={timerWarningMinutes=10,timerCriticalMinutes=2,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
     showProfessionGuide=false,alwaysShow=false,showInCombat=false,locked=true,fontSize=14,
     iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
@@ -37,6 +37,7 @@ function C.Initialize(db)
         assert(Public(v) and type(v)==type(default),"Invalid Campfire Monitor setting: "..key)
         if r then assert(Number(v,r[1],r[2]) and (v-r[1])%r[3]==0,"Invalid Campfire Monitor range: "..key) end
     end
+    assert(settings.timerCriticalMinutes<settings.timerWarningMinutes,"Red threshold must be below yellow threshold")
     if settings.textColor==nil then settings.textColor={1,0.85,0.5} end
     assert(type(settings.textColor)=="table","Invalid Campfire Monitor color")
     for i=1,3 do assert(Number(settings.textColor[i],0,1),"Invalid Campfire Monitor color") end
@@ -60,7 +61,7 @@ function C:Scan()
             local kind=id==self.NEARBY and "near" or id==self.BENEFITS and "benefits" or
                 (id==self.WELCOMING or id==self.CRAFTING) and "welcoming" or nil
             if kind then
-                snapshot[kind]={index=index,instance=Field(aura,"auraInstanceID"),icon=Field(aura,"icon")}
+                snapshot[kind]={index=index,instance=Field(aura,"auraInstanceID"),icon=Field(aura,"icon"),duration=Field(aura,"duration"),expiration=Field(aura,"expirationTime")}
                 if kind=="near" then snapshot.nearby=true end
             end
         end
@@ -87,14 +88,22 @@ function C:TooltipLines(aura)
     for i=2,64 do
         local row=Field(source,i)
         if row==nil then break end
-        for _,key in ipairs({"leftText","rightText"}) do
-            local text=Field(row,key)
-            if type(text)=="string" then
-                text=text:sub(1,2048):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
-                text=text:gsub("|T.-|t",""):gsub("|A.-|a","")
-                for line in text:gmatch("[^\r\n]+") do
-                    line=line:match("^%s*(.-)%s*$")
-                    if line~="" and not seen[line] then lines[#lines+1]=line;seen[line]=true end
+        local label=Field(row,"leftText")
+        if not (type(label)=="string" and self:IsMetadata(label)) then
+            for _,key in ipairs({"leftText","rightText"}) do
+                local text=Field(row,key)
+                if type(text)=="string" then
+                    text=text:sub(1,2048):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+                    text=text:gsub("|T.-|t",""):gsub("|A.-|a","")
+                    for line in text:gmatch("[^\r\n]+") do
+                        line=line:match("^%s*(.-)%s*$")
+                        local lower=line:lower()
+                        local metadata=lower:find("%s*%(%s*spell%s*id%s*:%s*#?%s*%d+%s*%)%s*$") or
+                            lower:find("%s*%[%s*spell%s*id%s*:%s*#?%s*%d+%s*%]%s*$") or
+                            lower:find("%s+spell%s*id%s*:%s*#?%s*%d+%s*$")
+                        if metadata then line=line:sub(1,metadata-1):match("^%s*(.-)%s*$") end
+                        if line~="" and not self:IsMetadata(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
+                    end
                 end
             end
         end
@@ -164,11 +173,111 @@ function C.CompactLine(line)
     for _,fragment in ipairs(unknown) do results[#results+1]=fragment end
     return results
 end
+-- Native public timing only. A private/missing expiration never becomes a
+-- guessed hour-long timer. Edit/preview samples are explicitly labeled.
+function C:IsBuffSample()
+    return self.previewing or (self.editing and not (self.snapshot or {}).benefits)
+end
+function C:Remaining()
+    if self:IsBuffSample() then return 2700 end
+    local aura=(self.snapshot or {}).benefits
+    if not aura or not Number(aura.expiration,0.001,1e12) or not Number(aura.duration,0.001,1e9) then return end
+    local ok,now=Call(GetTime)
+    if ok and Number(now,0,1e12) then return math.max(0,aura.expiration-now) end
+end
+function C:TimerColor(seconds)
+    if not Number(seconds,0,1e12) then return {0.7,0.75,0.8} end
+    if seconds<=self.db.timerCriticalMinutes*60 then return {1,0.22,0.16} end
+    if seconds<=self.db.timerWarningMinutes*60 then return {1,0.85,0.15} end
+    return {0.25,1,0.4}
+end
+function C:TimerLabel()
+    local seconds=self:Remaining()
+    if seconds==nil then return "Time unavailable",nil end
+    local whole=math.ceil(seconds)
+    local text
+    if whole<=0 then text="Expired"
+    elseif whole>=3600 then text=string.format("%d:%02d:%02d remaining",math.floor(whole/3600),math.floor(whole/60)%60,whole%60)
+    else text=string.format("%02d:%02d remaining",math.floor(whole/60),whole%60) end
+    if self:IsBuffSample() then text="Preview: "..text end
+    return text,seconds
+end
+function C.Gradient(text,first,last)
+    local output={}
+    for i=1,#text do
+        local t=(i-1)/math.max(1,#text-1)
+        local function Channel(n) return math.floor((first[n]+(last[n]-first[n])*t)*255+0.5) end
+        output[i]=string.format("|cff%02x%02x%02x%s|r",Channel(1),Channel(2),Channel(3),text:sub(i,i))
+    end
+    return table.concat(output)
+end
+local buffColors={
+    {"crit",{1,0.25,0.25}}, {"critical",{1,0.25,0.25}}, {"critically",{1,0.25,0.25}},
+    {"int",{0.25,0.55,1}}, {"intellect",{0.25,0.55,1}}, {"stats",{0.8,0.55,1}},
+    {"stamina",{0.3,1,0.5}}, {"strength",{1,0.6,0.25}}, {"spirit",{0.3,0.95,0.95}},
+    {"armor",{0.7,0.8,0.9}}, {"ap",{1,0.85,0.3}}, {"attack power",{1,0.85,0.3}},
+    {"spell power",{0.75,0.45,1}}, {"healing",{0.3,1,0.75}}, {"mana",{0.45,0.75,1}},
+    {"rested",{1,0.9,0.55}}, {"resists",{1,0.5,0.85}}, {"resistance",{1,0.5,0.85}},
+    {"resistances",{1,0.5,0.85}},
+}
+function C:BuffColor(line)
+    local lower=line:lower()
+    for _,entry in ipairs(buffColors) do
+        if lower:find("%f[%a]"..entry[1].."%f[%A]") then return entry[2] end
+    end
+    return self.db.textColor
+end
+function C:ColorBuffText(text)
+    local lines={}
+    for line in text:gmatch("[^\n]+") do
+        local rgb=self:BuffColor(line)
+        lines[#lines+1]=string.format("|cff%02x%02x%02x%s|r",math.floor(rgb[1]*255+0.5),
+            math.floor(rgb[2]*255+0.5),math.floor(rgb[3]*255+0.5),line)
+    end
+    return table.concat(lines,"\n")
+end
+function C:IsMetadata(line)
+    local lower=line:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):lower()
+    if lower:match("^spell%s*id%s*[:#%-]?%s*#?%s*%d+%s*$") or
+        lower:match("^aura%s*id%s*[:#%-]?%s*#?%s*%d+%s*$") or
+        lower:match("^id%s*[:#]%s*%d+%s*$") or lower:match("^spell%s*id%s*[:#]?%s*$") then return true end
+    local id=tonumber(lower)
+    return id==self.NEARBY or id==self.BENEFITS or id==self.WELCOMING or id==self.CRAFTING
+end
+function C:MonitorStatus()
+    local s=self.snapshot or {}
+    if self.previewing then return "Preview: Campfire Nearby" end
+    if s.nearby then return "Campfire Nearby" end
+    if s.known or self.editing or self.placing then return "No Nearby Campfire" end
+    return "Campfire Status Unavailable"
+end
+function C:UpdateTimerText()
+    local label,seconds=self:TimerLabel()
+    local colored=self.Gradient(label,{1,1,1},self:TimerColor(seconds))
+    for _,f in pairs({self.frame,self.benefitsFrame}) do
+        if f and f.buffTimer and f:IsShown() and f.buffTimer:IsShown() then f.buffTimer:SetText(colored) end
+    end
+end
+function C:UpdateTimerDriver()
+    if not self.timerDriver then self.timerDriver=CreateFrame("Frame") end
+    self.timerDriver:SetScript("OnUpdate",nil)
+    local visible=false
+    for _,f in pairs({self.frame,self.benefitsFrame}) do
+        if f and f:IsShown() and f.buffTimer:IsShown() then visible=true end
+    end
+    if not visible or self:IsBuffSample() or self:Remaining()==nil then return end
+    local elapsed=0
+    self.timerDriver:SetScript("OnUpdate",function(_,dt)
+        elapsed=elapsed+dt
+        if elapsed>=1 then elapsed=0;self:UpdateTimerText() end
+    end)
+end
+
 function C:BuildBenefitsText()
     local s=self.snapshot or {}
-    if self.previewing then return "Preview buffs\n2% Crit\n8% Stats" end
+    if self:IsBuffSample() then return "2% Crit\n8% Stats" end
     if not s.benefits then
-        if self.placing then return "Camp buffs" end
+        if self.placing then return "No active buffs" end
         return s.complete and "No Camp Benefits detected." or "Camp Benefits unavailable."
     end
     local lines=self:TooltipLines(s.benefits)
@@ -184,22 +293,12 @@ function C:BuildBenefitsText()
 end
 
 function C:BuildText()
-    local s,db=self.snapshot or {},self.db
-    local title=self.previewing and "Preview: Campfire Nearby" or
-        (not self.active and self.placing and "Campfire Monitor") or
-        (s.nearby and (s.welcoming and "Campfire Nearby - Resting" or "Campfire Nearby") or
-        (s.known and "No nearby campfire" or (s.message or "Campfire status unavailable.")))
-    local parts={}
-    if db.showText or not db.showIcon then parts[#parts+1]=title end
-    if db.showNearbyDetails and s.near and not self.previewing then
+    local s,parts=self.snapshot or {},{}
+    if self.db.showNearbyDetails and s.near and not self.previewing then
         local lines=self:TooltipLines(s.near)
         if #lines>0 then parts[#parts+1]="Nearby camp (native)";for _,line in ipairs(lines) do parts[#parts+1]=line end end
     end
-    if db.showBenefits and not db.separateBenefits then
-        if not db.compactBenefits and s.benefits then parts[#parts+1]="Your Camp Benefits" end
-        parts[#parts+1]=self:BuildBenefitsText()
-    end
-    if db.showProfessionGuide then
+    if self.db.showProfessionGuide then
         parts[#parts+1]="Profession guide (possible features)"
         for _,entry in ipairs(self.professions) do parts[#parts+1]=entry[1]..": "..entry[2] end
     end
@@ -211,6 +310,7 @@ function C:SetOption(key,value)
     local candidate=addon.ProfileCodec.Copy(self.owner.db);candidate.campfire[key]=value
     if not pcall(self.Initialize,candidate) then return false end
     self.db[key]=type(value)=="table" and {unpack(value)} or value
+    if self.SyncPositionOption then self:SyncPositionOption(key) end
     self:SyncEnabled()
     if self.owner.page then self.owner.page:Refresh() end
     return true
@@ -229,6 +329,7 @@ function C:Refresh()
 end
 function C:SyncEnabled()
     self.active=self.owner.active==true and self.db.enabled
+    self.editing=self.active and addon.editMode and P:OutsideCombat() or false
     if not self.events then self.events=CreateFrame("Frame") end
     self.events:UnregisterAllEvents()
     if self.active then
@@ -244,6 +345,7 @@ function C:SyncEnabled()
         end
         self:Refresh()
     end)
+    self:SyncEditDisplays()
     self:Refresh()
 end
 function C:SetPlacementMode(enabled)

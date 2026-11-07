@@ -47,7 +47,18 @@ function C:AddConfig(page)
     function owner:CanConfigure() return addon.LootSparkles:OutsideCombat() end
     function owner:SetAppearance(key,value) return C:SetOption(key,value) end
     W.ColorRow(page,owner,"Text Color","textColor")
+    page:Group("Buff Timer")
+    Slider("Yellow Below (Minutes)","timerWarningMinutes")
+    Slider("Red Below (Minutes)","timerCriticalMinutes")
+    local timerHelp=W.Label(page:Row("Timer Colors",72),"The countdown fades from white into green, yellow or red. Red must be below the yellow threshold. Hidden native timing shows Time unavailable.",nil,0,-4,440,T.muted)
+    timerHelp:SetWordWrap(true)
     page:Group("Position")
+    local edit=W.Button(page:Row("Addon Edit Mode",48),"Open Edit Mode",160,28);edit:SetPoint("LEFT")
+    edit:SetScript("OnClick",function()
+        if addon.LootSparkles:OutsideCombat() and self.active then
+            addon:SetEditMode(true);addon.PositionManager:SelectElement("campfireMonitor")
+        end
+    end);page.campfireEdit=edit
     local move=W.Button(page:Row("Window Placement",48),"Move Windows",160,28);move:SetPoint("LEFT")
     move:SetScript("OnClick",function() self:SetPlacementMode(not self.placing);page:Refresh() end)
     page.campfireMove=move
@@ -56,7 +67,7 @@ function C:AddConfig(page)
     Slider("Horizontal Offset","x");Slider("Vertical Offset","y")
     local reset=W.Button(page:Row("Monitor Position",48),"Reset Position",160,28);reset:SetPoint("LEFT")
     reset:SetScript("OnClick",function()
-        if addon.LootSparkles:OutsideCombat() then self:StopDrag();self.db.x=0;self.db.y=-240;self:Refresh();page:Refresh() end
+        if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(false);page:Refresh() end
     end);page.campfireReset=reset
     page:Group("Buff Window")
     Toggle("Lock Buff Window","benefitsLocked")
@@ -66,7 +77,7 @@ function C:AddConfig(page)
     Slider("Buff Horizontal Offset","benefitsX");Slider("Buff Vertical Offset","benefitsY")
     local resetBuffs=W.Button(page:Row("Buff Window Position",48),"Reset Buff Position",160,28);resetBuffs:SetPoint("LEFT")
     resetBuffs:SetScript("OnClick",function()
-        if addon.LootSparkles:OutsideCombat() then self:StopDrag();self.db.benefitsX=260;self.db.benefitsY=-240;self:Refresh();page:Refresh() end
+        if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(true);page:Refresh() end
     end);page.campfireBuffReset=resetBuffs
     local note=W.Label(page:Row("Campfire Help",220),
         "Move Windows lets you drag the monitor and detached buffs outside combat, even when locked. Preview windows can also be dragged. Right-click either window or choose Finish Moving to stop. Separate Buff Window keeps earned buffs in their own window with a saved position and its own size and opacity. Compact Buff Text shortens readable native bonuses; unfamiliar text stays unchanged. Earned buffs can outlast the nearby fire. The profession guide lists possible contributions, not this camp's detected objects. Combat display is off by default.",nil,0,-4,440,T.muted)

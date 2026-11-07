@@ -35,10 +35,10 @@ tips[102]={lines={{leftText='Camp Benefits'},
 auras={{spellId=C.BENEFITS,auraInstanceID=102}}
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
 assert(C.snapshot.nearby==false and C.frame:IsShown(),'joined earned buffs survive leaving camp')
-assert(C.frame.text:GetText():find('2%% Crit\n8%% Stats'))
+assert(Plain(C.frame.text:GetText()):find('2%% Crit\n8%% Stats'))
 assert(C:SetOption('separateBenefits',true))
 assert(not C.frame:IsShown() and C.benefitsFrame:IsShown())
-assert(C.benefitsFrame.text:GetText()=='2% Crit\n8% Stats')
+assert(Plain(C.benefitsFrame.text:GetText())=='2% Crit\n8% Stats')
 assert(not C.benefitsFrame.icon:IsShown(),'separate buff window stays simple')
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles');M.page:SelectSectionTab(2)
 local page=M.page
@@ -65,7 +65,7 @@ assert(C.db.benefitsX==300 and C.db.benefitsY==38,'independent scaled position s
 C.benefitsFrame.scripts.OnMouseUp(C.benefitsFrame,'RightButton')
 assert(not C.placing and not C.benefitsFrame.mouse and not C.frame:IsShown())
 assert(C:SetOption('compactBenefits',false))
-assert(C.benefitsFrame.text:GetText():find('Camp Chair: Critical strike',1,true))
+assert(Plain(C.benefitsFrame.text:GetText()):find('Camp Chair: Critical strike',1,true))
 assert(C:SetOption('compactBenefits',true) and C:SetOption('separateBenefits',false))
 assert(C.frame:IsShown() and not C.benefitsFrame:IsShown())
 assert(C.db.benefitsX==300 and C.db.x==50,'joining preserves both saved positions')

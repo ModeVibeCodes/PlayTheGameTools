@@ -12,7 +12,7 @@ the existing Quick Access/Food Bar subfeature lifecycle without changing shared
 navigation, the module registry, compatibility identifiers or SavedVariables.
 
 Campfire Monitor displays the native proximity status with an optional campfire
-icon and text. It can show **Your Camp Benefits**, using compact native-value stat lines by default, with full native text available, and optional **Nearby camp (native)** details.
+icon and text. It shows **Camp Buffs**, using compact native-value stat lines by default, with full native text available, and optional **Nearby camp (native)** details.
 An optional twelve-profession guide explains possible contributions.
 
 **Limits:** earned Camp Benefits can include previous camps. They do not prove a
@@ -74,7 +74,9 @@ Gameplay Enhancements page. The three files load before configuration/startup in
 the TOC. There is no external addon runtime dependency.
 
 Player-filtered UNIT_AURA plus world/combat events drive updates. There is no
-campfire polling. Combat display defaults off and performs no aura reads while
+campfire aura polling. A separate one-second presentation driver refreshes only
+visible countdown labels while native timing is readable; it stops when hidden,
+disabled, paused or using a static sample. Combat display defaults off and performs no aura reads while
 paused. Optional Show In Combat uses the same public-value checks; unavailable
 data clears proximity rather than retaining a stale nearby claim. The locked
 display is click-through. Dragging/settings changes and preview require OOC.
@@ -229,3 +231,79 @@ release builder. Native movement/compact-text screenshots remain pending.
    **Confirmation:** each position persists independently; joined mode shows one
    window; Reset Buff Position affects only the detached list. Combat ends
    placement and stops both windows' dragging without protected actions.
+
+
+## Shared Edit Mode, buff colors and native timer — November 7, 2026
+
+Both configured elements now register with the shared Position Manager:
+**Campfire Monitor** and, in separate mode, **Camp Buffs**. Header Edit Mode and
+Campfire Monitor → Position → Addon Edit Mode → Open Edit Mode open the existing
+workspace. Its real handles, coordinate inputs, snapping and Exit / Save apply
+to these elements. Joined mode has one element; disabled/unconfigured elements
+are not selectable. Edit placeholders are labeled Preview when no live buff is
+available. Existing flat offsets initialize the manager's records only when no
+saved managed record exists; subsequent changes keep the existing controls in
+sync. Positions made while disabled also survive activation/reload. Shared
+Edit Mode infrastructure and other modules were not modified.
+
+Buff presentation:
+
+- Header **Camp Buffs**, colored per character from orange to red.
+- Remaining time directly underneath. It fades from white into the current
+  urgency color: green normally, yellow at/below 10 minutes, red at/below
+  2 minutes. Buff Timer → Yellow Below (Minutes) / Red Below (Minutes) configure
+  these defaults; red must be lower than yellow. At expiry the label is Expired.
+- Native `duration` and `expirationTime` fields plus public GetTime determine
+  time left. Restricted/missing timing shows Time unavailable; no assumed hour
+  or fabricated countdown. Static edit/preview samples say Preview.
+- Crit red, Int blue; Stats purple, Stamina green, Strength orange, Spirit cyan,
+  Armor blue-grey, AP amber, healing mint, mana light blue, rested XP gold and
+  resistances pink. General Text Color remains the fallback for unknown rows
+  and the monitor's caption/details; requested headings/stat colors override it.
+- Standalone spell-ID metadata, ID side columns and inline spell-ID suffixes
+  are removed before compact/full native-text display.
+
+The icon is centered above its centered status caption. Readable states are
+**Campfire Nearby** / **No Nearby Campfire**; unknown data says Campfire Status
+Unavailable. Existing Always Show Monitor still controls away-from-camp
+visibility. No supported camp object position was verified: the inspected
+Forever Forge source explicitly notes that Campfire Nearby has no coordinates,
+and the native aura API supplies no destination. No yards or directional arrow
+is displayed; the player's own location/radius is not substituted for a camp.
+
+`tests/campfire_editmode.py` covers shared handles/coordinates/dragging, position
+persistence, countdown updates and exact green/yellow/red boundaries, gradients,
+stat colors, ID removal and centered captions. Existing campfire movement,
+monitor, sparkle and smoke checks remain relevant. Native rendering, countdown
+field availability, Edit Mode movement and screenshots are still pending.
+
+1. **Navigation:** Play The Game Tools → header → Edit Mode; Campfire Monitor /
+   Camp Buffs handles; Edit Mode → X Position / Y Position → Exit / Save.
+   **Action:** `/reload`, enable Gameplay Enhancements and Campfire Monitor, turn
+   Separate Buff Window on, enter Edit Mode, drag each labeled handle and adjust
+   coordinates, then Exit / Save and reload. **Required state:** OOC.
+   **Confirmation:** both configured elements are selectable and move/save through
+   the existing workspace; joining the list removes the extra Camp Buffs handle.
+   No drag jumps on aura or timer updates, and other editable elements still work.
+2. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
+   Enhancements → Campfire Monitor → Display → Show Your Camp Benefits;
+   Display Preview → Preview. **Action:** inspect Preview, stop it and compare
+   with earned live buffs. **Required state:** OOC, enabled feature, actual earned
+   buffs for live comparison. **Confirmation:** Camp Buffs heading above remaining
+   time and colored stat lines; Crit red, Int blue and other stats distinct. No
+   spell-ID rows/suffixes. Sample time is labeled Preview; unavailable native
+   timing never becomes an assumed countdown.
+3. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
+   Enhancements → Campfire Monitor → Buff Timer → Yellow Below (Minutes) / Red
+   Below (Minutes). **Action:** compare the live timer with the native buff and
+   observe the applicable thresholds; adjust them OOC if useful, then restore
+   desired values. **Required state:** readable native timing; red below yellow.
+   **Confirmation:** once-per-second time updates; white-to-green normally,
+   white-to-yellow at warning and white-to-red at low remaining time. Unavailable
+   threshold/native scenarios remain pending rather than manufactured.
+4. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
+   Enhancements → Campfire Monitor → Display → Always Show Monitor / Show Campfire
+   Icon / Show Status Text. **Action:** enable these, approach and leave an actual
+   campfire. **Required state:** OOC, preview off. **Confirmation:** centered icon
+   with the matching centered nearby/absent caption underneath; no guessed yards
+   or arrow. Unknown native state remains explicitly unavailable.

@@ -189,6 +189,9 @@ function M:OnEnable()
     if addon.CampfireMonitor then addon.CampfireMonitor:SyncEnabled() end
     self.questWasOn=self.db.questSparkles
 end
+function M:SetEditMode(enabled)
+    if addon.CampfireMonitor then addon.CampfireMonitor:SetEditMode(enabled) end
+end
 function M:OnDisable()
     self.active=false
     self.driver:UnregisterAllEvents(); self.driver:RegisterEvent("PLAYER_REGEN_ENABLED")

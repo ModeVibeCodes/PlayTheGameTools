@@ -3,6 +3,14 @@ from smoke import load
 
 FIXTURE=r'''
 C=addon.CampfireMonitor;M=addon.LootSparkles
+function Plain(text) return (text or ''):gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','') end
+function ShownText(frame)
+ local lines={}
+ for _,key in ipairs({'caption','buffTitle','buffTimer','text','details'}) do
+  local label=frame[key];if label and label:IsShown() then lines[#lines+1]=Plain(label:GetText()) end
+ end
+ return table.concat(lines,'\n')
+end
 auras={};auraReads=0;tooltipReads=0
 C_UnitAuras={GetAuraDataByIndex=function(unit,index,filter)
  assert(unit=='player' and filter=='HELPFUL');auraReads=auraReads+1
@@ -33,23 +41,23 @@ assert(page.selectedSection==page.sections[2] and page.campfireControls.enabled.
 assert(page.sparkleControls.sparklesEnabled.row==nil) -- cell stays a toggle grid, not another navigation page
 assert(C:SetOption('enabled',true) and not C.active,'master still off')
 addon:SetModuleEnabled('lootSparkles',true)
-assert(C.active and C.snapshot.known and not C.snapshot.nearby and not C.frame)
+assert(C.active and C.snapshot.known and not C.snapshot.nearby and not C.frame:IsShown())
 assert(C.events.events.UNIT_AURA and C.events.unitEvents.UNIT_AURA[1]=='player')
 local read=auraReads;FireEvent('UNIT_AURA','target');assert(auraReads==read)
 auras={{spellId=C.NEARBY,auraInstanceID=101,icon=135805},
  {spellId=C.BENEFITS,auraInstanceID=102}, {spellId=C.WELCOMING,auraInstanceID=103}}
 FireEvent('UNIT_AURA','player')
 assert(C.frame:IsShown() and C.snapshot.nearby and C.snapshot.complete)
-assert(C.frame.text:GetText():find('Campfire Nearby - Resting',1,true))
-assert(C.frame.text:GetText():find('12 Stamina',1,true))
-assert(C.frame.text:GetText():find('12 Stamina',1,true))
-local _,count=C.frame.text:GetText():gsub('12 Stamina','');assert(count==1,'deduplicate native lines')
-assert(not C.frame.text:GetText():find('secret',1,true))
-assert(C:SetOption('showNearbyDetails',true) and C.frame.text:GetText():find('A campfire is close.',1,true))
+assert(ShownText(C.frame):find('Campfire Nearby',1,true))
+assert(ShownText(C.frame):find('12 Stamina',1,true))
+assert(ShownText(C.frame):find('12 Stamina',1,true))
+local _,count=ShownText(C.frame):gsub('12 Stamina','');assert(count==1,'deduplicate native lines')
+assert(not ShownText(C.frame):find('secret',1,true))
+assert(C:SetOption('showNearbyDetails',true) and ShownText(C.frame):find('A campfire is close.',1,true))
 assert(C:SetOption('showProfessionGuide',true) and #C.professions==12)
-assert(C.frame.text:GetText():find('Profession guide (possible features)',1,true))
+assert(ShownText(C.frame):find('Profession guide (possible features)',1,true))
 assert(C:SetOption('showIcon',false) and not C.frame.icon:IsShown())
-assert(C:SetOption('showText',false));assert(C.frame.text:GetText():find('Campfire Nearby',1,true),'text fallback when icon off')
+assert(C:SetOption('showText',false));assert(ShownText(C.frame):find('Campfire Nearby',1,true),'text fallback when icon off')
 assert(C:SetOption('showIcon',true));assert(C.frame.icon:IsShown())
 assert(C:SetOption('width',400) and C:SetOption('fontSize',18) and C:SetOption('opacity',50))
 assert(C.frame:GetWidth()==400 and C.frame:GetAlpha()==0.5)
@@ -66,15 +74,15 @@ auras={{spellId=C.BENEFITS,auraInstanceID=102}}
 FireEvent('UNIT_AURA','player')
 assert(not C.snapshot.nearby and C.frame:IsShown(),'joined earned buffs remain visible without claiming nearby fire')
 assert(C:SetOption('alwaysShow',true) and C:SetOption('showText',true))
-assert(C.frame:IsShown() and C.frame.text:GetText():find('No nearby campfire',1,true))
-assert(C.frame.text:GetText():find('12 Stamina',1,true),'earned buffs remain separate from the nearby status')
+assert(C.frame:IsShown() and ShownText(C.frame):find('No Nearby Campfire',1,true))
+assert(ShownText(C.frame):find('12 Stamina',1,true),'earned buffs remain separate from the nearby status')
 auras={{secret=true}};FireEvent('UNIT_AURA','player')
 assert(not C.snapshot.known and not C.snapshot.nearby)
-assert(C.frame.text:GetText():find('Campfire status unavailable',1,true))
-assert(not C.frame.text:GetText():find('No Camp Benefits detected',1,true))
+assert(ShownText(C.frame):find('Campfire Status Unavailable',1,true))
+assert(not ShownText(C.frame):find('No Camp Benefits detected',1,true))
 auras={{spellId=C.NEARBY,auraInstanceID=101},{spellId={secret=true}}};FireEvent('UNIT_AURA','player')
 assert(C.snapshot.nearby and not C.snapshot.complete)
-assert(C.frame.text:GetText():find('Camp Benefits unavailable.',1,true),'partial scan does not prove benefit absence')
+assert(C:BuildBenefitsText():find('Camp Benefits unavailable.',1,true),'partial scan does not prove benefit absence')
 rejectAura=true;FireEvent('UNIT_AURA','player');assert(not C.snapshot.nearby and not C.snapshot.known)
 rejectAura=nil
 auras={{spellId=C.NEARBY,auraInstanceID=101}};FireEvent('UNIT_AURA','player')
@@ -86,7 +94,7 @@ testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED');assert(C.f
 assert(C:SetOption('showInCombat',true))
 testCombat=true;testLockdown=true;FireEvent('PLAYER_REGEN_DISABLED');assert(C.frame:IsShown())
 rejectAura=true;FireEvent('UNIT_AURA','player')
-assert(not C.snapshot.nearby and C.frame.text:GetText():find('unavailable',1,true))
+assert(not C.snapshot.nearby and ShownText(C.frame):lower():find('unavailable',1,true))
 testCombat=false;testLockdown=false;rejectAura=nil;FireEvent('PLAYER_REGEN_ENABLED')
 assert(C:SetOption('locked',false))
 C.frame.centerX=540;C.frame.centerY=420
@@ -94,7 +102,7 @@ C.frame.scripts.OnDragStart();assert(C.frame.moving)
 C.frame.scripts.OnDragStop();assert(not C.frame.moving and C.db.x==40 and C.db.y==20)
 page.campfireReset.scripts.OnClick();assert(C.db.x==0 and C.db.y==-240)
 assert(C:SetOption('locked',true))
-assert(C:TogglePreview() and C.previewing and C.frame.text:GetText():find('Preview:',1,true))
+assert(C:TogglePreview() and C.previewing and ShownText(C.frame):find('Preview:',1,true))
 page.campfireRefresh.scripts.OnClick();assert(not C.previewing,'Refresh Status returns to native data')
 C:TogglePreview()
 page:SelectSectionTab(1);assert(not C.previewing,'tab navigation ends preview')
@@ -128,8 +136,8 @@ C_TooltipInfo={GetUnitAura=function(unit,index,filter)
  assert(unit=='player' and filter=='HELPFUL');return tips[102]
 end}
 auras={{spellId=C.NEARBY},{spellId=C.BENEFITS}}
-C:Refresh();assert(C.frame.text:GetText():find('12 Stamina',1,true))
-C_TooltipInfo=nil;C:Refresh();assert(C.frame.text:GetText():find('Native benefit details unavailable.',1,true))
+C:Refresh();assert(ShownText(C.frame):find('12 Stamina',1,true))
+C_TooltipInfo=nil;C:Refresh();assert(ShownText(C.frame):find('Native benefit details unavailable.',1,true))
 C_UnitAuras.GetAuraDataByIndex=function() return {spellId=7} end
 C:Refresh();assert(not C.snapshot.known,'bounded scan cannot prove absence without terminator')
 ''')
