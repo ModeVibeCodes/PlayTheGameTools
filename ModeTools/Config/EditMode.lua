@@ -77,7 +77,7 @@ function addon:CreateEditWindow()
         window.moving = true; window:StartMoving()
     end)
     drag:SetScript("OnDragStop", function() window:StopMovingOrSizing(); window.moving = false end)
-    W.Heading(drag, "Play The Game Tools Edit Mode", 20, 10, -4, 280, T.primary)
+    W.Heading(drag, "Play The Game Tools Edit Mode", T.fontSize.section, 12, -8, 280, T.text)
     local selected = W.Label(window, "", nil, 20, -52, 300, T.secondary)
     local refreshing
     W.Label(window, "X Position", nil, 20, -80, 300)
@@ -116,7 +116,7 @@ function addon:CreateEditWindow()
     end
     local xInput, xSlider, refreshX = Coordinate("x", -104)
     local yInput, ySlider, refreshY = Coordinate("y", -162)
-    W.Heading(window, "Snap To UI Element", 16, 20, -202, 300, T.primary)
+    W.Heading(window, "Snap To UI Element", T.fontSize.group, 20, -204, 300, T.text)
     local P = self.Positioning
     local function Position()
         local element = E:Selected()

@@ -58,8 +58,8 @@ end
 
 function addon:CreateSettingsSearch(sidebar)
     local input = CreateFrame("EditBox", nil, sidebar)
-    input:SetPoint("TOPLEFT", 0, -22)
-    input:SetPoint("TOPRIGHT", 0, -22)
+    input:SetPoint("TOPLEFT", 0, 0)
+    input:SetPoint("TOPRIGHT", 0, 0)
     input:SetHeight(30)
     input:SetAutoFocus(false)
     input:SetMaxLetters(80)
@@ -72,7 +72,7 @@ function addon:CreateSettingsSearch(sidebar)
     local popup = CreateFrame("Frame", nil, input)
     popup:Hide()
     popup:SetPoint("TOPLEFT", input, "BOTTOMLEFT", 0, -4)
-    popup:SetSize(340, 128)
+    popup:SetSize(340, 124)
     popup:SetFrameStrata("TOOLTIP")
     popup:SetFrameLevel(input:GetFrameLevel() + 40)
     popup:SetClampedToScreen(true)
@@ -80,9 +80,11 @@ function addon:CreateSettingsSearch(sidebar)
     W.Texture(popup, "BorderSilver", "BORDER")
     local buttons = {}
     for index = 1, 3 do
-        local button = W.Button(popup, "", 324, 36, "tab")
-        button:SetPoint("TOPLEFT", 8, -8 - (index - 1) * 38)
-        button.label:SetWidth(300)
+        local button = W.Button(popup, "", 328, 36, "tab")
+        button:SetPoint("TOPLEFT", 6, -6 - (index - 1) * 37)
+        button.label:ClearAllPoints()
+        button.label:SetPoint("LEFT", 12, 0)
+        button.label:SetWidth(304)
         button.label:SetJustifyH("LEFT")
         button:SetScript("OnClick", function()
             local result = button.result
@@ -103,7 +105,7 @@ function addon:CreateSettingsSearch(sidebar)
             button:SetShown(results[index] ~= nil)
             if results[index] then button.label:SetText(results[index].label) end
         end
-        if #results > 0 then popup:SetHeight(16 + #results * 38) end
+        if #results > 0 then popup:SetHeight(12 + #results * 37) end
         popup:SetShown(#results > 0)
         input.results = results
     end

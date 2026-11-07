@@ -46,11 +46,13 @@ lua.execute('''
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)
     assert(SLASH_MODETOOLS1=='/modetools' and SLASH_MODETOOLS2=='/mode')
     SlashCmdList.MODETOOLS()
-    assert(addon.configWindow.title:GetText()=='Play The Game Tools — Dashboard')
+    assert(addon.configWindow.title:GetText()=='Play The Game Tools')
+    assert(addon.configWindow.moduleHeader.title:GetText()=='Dashboard')
     assert(addon.configWindow.pages.dashboard.welcomeTexts[1]=='Welcome to Play The Game Tools!')
     for _,id in ipairs(addon.moduleOrder) do
         addon:SelectConfigPage(id)
         assert(addon.configWindow.pages[id],id)
+        assert(addon.configWindow.moduleHeader.title:GetText()==addon.modules[id].title,id)
     end
     addon.db.window.x=123; addon.db.window.y=45
     addon:SetModuleEnabled('combatTimer',true)
