@@ -28,3 +28,7 @@ C.Data.Items[277210]="Pyrewood Signet Ring|Finger|N"
 local ids=C.Data.InstanceQuests.SFK
 for index,id in ipairs(ids) do if id==1654 then ids[index]=1806 end end
 ids[#ids+1]=95140;ids[#ids+1]=78307
+
+-- The pilot lists these chains by their final reward step. Their actual dungeon
+-- collection stage also counts as picked up, once, for that same quest card.
+C.QuestLogAliases={[1806]={1654},[78307]={78261}}

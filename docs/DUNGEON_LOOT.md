@@ -11,7 +11,9 @@ and real screenshots remain pending; no release publication is authorized.
 The bundled GPLv3 catalog contains **35 dungeon/wing entries**: **31 browsable**
 and **four preview-only**. Preview cards are non-clickable and say **Data not
 available yet**. Automated traversal covers **286 boss/loot-source entries and
-576 quest associations**, including repeated quests across wings. These counts
+576 source quest associations**, including repeated quests across wings. The
+browser groups 15 same-chain duplicate listings into **561 dungeon task entries**.
+These counts
 are source assignments, not completeness or current-server claims. Drowned City
 has partial boss records but no recorded loot/quests; its card says **Quests not
 recorded**. Classic fallback quests and incomplete loot are explicitly labeled.
@@ -22,11 +24,131 @@ release, with independently authored SFK additions. The snapshot predates some
 newest Forever content. See ../CATALOG_SOURCES.md for provenance, licensing and
 uncertainty. Raids are excluded. No settings or compatibility IDs change.
 
+## Player eligibility and quest-log progress
+
+On 2026-11-07 the owner confirmed the PR #8 completion, chain grouping,
+quest status, tile alignment and quick-jump revision works as intended in-game,
+and authorized merging it into main. Real screenshots remain pending. The
+checks below are retained for regression testing; this confirmation is not an
+exhaustive audit of every catalog fact or a release publication approval.
+
+
+Quest lists and expanded prerequisites automatically hide entries restricted to
+another faction or class. Both-faction quests stay visible. Class lists support
+more than one allowed class and use native class colors. The former faction
+selector is a compact automatic Alliance/Horde badge; manual filtering cannot
+expose the opposite faction.
+
+Every browsable card with known quest records shows **You have X/Y possible
+quests**, where Y is the number of distinct recorded quests matching the current
+faction/class and X is the number in the player's quest log. Blue means none,
+gold means some, green means all. A second line such as **Rogue quests: 1/2 in
+log** appears only when that character has recorded class-specific quests.
+Pickup progress is larger (14px), right aligned at the bottom of the tile. On
+wide cards it shares the footer with metadata; narrow cards stack the footer
+sections and can grow to avoid overlap. Titles and adjacent faction icons form
+one centered group within the title band. Their existing gradient/glow remains.
+Preview and missing-data cards retain their explicit unavailable states.
+
+The SFK pilot lists Test of Righteousness and Horn of Xelthos by their final
+reward step. Their known dungeon collection steps (1654 / 78261) also count as
+picked up for those entries (1806 / 78307), once per entry. Unrelated prerequisite
+quests do not count as dungeon pickups. Counts do not depend on the search box.
+Y remains a faction/class catalog total: it does not promise that the player
+currently meets level, race, reputation or prerequisite conditions, and does not
+remove already completed quests. Existing source completeness warnings apply.
+
+The provider reads `UnitFactionGroup("player")`, the class filename from
+`UnitClass("player")`, and `C_QuestLog.IsOnQuest(questID)` through protected calls
+plus `C_QuestLog.IsQuestFlaggedCompleted(questID)` for character history, with
+public-value validation. Account-wide completion is not used. Unique queries are cached within each
+update across all cards. `QUEST_LOG_UPDATE` is registered only while enabled and
+the browser page is shown; changed totals, quest statuses or active chain stages redraw the UI. Showing the page
+refreshes identity and counts. No polling or quest-log writes are added. Missing,
+failing or restricted APIs show an unavailable state instead of a false zero;
+quests needing an unknown identity are withheld until it can be read. Card
+restriction headers stay cheap; maps/rewards are still normalized on selection.
+
+API signatures/events checked against Forever's generated
+[UnitDocumentation.lua](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua)
+and [QuestLogDocumentation.lua](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/QuestLogDocumentation.lua)
+on 2026-11-07. These read APIs do not change the independent native map renderer.
+
+Native regression checks (owner confirmed the revision on 2026-11-07):
+
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** `/reload`, inspect Shadowfang Keep and another recorded dungeon
+   while comparing with the quest log. **Required state:** Forever, OOC, Dungeon
+   Loot enabled; DungeonJournal/Questie disabled. **Confirmation:** X/Y matches
+   the character's recorded faction/class quests, class-only pickup status uses
+   the character's class color, and text fits over the existing dungeon image.
+2. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   Shadowfang Keep -> Quests. **Action:** inspect the list and expand a visible
+   quest's Prerequisites button if present. **Required state:** OOC; repeat on an
+   opposite-faction or different-class character if available. **Confirmation:**
+   other-faction/class quests are absent, neutral quests remain, and the compact
+   faction badge matches the character without overlapping search.
+3. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** pick up/abandon a recorded eligible dungeon quest, then return to
+   the cards; repeat with the page already visible if the NPC interaction allows.
+   **Required state:** OOC. **Confirmation:** the numerator changes without using
+   General -> Refresh; denominator remains stable, and blue/gold/green status
+   follows none/some/all. A completed quest awaiting turn-in remains in the log.
+
+## Completion and duplicate-chain handling
+
+Quest list subtitles and the detail pane clearly show **In your log** (gold),
+**Completed** (green), or **Not in your log**. A quest awaiting turn-in remains
+in the log. The card shows **All quests completed** only when the native
+character completion flags confirm every eligible task's terminal listed stage.
+A partial history shows X/Y completed beneath pickup progress. Unknown/restricted
+history never produces an all-completed claim; zero eligible tasks do not either.
+No SavedVariables completion guesses or dungeon-run history are recorded.
+
+Same-title quests collapse only when mandatory `pre` relationships connect them
+and their faction/class restrictions match. Intermediate prerequisite stages are
+retained, as are each stage's objective, acquisition, turn-in and reward details.
+The active or first unfinished stage opens automatically; compact **Stage 1**,
+**Stage 2**, etc. buttons permit inspection in place. Completion uses the final
+listed stage, not an earlier pickup/collection step. Unrelated identical titles,
+faction/class variants, preAny alternatives and cyclic records are not merged.
+The raw licensed tables remain unchanged. Computed grouping is cached per dungeon.
+
+The catalog audit found 15 repeated chain-stage listings across RFC, Ruins of
+Lordaeron, BFD, Gnomeregan, RFD, Uldaman, BRD, LBRS, Stratholme and UBRS. Horde
+Ruins of Lordaeron now has six tasks: Unending Torment is one entry with stages
+97288 -> 97289 -> 97290, rather than two counted listings.
+
+Native follow-up regression checks (owner confirmed intended behavior on 2026-11-07):
+
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   Ruins of Lordaeron -> Quests. **Action:** inspect Unending Torment and its
+   Stage 1 / Stage 2 / Stage 3 buttons. **Required state:** Forever, OOC, Horde,
+   Dungeon Loot enabled. **Confirmation:** one list entry, six eligible tasks on
+   the card, active stage selected, and clearly visible In your log or Completed
+   labels matching the character. No source stage's details disappear.
+2. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** inspect a dungeon whose eligible quests this character has turned
+   in. **Required state:** OOC, completion history available from the client.
+   **Confirmation:** All quests completed appears only when every eligible task
+   is flagged complete; partly finished dungeons show a partial completion count.
+3. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   the **20–29** bracket button below search. **Action:** click it, try another
+   range, search for a dungeon, then resize the window. **Required state:** OOC.
+   **Confirmation:** the list scrolls to Suggested Starting Levels 20–29;
+   unavailable search-result ranges are hidden, headers have a subtle underline
+   and reversed blue gradient, and the strip disappears inside a dungeon.
+4. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** inspect a neutral dungeon and a faction dungeon at wide/narrow
+   widths. **Required state:** OOC. **Confirmation:** title and emblem(s) center
+   together, progress sits at bottom right in larger type, footer columns/stack
+   do not overlap, and the title's subtle glow aligns with the text.
+
 ## Browser and appearance
 
-Cards retain the accepted 180px scene, title, territory emblem, boss/rare totals,
+Cards retain the 180px minimum scene, title, territory emblem, boss/rare totals,
 quest count and light text bands. Each card shows its actual recommended range.
-Groups use **Suggested starting levels 10–19 / 20–29 / 30–39 / 40–49 / 50–60**,
+Groups use **Suggested Starting Levels 10–19 / 20–29 / 30–39 / 40–49 / 50–60**,
 based on the lower end of that range, rather than treating it as an entry rule.
 Unknown levels remain Unknown. Ordering is starting level, ending level, then
 name. Search filters names; empty results are explicit.
@@ -34,7 +156,8 @@ name. Search filters names; empty results are explicit.
 Card scenes use native Blizzard loading-screen, encounter-journal or LFG
 textures. No external-addon artwork paths are used. Missing native scenes fall
 back to a small native icon. The accepted SFK loading-screen crop remains
-0.04–0.96 / 0.28–0.78. Text bands are 34px/44px at 55%.
+0.04–0.96 / 0.28–0.78. The title band is 34px; the footer starts at 44px and grows for wrapped text,
+both at 55% opacity.
 
 Territory emblems are regional guidance, not quest or entry restrictions. Known
 Alliance/Horde home-zone map IDs are classified explicitly; other recorded
@@ -143,10 +266,12 @@ python tests/dungeon_loot.py
 python tests/dungeon_loot_map.py
 python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
+python tests/dungeon_loot_player.py
+python tests/dungeon_loot_completion.py
 python tools/build_release.py
 ```
 
-The catalog test traverses all 31 bundled browsable dungeons and 576 quest associations,
+The catalog test traverses all 31 bundled browsable dungeons and 561 grouped task entries,
 checks source isolation, bounded pooled UI growth, lazy selected-dungeon reads,
 preview non-interactivity, search/selection changes, art metadata and conservative
 location matching. Map tests cover native pool/zoom/frame-level contracts and

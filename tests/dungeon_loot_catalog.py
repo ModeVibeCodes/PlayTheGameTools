@@ -3,6 +3,7 @@ from smoke import load
 
 lua, _ = load()
 lua.execute(r'''
+    function UnitFactionGroup() return "Alliance" end
     local M,P,L=addon.DungeonLoot,addon.DungeonLootProvider,addon.DungeonLootLocations
     local source={DB={
         ['Fixture Burrow']={level='13-18',location='Fixture North',entrance={mapID=1454,x=.4,y=.5},
@@ -60,9 +61,9 @@ lua.execute(r'''
     assert(M.data.name=='Fixture Citadel' and #M.data.bosses==3 and M.view.quest==1)
     assert(M.data.bossCount==1 and M.data.rareCount==1)
     assert(Find(page.detailPane,'Citadel Task').visible)
-    M.view.faction='Horde';page:Refresh()
-    Find(page.detailPane,'No quests match your filters.')
-    M.view.faction='all';page:Refresh()
+    function UnitFactionGroup() return 'Horde' end;M:ReadData();page:Refresh()
+    Find(page.detailPane,'No quests match your character or search.')
+    function UnitFactionGroup() return 'Alliance' end;M:ReadData();page:Refresh()
     M:Navigate('Fixture Burrow','loot');assert(M.view.boss==1 and M.view.quest==nil)
     assert(M.data.bosses[1].name=='Burrow Boss','selection and data do not leak across dungeons')
     M:Navigate(nil);assert(not page.context:IsShown())

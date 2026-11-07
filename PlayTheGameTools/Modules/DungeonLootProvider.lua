@@ -15,6 +15,112 @@ local function Table(v) return Public(v) and type(v) == "table" and v or {} end
 local function ID(v)
     if Public(v) and type(v) == "number" and v > 0 and v < 10000000 and v == math.floor(v) then return v end
 end
+local function Restrictions(raw)
+    raw=Table(raw)
+    local q={id=ID(raw.id),faction=Text(raw.faction),classOnly=Text(raw.classOnly),classes={},logIDs={},completionIDs={}}
+    for _,token in ipairs(Table(raw.classes)) do if Text(token) then q.classes[#q.classes+1]=token end end
+    for _,id in ipairs(Table(raw.logIDs)) do if ID(id) then q.logIDs[#q.logIDs+1]=id end end
+    for _,id in ipairs(Table(raw.completionIDs)) do if ID(id) then q.completionIDs[#q.completionIDs+1]=id end end
+    return q
+end
+function P:Player()
+    local player={}
+    if type(UnitFactionGroup)=="function" then
+        local ok,faction=pcall(UnitFactionGroup,"player")
+        if ok and Public(faction) and (faction=="Alliance" or faction=="Horde") then player.faction=faction end
+    end
+    if type(UnitClass)=="function" then
+        local ok,_,token=pcall(UnitClass,"player")
+        if ok then player.class=Text(token) end
+    end
+    return player
+end
+-- nil means identity is unavailable: do not claim a definitive personal total.
+function P:Eligible(q,player)
+    local faction=Text(q.faction)
+    if faction=="Alliance" or faction=="Horde" then
+        if not player.faction then return nil end
+        if faction~=player.faction then return false end
+    end
+    local classes=Table(q.classes)
+    local only=Text(q.classOnly)
+    if #classes>0 or only then
+        if not player.class then return nil end
+        if #classes==0 then return only==player.class end
+        for _,token in ipairs(classes) do if Text(token)==player.class then return true end end
+        return false
+    end
+    return true
+end
+local function QuestFlag(id,cache,method)
+    if not id then return nil end
+    if cache[id]~=nil then if cache[id]=="unknown" then return nil end;return cache[id] end
+    local getter=C_QuestLog and C_QuestLog[method]
+    if type(getter)=="function" then
+        local ok,value=pcall(getter,id)
+        if ok and Public(value) and type(value)=="boolean" then cache[id]=value;return value end
+    end
+    cache[id]="unknown"
+end
+function P:UpdateQuestState(data)
+    local cache,completionCache={},{}
+    local changed=false
+    data.questStates={}
+    for _,card in ipairs(data.cards) do
+        local stats={total=0,inLog=0,classTotal=0,classInLog=0,completed=0,classCompleted=0,known=true,logKnown=true,completionKnown=true}
+        local seen,states={},{}
+        for _,q in ipairs(card.questHeaders or {}) do
+            local eligible=self:Eligible(q,data.player)
+            if eligible==nil then stats.known=false end
+            local id=ID(q.id)
+            if eligible and id and not seen[id] then
+                seen[id]=true;stats.total=stats.total+1
+                local onQuest=QuestFlag(id,cache,"IsOnQuest")
+                local unknown=onQuest==nil
+                for _,alias in ipairs(Table(q.logIDs)) do
+                    local active=QuestFlag(ID(alias),cache,"IsOnQuest")
+                    if active then onQuest=true end
+                    if active==nil then unknown=true end
+                end
+                if not onQuest and unknown then stats.logKnown=false end
+                if onQuest then stats.inLog=stats.inLog+1 end
+                local completed=true
+                local completionIDs=#q.completionIDs>0 and q.completionIDs or {id}
+                for _,finishID in ipairs(completionIDs) do
+                    local done=QuestFlag(finishID,completionCache,"IsQuestFlaggedCompleted")
+                    if done==nil then stats.completionKnown=false end
+                    if not done then completed=false end
+                end
+                if completed then stats.completed=stats.completed+1 end
+                local status={inLog=onQuest==true,completed=completed,logKnown=not unknown or onQuest==true}
+                local previous=card.questStates and card.questStates[id]
+                if not previous or previous.inLog~=status.inLog or previous.completed~=status.completed or previous.logKnown~=status.logKnown then changed=true end
+                states[id]=status
+                if q.classOnly or #Table(q.classes)>0 then
+                    stats.classTotal=stats.classTotal+1
+                    if onQuest then stats.classInLog=stats.classInLog+1 end
+                    if completed then stats.classCompleted=stats.classCompleted+1 end
+                end
+            end
+        end
+        local old=card.questState or {}
+        for key,value in pairs(stats) do if old[key]~=value then changed=true end end
+        card.questState=stats;card.questStates=states
+        if card.name==data.name then data.questStates=states end
+    end
+    for _,q in ipairs(data.quests or {}) do
+        local previousStage=q.currentStage and q.currentStage.id
+        local state=data.questStates[q.id]
+        q.currentStage=state and state.completed and q.stages and q.stages[#q.stages] or nil
+        for _,stage in ipairs(not q.currentStage and self:Eligible(q,data.player) and q.stages or {}) do
+            if QuestFlag(stage.id,cache,"IsOnQuest")==true then q.currentStage=stage;break end
+            if not q.currentStage and QuestFlag(stage.id,completionCache,"IsQuestFlaggedCompleted")~=true then q.currentStage=stage end
+        end
+        if not q.currentStage and q.stages and #q.stages>0 then q.currentStage=q.stages[#q.stages] end
+        if previousStage~=(q.currentStage and q.currentStage.id) then changed=true end
+    end
+    return changed
+end
 local function Map(v)
     v = Table(v)
     local label = Text(v.label)
@@ -39,6 +145,8 @@ local function Quest(raw, ns, context, step, stepID, stepName)
     raw = Table(raw)
     local q = { id = ID(raw.id) or ID(stepID), name = Text(raw.name) or Text(stepName) or "Unnamed quest", level = ID(raw.level), requires = ID(raw.requires) }
     for _, field in ipairs(fields) do q[field] = Text(raw[field]) end
+    local restrictions=Restrictions(raw)
+    q.logIDs,q.classes,q.completionIDs=restrictions.logIDs,restrictions.classes,restrictions.completionIDs
     local start=raw.startMap or raw.map or Table(ns.QUEST_START_MAPS)[q.id]
     local finish=raw.turninMap
     local locations=addon.DungeonLootLocations
@@ -61,7 +169,14 @@ local function Quest(raw, ns, context, step, stepID, stepName)
             local detail = Table(Table(ns.QUEST_PREREQ_DETAILS)[ID(entry.id)])
             local normalized = Quest(detail, ns, context, true, entry.id, entry.name)
             normalized.id, normalized.name = ID(entry.id), Text(entry.name) or normalized.name
-            q.chain[#q.chain + 1] = normalized
+            if P:Eligible(normalized,context.player) then q.chain[#q.chain + 1] = normalized end
+        end
+    end
+    q.stages={}
+    if not step then
+        for _,stage in ipairs(Table(raw.stages)) do
+            local detail=Quest(stage,ns,context,true)
+            if P:Eligible(detail,context.player) then q.stages[#q.stages+1]=detail end
         end
     end
     return q
@@ -102,7 +217,10 @@ local function Card(name,raw,ns)
     local available=not preview and (type(raw.bosses)=="table" or type(raw.quests)=="table")
     local faction=TERRITORY[entrance.mapID] or (name=="Shadowfang Keep" and "Horde" or "Both")
     if preview and not ID(entrance.mapID) then faction=nil end
+    local headers={}
+    for _,q in ipairs(Table(raw.quests)) do headers[#headers+1]=Restrictions(q) end
     return {name=name,available=available,previewOnly=preview,bossCount=count,rareCount=rare,questCount=#Table(raw.quests),questCountKnown=raw.questDataIncomplete~=true,
+        questHeaders=headers,
         location=Text(raw.location) or "Location unknown",levelLow=low,levelHigh=high,
         card={art=home or Art(raw.icon),iconOnly=not home,crop=crop,
             faction=faction,
@@ -113,7 +231,7 @@ function P:Read(dungeon)
     local catalog=addon.DungeonLootCatalog
     local ns=Table(catalog and catalog:Read(dungeon))
     local db=Table(ns.DB)
-    local result={name=dungeon,catalog={},cards={},bosses={},quests={},available=false,bossCount=0,rareCount=0}
+    local result={name=dungeon,catalog={},cards={},bosses={},quests={},available=false,bossCount=0,rareCount=0,player=self:Player()}
     for name,raw in pairs(db) do
         if type(name)=="string" and type(raw)=="table" and raw.isRaid~=true and raw.type~="raid" and (raw.previewOnly==true or type(raw.bosses)=="table" or type(raw.quests)=="table") then
             result.cards[#result.cards+1]=Card(name,raw,ns)
@@ -144,6 +262,7 @@ function P:Read(dungeon)
     result.providerSource=result.source
     local raw=Table(db[dungeon])
     if not selected or not selected.available then
+        self:UpdateQuestState(result)
         result.source=selected and selected.previewOnly and "Dungeon data is not available yet." or "No recorded data for this dungeon."
         return result
     end
@@ -151,7 +270,7 @@ function P:Read(dungeon)
     result.bossCount,result.rareCount=selected.bossCount,selected.rareCount
     result.location,result.level=Text(raw.location),Text(raw.level)
     result.lootIncomplete=raw.fullItemsTBD==true
-    local context={name=dungeon,entrance=raw.entrance,locations=addon.DungeonLootLocations:RecordedIndex(ns)}
+    local context={name=dungeon,player=result.player,entrance=raw.entrance,locations=addon.DungeonLootLocations:RecordedIndex(ns)}
     for _,boss in ipairs(Table(raw.bosses)) do
         boss=Table(boss)
         result.bosses[#result.bosses+1]={name=Text(boss.name) or "Unnamed encounter",items=Items(boss.loot),
@@ -159,5 +278,6 @@ function P:Read(dungeon)
             rare=boss.rare==true,extra=Extra(boss)}
     end
     for _,quest in ipairs(Table(raw.quests)) do result.quests[#result.quests+1]=Quest(quest,ns,context) end
+    self:UpdateQuestState(result)
     return result
 end

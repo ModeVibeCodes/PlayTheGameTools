@@ -176,6 +176,8 @@ python tests/dungeon_loot.py
 python tests/dungeon_loot_map.py
 python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
+python tests/dungeon_loot_player.py
+python tests/dungeon_loot_completion.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -187,3 +189,17 @@ or quest availability. See [exact native review paths](docs/DUNGEON_LOOT.md#nati
 The owner accepted SFK; standalone catalog review and screenshots remain pending.
 Disable DungeonJournal, Questie and QuestieDB for the native baseline checks.
 Restart the client to load the new TOC files; preserve SavedVariables.
+
+Player-quest revision: tests cover both factions, multiple classes and allowed
+class lists, prerequisite filtering, colored card totals, live pickup/abandon
+updates, unavailable API/identity states, event cleanup and SFK collection-stage
+aliases. The owner confirmed the PR #8 revision works as intended in-game on
+2026-11-07 and authorized merging. Retain the exact regression checks in
+[Player eligibility and quest-log progress](docs/DUNGEON_LOOT.md#player-eligibility-and-quest-log-progress).
+Completion/layout revision: the new suite verifies native completion flags,
+Ruins' six-task total, preserved chain stages and controls, unrelated title/variant
+isolation, cycle guards, full source-ID coverage, status labels, title/footer
+anchors and bracket jumps. The owner confirmed the revised behavior in-game;
+exact regression paths remain in docs/DUNGEON_LOOT.md. This does not establish
+every catalog fact or server availability.
+Screenshots: pending.

@@ -34,11 +34,20 @@ function C:Location(loc,text,name,entrance)
     local inside=loc.zone or text
     if inside then return L:Interior(inside,name,entrance) end
 end
+-- Cheap restriction metadata for every card; never resolves maps or rewards.
+function C:QuestHeader(id)
+    local q=self.Data.Quests[id] or {}
+    local classes={}
+    for _,token in ipairs(Array(q.classes)) do classes[#classes+1]=token:upper() end
+    return {id=id,faction=({A="Alliance",H="Horde",B="Both"})[q.side],
+        classes=classes,classOnly=#classes==1 and classes[1] or nil,logIDs=self.QuestLogAliases and self.QuestLogAliases[id]}
+end
 function C:Quest(id,context)
     local q=self.Data.Quests[id]
     if not q then return {id=id,name="Quest "..id,warning="Details are not recorded for this prerequisite."} end
     local start,finish=Array(q.start),Array(q.finish)
-    local result={id=id,name=q.name,level=q.level,requires=q.min,objective=q.obj,
+    local header=self:QuestHeader(id)
+    local result={id=id,name=q.name,level=q.level,requires=q.min,objective=q.obj,classes=header.classes,logIDs=header.logIDs,
         faction=({A="Alliance",H="Horde",B="Both"})[q.side] or "Both",
         pickup=LocationText(start,q.startText),turnin=LocationText(finish,q.finishText)}
     if q.classes and #q.classes==1 then result.classOnly=q.classes[1]:upper() end
@@ -81,6 +90,68 @@ function C:Artwork(instance)
         end
     end
 end
+-- Merge repeated titles only when mandatory prerequisite links prove a chain.
+-- Independent quests with the same name and faction/class variants stay separate.
+function C:Groups(key,ids)
+    self.groupCache=self.groupCache or {}
+    if self.groupCache[key] then return self.groupCache[key] end
+    local function Path(ancestor,id,seen,depth)
+        if ancestor==id then return {id} end
+        if depth>32 or seen[id] then return end
+        seen[id]=true
+        local q=self.Data.Quests[id] or {}
+        for _,parent in ipairs(Array(q.pre)) do
+            if type(parent)=="number" then
+                local path=Path(ancestor,parent,seen,depth+1)
+                if path then path[#path+1]=id;return path end
+            end
+        end
+    end
+    local function Signature(id)
+        local q=self.Data.Quests[id] or {}
+        local classes={};for _,token in ipairs(Array(q.classes)) do classes[#classes+1]=token:upper() end;table.sort(classes)
+        return (q.name or tostring(id)):lower().."|"..(q.side or "").."|"..table.concat(classes,",")
+    end
+    local groups={}
+    for _,id in ipairs(Array(ids)) do
+        local found
+        for _,group in ipairs(groups) do
+            if Signature(id)==Signature(group.ids[1]) then
+                for _,other in ipairs(group.ids) do
+                    local forward,reverse=Path(other,id,{},0),Path(id,other,{},0)
+                    if other==id or (forward~=nil)~=(reverse~=nil) then found=group;break end
+                end
+            end
+            if found then break end
+        end
+        if not found then found={ids={}};groups[#groups+1]=found end
+        local exists=false;for _,other in ipairs(found.ids) do if other==id then exists=true end end
+        if not exists then found.ids[#found.ids+1]=id end
+    end
+    for _,group in ipairs(groups) do
+        local rank,original={},{}
+        for index,id in ipairs(group.ids) do
+            original[id]=index;rank[id]=0
+            for _,other in ipairs(group.ids) do if id~=other and Path(other,id,{},0) then rank[id]=rank[id]+1 end end
+        end
+        table.sort(group.ids,function(a,b) return rank[a]==rank[b] and original[a]<original[b] or rank[a]<rank[b] end)
+        group.stages={};group.terminal={}
+        local seen={}
+        local function Add(id) if not seen[id] then seen[id]=true;group.stages[#group.stages+1]=id end end
+        for _,id in ipairs(group.ids) do
+            local terminal=true
+            for _,other in ipairs(group.ids) do
+                if id~=other then
+                    local path=Path(id,other,{},0)
+                    if path then terminal=false;for _,step in ipairs(path) do Add(step) end end
+                end
+            end
+            Add(id);if terminal then group.terminal[#group.terminal+1]=id end
+        end
+    end
+    self.groupCache[key]=groups
+    return groups
+end
 function C:Read(selected)
     local ns={DB={},QUEST_PREREQ_CHAINS={},QUEST_PREREQ_DETAILS={},DUNGEON_HOME_ART={},DUNGEON_HOME_TEXCOORD={}}
     for _,instance in ipairs(self.Data.Instances or {}) do
@@ -98,7 +169,7 @@ function C:Read(selected)
             if instance.trash and #instance.trash>0 then entry.bosses[#entry.bosses+1]={name="Trash drops",trash=true,loot=Items(instance.trash,self.Data)} end
             local ids=self.Data.InstanceQuests[instance.key] or {}
             entry.questDataIncomplete=instance.status=="pending" and #ids==0
-            for _,id in ipairs(ids) do entry.quests[#entry.quests+1]={id=id} end
+            for _,id in ipairs(ids) do entry.quests[#entry.quests+1]=self:QuestHeader(id) end
             ns.DB[name]=entry
             ns.DUNGEON_HOME_ART[name],ns.DUNGEON_HOME_TEXCOORD[name]=self:Artwork(instance)
             if selected==name then
@@ -143,6 +214,25 @@ function C:Read(selected)
                     end
                 end
             end
+            local records={};for _,q in ipairs(entry.quests) do records[q.id]=q end
+            local unique={}
+            for _,group in ipairs(self:Groups(instance.key,ids)) do
+                local q=records[group.ids[1]]
+                if q then
+                    q.completionIDs=group.terminal
+                    if #group.ids>1 then
+                        local logIDs={};for _,id in ipairs(group.stages) do logIDs[#logIDs+1]=id end
+                        for _,id in ipairs(q.logIDs or {}) do logIDs[#logIDs+1]=id end
+                        q.logIDs=logIDs
+                        if selected==name then
+                            q.stages={}
+                            for _,id in ipairs(group.stages) do q.stages[#q.stages+1]=self:Quest(id,{name=name,entrance=entry.entrance}) end
+                        end
+                    end
+                    unique[#unique+1]=q
+                end
+            end
+            entry.quests=unique
         end
     end
     return ns

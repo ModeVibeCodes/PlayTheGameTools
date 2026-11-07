@@ -36,7 +36,7 @@ lua.execute(r'''
     local found={};for _,q in ipairs(info.quests) do found[q.id]=q end
     assert(found[78307].classOnly=='ROGUE' and #found[78307].chain>0)
     assert(found[95140].items[1].id==267369 and #found[95140].pickupTargets>0)
-    assert(found[1806].items[1].id==6953 and #found[1806].chain>0)
+    assert(found[1806].items[1].id==6953 and C.Data.Quests[1806].pre[1]==1654)
     local complete=P:Read('The Drowned City')
     assert(complete.available and complete.lootIncomplete and #complete.quests==0,'newest snapshot gaps stay explicit')
     local saved=addon.DungeonLootCatalog

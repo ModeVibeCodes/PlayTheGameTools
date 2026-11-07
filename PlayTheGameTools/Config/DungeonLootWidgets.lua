@@ -32,7 +32,7 @@ end
 local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.5),math.floor(g*255+.5),math.floor(b*255+.5)) end
 local PALETTES={header={{159,204,250},{9,116,241}},boss={{248,61,92},{253,75,47}},quest={{250,218,94},{250,242,223}},npc={{245,247,250},{160,168,180}}}
 function UI.Gradient(text,kind)
-    local colors=PALETTES[kind] or PALETTES.header
+    local colors=kind=="bracket" and {PALETTES.header[2],PALETTES.header[1]} or PALETTES[kind] or PALETTES.header
     local chars={};for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars+1]=char end
     local out={}
     for index,char in ipairs(chars) do
@@ -50,6 +50,11 @@ function UI.ClassText(token)
     local name=LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token] or (token:sub(1,1)..token:sub(2):lower())
     local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[token]
     return c and ("|cff"..Hex(c.r,c.g,c.b)..name.."|r") or name
+end
+function UI.ClassesText(q)
+    local names={}
+    for _,token in ipairs(q.classes or {}) do names[#names+1]=UI.ClassText(token) end
+    return #names>0 and table.concat(names,", ") or UI.ClassText(q.classOnly)
 end
 function UI.New(page, module)
     local pool = { page = page, module = module, used = 0 }
@@ -88,6 +93,8 @@ function UI.New(page, module)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
         for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
         for _, cell in ipairs(slot.cells) do cell:Hide() end
+        if slot.questProgress then slot.questProgress:Hide() end
+        if slot.headingLine then slot.headingLine:Hide() end
         if slot.art then slot.art:Hide(); slot.topBand:Hide(); slot.bottomBand:Hide() end
         return slot
     end
@@ -96,7 +103,7 @@ function UI.New(page, module)
         local slot = self:Row()
         slot.callback, slot.item, slot.expandedItem = callback, item, options.expandedItem == true
         local button = slot.button
-        button.label:SetJustifyH("LEFT");button.label:SetJustifyV("TOP")
+        button.label:SetJustifyH("LEFT");button.label:SetJustifyV("TOP");button.label:SetWordWrap(true)
         button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, item and -10 or -12)
         local factionWidth = UI.Factions(button, options.faction)
         button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
@@ -140,6 +147,12 @@ function UI.New(page, module)
             end
             button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT",12,-4);button.label:SetPoint("TOPRIGHT",-12-factionWidth,-4)
         end
+        if options.underline then
+            slot.headingLine=slot.headingLine or button:CreateTexture(nil,"OVERLAY")
+            slot.headingLine:SetColorTexture(1,1,1,1)
+            slot.headingLine:SetGradient("HORIZONTAL",CreateColor(9/255,116/255,241/255,.5),CreateColor(159/255,204/255,250/255,.08))
+            slot.headingLine:ClearAllPoints();slot.headingLine:SetPoint("BOTTOMLEFT",12,1);slot.headingLine:SetPoint("BOTTOMRIGHT",-12,1);slot.headingLine:SetHeight(1);slot.headingLine:Show()
+        end
         slot.subtitle:SetText(options.subtitle or "")
         slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -6);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -6)
         slot.subtitle:SetShown(options.subtitle ~= nil)
@@ -170,6 +183,24 @@ function UI.New(page, module)
         end
         return slot
     end
+    function pool:Stages(stages,selected,callback)
+        local slot=self:Add("")
+        slot.button:Hide()
+        for index,stage in ipairs(stages) do
+            local id=stage.id
+            local b=slot.cells[index] or W.Button(slot.control,"",72,26)
+            slot.cells[index]=b;b.label:SetText("Stage "..index);b:SetSelected(id==selected)
+            b:SetScript("OnClick",function() if module.active then callback(id) end end);b:Show()
+        end
+        function slot.row:layoutChildren(width)
+            local columns=math.max(1,math.floor((width-24)/78))
+            for index=1,#stages do
+                local b=slot.cells[index];b:ClearAllPoints();b:SetSize(72,26)
+                b:SetPoint("TOPLEFT",12+((index-1)%columns)*78,-2-math.floor((index-1)/columns)*30)
+            end
+            self:SetHeight(math.ceil(#stages/columns)*30+4)
+        end
+    end
     function pool:Dungeon(data, callback)
         local card = data.card
         local slot = self:Add(data.name, callback, nil, T.text, nil, { heading = true, faction = card.faction })
@@ -178,6 +209,10 @@ function UI.New(page, module)
             slot.art:SetAllPoints(slot.button)
             slot.topBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.55)
             slot.bottomBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.55)
+            slot.questProgress=W.Label(slot.button,"",nil,14,-50,400,T.text)
+            slot.questProgress:SetPoint("TOPRIGHT",-14,-50)
+            slot.questProgress:SetJustifyV("TOP");slot.questProgress:SetWordWrap(true)
+            slot.questProgress:SetShadowColor(0,0,0,1);slot.questProgress:SetShadowOffset(1,-1)
         end
         slot.art:ClearAllPoints();slot.art:SetTexture(card.art)
         if card.iconOnly then
@@ -188,10 +223,61 @@ function UI.New(page, module)
         slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(44);slot.bottomBand:Show()
         addon.Media:BindInterfaceFont(slot.button.label, GameFontHighlight, 20)
         for _,glow in ipairs(slot.headerGlow or {}) do local face=slot.button.label:GetFont();glow:SetFont(face,20,"OUTLINE") end
-        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 8);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 8)
-        local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. (data.questCountKnown==false and "Quests not recorded" or (data.questCount .. " quests"))) or (data.previewOnly and "Data not available yet" or "Loot and quests unavailable")
-        slot.subtitle:SetText(card.suggestedLevel.." · "..data.location.." · "..(card.faction=="Both" and "Neutral / contested territory" or (card.faction and (card.faction.." territory") or "Territory unknown")).."\n"..counts);slot.subtitle:Show()
-        function slot.row:layoutChildren(width) self:SetHeight(180);slot.button.label:SetWidth(math.max(80,width-70)) end
+        slot.button.label:SetJustifyH("CENTER");slot.button.label:SetJustifyV("MIDDLE");slot.button.label:SetWordWrap(false)
+        for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
+        slot.questProgress:ClearAllPoints();slot.questProgress:SetPoint("BOTTOMRIGHT",-14,8)
+        slot.questProgress:SetJustifyH("RIGHT");slot.questProgress:SetJustifyV("BOTTOM")
+        addon.Media:BindInterfaceFont(slot.questProgress,GameFontHighlight,14)
+        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT",14,8)
+        local counts=data.available and (data.bossCount.." bosses"..(data.rareCount>0 and (" + "..data.rareCount.." rare") or "").." · "..
+            (data.questCountKnown==false and "Quests not recorded" or ((data.questState and data.questState.known and data.questState.total or "?").." quests"))) or
+            (data.previewOnly and "Data not available yet" or "Loot and quests unavailable")
+        local progress=""
+        local state=data.questState
+        if data.available and data.questCountKnown~=false and state then
+            local tint=state.inLog==state.total and state.total>0 and "|cff79d98c" or (state.inLog>0 and "|cffFADA5E" or "|cff9fccfa")
+            if not state.known then progress="|cff9fccfaQuest eligibility unavailable|r"
+            elseif state.completionKnown and state.total>0 and state.completed==state.total then progress="|cff79d98cAll quests completed|r"
+            elseif not state.logKnown then progress="|cff9fccfaQuest log unavailable · "..state.total.." possible|r"
+            else progress=tint.."You have "..state.inLog.."/"..state.total.." possible quests|r" end
+            if state.known and state.classTotal>0 and state.completed~=state.total then
+                progress=progress.."\n"..UI.ClassText(module.data.player.class).." quests: "..
+                    (state.logKnown and (state.classInLog.."/"..state.classTotal.." in log") or (state.classTotal.." possible"))
+            end
+            if state.known and state.completionKnown and state.completed>0 and state.completed<state.total then
+                progress=progress.."\n|cff79d98c"..state.completed.."/"..state.total.." completed|r"
+            end
+        end
+        slot.subtitle:SetText(card.suggestedLevel.." · "..data.location.."\n"..counts);slot.subtitle:Show()
+        slot.questProgress:SetText(progress);slot.questProgress:SetShown(progress~="")
+        function slot.row:layoutChildren(width)
+            local footerWidth=math.max(80,(width-40)*.5)
+            slot.questProgress:ClearAllPoints();slot.questProgress:SetPoint("BOTTOMRIGHT",-14,8)
+            slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT",14,8)
+            slot.questProgress:SetWidth(footerWidth);slot.subtitle:SetWidth(footerWidth)
+            local height=math.max(slot.questProgress:GetStringHeight(),slot.subtitle:GetStringHeight())+16
+            if width<560 and progress~="" then
+                slot.questProgress:SetWidth(math.max(80,width-28));slot.subtitle:SetWidth(math.max(80,width-28))
+                slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT",slot.questProgress,"TOPLEFT",0,8)
+                height=slot.questProgress:GetStringHeight()+slot.subtitle:GetStringHeight()+24
+            end
+            slot.bottomBand:SetHeight(math.max(44,height))
+            self:SetHeight(math.max(180,height+70))
+            local iconCount=0;for _,icon in ipairs(slot.button.factionIcons or {}) do if icon:IsShown() then iconCount=iconCount+1 end end
+            local nameWidth=math.min(slot.button.label:GetStringWidth(),math.max(60,width-40-iconCount*28))
+            local groupWidth=nameWidth+(iconCount>0 and (8+iconCount*24+(iconCount-1)*4) or 0)
+            slot.button.label:ClearAllPoints();slot.button.label:SetSize(nameWidth,30)
+            slot.button.label:SetPoint("CENTER",slot.topBand,"CENTER",-(groupWidth-nameWidth)*.5,0)
+            for index,glow in ipairs(slot.headerGlow or {}) do
+                local offsets={{-1,0},{1,0},{0,-1},{0,1}}
+                glow:ClearAllPoints();glow:SetSize(nameWidth,30);glow:SetPoint("CENTER",slot.button.label,"CENTER",offsets[index][1],offsets[index][2])
+                glow:SetJustifyH("CENTER");glow:SetJustifyV("MIDDLE");glow:SetWordWrap(false);glow:Show()
+            end
+            local n=0
+            for _,icon in ipairs(slot.button.factionIcons or {}) do if icon:IsShown() then
+                icon:ClearAllPoints();icon:SetPoint("LEFT",slot.button.label,"RIGHT",8+n*28,0);n=n+1
+            end end
+        end
         return slot
     end
     return pool

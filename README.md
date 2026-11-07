@@ -104,7 +104,14 @@ Entertainment. Play The Game Tools is an independent community addon.
 Questing & Leveling -> Dungeon Loot is off by default and includes its own
 catalog. **DungeonJournal, Lootified and Questie are not required.** The catalog
 contains 31 browsable dungeon/wing entries and four unavailable previews, grouped
-by suggested starting level. Boss loot, quest steps, prerequisites, rewards and
+by suggested starting level. Cards show how many faction/class-eligible quests
+are in your log, with a separate class-quest pickup line and completion status.
+Fully finished dungeons show All quests completed. Repeated quest-chain stages
+count as one task with their details retained. A compact bracket strip jumps to
+level groups. Quest lists and
+prerequisites automatically exclude other factions/classes. Totals are catalog
+coverage, not checks of current level or prerequisite availability.
+Boss loot, quest steps, prerequisites, rewards and
 native map/copy controls retain the accepted Shadowfang Keep layout.
 
 Recorded pickup/turn-in positions use native map conversion, with the owned SFK
