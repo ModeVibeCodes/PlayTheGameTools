@@ -1,6 +1,4 @@
 """Persistent SFK lists, condensed quest details, source isolation and item events."""
-import argparse
-from pathlib import Path
 from smoke import load
 
 lua, _ = load()
@@ -36,7 +34,7 @@ lua.execute('''
     function Click(text,pane) local b=Find(text,pane,true);b:GetScript('OnClick')(b) end
     assert(Contains('Enable Dungeon Loot'))
     addon:SetModuleEnabled('dungeonLoot',true)
-    Click('Shadowfang Keep');assert(Contains('Enable DungeonJournal'))
+    Click('Shadowfang Keep');assert(addon.DungeonLoot.data.available,'bundled SFK works without external addons')
     local source={DB={['Another Dungeon']={},['Shadowfang Keep']={
         bosses={{name='Fixture Boss',npcID=100006,loot={{100001,'Fixture Item','Back',2}}},
             {name='Second Boss',rare=true,loot={{100007,'Second Item','Head',2}}},
@@ -48,7 +46,7 @@ lua.execute('''
             {id=100004,name='Other Quest',faction='Alliance',objective='Other objective'}}}},
         STATIC_DISPLAY_IDS={[100006]=1234},QUEST_PREREQ_CHAINS={[100002]={{id=100005,name='Fixture prerequisite'}}},
         QUEST_PREREQ_DETAILS={[100005]={pickup='Prereq NPC',objective='Prereq objective'}}}
-    ForeverDungeonJournal_NS=source
+    addon.DungeonLootCatalog.Read=function() return source end
     local before=addon.ProfileCodec.Encode(source)
     local snapshot=addon.DungeonLootProvider:Read()
     assert(#snapshot.catalog==1 and snapshot.bossCount==1 and snapshot.rareCount==1)
@@ -146,26 +144,5 @@ lua.execute('''
 state = lua.eval('addon.ProfileCodec.Encode(ModeToolsDB)')
 restored, _ = load(state)
 restored.execute("assert(addon.DungeonLoot.enabled)")
-parser = argparse.ArgumentParser()
-parser.add_argument('--reference-directory', type=Path)
-args = parser.parse_args()
-if args.reference_directory:
-    native, _ = load()
-    native.execute("ForeverDungeonJournal_NS={Constants={ALBA_FAIRMOON_LOCATION='Reference location'}}")
-    execute = native.eval('function(s,n,ns) local f,e=loadstring(s,n);assert(f,e);return f("ForeverDungeonJournal",ns) end')
-    for name in ('Dungeons','SharedLoot','Bosses','QuestMaps','QuestChains','QuestRewards','QuestShareability','QuestUpdates'):
-        path=args.reference_directory / 'Data' / (name+'.lua')
-        execute(path.read_text(encoding='utf-8-sig'),str(path),native.globals().ForeverDungeonJournal_NS)
-    native.execute('''
-        local M=addon.DungeonLoot
-        addon:SetModuleEnabled('dungeonLoot',true)
-        addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot');M:Navigate('Shadowfang Keep')
-        assert(M.data.bossCount==8 and M.data.rareCount==1 and #M.data.quests==7)
-        for i=1,#M.data.bosses do M:SelectEntry('boss',i) end
-        M:Navigate('Shadowfang Keep','quests')
-        for i=1,#M.data.quests do
-            M:SelectEntry('quest',i);M.view.showNotes=true;M.view.showPrerequisites=true;M.page:Refresh()
-        end
-    ''')
-    print('PASS installed SFK data: 8 bosses + 1 rare, 7 quest detail panes (mock only)')
-print('PASS persistent lists, auto-selection, in-place details, filters, collapsed quests, source isolation, item events and profiles')
+# The complete bundled catalog is exercised by dungeon_loot_catalog.py.
+print('PASS persistent lists, auto-selection, in-place details, filters, source isolation, item events and profiles')

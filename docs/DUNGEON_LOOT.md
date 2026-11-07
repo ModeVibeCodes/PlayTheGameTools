@@ -1,157 +1,192 @@
-# Dungeon Loot — Shadowfang Keep pilot
+# Dungeon Loot — Forever dungeon browser
 
-Dungeon Loot is under **Questing & Leveling**, alongside Class Training. It is off
-by default. Enable it with the header switch. Compatibility IDs, slash commands,
-ModeToolsDB and other modules remain unchanged. Continue on codex/dungeon-loot and
-update draft PR #6; do not merge or push directly to main.
+Dungeon Loot is under **Questing & Leveling** and off by default. The owner
+accepted the SFK layout and native-pin fix on 2026-11-07, then authorized expansion
+to the other dungeons. The same appearance and interaction apply across the
+catalog. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
+and real screenshots remain pending; no release publication is authorized.
 
-## Browser
+## Coverage and dependencies
 
-Only Shadowfang Keep appears. Dungeons shows a 180px Blizzard loading-screen card
-under **Suggested levels 20–30**, with title, territory emblem and source totals:
-8 bosses + 1 rare, 3 extra loot sources and 7 quests. The range follows the installed
-DungeonJournal 1.7.0 record and is not an entry requirement. The UV crop is
-0.04–0.96 horizontally / 0.28–0.78 vertically to exclude logo/loading-bar regions.
+The bundled GPLv3 catalog contains **35 dungeon/wing entries**: **31 browsable**
+and **four preview-only**. Preview cards are non-clickable and say **Data not
+available yet**. Automated traversal covers **286 boss/loot-source entries and
+576 quest associations**, including repeated quests across wings. These counts
+are source assignments, not completeness or current-server claims. Drowned City
+has partial boss records but no recorded loot/quests; its card says **Quests not
+recorded**. Classic fallback quests and incomplete loot are explicitly labeled.
 
-Boss Loot and Quests use persistent, independently scrolling left lists and right
-details. The first match is selected immediately. Selecting an entry preserves
-list scroll and resets detail scroll. Filters replace excluded selections with a
-matching entry or an explicit empty state. Boss/quest selections persist across
-tab changes. Extra sources stay under Other loot and do not inflate boss counts.
+DungeonJournal, Lootified, AtlasLoot, Questie and QuestieDB are not required.
+The catalog ships as editable Lua data derived from the pinned Lootified 1.2.0
+release, with independently authored SFK additions. The snapshot predates some
+newest Forever content. See ../CATALOG_SOURCES.md for provenance, licensing and
+uncertainty. Raids are excluded. No settings or compatibility IDs change.
 
-Bosses with up to five items show public client tooltip text/colors inline. Six or
-more stay compact; quest rewards are compact. Hover tooltips remain available.
-Missing/restricted text is not inferred. Only visible short lists query tooltip
-data; matching TOOLTIP_DATA_UPDATE IDs refresh them without polling. The first
-item tooltip line is treated as its title and omitted from the body. Specialized
-native graphics/comparisons stay in the hover UI.
+## Browser and appearance
 
-Quest titles/subtitles have corrected height/padding and explicit top alignment.
-Headers use #9fccfa to #0974f1; boss names use #f83d5c to #fd4b2f;
-quest titles/section headings use #FADA5E to #FAF2DF, with faint static heading glow. Notes, descriptions and warnings appear
-near the title without a notes toggle. Class names use localized Blizzard names
-and RAID_CLASS_COLORS. List rows show Chain when prerequisite steps are recorded.
-Numbered Starts at, Objective and Turn in steps precede rewards; Prerequisites (N)
-expands chain acquisition details. The faction chooser is 128 × 28, with inherited
-anchors cleared; search ends 10px before it. General owns compact Refresh and
-source attribution. Dungeon emblems denote territory, not entry restrictions;
-quest emblems denote quest faction.
+Cards retain the accepted 180px scene, title, territory emblem, boss/rare totals,
+quest count and light text bands. Each card shows its actual recommended range.
+Groups use **Suggested starting levels 10–19 / 20–29 / 30–39 / 40–49 / 50–60**,
+based on the lower end of that range, rather than treating it as an entry rule.
+Unknown levels remain Unknown. Ordering is starting level, ending level, then
+name. Search filters names; empty results are explicit.
 
-## Locations and map pilot
+Card scenes use native Blizzard loading-screen, encounter-journal or LFG
+textures. No external-addon artwork paths are used. Missing native scenes fall
+back to a small native icon. The accepted SFK loading-screen crop remains
+0.04–0.96 / 0.28–0.78. Text bands are 34px/44px at 55%.
 
-**View on Map** buttons (128 x 28, matching the faction chooser) appear beside
-destination captions in pickup, objective and turn-in sections, only for recorded
-coordinates. Expanded prerequisites can also have buttons. A Patrol caption means
-an ordered path is recorded. Missing buttons mean no
-usable coordinates, not confirmed absence of the entity. Direct NPC and object
-objectives are supported; item-drop and kill-credit associations are not inferred.
+Territory emblems are regional guidance, not quest or entry restrictions. Known
+Alliance/Horde home-zone map IDs are classified explicitly; other recorded
+entrances use both emblems for neutral/contested territory. Preview entries with
+no entrance metadata leave territory unknown. Quest emblems retain quest faction.
 
-An owned, manually curated SFK planning catalog now supplies pickup and turn-in
-pins for all seven visible quests **without Questie or QuestieDB**. It also covers
-selected direct objectives and two associated chain steps. Points remain rounded planning estimates and return fresh copies. Buttons and
-marker captions omit approximation suffixes at the owner's request. Locations inside SFK intentionally use the outdoor entrance on the
-Silverpine map, with an **Entrance marker only** explanation of where to go inside.
-No exact floor/NPC position is implied. The final Old Fire-Eye kill remains unknown
-in this catalog; no objective point is invented. Forging/payment phases map to
-Jordan/Dead Drop rather than incorrectly marking the earlier dungeon collection.
+A fixed selected-dungeon name/range appears above the persistent boss/quest panes.
+First matching entries select automatically. Entry selection preserves list
+scroll and resets detail scroll. Dungeon changes clear stale entry selections,
+copy panels and map status/pins. Filters choose a valid match or an empty state.
+Dungeons / Boss Loot / Quests / General have the same 2px blue selection underline.
+General retains the compact **Refresh** control and attribution.
 
-The optional installed QuestieDB/Questie APIs remain enrichment for gaps and
-recorded patrols. Owned pins take priority; an optional ordered patrol attaches
-only for the same named entity on the same map. No route is manufactured from
-estimates or spawn clusters. Public entity getters and ZoneDB conversion follow
-the inspected installed APIs. DungeonJournal's structured pickup maps remain an
-additional fallback for uncataloged chain steps. Loot and quest list data still
-come from the separately enabled DungeonJournal; this location work does not
-remove that separate pilot dependency.
+Bosses with <=5 items use public client tooltip text inline; larger lists remain
+compact. Hover tooltips, missing/restricted-data fallbacks, native item-quality
+colors and event-driven item updates are unchanged. Portraits use source display
+IDs and Blizzard's portrait renderer; absent metadata uses the native default.
+Extra sources remain under **Other loot** and do not inflate boss totals.
 
-The native C_Map.OpenWorldMap entry point opens the zone (ShowUIPanel fallback).
-Data-provider size/scale/map callbacks and three bounded post-open redraws handle
-canvas layout settling; the overlay rebinds if the canvas changes. Closing,
-dismissing or choosing another target invalidates queued redraws. Quest-log
-ownership and completion are never queried to decide whether to show an icon.
-Native map canvas data-provider callbacks manage an independent overlay: high-contrast
-40px bordered quest/objective icons with labels, plus recorded patrol segments. Only
-the clicked target is shown. Right-clicking its marker dismisses the owned icons
-and route without closing the map; closing later still returns to settings. Multiple spawn points are never joined as a patrol;
-separate paths remain separate; an invalid point invalidates its path. No Questie
-artwork or route-rendering code is copied. Changing maps hides the overlay; closing
-the map clears it. Settings hide while the map is open and return on close outside
-combat. Disabling Dungeon Loot clears pins/lines. No polling or user-waypoint API.
+Quest steps remain **1. Starts at / 2. Objective / 3. Turn in**, then rewards and
+optional prerequisites. Notes remain near the top; useful interior/entrance hints
+are retained and missing hints are not invented. Known NPC/target names appear
+below their heading in a subtle glowing white/gray gradient. Class names retain
+native class colors and recorded chains show **Chain**. Moderate line leading
+and reduced row gaps preserve the accepted compact layout.
 
-Map opening requires out-of-combat state. Missing APIs or rejected opens produce
-a status message on the quest page, without retrying rejected protected actions.
-Native map support, dungeon-floor art, zoom/layering and actual SFK patrol-data
-availability remain experimental and unconfirmed. Do not expand dungeon/map
-coverage until the owner confirms the pilot in game. No quest acceptance, turn-in,
-sharing, tracking, automated messages or journal-selection changes are implemented.
+Gradients: general #9fccfa to #0974f1, boss #f83d5c to #fd4b2f, quest #FADA5E to
+#FAF2DF, NPC #F5F7FA to #A0A8B4. Heading glow is static and restrained.
 
-## Data, ownership and API assumptions
+## Locations and map controls
 
-ForeverDungeonJournal must be separately installed/enabled for the pilot's loot
-and quest data. Optional TOC dependencies establish load order without preventing
-Play The Game Tools startup when providers are absent. Its exposed internal
-namespace remains a compatibility risk. Community loot/quest assignments mix
-Forever observations with Classic fallbacks; source counts are not official
-completeness, current-drop or guaranteed quest-availability claims. No drop rates.
+Only pickups and turn-ins expose **View on Map** / **Copy Coordinates** (128 x 28,
+stacking on narrow panes). Objectives retain their text/hints without map/copy
+buttons, including expanded prerequisite objectives.
 
-No reference-addon records, prose, code or artwork are bundled, downloaded,
-scraped, persisted or exported. Source tables/SavedVariables are never changed.
-DungeonJournal by Exehn/ExehnTV is All Rights Reserved:
-https://www.curseforge.com/wow/addons/dungeonjournal
-QuestieDB's LICENSE.md and Questie's licensing were inspected. The location adapter
-is runtime API interoperability, not redistribution. Removing dependencies needs
-verified data and appropriate redistribution terms.
+The owned SFK planning catalog remains first priority. Other quests use recorded
+source pickup/return maps, optional installed QuestieDB/Questie, or exact normalized
+giver-name joins against recorded source maps. Conflicting named locations remain
+unresolved; names are never substring-matched. Repeated samples within 0.5
+percentage points are treated as the same approximate location. A source text
+explicitly locating an NPC inside the selected dungeon may use that dungeon's
+recorded outdoor entrance, labeled **Entrance marker only** in quest details.
+No interior floor position or patrol is invented.
 
-Client-owned art: Interface/Glues/LoadingScreens/LoadScreenShadowFangKeep,
-TargetingFrame/UI-PVP-Alliance / UI-PVP-Horde, GossipFrame quest icons and WorldMap
-Skull_64. Boss display IDs come from installed metadata and are passed to native
-SetPortraitTextureFromCreatureDisplayID; missing metadata/API uses Blizzard's
-default boss icon. No baked reference portraits or Blizzard image files are shipped.
+World-space source positions are converted through native C_Map APIs into
+zone coordinates, with validated finite/public values and successful conversions
+cached. Missing APIs, invalid points and continent-only results omit map controls.
+This conversion needs native Forever review; mocks do not establish coverage.
+Multiple spawn points are never joined into an invented patrol. Optional recorded
+patrols remain separate. Removing Questie does not suppress bundled/owned pins.
 
-Primary Blizzard source reviewed 2026-11-07 on the forever branch:
-- Blizzard_APIDocumentationGenerated/UnitDocumentation.lua, ItemDocumentation.lua
-  and TooltipInfoDocumentation.lua: portrait/item signatures and tooltip updates.
-- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/MapDocumentation.lua (C_Map.OpenWorldMap)
-- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_MapCanvas/MapCanvas_DataProviderBase.lua
+The accepted map renderer uses AcquirePin/RemovePin with an addon-owned virtual
+XML template and MapCanvasPinMixin: normalized positioning, inverse canvas zoom
+and PIN_FRAME_LEVEL_TOPMOST. The 36px blue-bordered icon has a centered 24px
+symbol and hover text **Approximate location - Right Click to Hide Icon**. Pins
+are reused on refresh and released on mismatch, close, dismissal or disable.
+Right-click hides only this addon's pins/routes; closing returns to settings.
+Only recorded patrol geometry uses a separate canvas overlay.
+
+Opening is OOC-only. Quest ownership/completion never gates custom pins. Bounded
+post-open redraws handle late canvas sizing without polling. Provider rendering
+failures are surfaced, including failures during SetMapID; a missing XML template
+reports a restart requirement. Rejected protected actions are not retried.
+
+Copy Coordinates opens a focused/preselected native edit field containing the
+zone and selected destination's percentage coordinates (first planning point,
+not player position). Press **Ctrl+C** to copy. Escape/Enter/Close dismisses it;
+navigation/hide/disable releases focus. CopyToClipboard is restricted in Forever's
+generated Os documentation; it is not called and no secure workaround is used.
+No automated quest acceptance, turn-in, sharing, tracking or messages.
+
+## Implementation, ownership and validation
+
+Only the selected dungeon's quests/items are normalized. Card counts are cheap
+metadata; opening the index does not load every dungeon's item tooltips or query
+all quests through optional location APIs. Snapshots/navigation/expansion/copy
+state remain session-only. Item listeners stop when hidden/disabled. Source
+records are read-only and all exposed coordinates/crops/items are fresh copies.
+
+DungeonLootProvider.lua owns discovery/normalization; DungeonLootLocations.lua
+owns recorded-name/optional API adapters; DungeonLootLocationData.lua owns the
+small independently curated SFK catalog. DungeonLootMap.lua and
+DungeonLootMapPins.xml own the native pin lifecycle/template. DungeonLoot.lua
+owns module state/item metadata; Config/DungeonLoot*.lua own the shared UI.
+
+The catalog's GPLv3 license, attribution and editable data are included in the
+release package. Original MIT grants remain intact. No DungeonJournal data or
+assets are redistributed. See ../CATALOG_SOURCES.md and ../THIRD_PARTY_NOTICES.md.
+
+Primary Forever source/API references:
 - https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_MapCanvas/Blizzard_MapCanvas.lua
-- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/SimpleLineAPIDocumentation.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_MapCanvas/MapCanvas_DataProviderBase.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_MapCanvas/MapCanvas_PinFrameLevelsManager.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/MapDocumentation.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/OsDocumentation.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/SimpleTextureBaseAPIDocumentation.lua
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/SimpleFontStringAPIDocumentation.lua
+- ItemDocumentation.lua / TooltipInfoDocumentation.lua / UnitDocumentation.lua:
+  item data, tooltip updates and native creature portraits.
 
-## Architecture and checks
-
-Modules/DungeonLootProvider.lua normalizes SFK data; DungeonLootLocationData.lua owns approximate points; DungeonLootLocations.lua reads
-optional location APIs; DungeonLootMap.lua owns map overlays; DungeonLoot.lua owns
-lifecycle and item metadata. Config/DungeonLootWidgets.lua pools themed rows;
-Config/DungeonLoot.lua owns lists/details. Only module enable is saved in profiles.
-Item listeners stop when hidden/disabled; snapshots/navigation/expansion are session
-only. No settings migration or source-art copying.
-
-With Python 3.12+ and lupa.lua51:
+Python 3.12+ / lupa.lua51 checks:
 
 ```
 python tests/smoke.py
-python tests/dungeon_loot.py --reference-directory "<installed ForeverDungeonJournal directory>"
+python tests/dungeon_loot.py
 python tests/dungeon_loot_map.py
+python tests/dungeon_loot_catalog.py
+python tests/dungeon_loot_standalone.py
 python tools/build_release.py
 ```
 
-Tests cover startup, all pages, profiles, source isolation, actual list/map button
-callbacks, auto-selection, independent scroll preservation, filters/empty states,
-pooled rows, tooltip threshold/colors/events/fallback, route geometry, no guessed
-patrols, cleanup, combat guards, notes/class/chain styling and toolbar anchors.
-Installed DungeonJournal data files run only in an isolated Lua 5.1 mock. Actual
-Questie runtime data availability and native behavior are not established by mocks.
-Preserve prior same-version artifacts before rebuilding; never overwrite evidence.
+The catalog test traverses all 31 bundled browsable dungeons and 576 quest associations,
+checks source isolation, bounded pooled UI growth, lazy selected-dungeon reads,
+preview non-interactivity, search/selection changes, art metadata and conservative
+location matching. Map tests cover native pool/zoom/frame-level contracts and
+failure paths. The builder validates the virtual XML template and its TOC order.
+Mocks do not establish native layout, actual drops or current quest availability.
+Retain prior same-version packages with hash verification before rebuilding.
 
-## Next native review — pending
+## Native review — expansion pending
 
-Existing Forever AddOns junction targets this checkout's ModeTools folder. No
-copy-sync, junction changes or SavedVariables edits. `/reload` should load changes;
-if new optional providers are not recognized, report whether a restart was needed.
-The owner liked earlier revisions; current quest styling/map behavior needs fresh
-review. Supplied DungeonJournal screenshots are interaction references, not native
-evidence of Play The Game Tools.
+The owner confirmed the SFK appearance/native pin result before authorizing this
+expansion. Existing Forever junction remains unchanged; no copy-sync or
+SavedVariables edits. Restart the client for the added TOC files. Disable DungeonJournal, Questie
+and QuestieDB for baseline review. Screenshots: pending;
+the owner authorized merging with this native-review limitation recorded.
 
-Use the current native review steps after the provenance table below. Screenshots: pending.
+1. **Navigation:** `/mode` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
+   **Action:** `/reload`, browse the groups and search for Ragefire Chasm, The
+   Deadmines, Hall of Thanes, Scarlet Monastery, then clear search.
+   **Required state:** Forever, OOC, Dungeon Loot enabled; external data addons disabled.
+   **Confirmation:** correct names/scenes/counts/ranges and region emblems, with
+   the four preview cards clearly unavailable and no stale SFK title.
+2. **Navigation:** Dungeons -> Ragefire Chasm -> Boss Loot, then Dungeons ->
+   The Deadmines -> Boss Loot. **Action:** select different boss rows in each.
+   **Required state:** OOC; allow item metadata to load. **Confirmation:** header
+   names the correct dungeon, list stays visible, loot updates in place and entry
+   selections do not leak between dungeons; <=5 items detailed, larger lists compact.
+3. **Navigation:** Dungeons -> Shadowfang Keep -> Quests -> Deathstalkers in
+   Shadowfang -> 1. Starts at -> View on Map. **Action:** click and right-click
+   the pin; close the map. **Required state:** OOC. **Confirmation:** accepted
+   blue-bordered pin and short tooltip remain functional; closing restores settings.
+4. **Navigation:** `/mode` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   Shadowfang Keep -> Quests -> The Book of Ur -> 1. Starts at -> Copy Coordinates.
+   **Action:** copy with Ctrl+C and paste into a text editor; then inspect
+   3. Turn in -> View on Map. **Required state:** Forever, OOC, external data
+   addons disabled. **Confirmation:** selected Undercity coordinates, visible pin,
+   and clean focus release. Objectives retain text without map/copy controls.
+5. **Navigation:** Dungeon Loot -> General -> Refresh. **Action:** click, then
+   return to Dungeons and open different dungeon/quest tabs. **Required state:**
+   OOC. **Confirmation:** refreshed catalog, correct active underlines, faction
+   filters, class colors/chain notes and accepted spacing remain consistent.
 
 ## Owned location catalog provenance (checked 2026-11-07)
 
@@ -179,31 +214,3 @@ narrative wording reused:
 - https://eternadex.com/en/npc/dead-drop/ — Pyrewood pickup/return area.
 - https://www.wowhead.com/forever/quest=1013/the-book-of-ur — interior book location cross-check.
 - https://www.wowhead.com/forever/quest=78307/the-horn-of-xelthos — payment-step distinction.
-
-### Current native review additions
-
-1. **Navigation:** `/mode` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
-   Shadowfang Keep -> Quests -> Deathstalkers in Shadowfang -> 1. Starts at ->
-   View on Map (High Executor Hadrec caption). **Action:** click with the quest in
-   your log, then repeat on a character without it. **Required state:** Forever,
-   out of combat, DungeonJournal and Dungeon Loot enabled; `/reload` after changes.
-   **Confirmation:** a labeled quest marker appears near the Sepulcher in both
-   cases; no approximation suffix. Test with Questie/QuestieDB disabled as well.
-2. **Navigation:** resulting world-map marker. **Action:** zoom, right-click the
-   marker, then close the map. **Required state:** map open. **Confirmation:** the
-   marker stays attached to its location while zooming; right-click dismisses our
-   icons/routes without closing the map; closing returns to settings.
-3. **Navigation:** same quest -> 3. Turn in -> View on Map (Deathstalker Vincent
-   (inside SFK) caption). **Action:** click. **Required state:** out of combat.
-   **Confirmation:** the Silverpine entrance marker explains the courtyard
-   destination; it does not claim an exact dungeon-floor position.
-4. **Navigation:** Dungeon Loot -> Shadowfang Keep -> Quests, then Boss Loot.
-   **Action:** inspect titles, steps and map controls. **Required state:** out of
-   combat. **Confirmation:** numbered pickup/objective/turn-in steps, compact
-   View on Map buttons, gold quest text, red boss names and blue general headers;
-   class/item colors remain readable and heading glow remains subtle.
-
-Focused mock tests cover exact gradient endpoints, compact button anchors,
-ordered patrol geometry, ownership-independent targets, delayed/replaced canvas
-layout and cancellation after dismissal. Native rendering, zoom, placement and
-actual patrol availability remain pending. Screenshots: pending.

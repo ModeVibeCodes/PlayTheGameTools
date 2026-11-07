@@ -14,7 +14,84 @@ end
 function L:Point(raw)
     raw=Table(raw)
     if Number(raw.mapID,1,1000000) and Number(raw.x,0,1) and Number(raw.y,0,1) then
-        return {mapID=raw.mapID,x=raw.x,y=raw.y,label=type(raw.label)=="string" and raw.label or "Quest location",points={{raw.x,raw.y}},paths={}}
+        return {mapID=raw.mapID,x=raw.x,y=raw.y,label=type(raw.label)=="string" and raw.label or "Quest location",detail=Public(raw.detail) and type(raw.detail)=="string" and raw.detail or nil,points={{raw.x,raw.y}},paths={}}
+    end
+end
+-- Convert static catalog spawn coordinates through the current client, never
+-- through another addon. This touches no player position or quest-log state.
+function L:WorldPoint(world,label)
+    if type(world)~="table" or not Number(world[1],0,1) or not Number(world[2],-100000,100000) or not Number(world[3],-100000,100000) then return nil end
+    if not C_Map or type(C_Map.GetMapPosFromWorldPos)~="function" or type(C_Map.GetMapInfoAtPosition)~="function" or type(CreateVector2D)~="function" then return nil end
+    self.worldCache=self.worldCache or {}
+    local key=string.format("%d,%.6f,%.6f",world[1],world[2],world[3])
+    local saved=self.worldCache[key]
+    if saved then return self:Point({mapID=saved.mapID,x=saved.x,y=saved.y,label=label}) end
+    local ok,point=pcall(function()
+        local mapID=world[1]==0 and 1415 or 1414
+        local vector=CreateVector2D(world[2],world[3])
+        local _,position=C_Map.GetMapPosFromWorldPos(world[1],vector,mapID)
+        if not Public(position) or not position then return nil end
+        local limit=Enum and Enum.UIMapType and Enum.UIMapType.Zone
+        if not limit then return nil end
+        for _=1,4 do
+            if not Number(position.x,0,1) or not Number(position.y,0,1) then return nil end
+            local info=C_Map.GetMapInfoAtPosition(mapID,position.x,position.y)
+            if not Public(info) or type(info)~="table" or not Number(info.mapID,1,1000000) or info.mapID==mapID or not Number(info.mapType,0,limit) then break end
+            local nextID,nextPosition=C_Map.GetMapPosFromWorldPos(world[1],vector,info.mapID)
+            if not Public(nextPosition) or not nextPosition or not Public(nextID) or nextID~=info.mapID then break end
+            mapID,position=info.mapID,nextPosition
+        end
+        if mapID==1414 or mapID==1415 then return nil end
+        return self:Point({mapID=mapID,x=position.x,y=position.y,label=label})
+    end)
+    if ok and point then self.worldCache[key]={mapID=point.mapID,x=point.x,y=point.y};return point end
+end
+-- Exact giver-name joins only; ambiguous map records remain unresolved.
+local function Name(text)
+    if not Public(text) or type(text)~="string" then return nil end
+    local name=text:match("^([^,;\n]+)") or text
+    for _,separator in ipairs({" — "," - "," ("}) do
+        local at=name:find(separator,1,true);if at then name=name:sub(1,at-1) end
+    end
+    return name:match("^%s*(.-)%s*$"):lower()
+end
+function L:RecordedIndex(ns)
+    local index={}
+    local function Add(raw,name)
+        local point=self:Point(raw)
+        name=Name(name)
+        if not point or not name or name=="" then return end
+        local old=index[name]
+        if old==false then return end
+        if old and (old.mapID~=point.mapID or math.abs(old.x-point.x)>.005 or math.abs(old.y-point.y)>.005) then index[name]=false
+        elseif not old then index[name]=point end
+    end
+    for _,raw in pairs(Table(ns.QUEST_START_MAPS)) do
+        raw=Table(raw);Add(raw,raw.targetName or raw.label)
+    end
+    for _,raw in ipairs(Table(ns.TURNIN_SPOTS)) do raw=Table(raw);Add(raw,raw.targetName or raw.label) end
+    for _,dungeon in pairs(Table(ns.DB)) do
+        for _,q in ipairs(Table(Table(dungeon).quests)) do
+            q=Table(q);Add(q.startMap or q.map,q.pickup);Add(q.turninMap,q.turnin)
+        end
+    end
+    return index
+end
+function L:FindRecorded(text,index)
+    local name=Name(text)
+    local point=name and index[name]
+    if point then return self:Point(point) end
+end
+function L:Interior(text,dungeon,entrance)
+    if type(text)~="string" or not text:lower():find("inside",1,true) then return nil end
+    local lower=text:lower()
+    local place=(dungeon:match("^([^:]+)") or dungeon):lower()
+    if not lower:find(place,1,true) and not lower:find("inside the dungeon",1,true) and not lower:find("inside the instance",1,true) then return nil end
+    local point=self:Point(entrance)
+    if point then
+        point.label="Dungeon entrance — "..dungeon
+        point.detail="Entrance marker only. "..text
+        return point
     end
 end
 function L:Targets(id,kind,fallback)

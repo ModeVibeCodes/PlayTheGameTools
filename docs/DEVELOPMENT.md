@@ -51,10 +51,13 @@ and releases; passing static checks alone is not a release acceptance claim.
 
 ## Dungeon Loot feature work
 
-The SFK pilot adds a seventh registered module and seven Lua files. Its owning
+Dungeon Loot adds a seventh registered module, twelve Lua files and a virtual
+map-pin XML template. The builder validates and packages the template immediately
+after its Lua mixin. Its owning
 document is [DUNGEON_LOOT.md](DUNGEON_LOOT.md), with source/provider limitations,
-focused checks and native review steps. Continue work on codex/dungeon-loot and
-update its draft PR; do not merge or publish directly to main.
+focused checks and native review steps. The owner accepted SFK and authorized
+all-dungeon expansion on 2026-11-07. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
+and screenshots remain pending; this authorization does not publish a release.
 
 For this machine the owner verified an existing Forever AddOns junction to this
 checkout's ModeTools directory. Source edits and branch switches affect the next

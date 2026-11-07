@@ -128,6 +128,12 @@ function methods:SetText(text)
 end
 function methods:SetColorTexture(...) self.color = {...} end
 function methods:SetTextColor(...) self.color = {...} end
+function CreateColor(r,g,b,a) return {r=r,g=g,b=b,a=a} end
+function methods:SetGradient(orientation,minimum,maximum)
+    assert(orientation=="HORIZONTAL" or orientation=="VERTICAL")
+    self.gradient={orientation=orientation,minimum=minimum,maximum=maximum}
+end
+function methods:SetSpacing(value) self.spacing=value end
 function methods:SetVertexColor(...) self.vertexColor = {...} end
 function methods:SetStatusBarTexture(path) self.statusBarTexture=path;return true end
 function methods:SetStatusBarColor(...) self.statusBarColor={...} end

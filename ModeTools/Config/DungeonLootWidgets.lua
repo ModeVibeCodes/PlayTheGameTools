@@ -30,7 +30,7 @@ function UI.Portrait(texture, entry)
     elseif entry.icon then texture:SetTexture(entry.icon) end
 end
 local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.5),math.floor(g*255+.5),math.floor(b*255+.5)) end
-local PALETTES={header={{159,204,250},{9,116,241}},boss={{248,61,92},{253,75,47}},quest={{250,218,94},{250,242,223}}}
+local PALETTES={header={{159,204,250},{9,116,241}},boss={{248,61,92},{253,75,47}},quest={{250,218,94},{250,242,223}},npc={{245,247,250},{160,168,180}}}
 function UI.Gradient(text,kind)
     local colors=PALETTES[kind] or PALETTES.header
     local chars={};for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars+1]=char end
@@ -83,6 +83,7 @@ function UI.New(page, module)
             button:HookScript("OnLeave", function(owner) if module.tooltipOwner == owner then module:HideTooltip() end end)
         end
         slot.visible = true
+        if slot.copyButton then slot.copyButton:Hide() end
         slot.button:ClearAllPoints();slot.button:SetAllPoints(slot.control)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
         for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
@@ -101,7 +102,7 @@ function UI.New(page, module)
         button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
         button.label:SetText((options.heading or options.gradient) and UI.Gradient(text,options.gradient) or text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
-        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.expandedItem and 14 or 12))
+        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.subheader and 14 or (options.expandedItem and 14 or 12)))
         button:EnableMouse(callback ~= nil or item ~= nil)
         button.fill:SetShown(callback ~= nil or item ~= nil); button.outline:SetShown(callback ~= nil or item ~= nil)
         if item or options.portrait then
@@ -111,7 +112,7 @@ function UI.New(page, module)
             slot.icon:Show()
             if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", options.compact and 60 or 86, options.compact and -10 or -24);button.label:SetPoint("TOPRIGHT", -12, options.compact and -10 or -24) end
         end
-        if options.heading then
+        if options.heading or options.subheader then
             slot.headerGlow=slot.headerGlow or {}
             local offsets={{-1,0},{1,0},{0,-1},{0,1}}
             local face,size=button.label:GetFont()
@@ -123,14 +124,31 @@ function UI.New(page, module)
                 glow:SetText(button.label:GetText());glow:Show()
             end
         end
+        -- Modest line leading with tighter surrounding padding in quest detail.
+        local questDetail=module.view.tab=="quests" and page==module.page.detailPane
+        button.label:SetSpacing(questDetail and 4 or 0)
+        slot.subtitle:SetSpacing(questDetail and 4 or 0)
+        for _,glow in ipairs(slot.headerGlow or {}) do glow:SetSpacing(questDetail and 4 or 0) end
+        slot.row.gapAfter=questDetail and 2 or 4
+        local questText=questDetail and not item and not options.portrait
+        slot.control:ClearAllPoints()
+        slot.control:SetPoint("TOPLEFT",slot.row,"TOPLEFT",0,questText and 0 or -4)
+        slot.control:SetPoint("BOTTOMRIGHT",slot.row,"BOTTOMRIGHT",0,questText and 0 or 4)
+        if questText then
+            for index,texture in ipairs(button.factionIcons or {}) do
+                texture:ClearAllPoints();texture:SetPoint("TOPRIGHT",-10-(index-1)*28,-4)
+            end
+            button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT",12,-4);button.label:SetPoint("TOPRIGHT",-12-factionWidth,-4)
+        end
         slot.subtitle:SetText(options.subtitle or "")
         slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -6);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -6)
         slot.subtitle:SetShown(options.subtitle ~= nil)
         function slot.row:layoutChildren(width)
             button.label:SetWidth(math.max(80, width - (options.portrait and (options.compact and 76 or 104) or (item and 64 or 28)) - factionWidth))
-            local height = button.label:GetStringHeight() + 32
+            local padding=questText and (options.subheader and 8 or 6) or 32
+            local height = button.label:GetStringHeight() + padding
             if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 6 end
-            self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (options.heading and 40 or (options.subtitle and 56 or 40))), height + (item and 8 or 0)))
+            self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (questText and (options.heading and 28 or 18) or (options.heading and 40 or (options.subtitle and 56 or 40)))), height + (item and 8 or 0)))
         end
         return slot
     end
@@ -138,36 +156,77 @@ function UI.New(page, module)
         local slot=self:Add("View on Map",callback)
         local button=slot.button
         slot.mapKind=kind
-        button:ClearAllPoints();button:SetPoint("TOPLEFT",12,-4);button:SetSize(128,28)
-        button.label:ClearAllPoints();button.label:SetAllPoints(button);button.label:SetJustifyH("CENTER");button.label:SetJustifyV("MIDDLE")
-        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("TOPLEFT",button,"TOPRIGHT",10,0)
-        slot.subtitle:SetPoint("TOPRIGHT",slot.control,"TOPRIGHT",-12,-4)
-        slot.subtitle:SetText(target.label..(#target.paths>0 and " · Patrol" or ""));slot.subtitle:Show()
+        button:ClearAllPoints();button:SetPoint("TOPLEFT",12,-2);button:SetSize(128,28)
+        button.label:ClearAllPoints();button.label:SetAllPoints(button);button.label:SetJustifyH("CENTER");button.label:SetJustifyV("MIDDLE");button.label:SetSpacing(0)
+        if not slot.copyButton then slot.copyButton=W.Button(slot.control,"Copy Coordinates",128,28) end
+        slot.copyButton:ClearAllPoints();slot.copyButton:SetPoint("TOPLEFT",button,"TOPRIGHT",8,0)
+        slot.copyButton:SetScript("OnClick",function() if module.active then module:ShowCoordinates(target) end end)
+        slot.copyButton:Show()
         function slot.row:layoutChildren(width)
-            slot.subtitle:SetWidth(math.max(40,width-174))
-            self:SetHeight(math.max(44,slot.subtitle:GetStringHeight()+16))
+            -- Stack the two compact actions on narrow detail panes.
+            slot.copyButton:ClearAllPoints()
+            if width<292 then slot.copyButton:SetPoint("TOPLEFT",button,"BOTTOMLEFT",0,-6);self:SetHeight(70)
+            else slot.copyButton:SetPoint("TOPLEFT",button,"TOPRIGHT",8,0);self:SetHeight(36) end
         end
         return slot
     end
     function pool:Dungeon(data, callback)
         local card = data.card
-        local slot = self:Add("Shadowfang Keep", callback, nil, T.text, nil, { heading = true, faction = card.faction })
+        local slot = self:Add(data.name, callback, nil, T.text, nil, { heading = true, faction = card.faction })
         if not slot.art then
             slot.art = slot.button:CreateTexture(nil, "BACKGROUND", nil, 1)
             slot.art:SetAllPoints(slot.button)
-            slot.topBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.86)
-            slot.bottomBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.88)
+            slot.topBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.55)
+            slot.bottomBand = W.Fill(slot.button, T.background, "ARTWORK", 0, 0.55)
         end
-        slot.art:SetTexture(card.art);slot.art:SetTexCoord(0.04, 0.96, 0.28, 0.78);slot.art:Show()
-        slot.topBand:ClearAllPoints();slot.topBand:SetPoint("TOPLEFT");slot.topBand:SetPoint("TOPRIGHT");slot.topBand:SetHeight(40);slot.topBand:Show()
-        slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(52);slot.bottomBand:Show()
+        slot.art:ClearAllPoints();slot.art:SetTexture(card.art)
+        if card.iconOnly then
+            slot.art:SetSize(64,64);slot.art:SetPoint("CENTER",0,0);slot.art:SetTexCoord(0,1,0,1)
+        else slot.art:SetAllPoints(slot.button);slot.art:SetTexCoord(unpack(card.crop)) end
+        slot.art:SetShown(card.art~=nil)
+        slot.topBand:ClearAllPoints();slot.topBand:SetPoint("TOPLEFT");slot.topBand:SetPoint("TOPRIGHT");slot.topBand:SetHeight(34);slot.topBand:Show()
+        slot.bottomBand:ClearAllPoints();slot.bottomBand:SetPoint("BOTTOMLEFT");slot.bottomBand:SetPoint("BOTTOMRIGHT");slot.bottomBand:SetHeight(44);slot.bottomBand:Show()
         addon.Media:BindInterfaceFont(slot.button.label, GameFontHighlight, 20)
         for _,glow in ipairs(slot.headerGlow or {}) do local face=slot.button.label:GetFont();glow:SetFont(face,20,"OUTLINE") end
-        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 12);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 12)
-        local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. #data.quests .. " quests") or "Loot and quests unavailable"
-        slot.subtitle:SetText("Silverpine Forest · Horde territory\n" .. counts);slot.subtitle:Show()
+        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("BOTTOMLEFT", 14, 8);slot.subtitle:SetPoint("BOTTOMRIGHT", -14, 8)
+        local counts = data.available and (data.bossCount .. " bosses" .. (data.rareCount > 0 and (" + " .. data.rareCount .. " rare") or "") .. "   ·   " .. (data.questCountKnown==false and "Quests not recorded" or (data.questCount .. " quests"))) or (data.previewOnly and "Data not available yet" or "Loot and quests unavailable")
+        slot.subtitle:SetText(card.suggestedLevel.." · "..data.location.." · "..(card.faction=="Both" and "Neutral / contested territory" or (card.faction and (card.faction.." territory") or "Territory unknown")).."\n"..counts);slot.subtitle:Show()
         function slot.row:layoutChildren(width) self:SetHeight(180);slot.button.label:SetWidth(math.max(80,width-70)) end
         return slot
     end
     return pool
+end
+
+-- Clipboard writes are not available to ordinary addon code. A focused native
+-- edit box lets the player copy with Ctrl+C without protected API workarounds.
+function addon.DungeonLoot:ShowCoordinates(target)
+    local frame=self.coordinateFrame
+    if not frame then
+        frame=CreateFrame("Frame",nil,self.page)
+        frame:SetSize(340,126);frame:SetPoint("CENTER");frame:SetFrameStrata("DIALOG")
+        frame:SetFrameLevel(self.page:GetFrameLevel()+100);frame:EnableMouse(true)
+        W.Texture(frame,"Window")
+        local title=W.Label(frame,"Copy Coordinates",nil,12,-10,310,T.text)
+        frame.hint=W.Label(frame,"Press Ctrl+C to copy; Escape to close.",nil,12,-78,310,T.muted)
+        local edit=CreateFrame("EditBox",nil,frame)
+        edit:SetPoint("TOPLEFT",12,-38);edit:SetPoint("TOPRIGHT",-12,-38);edit:SetHeight(28)
+        edit:SetFontObject(GameFontHighlight);edit:SetAutoFocus(false);edit:SetTextInsets(6,6,0,0)
+        W.Texture(edit,"InputField")
+        edit:SetScript("OnEscapePressed",function() frame:Hide() end)
+        edit:SetScript("OnEnterPressed",function() frame:Hide() end)
+        edit:SetScript("OnEditFocusGained",function(box) box:HighlightText() end)
+        edit:SetScript("OnMouseUp",function(box) box:HighlightText() end)
+        frame:SetScript("OnHide",function() edit:ClearFocus() end)
+        local close=W.Button(frame,"Close",58,22);close:SetPoint("BOTTOMRIGHT",-10,8)
+        close:SetScript("OnClick",function() frame:Hide() end)
+        frame.edit=edit;self.coordinateFrame=frame
+    end
+    local name="Map "..target.mapID
+    if C_Map and type(C_Map.GetMapInfo)=="function" then
+        local ok,info=pcall(C_Map.GetMapInfo,target.mapID)
+        if ok and type(info)=="table" and type(info.name)=="string" then name=info.name end
+    end
+    -- Copy the selected planning point, not the player's current position.
+    frame.edit:SetText(string.format("%s: %.1f, %.1f",name,target.x*100,target.y*100))
+    frame:Show();frame.edit:SetFocus();frame.edit:HighlightText()
 end

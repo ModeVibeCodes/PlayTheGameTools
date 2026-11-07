@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+- Made Dungeon Loot standalone: bundled the GPLv3 Lootified 1.2.0 data catalog
+  with its full license, source attribution and editable Lua. Removed the
+  DungeonJournal dependency and external artwork paths. Native world-coordinate
+  conversion supports recorded pickup/return locations without Questie. Retained
+  SFK class quests and the accepted UI; incomplete/newer records remain labeled.
+
+- Expanded the accepted SFK browser to every recorded Forever dungeon/wing:
+  31 playable entries and four non-clickable previews in the current source.
+  Added sorted suggested-starting-level groups, per-dungeon scenes/counts/region
+  emblems, a fixed dungeon context header and independent selection routing.
+  Selected-dungeon normalization keeps item/location work bounded. Recorded
+  giver-name joins and explicit entrance proxies improve map/copy coverage;
+  missing or ambiguous locations remain unavailable. No upstream media copied; data bundling is described above.
+
+- Replaced invisible loose map markers with managed native map pins using an
+  addon-owned XML template, normalized positioning, zoom compensation and the
+  native topmost frame level. Added pool lifecycle/load-order validation and
+  actionable marker errors, including failures inside map refresh callbacks.
+
+- Tightened SFK quest spacing, added glowing gray NPC subheaders and retained
+  useful location hints. Objective map actions are removed. Pickup/turn-in actions
+  now pair View on Map with Copy Coordinates (preselected field, Ctrl+C).
+  Added blue-gradient tab underlines and cleaner centered map symbols with blue
+  borders and a short hide tooltip. Lightened/shrank dungeon card text bands.
+
 - Updated Dungeon Loot map opening/layout handling with the native zone-opening
   API, bounded redraws and canvas rebinding. Custom markers remain independent
   of quest ownership. Added compact View on Map buttons, removed approximation

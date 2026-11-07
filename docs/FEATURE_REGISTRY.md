@@ -2,7 +2,7 @@
 
 | Feature | Configuration | Scope | Native status |
 | --- | --- | --- | --- |
-| Dungeon Loot | Questing & Leveling → Dungeon Loot | SFK artwork card, persistent boss/quest lists and condensed detail panes; installed DungeonJournal provider | Visual revision; native review and screenshots pending |
+| Dungeon Loot | Questing & Leveling → Dungeon Loot | All recorded Forever dungeon/wing cards, boss/quest details, native map/copy controls; bundled GPLv3 catalog; no DungeonJournal dependency | SFK accepted by owner; standalone all-dungeon review and screenshots pending |
 
 See [Dungeon Loot](DUNGEON_LOOT.md) for source provenance, dependencies, API
 assumptions, limitations and exact manual checks. Existing modules are documented

@@ -29,6 +29,7 @@ function M:OnEnable()
     self:SyncEvents()
 end
 function M:OnDisable()
+    if self.coordinateFrame then self.coordinateFrame:Hide() end
     if addon.DungeonLootMap then addon.DungeonLootMap:Clear() end
     self.active = false
     self.events:UnregisterAllEvents()
@@ -90,10 +91,11 @@ function M:Matches(text)
     return self.view.search == "" or tostring(text):lower():find(self.view.search:lower(), 1, true) ~= nil
 end
 function M:ReadData()
-    self.data = addon.DungeonLootProvider:Read()
+    self.data = addon.DungeonLootProvider:Read(self.view.dungeon)
     return self.data
 end
 function M:SelectEntry(kind, index)
+    if self.coordinateFrame then self.coordinateFrame:Hide() end
     self.mapStatus=nil
     self:HideTooltip()
     self.view[kind] = index
@@ -104,10 +106,16 @@ function M:SelectEntry(kind, index)
     end
 end
 function M:Navigate(dungeon, tab, boss, quest)
+    if self.coordinateFrame then self.coordinateFrame:Hide() end
     self:HideTooltip()
     local sameDungeon = self.view.dungeon == dungeon
     self.view.dungeon, self.view.tab = dungeon, tab or "loot"
-    if not sameDungeon then self.view.boss, self.view.quest = nil, nil end
+    if not sameDungeon then
+        self.view.boss,self.view.quest=nil,nil
+        self.mapStatus=nil
+        if addon.DungeonLootMap then addon.DungeonLootMap:Clear() end
+    end
+    self:ReadData()
     if boss then self.view.boss = boss end
     if quest then self.view.quest = quest end
     self.view.search = ""

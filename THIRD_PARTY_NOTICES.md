@@ -53,20 +53,22 @@ The Play The Game Tools MIT grant does not relicense Blizzard assets or declare 
 domain. No third-party font files are bundled; optional media providers are not
 redistributed by this package.
 
-## Optional DungeonJournal interoperability
+## Bundled Dungeon Loot catalog
 
-DungeonJournal (ForeverDungeonJournal) by Exehn / ExehnTV is a separate addon,
-listed as All Rights Reserved at https://www.curseforge.com/wow/addons/dungeonjournal.
-The Dungeon Loot pilot reads its exposed in-memory data when the user has it
-installed and enabled. No DungeonJournal code, database, prose, artwork or other
-assets are bundled in this repository or release ZIP. Source attribution and
-installed version appear in General. This is independent interoperability,
-not an endorsement or a grant to redistribute the upstream addon. See
-docs/DUNGEON_LOOT.md for schema compatibility and data uncertainty.
+DungeonLootCatalogItems.lua, DungeonLootCatalogInstances.lua and
+DungeonLootCatalogQuests.lua derive from Lootified 1.2.0 by Alen (TepsiPepsi),
+GPLv3, including data attributed upstream to CMaNGOS classic-db (GPLv3).
+Each file retains provenance comments and records its namespace modification.
+The full unmodified license is in LICENSES/GPL-3.0.txt. Editable Lua source ships
+in the package. Combined distributions containing this catalog are provided under
+GPLv3; Mode's original MIT notices and grants remain intact. No warranty applies.
+See CATALOG_SOURCES.md for the pinned archive, hash, source URLs and exclusions.
 
-Dungeon Loot also references Blizzard's native SFK loading-screen texture,
-faction emblems and default boss icon, and asks the native portrait renderer
-to draw boss display IDs. No Blizzard image files are redistributed.
+No DungeonJournal database, code, prose or artwork is bundled or required.
+No Lootified UI, fonts, emblems, maps or other image assets are included.
+Dungeon cards and portraits reference native Blizzard client artwork only.
+Original SFK additions are independently authored factual summaries, with sources
+listed in CATALOG_SOURCES.md. Blizzard retains its game text, names and artwork.
 
 ## Optional QuestieDB / Questie location APIs
 

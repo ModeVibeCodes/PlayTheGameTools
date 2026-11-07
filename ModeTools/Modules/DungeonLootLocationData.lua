@@ -8,7 +8,7 @@ local doan={1413,49,57,"Doan Karhan"}
 local beldugur={1458,54,55,"Keeper Bel'dugur"}
 local dalar={1421,44,40,"Dalar Dawnweaver"}
 local jordan={1426,52,37,"Jordan Stilwell"}
-local lumina={1421,43,41,"Lumina Windsinger","After her Fenris escort, look in the Sepulcher crypt. Approximate location."}
+local lumina={1421,43,41,"Lumina Windsinger","After her Fenris escort, look in the Sepulcher crypt."}
 local drop={1421,47,71,"Dead Drop"}
 local function Inside(name,detail) return {1421,45,68,name,"Entrance marker only. "..detail} end
 local courtyard=Inside("Deathstalker Vincent (inside SFK)","Enter Shadowfang Keep and reach the courtyard after the first boss.")
@@ -34,7 +34,7 @@ function D:Targets(id,kind)
     for _,point in ipairs(list or {}) do
         result[#result+1]={mapID=point[1],x=point[2]/100,y=point[3]/100,label=point[4],
             points={{point[2]/100,point[3]/100}},paths={},approximate=true,
-            detail=point[5] or "Approximate planning location. Confirm the NPC/object position in game.",source="Play The Game Tools location catalog"}
+            detail=point[5],source="Play The Game Tools location catalog"}
     end
     return result
 end

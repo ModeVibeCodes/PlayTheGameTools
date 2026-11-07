@@ -32,5 +32,7 @@ preserve module independence, and avoid unnecessary polling and protected-action
 workarounds. Existing mock tests establish neither Blizzard support nor native
 behavior. Use actual implemented UI paths and exact labels for manual tests.
 
-Original code is MIT. Preserve all third-party notices and artwork ownership.
+Original code retains its MIT grant. Distributions containing the bundled dungeon
+catalog are GPLv3; see CATALOG_SOURCES.md and LICENSES/GPL-3.0.txt. Preserve
+all third-party notices and artwork ownership.
 Never copy reference-addon code or assets without reviewing their licenses.
