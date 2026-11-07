@@ -27,10 +27,11 @@ item tooltip line is treated as its title and omitted from the body. Specialized
 native graphics/comparisons stay in the hover UI.
 
 Quest titles/subtitles have corrected height/padding and explicit top alignment.
-Headers use an amber-to-rose-to-violet text gradient with a faint static glow. Notes, descriptions and warnings appear
+Headers use #9fccfa to #0974f1; boss names use #f83d5c to #fd4b2f;
+quest titles/section headings use #FADA5E to #FAF2DF, with faint static heading glow. Notes, descriptions and warnings appear
 near the title without a notes toggle. Class names use localized Blizzard names
 and RAID_CLASS_COLORS. List rows show Chain when prerequisite steps are recorded.
-Objective, Starts at, Turn in and reward sections stay concise; Prerequisites (N)
+Numbered Starts at, Objective and Turn in steps precede rewards; Prerequisites (N)
 expands chain acquisition details. The faction chooser is 128 × 28, with inherited
 anchors cleared; search ends 10px before it. General owns compact Refresh and
 source attribution. Dungeon emblems denote territory, not entry restrictions;
@@ -38,17 +39,17 @@ quest emblems denote quest faction.
 
 ## Locations and map pilot
 
-Map pickup — [name], Map turn-in — [name] and Map objective — [name] buttons appear
-only for recorded coordinates. Expanded prerequisites can also have buttons.
-The (patrol) suffix means an ordered path is recorded. Missing buttons mean no
+**View on Map** buttons (128 x 28, matching the faction chooser) appear beside
+destination captions in pickup, objective and turn-in sections, only for recorded
+coordinates. Expanded prerequisites can also have buttons. A Patrol caption means
+an ordered path is recorded. Missing buttons mean no
 usable coordinates, not confirmed absence of the entity. Direct NPC and object
 objectives are supported; item-drop and kill-credit associations are not inferred.
 
 An owned, manually curated SFK planning catalog now supplies pickup and turn-in
 pins for all seven visible quests **without Questie or QuestieDB**. It also covers
-selected direct objectives and two associated chain steps. Points are rounded,
-marked **[approx.]** on buttons and **Approximate location** on markers, and return
-fresh copies. Locations inside SFK intentionally use the outdoor entrance on the
+selected direct objectives and two associated chain steps. Points remain rounded planning estimates and return fresh copies. Buttons and
+marker captions omit approximation suffixes at the owner's request. Locations inside SFK intentionally use the outdoor entrance on the
 Silverpine map, with an **Entrance marker only** explanation of where to go inside.
 No exact floor/NPC position is implied. The final Old Fire-Eye kill remains unknown
 in this catalog; no objective point is invented. Forging/payment phases map to
@@ -63,6 +64,11 @@ additional fallback for uncataloged chain steps. Loot and quest list data still
 come from the separately enabled DungeonJournal; this location work does not
 remove that separate pilot dependency.
 
+The native C_Map.OpenWorldMap entry point opens the zone (ShowUIPanel fallback).
+Data-provider size/scale/map callbacks and three bounded post-open redraws handle
+canvas layout settling; the overlay rebinds if the canvas changes. Closing,
+dismissing or choosing another target invalidates queued redraws. Quest-log
+ownership and completion are never queried to decide whether to show an icon.
 Native map canvas data-provider callbacks manage an independent overlay: high-contrast
 40px bordered quest/objective icons with labels, plus recorded patrol segments. Only
 the clicked target is shown. Right-clicking its marker dismisses the owned icons
@@ -73,7 +79,7 @@ the map clears it. Settings hide while the map is open and return on close outsi
 combat. Disabling Dungeon Loot clears pins/lines. No polling or user-waypoint API.
 
 Map opening requires out-of-combat state. Missing APIs or rejected opens produce
-a status message on the quest page, with no automatic retry or workaround.
+a status message on the quest page, without retrying rejected protected actions.
 Native map support, dungeon-floor art, zoom/layering and actual SFK patrol-data
 availability remain experimental and unconfirmed. Do not expand dungeon/map
 coverage until the owner confirms the pilot in game. No quest acceptance, turn-in,
@@ -105,6 +111,7 @@ default boss icon. No baked reference portraits or Blizzard image files are ship
 Primary Blizzard source reviewed 2026-11-07 on the forever branch:
 - Blizzard_APIDocumentationGenerated/UnitDocumentation.lua, ItemDocumentation.lua
   and TooltipInfoDocumentation.lua: portrait/item signatures and tooltip updates.
+- https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/MapDocumentation.lua (C_Map.OpenWorldMap)
 - https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_MapCanvas/MapCanvas_DataProviderBase.lua
 - https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_MapCanvas/Blizzard_MapCanvas.lua
 - https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/SimpleLineAPIDocumentation.lua
@@ -144,41 +151,7 @@ The owner liked earlier revisions; current quest styling/map behavior needs fres
 review. Supplied DungeonJournal screenshots are interaction references, not native
 evidence of Play The Game Tools.
 
-1. **Navigation:** `/mode` → Questing & Leveling → Dungeon Loot → Dungeons →
-   Shadowfang Keep → Quests → Deathstalkers in Shadowfang.
-   **Action:** `/reload`, inspect title, notes, section spacing, search and faction
-   chooser. **Required state:** Forever, out of combat, DungeonJournal enabled.
-   **Confirmation:** text/icons do not clip; headers have a gradient; notes are
-   visible near the top; search and the smaller faction selector do not overlap.
-2. **Navigation:** same quest → Map pickup — High Executor Hadrec [approx.].
-   **Action:** click the pickup button, then close the map. **Required state:**
-   out of combat. **Confirmation:** Silverpine opens with a yellow quest marker;
-   settings do not obscure it and return on close. Missing capability/rejection
-   produces an actionable status instead of a claimed successful pin.
-3. **Navigation:** same quest → Map turn-in — Deathstalker Vincent (inside SFK)
-   [approx.]. **Action:** click, zoom/change maps, then close. **Required state:**
-   out of combat; Questie is not required. **Confirmation:** the owned Silverpine
-   entrance marker appears with an explanation to enter for the courtyard. It
-   does not imply exact interior coordinates; map changes/close clear it.
-4. **Navigation:** Quests → a recorded Map pickup / Map turn-in / Map objective
-   button ending (patrol). **Action:** click it. **Required state:** out of combat,
-   optional location sources enabled and a recorded ordered path for that entity.
-   **Confirmation:** only that recorded patrol accompanies its marker. No SFK
-   route availability is claimed yet; if no patrol button exists, this native
-   route check cannot be performed until verified route data is available.
-5. **Navigation:** Quests → The Horn of Xelthos → Prerequisites (1).
-   **Action:** inspect class/Chain/notes, expand the prerequisite, then select a
-   different quest. **Required state:** out of combat; All factions.
-   **Confirmation:** Rogue is class colored, Chain is shown, notes are already
-   visible, and prerequisite details expand without hiding the quest list.
-6. **Navigation:** Boss Loot → Rethilgore, then Other loot → Fel Steed / Shadow
-   Charger; then Dungeons. **Action:** compare loot and return to the card.
-   **Required state:** out of combat; allow item metadata to arrive.
-   **Confirmation:** short lists remain detailed, long lists compact, alignment
-   stays correct and the smaller scenery-only card retains its source totals.
-
-Screenshots: pending. Keep PR #6 draft until user-confirmed native checks and real
-Forever before/after captures of the changed addon. Crop other players' names/chat.
+Use the current native review steps after the provenance table below. Screenshots: pending.
 
 ## Owned location catalog provenance (checked 2026-11-07)
 
@@ -209,27 +182,28 @@ narrative wording reused:
 
 ### Current native review additions
 
-- **Navigation:** AddOns → Questie / QuestieDB; then `/mode` → Questing & Leveling
-  → Dungeon Loot → Shadowfang Keep → Quests → Deathstalkers in Shadowfang →
-  Map pickup — High Executor Hadrec [approx.]. **Action:** disable Questie and
-  QuestieDB, `/reload`, then click the map button. **Required state:** Forever,
-  out of combat; DungeonJournal and Dungeon Loot enabled. **Confirmation:** a
-  high-contrast labeled quest icon appears near the Sepulcher, clearly marked
-  approximate. The owned estimate works without either Questie addon.
-- **Navigation:** the resulting world-map marker. **Action:** right-click it, then
-  close the map. **Required state:** map open. **Confirmation:** only this addon's
-  markers/route disappear; the map stays open, and closing it returns to settings.
-- **Navigation:** Quests → Deathstalkers in Shadowfang → Map turn-in — Deathstalker
-  Vincent (inside SFK) [approx.]. **Action:** click with Questie still disabled.
-  **Required state:** out of combat. **Confirmation:** the marker is at the outdoor
-  SFK entrance; its tooltip explicitly explains the interior courtyard destination.
-  It does not claim to pinpoint Vincent on a dungeon floor.
-- **Navigation:** Dungeon Loot → Shadowfang Keep → Quests → any quest detail.
-  **Action:** inspect section headings. **Required state:** out of combat.
-  **Confirmation:** amber/rose/violet colors and a restrained static glow, with
-  readable normal text and unchanged native item-quality colors.
+1. **Navigation:** `/mode` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   Shadowfang Keep -> Quests -> Deathstalkers in Shadowfang -> 1. Starts at ->
+   View on Map (High Executor Hadrec caption). **Action:** click with the quest in
+   your log, then repeat on a character without it. **Required state:** Forever,
+   out of combat, DungeonJournal and Dungeon Loot enabled; `/reload` after changes.
+   **Confirmation:** a labeled quest marker appears near the Sepulcher in both
+   cases; no approximation suffix. Test with Questie/QuestieDB disabled as well.
+2. **Navigation:** resulting world-map marker. **Action:** zoom, right-click the
+   marker, then close the map. **Required state:** map open. **Confirmation:** the
+   marker stays attached to its location while zooming; right-click dismisses our
+   icons/routes without closing the map; closing returns to settings.
+3. **Navigation:** same quest -> 3. Turn in -> View on Map (Deathstalker Vincent
+   (inside SFK) caption). **Action:** click. **Required state:** out of combat.
+   **Confirmation:** the Silverpine entrance marker explains the courtyard
+   destination; it does not claim an exact dungeon-floor position.
+4. **Navigation:** Dungeon Loot -> Shadowfang Keep -> Quests, then Boss Loot.
+   **Action:** inspect titles, steps and map controls. **Required state:** out of
+   combat. **Confirmation:** numbered pickup/objective/turn-in steps, compact
+   View on Map buttons, gold quest text, red boss names and blue general headers;
+   class/item colors remain readable and heading glow remains subtle.
 
-Focused tests now verify all seven owned pickup/return pairs with optional
-providers absent, copy isolation, interior-proxy labeling, unknown-objective
-handling, warm gradient/glow, marker elevation/labeling and right-click dismissal.
-Native marker visibility, exact planning-point placement and glow remain pending.
+Focused mock tests cover exact gradient endpoints, compact button anchors,
+ordered patrol geometry, ownership-independent targets, delayed/replaced canvas
+layout and cancellation after dismissal. Native rendering, zoom, placement and
+actual patrol availability remain pending. Screenshots: pending.

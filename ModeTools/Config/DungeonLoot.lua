@@ -46,7 +46,7 @@ function M:CreateConfigPage(parent)
     page.listPane,page.detailPane=left,right
     W.Fill(left,T.sidebar);W.Fill(right,T.panel)
     local function Add(...) return rightRows:Add(...) end
-    local function Heading(text) Add(text,nil,nil,T.secondary,nil,{heading=true}) end
+    local function Heading(text) Add(text,nil,nil,T.secondary,nil,{heading=true,gradient=M.view.tab=="quests" and "quest" or "header"}) end
     local function Item(item,prefix,expanded)
         local name,icon,quality,loaded=self:ItemInfo(item)
         local color=T.text
@@ -63,10 +63,7 @@ function M:CreateConfigPage(parent)
     local function MapButtons(targets,kind)
         for _,target in ipairs(targets or {}) do
             local location=target
-            local label="Map "..(kind=="pickup" and "pickup" or kind=="turnin" and "turn-in" or "objective").." — "..target.label
-            if target.approximate then label=label.." [approx.]" end
-            if #target.paths>0 then label=label.." (patrol)" end
-            Add(label,function()
+            rightRows:MapAction(target,kind,function()
                 local ok,reason=addon.DungeonLootMap:Open(location,kind)
                 M.mapStatus=not ok and reason or nil
                 page:Refresh()
@@ -83,15 +80,15 @@ function M:CreateConfigPage(parent)
         MapButtons(q.pickupTargets,"pickup")
     end
     local function QuestDetail(q)
-        Add(q.name,nil,nil,T.text,nil,{heading=true,faction=q.faction})
+        Add(q.name,nil,nil,T.text,nil,{heading=true,gradient="quest",faction=q.faction})
         Add((q.requires and ("Level "..q.requires.."+") or "Level unknown").." · "..addon.DungeonLootWidgets.ClassText(q.classOnly),nil,nil,T.muted)
         if q.warning then Add(q.warning,nil,nil,T.primary) end
         if q.note then Add(q.note,nil,nil,T.secondary) end
         if q.description and q.description~=q.note then Add(q.description,nil,nil,T.secondary) end
         if M.mapStatus then Add(M.mapStatus,nil,nil,T.primary) end
-        Heading("Objective");Add(q.objective or "Objective unknown.");MapButtons(q.objectiveTargets,"objective")
-        Heading("Starts at");Acquisition(q)
-        Heading("Turn in");Add((q.turnin or "Location unknown")..(q.finish and ("\n"..q.finish) or ""));MapButtons(q.turninTargets,"turnin")
+        Heading("1. Starts at");Acquisition(q)
+        Heading("2. Objective");Add(q.objective or "Objective unknown.");MapButtons(q.objectiveTargets,"objective")
+        Heading("3. Turn in");Add((q.turnin or "Location unknown")..(q.finish and ("\n"..q.finish) or ""));MapButtons(q.turninTargets,"turnin")
         Heading(q.rewardChoice and "Choose one reward" or "Rewards")
         for _,item in ipairs(q.items) do Item(item) end
         -- Avoid repeating every item name in the prose reward summary.
@@ -167,7 +164,7 @@ function M:CreateConfigPage(parent)
         elseif not data.available then rootRows:Add(data.source,nil,nil,T.muted)
         else
             local entries={}
-            leftRows:Add(v.tab=="loot" and "Bosses" or "Quests",nil,nil,T.secondary,nil,{heading=true})
+            leftRows:Add(v.tab=="loot" and "Bosses" or "Quests",nil,nil,T.secondary,nil,{heading=true,gradient=v.tab=="quests" and "quest" or "header"})
             if v.tab=="loot" then
                 for _,extras in ipairs({false,true}) do
                     for index,boss in ipairs(data.bosses) do
@@ -191,7 +188,7 @@ function M:CreateConfigPage(parent)
             local extrasHeading=false
             for _,record in ipairs(entries) do
                 local entry,index=record.entry,record.index
-                local options={compact=true,selected=v[key]==index}
+                local options={compact=true,selected=v[key]==index,gradient=key=="boss" and "boss" or "quest"}
                 if key=="boss" then
                     if entry.extra and not extrasHeading then leftRows:Add("Other loot",nil,nil,T.secondary,nil,{heading=true});extrasHeading=true end
                     options.portrait=entry
@@ -206,7 +203,7 @@ function M:CreateConfigPage(parent)
                 local message=key=="boss" and "No bosses match your search." or "No quests match your filters."
                 leftRows:Add(message);Add(message)
             elseif key=="boss" then
-                Add(selected.name,nil,nil,T.text,nil,{heading=true,portrait=selected})
+                Add(selected.name,nil,nil,T.text,nil,{heading=true,gradient="boss",portrait=selected})
                 for _,item in ipairs(selected.items) do Item(item,nil,#selected.items<=5) end
                 if #selected.items==0 then Add("Loot unknown.") end
             else QuestDetail(selected) end

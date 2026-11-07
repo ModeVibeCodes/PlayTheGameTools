@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+- Updated Dungeon Loot map opening/layout handling with the native zone-opening
+  API, bounded redraws and canvas rebinding. Custom markers remain independent
+  of quest ownership. Added compact View on Map buttons, removed approximation
+  suffixes, numbered quest steps, and applied the requested blue/red/gold gradients.
+
 - Dungeon Loot headers now use amber/rose/violet with a subtle static glow. Map
   targets use larger contrasting labeled icons, dismissible by right-click.
   Added an owned, attributed SFK pickup/turn-in planning catalog for all seven
-  quests, usable without Questie. Estimates are labeled; interior destinations
+  quests, usable without Questie. Points remain planning estimates; interior destinations
   use explicit entrance proxies. Optional sources may still enrich patrols.
 
 - Refined Dungeon Loot quest alignment, gradient headings, always-visible notes,

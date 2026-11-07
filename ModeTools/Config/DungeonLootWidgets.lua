@@ -30,14 +30,17 @@ function UI.Portrait(texture, entry)
     elseif entry.icon then texture:SetTexture(entry.icon) end
 end
 local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.5),math.floor(g*255+.5),math.floor(b*255+.5)) end
-function UI.Gradient(text)
+local PALETTES={header={{159,204,250},{9,116,241}},boss={{248,61,92},{253,75,47}},quest={{250,218,94},{250,242,223}}}
+function UI.Gradient(text,kind)
+    local colors=PALETTES[kind] or PALETTES.header
     local chars={};for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars+1]=char end
     local out={}
     for index,char in ipairs(chars) do
         local t=(index-1)/math.max(1,#chars-1)
         local r,g,b
-        if t<=.5 then local u=t*2;r,g,b=1-.03*u,.78-.30*u,.42+.22*u
-        else local u=(t-.5)*2;r,g,b=.97-.36*u,.48+.09*u,.64+.36*u end
+        r=(colors[1][1]+(colors[2][1]-colors[1][1])*t)/255
+        g=(colors[1][2]+(colors[2][2]-colors[1][2])*t)/255
+        b=(colors[1][3]+(colors[2][3]-colors[1][3])*t)/255
         out[index]="|cff"..Hex(r,g,b)..char.."|r"
     end
     return table.concat(out)
@@ -53,7 +56,7 @@ function UI.New(page, module)
     page.slots = {}
     function pool:Reset()
         self.used = 0
-        for _, slot in ipairs(page.slots) do slot.visible = false; slot.item = nil; slot.callback = nil end
+        for _, slot in ipairs(page.slots) do slot.visible = false; slot.item = nil; slot.callback = nil; slot.mapKind=nil end
     end
     function pool:Row()
         self.used = self.used + 1
@@ -92,10 +95,11 @@ function UI.New(page, module)
         local slot = self:Row()
         slot.callback, slot.item, slot.expandedItem = callback, item, options.expandedItem == true
         local button = slot.button
+        button.label:SetJustifyH("LEFT");button.label:SetJustifyV("TOP")
         button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, item and -10 or -12)
         local factionWidth = UI.Factions(button, options.faction)
         button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
-        button.label:SetText(options.heading and UI.Gradient(text) or text); button:SetLabelColor(color or T.text)
+        button.label:SetText((options.heading or options.gradient) and UI.Gradient(text,options.gradient) or text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
         addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.expandedItem and 14 or 12))
         button:EnableMouse(callback ~= nil or item ~= nil)
@@ -127,6 +131,21 @@ function UI.New(page, module)
             local height = button.label:GetStringHeight() + 32
             if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 6 end
             self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (options.heading and 40 or (options.subtitle and 56 or 40))), height + (item and 8 or 0)))
+        end
+        return slot
+    end
+    function pool:MapAction(target,kind,callback)
+        local slot=self:Add("View on Map",callback)
+        local button=slot.button
+        slot.mapKind=kind
+        button:ClearAllPoints();button:SetPoint("TOPLEFT",12,-4);button:SetSize(128,28)
+        button.label:ClearAllPoints();button.label:SetAllPoints(button);button.label:SetJustifyH("CENTER");button.label:SetJustifyV("MIDDLE")
+        slot.subtitle:ClearAllPoints();slot.subtitle:SetPoint("TOPLEFT",button,"TOPRIGHT",10,0)
+        slot.subtitle:SetPoint("TOPRIGHT",slot.control,"TOPRIGHT",-12,-4)
+        slot.subtitle:SetText(target.label..(#target.paths>0 and " · Patrol" or ""));slot.subtitle:Show()
+        function slot.row:layoutChildren(width)
+            slot.subtitle:SetWidth(math.max(40,width-174))
+            self:SetHeight(math.max(44,slot.subtitle:GetStringHeight()+16))
         end
         return slot
     end

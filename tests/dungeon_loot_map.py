@@ -76,8 +76,13 @@ lua.execute('''
     for index,slot in ipairs(page.detailPane.slots) do if slot.visible then
         local text=Plain(slot.button.label:GetText())
         if text=='Important acquisition note' then noteIndex=index end
-        if text=='Objective' then objectiveIndex=index end
-        if text:find('Map pickup',1,true) then mapButton=slot.button end
+        if text=='2. Objective' then objectiveIndex=index end
+        if text=='View on Map' and slot.mapKind=='pickup' then
+            mapButton=slot.button
+            assert(mapButton:GetWidth()==128 and mapButton:GetHeight()==28)
+            assert(slot.subtitle:GetText()=='Fixture Patrol'..' · Patrol')
+        end
+        assert(not text:lower():find('approx',1,true))
         assert(text~='Quest notes' and text~='Hide notes')
     end end
     assert(noteIndex and objectiveIndex and noteIndex<objectiveIndex and mapButton)
@@ -93,7 +98,10 @@ lua.execute('''
     assert(hasGlow)
     local gradient=addon.DungeonLootWidgets.Gradient('Objective')
     assert(Plain(gradient)=='Objective' and select(2,gradient:gsub('|cff',''))==9)
-    assert(gradient:find('|cffffc76b',1,true) and gradient:find('|cff9c91ff',1,true),'warm amber-to-violet gradient')
+    for kind,colors in pairs({header={'9fccfa','0974f1'},boss={'f83d5c','fd4b2f'},quest={'fada5e','faf2df'}}) do
+        local value=addon.DungeonLootWidgets.Gradient('AB',kind)
+        assert(value=='|cff'..colors[1]..'A|r|cff'..colors[2]..'B|r',kind..' exact gradient endpoints')
+    end
     LibQuestieDB=nil;QuestieLoader=nil
     assert(#L:Targets(100002,'turnin')==0)
     assert(#L:Targets(100002,'pickup',{mapID=1421,x=.4,y=.5,label='Recorded pickup'})==1)
@@ -112,11 +120,43 @@ lua.execute('''
     assert(#L:Targets(95140,'objective')==0,'unknown final kill is not invented')
     assert(Map:Open(L:Targets(1098,'pickup')[1],'pickup'))
     local pin=Map.markers[1]
-    assert(pin:IsShown() and pin:GetWidth()==40 and pin.caption:GetText():find('Approximate location',1,true))
+    assert(pin:IsShown() and pin:GetWidth()==40 and pin.caption:GetText()=='High Executor Hadrec')
     assert(pin.clickRegistration=='RightButtonUp' and pin:GetFrameLevel()>canvas:GetFrameLevel()+50)
     pin:GetScript('OnClick')(pin,'LeftButton');assert(Map.target)
     pin:GetScript('OnClick')(pin,'RightButton')
     assert(not pin:IsShown() and Map.target==nil and WorldMapFrame:IsShown(),'right click removes only our overlay, not the map')
     WorldMapFrame:Hide();assert(addon.configWindow:IsShown(),'dismiss keeps return-to-settings behavior')
+    -- Deferred canvas layout and native entry point, independent of quest ownership.
+    local pending={}
+    local timer=C_Timer.After
+    C_Timer.After=function(_,fn) pending[#pending+1]=fn end
+    local nativeOpens,questQueries=0,0
+    C_Map=C_Map or {}
+    C_Map.OpenWorldMap=function(id)
+        nativeOpens=nativeOpens+1;WorldMapFrame:Show();WorldMapFrame:SetMapID(id)
+    end
+    C_QuestLog={IsOnQuest=function() error('quest log must not gate custom markers') end}
+    for _,hasQuest in ipairs({false,true}) do
+        IsQuestFlaggedCompleted=function() error('completion must not gate custom markers') end
+        C_QuestLog.IsOnQuest=function() questQueries=questQueries+1;return hasQuest end
+        canvas:SetSize(0,0)
+        assert(Map:Open(L:Targets(1098,'pickup')[1],'pickup'))
+        assert(not pin:IsShown(),'wait for usable canvas dimensions')
+        canvas=CreateFrame('Frame');canvas:SetSize(800,500)
+        for _,fn in ipairs(pending) do fn() end;pending={}
+        assert(pin:IsShown() and Map.overlay:GetParent()==canvas,'rebind replaced canvas after layout')
+        assert(pin.points[1][4]==344 and pin.points[1][5]==-205,'settled canvas coordinates')
+        Map:Dismiss()
+        for _,fn in ipairs(pending) do fn() end;pending={}
+        assert(not pin:IsShown())
+        WorldMapFrame:Hide()
+    end
+    assert(nativeOpens==2 and questQueries==0)
+    assert(Map:Open(L:Targets(1098,'pickup')[1],'pickup'))
+    Map:Dismiss()
+    for _,fn in ipairs(pending) do fn() end
+    assert(not pin:IsShown(),'queued callbacks cannot resurrect dismissed markers')
+    C_Timer.After=timer
+
 ''')
 print('PASS quest map pins, ordered patrol geometry, combat guards, cleanup, read-only source, notes, class/chain styling and toolbar anchors (mock only)')

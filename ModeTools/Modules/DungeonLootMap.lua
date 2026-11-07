@@ -11,6 +11,7 @@ local function OOC()
     return true
 end
 function Map:Clear()
+    self.generation=(self.generation or 0)+1
     self.target=nil;self.returnToConfig=nil
     if self.overlay then self.overlay:Hide() end
     for _,pin in ipairs(self.markers) do pin:Hide() end
@@ -27,6 +28,7 @@ function Map:Render()
     local target,map=self.target,self.map
     if not target or not map or not map:IsShown() or map:GetMapID()~=target.mapID then return end
     local canvas=map:GetCanvas()
+    if not canvas then return end
     local width,height=canvas:GetWidth(),canvas:GetHeight()
     if not Public(width) or not Public(height) or type(width)~="number" or type(height)~="number" or width<=0 or height<=0 then return end
     if not self.overlay then
@@ -34,6 +36,7 @@ function Map:Render()
         self.overlay:SetFrameLevel(canvas:GetFrameLevel()+50);self.overlay:EnableMouse(false)
     end
     local layer=self.overlay
+    layer:SetParent(canvas);layer:ClearAllPoints();layer:SetAllPoints(canvas)
     layer:SetFrameStrata(type(map.GetFrameStrata)=="function" and map:GetFrameStrata() or "HIGH")
     layer:SetFrameLevel(math.max(canvas:GetFrameLevel(),map:GetFrameLevel())+200);layer:Show()
     local points=target.points
@@ -56,9 +59,9 @@ function Map:Render()
             self.markers[index]=pin
         end
         pin:SetFrameStrata(type(map.GetFrameStrata)=="function" and map:GetFrameStrata() or "HIGH");pin:SetFrameLevel(layer:GetFrameLevel()+1)
-        pin.label=target.label..(target.approximate and " — approximate location" or "")..(#target.paths>0 and " — recorded patrol" or "")
+        pin.label=target.label..(#target.paths>0 and " — recorded patrol" or "")
         pin.label=pin.label..(target.detail and ("\n"..target.detail) or "").."\nRight-click to dismiss."
-        pin.caption:SetText(target.label..(target.approximate and "\nApproximate location" or ""))
+        pin.caption:SetText(target.label)
         pin.icon:SetTexture(self.kind=="pickup" and "Interface\\GossipFrame\\AvailableQuestIcon" or self.kind=="turnin" and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\WorldMap\\Skull_64")
         pin:ClearAllPoints();pin:SetPoint("CENTER",layer,"TOPLEFT",width*point[1],-height*point[2]);pin:Show()
     end
@@ -96,9 +99,24 @@ function Map:Open(target,kind)
             map:AddDataProvider(provider);self.provider=provider
         end
         self.target,self.kind=target,kind
-        ShowUIPanel(map);map:SetMapID(target.mapID)
+        self.generation=(self.generation or 0)+1
+        local generation=self.generation
+        -- Let the map select its zone through the client entry point, after its
+        -- OnShow initialization. Our overlay never consults quest ownership.
+        if C_Map and type(C_Map.OpenWorldMap)=="function" then C_Map.OpenWorldMap(target.mapID)
+        else ShowUIPanel(map) end
+        map:SetMapID(target.mapID)
         if not map:IsShown() or map:GetMapID()~=target.mapID then error("Map open rejected") end
         self:Render()
+        -- Opening/resizing the map can settle its canvas after SetMapID returns.
+        -- Bounded redraws, cancelled on close/dismiss/new selection; no polling.
+        if C_Timer and type(C_Timer.After)=="function" then
+            for _,delay in ipairs({0,.05,.2}) do
+                C_Timer.After(delay,function()
+                    if self.generation==generation and self.target==target then self:Render() end
+                end)
+            end
+        end
         if addon.configWindow and addon.configWindow:IsShown() then
             self.returnToConfig=true;addon.configWindow:Hide()
         end
