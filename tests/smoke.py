@@ -41,7 +41,7 @@ def load(encoded=None, project=18):
 files, order, _ = payload()
 lua, addon = load()
 lua.execute('''
-    assert(addon.initialized and #addon.moduleOrder==6 and #addon.categoryOrder==4)
+    assert(addon.initialized and #addon.moduleOrder==7 and #addon.categoryOrder==4)
     assert(addon.Edition.name=='Forever' and addon.developmentPhase=='Forever Beta')
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)
     assert(SLASH_MODETOOLS1=='/modetools' and SLASH_MODETOOLS2=='/mode')

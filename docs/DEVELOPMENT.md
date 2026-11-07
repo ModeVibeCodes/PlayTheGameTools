@@ -48,3 +48,19 @@ Use focused pull requests. Issues should include Forever build, addon version,
 class/level, exact reproduction and error text. Remove account data and personal
 paths before attaching logs. Maintainer approval is needed for native acceptance
 and releases; passing static checks alone is not a release acceptance claim.
+
+## Dungeon Loot feature work
+
+Dungeon Loot adds a seventh registered module, twelve Lua files and a virtual
+map-pin XML template. The builder validates and packages the template immediately
+after its Lua mixin. Its owning
+document is [DUNGEON_LOOT.md](DUNGEON_LOOT.md), with source/provider limitations,
+focused checks and native review steps. The owner accepted SFK and authorized
+all-dungeon expansion on 2026-11-07. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
+and screenshots remain pending; this authorization does not publish a release.
+
+For this machine the owner verified an existing Forever AddOns junction to this
+checkout's ModeTools directory. Source edits and branch switches affect the next
+client load. Preserve that junction; do not apply the older copy-sync workflow.
+This owner-directed arrangement supersedes the general separate-install advice
+above for this machine only. Never change SavedVariables.

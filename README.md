@@ -90,7 +90,29 @@ additional reporting option.
 
 ## License and credits
 
-Play The Game Tools original code is open source under [MIT](LICENSE). See
+Original code retains its [MIT grant](LICENSE). Distributions containing the
+bundled Dungeon Loot data are provided under [GPLv3](LICENSES/GPL-3.0.txt);
+editable source and attribution ship with the package. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for training-catalog attribution
 and artwork ownership. WoW and Blizzard assets remain the property of Blizzard
 Entertainment. Play The Game Tools is an independent community addon.
+
+## Dungeon Loot
+
+Questing & Leveling -> Dungeon Loot is off by default and includes its own
+catalog. **DungeonJournal, Lootified and Questie are not required.** The catalog
+contains 31 browsable dungeon/wing entries and four unavailable previews, grouped
+by suggested starting level. Boss loot, quest steps, prerequisites, rewards and
+native map/copy controls retain the accepted Shadowfang Keep layout.
+
+Recorded pickup/turn-in positions use native map conversion, with the owned SFK
+planning points retained. Missing positions keep their text without map controls.
+Optional Questie APIs can supplement locations; quest-log ownership never gates
+our pins. Copy Coordinates selects text for Ctrl+C. Artwork uses native client
+textures only, with an icon fallback.
+
+The licensed snapshot predates some newest Forever additions. Classic reference
+records and incomplete entries are labeled; this is not a completeness or current
+server-availability guarantee. See [coverage and native checks](docs/DUNGEON_LOOT.md)
+and [catalog sources and license terms](CATALOG_SOURCES.md). Standalone native
+review and real screenshots remain pending.

@@ -166,3 +166,24 @@ Initial WowUp install/update delivery remains untested until an explicitly appro
 public release exists. Test it with one guildmate before broader announcement.
 Public repository/release creation is a separate approval; no auto-publish workflow
 is supplied. A beta label does not restrict access to guildmates.
+
+## Dungeon Loot
+
+Run the smoke test/build and these focused checks:
+
+```
+python tests/dungeon_loot.py
+python tests/dungeon_loot_map.py
+python tests/dungeon_loot_catalog.py
+python tests/dungeon_loot_standalone.py
+```
+
+The catalog suite traverses all bundled browsable dungeons, every boss/source and
+quest pane, preview non-interactivity, read-only provider state, independent
+selections/search, artwork metadata, conservative location joins and lazy reads.
+Map checks cover native pin pooling, zoom/levels, cleanup, missing templates and
+provider failures. Mock tests establish neither native rendering nor actual drops
+or quest availability. See [exact native review paths](docs/DUNGEON_LOOT.md#native-review--expansion-pending).
+The owner accepted SFK; standalone catalog review and screenshots remain pending.
+Disable DungeonJournal, Questie and QuestieDB for the native baseline checks.
+Restart the client to load the new TOC files; preserve SavedVariables.

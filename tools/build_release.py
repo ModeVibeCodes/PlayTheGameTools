@@ -4,10 +4,11 @@ import hashlib
 import io
 import re
 import zipfile
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = ROOT / 'ModeTools'
-DOCUMENTS = ('README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'TESTING.md')
+DOCUMENTS = ('README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'TESTING.md', 'CATALOG_SOURCES.md', 'LICENSES/GPL-3.0.txt')
 MEDIA = {'.tga', '.blp', '.png', '.jpg', '.jpeg', '.ogg', '.mp3', '.wav', '.ttf', '.otf'}
 
 
@@ -37,11 +38,27 @@ def payload():
     order = [s.strip().replace('\\', '/') for s in toc.splitlines() if s.strip() and not s.lstrip().startswith('#')]
     if len(order) != len(set(order)) or order[0] != 'Core/Edition.lua' or order[-2:] != ['Core/Init.lua', 'Core/ReleaseMetadata.lua']:
         raise ValueError('Invalid TOC order or duplicate entries')
+    runtime = order
+    xml_name = 'Modules/DungeonLootMapPins.xml'
+    if runtime.count(xml_name) != 1 or runtime.index(xml_name) != runtime.index('Modules/DungeonLootMap.lua') + 1:
+        raise ValueError('Map pin template must follow its Lua mixin')
+    template = ET.fromstring(source_path(xml_name).read_bytes())
+    nodes = list(template)
+    ns = '{http://www.blizzard.com/wow/ui/}'
+    if (template.tag != ns + 'Ui' or len(nodes) != 1 or nodes[0].tag != ns + 'Frame'
+            or nodes[0].attrib != {'name': 'ModeToolsDungeonLootMapPinTemplate', 'virtual': 'true',
+                                   'enableMouse': 'true', 'mixin': 'ModeToolsDungeonLootMapPinMixin'}
+            or len(nodes[0]) != 0):
+        raise ValueError('Unexpected map pin template contents')
+    actual_xml = {p.relative_to(ADDON).as_posix() for p in ADDON.rglob('*.xml')}
+    if actual_xml != {xml_name}:
+        raise ValueError('XML source inventory differs from TOC')
+    order = [name for name in runtime if name != xml_name]
     for name in order:
         if not re.fullmatch(r'(?:Core|Config|Modules)/.+\.lua', name):
             raise ValueError(f'Unsupported runtime source: {name}')
     files = {'ModeTools.toc': (ADDON / 'ModeTools.toc').read_bytes()}
-    files.update({name: source_path(name).read_bytes() for name in order})
+    files.update({name: source_path(name).read_bytes() for name in runtime})
     for path in (ADDON / 'Media').rglob('*'):
         ordinary(path)
         if path.is_file():
