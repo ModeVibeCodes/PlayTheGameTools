@@ -75,7 +75,7 @@ new native interactions remain pending user confirmation.
    events remove unavailable rows. Native rejection remains authoritative.
 3. **Navigation:** Camp Contributions → header / Dismiss; /ptg → Questing &
    Leveling → Gameplay Enhancements → Campfire Monitor → Camp Contributions →
-   Contribution Window → Open Contributions / Preview Contributions; Contribution Tools → Refresh Contributions / Edit Contributions.
+   Contribution Window → Open Contributions / Preview Contributions; Detected Kits → Refresh; Contribution Position → Edit Contributions / Reset Position.
    **Action:** drag the header, Dismiss, reopen, leave/reenter camp, and reload;
    refresh after changing carried kits. **Required state:** OOC, ready kit.
    **Confirmation:** position persists; dismissal lasts this visit, reopening
@@ -86,11 +86,11 @@ new native interactions remain pending user confirmation.
    **Confirmation:** only an inert sample appears in Edit Mode; all content hides in combat. Live actions resume only when
    eligible outside combat; no automatic item use occurs.
 5. **Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
-   Monitor → Display → Show Your Camp Benefits / Separate Buff Window.
+   Monitor → Camp Buffs → Show Your Camp Benefits / Separate Buff Window.
    **Action:** inspect earned buffs in joined and separate modes.
    **Required state:** readable native Camp Benefits timing, Preview off.
-   **Confirmation:** the sole remaining-time display is the Camp Buffs subheading;
-   native duration-only footer rows are absent and periodic stat text is retained.
+   **Confirmation:** only the native duration footer remains; no addon countdown subheading exists,
+   and periodic stat text is retained.
 
 ## Preview and detected-kit controls
 
@@ -107,7 +107,7 @@ explicit samples; edit samples end with Exit / Save. Existing template-rejection
 state does not prevent a harmless non-action preview.
 
 **Detected Kits** lists names/counts from the latest ready-inventory scan, capped
-at three names plus a remaining count. Refresh Contributions explicitly scans
+at three names plus a remaining count. Refresh explicitly scans
 outside combat even away from a fire; no placement window opens without confirmed
 proximity. The concise Contributions TLDR combines the former availability/help
 explanations. No kit is presented as already installed at the camp.
@@ -118,7 +118,7 @@ explanations. No kit is presented as already installed at the camp.
   away from a fire, drag the header, then choose Stop Preview.
   **Required state:** OOC; no carried item/profession/fire required.
   **Confirmation:** labeled sample appears, moves and disappears; no item is used.
-- **Navigation:** same tab → Camp Contributions → Contribution Tools → Edit
+- **Navigation:** same tab → Camp Contributions → Contribution Position → Edit
   Contributions; Edit Mode → X Position / Y Position → Exit / Save.
   **Action:** select/move Camp Contributions, adjust coordinates, save and reload.
   **Required state:** OOC, monitor and popup enabled.
@@ -134,3 +134,31 @@ explanations. No kit is presented as already installed at the camp.
 tests/campfire_controls.py exercises the actual settings buttons, color-wheel
 apply/cancel, compact grid membership, inert sample and handle/header dragging,
 saved positions, tab/combat teardown and disabled edit membership (mock only).
+
+## Visibility correction and per-window styling
+
+Owner confirms detection is correct but reports invisible live/preview content.
+Root cause found: the initial frame had size but no screen anchor when registered
+with Position Manager. Native GetCenter may be nil there, so geometry validation
+rejects construction. The broad mock supplied a center even when unanchored.
+Construction now sets a CENTER screen anchor before registration and uses the
+existing addon preview layer (DIALOG level 90) above the settings window; a scoped
+native-like geometry fixture guards this path. The sample includes an explicit
+icon, title, dark row and panel, independently of item dispatch support.
+
+Camp Contributions has separate Contribution Scale / Contribution Opacity /
+Contribution Background controls. Contribution Position → Reset Position restores
+the managed screen position to 0,120 without resetting other settings. Header
+drag/shared Edit Mode remain supported. No tether or shared anchoring change was
+needed; the existing independent position is preserved.
+
+**Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
+Monitor → Camp Contributions → Contribution Window → Preview Contributions;
+Contribution Position → Reset Position / Edit Contributions.
+**Action:** /reload, start preview, reset/move it, adjust Contribution Scale /
+Contribution Opacity / Contribution Background, stop preview, then open the live
+window at a fire with a ready kit. **Required state:** OOC, parent/monitor/popup
+enabled; preview needs no item/fire. **Confirmation:** visible panel, title and
+sample icon; live ready kit has its native icon and Place action. Click once and
+complete native targeting to confirm placement. Native visual/use acceptance and
+screenshots remain pending; detection is owner-confirmed.

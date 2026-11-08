@@ -41,7 +41,7 @@ function A:CreateWindow()
     if not D.OutsideCombat() then return end
     local W,T=addon.ConfigWidgets,addon.InterfaceTheme
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.window=f
-    f:Hide();f:SetSize(450,166);f:SetMovable(true);f:SetClampedToScreen(true);f:SetFrameStrata("DIALOG")
+    f:Hide();f:SetSize(450,166);f:SetPoint("CENTER",UIParent,"CENTER",self.db.contributionX,self.db.contributionY);f:SetMovable(true);f:SetClampedToScreen(true);f:SetFrameStrata("DIALOG");f:SetFrameLevel(90)
     f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     f:SetBackdropColor(0.035,0.045,0.06,0.96);f:SetBackdropBorderColor(0.32,0.40,0.48,1)
     local header=CreateFrame("Frame",nil,f);f.header=header
@@ -131,9 +131,11 @@ function A:Layout(count,footer)
     f.content:SetHeight(count*48);f.viewport:SetHeight(rows*48)
     f.maxScroll=math.max(0,(count-rows)*48);f.scroll=math.min(f.scroll,f.maxScroll)
     f.viewport:SetVerticalScroll(f.scroll);f.footer:SetText(footer)
+    f:SetAlpha(self.db.contributionOpacity/100)
+    f:SetBackdropColor(0.035,0.045,0.06,self.db.contributionBackgroundOpacity/100)
     local e=PM.elements.campfireContributions
     if not f.dragging and not (e and e.dragging) then
-        f:SetScale(math.max(0.5,math.min(1,(UIParent:GetHeight()-40)/height)));f:SetHeight(height)
+        f:SetScale(math.max(0.25,math.min(self.db.contributionScale/100,(UIParent:GetHeight()-40)/height)));f:SetHeight(height)
         PM:ApplyPosition("campfireContributions")
     end
     f:Show()
@@ -149,7 +151,8 @@ function A:RenderPreview()
     for _,button in ipairs(self.buttons or {}) do button:Hide() end
     if not f.sample then
         local row=CreateFrame("Frame",nil,f.content);f.sample=row;row:SetSize(430,44);row:SetPoint("TOPLEFT")
-        local icon=row:CreateTexture(nil,"ARTWORK");icon:SetSize(36,36);icon:SetPoint("LEFT",4,0);icon:SetTexture(135805)
+        local bg=row:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();bg:SetColorTexture(0.10,0.14,0.18,1)
+        local icon=row:CreateTexture(nil,"ARTWORK");row.icon=icon;icon:SetSize(36,36);icon:SetPoint("LEFT",4,0);icon:SetTexture(135805)
         row.text=addon.ConfigWidgets.Label(row,"Preview kit - no item use",nil,48,-5,370,addon.InterfaceTheme.text)
         row.note=addon.ConfigWidgets.Label(row,"Sample profession contribution",nil,48,-25,370,addon.InterfaceTheme.muted)
     end

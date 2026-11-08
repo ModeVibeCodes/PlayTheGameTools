@@ -151,3 +151,18 @@ items. Explicit Refresh Contributions reads inventory OOC even away from camp.
 Run campfire_controls.py (imports contributions/monitor/smoke), campfire_editmode.py,
 campfire_movement.py, loot_sparkles.py and the builder. Native acceptance pending;
 owning docs contain exact paths. No shared core/Retail/SavedVariables changes.
+
+## Native-only camp duration and contribution visibility correction
+
+Supersedes the earlier countdown notes: all custom timer labels/drivers/settings
+are removed, leaving native tooltip duration. Legacy stored timer preferences are
+inert and preserved. Config is grouped General / Campfire Icon / Camp Buffs /
+Camp Contributions; status refresh is a secondary Tools button. Contribution
+construction now anchors before Position Manager registration; native unanchored
+GetCenter can be nil, unlike the original broad fixture. The scoped geometry
+regression now models that behavior. Preview has explicit sample icon/row/panel;
+contributions have independent scale/opacity/background and Reset Position.
+Run campfire_controls.py, campfire_editmode.py, campfire_movement.py,
+loot_sparkles.py, smoke.py and builder. Owner confirms detection, but native
+visual rendering/item dispatch and screenshots remain pending. See owning docs
+for exact paths. No shared core/Retail/SavedVariables/junction changes.

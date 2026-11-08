@@ -18,18 +18,17 @@ local function Field(t,key)
     local ok,v=Call(function() return t[key] end)
     if ok then return v end
 end
-C.ranges={contributionX={-10000,10000,1},contributionY={-10000,10000,1},timerWarningMinutes={1,60,1},timerCriticalMinutes={1,30,1},fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
+C.ranges={contributionX={-10000,10000,1},contributionY={-10000,10000,1},contributionScale={50,150,5},contributionOpacity={20,100,5},contributionBackgroundOpacity={0,100,5},fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
     opacity={20,100,5},backgroundOpacity={0,100,5},benefitsX={-10000,10000,1},benefitsY={-10000,10000,1},
     benefitsWidth={100,600,10},benefitsFontSize={10,24,1},benefitsScale={50,150,5},
     benefitsOpacity={20,100,5},benefitsBackgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
-C.defaults={headerGradient=false,timerGradient=false,dynamicTimerColor=true,colorStats=true,showContributionPopup=true,contributionX=0,contributionY=120,timerWarningMinutes=10,timerCriticalMinutes=2,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
+C.defaults={headerGradient=false,contributionScale=100,contributionOpacity=100,contributionBackgroundOpacity=95,colorStats=true,showContributionPopup=true,contributionX=0,contributionY=120,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
     showProfessionGuide=false,alwaysShow=false,showInCombat=false,locked=true,fontSize=14,
     iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
     benefitsScale=100,benefitsOpacity=100,benefitsBackgroundOpacity=0}
 C.colorDefaults={textColor={1,0.85,0.5},headerColor={1,0.58,0.12},headerEndColor={1,0.12,0.08},
-    timerColor={1,1,1},timerGoodColor={0.25,1,0.4},timerWarningColor={1,0.85,0.15},
-    timerCriticalColor={1,0.22,0.16},critColor={1,0.25,0.25},intColor={0.25,0.55,1}}
+    critColor={1,0.25,0.25},intColor={0.25,0.55,1}}
 function C.Initialize(db)
     if db.campfire==nil then db.campfire={} end
     local settings=db.campfire
@@ -40,7 +39,6 @@ function C.Initialize(db)
         assert(Public(v) and type(v)==type(default),"Invalid Campfire Monitor setting: "..key)
         if r then assert(Number(v,r[1],r[2]) and (v-r[1])%r[3]==0,"Invalid Campfire Monitor range: "..key) end
     end
-    assert(settings.timerCriticalMinutes<settings.timerWarningMinutes,"Red threshold must be below yellow threshold")
     for key,default in pairs(C.colorDefaults) do
         if settings[key]==nil then settings[key]={unpack(default)} end
         assert(Public(settings[key]) and type(settings[key])=="table","Invalid Campfire Monitor color: "..key)
@@ -66,7 +64,7 @@ function C:Scan()
             local kind=id==self.NEARBY and "near" or id==self.BENEFITS and "benefits" or
                 (id==self.WELCOMING or id==self.CRAFTING) and "welcoming" or nil
             if kind then
-                snapshot[kind]={index=index,instance=Field(aura,"auraInstanceID"),icon=Field(aura,"icon"),duration=Field(aura,"duration"),expiration=Field(aura,"expirationTime")}
+                snapshot[kind]={index=index,instance=Field(aura,"auraInstanceID"),icon=Field(aura,"icon")}
                 if kind=="near" then snapshot.nearby=true end
             end
         end
@@ -108,7 +106,7 @@ function C:TooltipLines(aura)
                             lower:find("%s*%[%s*spell%s*id%s*:%s*#?%s*%d+%s*%]%s*$") or
                             lower:find("%s+spell%s*id%s*:%s*#?%s*%d+%s*$")
                         if metadata then line=line:sub(1,metadata-1):match("^%s*(.-)%s*$") end
-                        if line~="" and not self:IsMetadata(line) and not self:IsTimerLine(line) and not self:IsBuffPreamble(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
+                        if line~="" and not self:IsMetadata(line) and not self:IsBuffPreamble(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
                     end
                 end
             end
@@ -179,35 +177,9 @@ function C.CompactLine(line)
     for _,fragment in ipairs(unknown) do results[#results+1]=fragment end
     return results
 end
--- Native public timing only. A private/missing expiration never becomes a
--- guessed hour-long timer. Edit/preview samples are explicitly labeled.
+-- Edit Mode supplies sample buffs only when no earned native benefits exist.
 function C:IsBuffSample()
     return self.previewing or (self.editing and not (self.snapshot or {}).benefits)
-end
-function C:Remaining()
-    if self:IsBuffSample() then return 2700 end
-    local aura=(self.snapshot or {}).benefits
-    if not aura or not Number(aura.expiration,0.001,1e12) or not Number(aura.duration,0.001,1e9) then return end
-    local ok,now=Call(GetTime)
-    if ok and Number(now,0,1e12) then return math.max(0,aura.expiration-now) end
-end
-function C:TimerColor(seconds)
-    if not self.db.dynamicTimerColor then return self.db.timerColor end
-    if not Number(seconds,0,1e12) then return self.db.timerColor end
-    if seconds<=self.db.timerCriticalMinutes*60 then return self.db.timerCriticalColor end
-    if seconds<=self.db.timerWarningMinutes*60 then return self.db.timerWarningColor end
-    return self.db.timerGoodColor
-end
-function C:TimerLabel()
-    local seconds=self:Remaining()
-    if seconds==nil then return "Time unavailable",nil end
-    local whole=math.ceil(seconds)
-    local text
-    if whole<=0 then text="Expired"
-    elseif whole>=3600 then text=string.format("%d:%02d:%02d remaining",math.floor(whole/3600),math.floor(whole/60)%60,whole%60)
-    else text=string.format("%02d:%02d remaining",math.floor(whole/60),whole%60) end
-    if self:IsBuffSample() then text="Preview: "..text end
-    return text,seconds
 end
 function C.Gradient(text,first,last)
     local output={}
@@ -246,7 +218,7 @@ function C:ColorBuffText(text)
     end
     return table.concat(lines,"\n")
 end
--- Strip native aura footer timing, not amounts such as Mana every 5 sec.
+-- Omit tooltip introduction/headings; keep native duration text below the stats.
 function C:IsBuffPreamble(line)
     local text=line:lower():gsub("folloing","following"):gsub("[%p]", " "):gsub("%s+", " "):match("^%s*(.-)%s*$")
     return text=="camp benefits" or text=="camp buffs" or
@@ -254,24 +226,6 @@ function C:IsBuffPreamble(line)
         text:match("^you gained the following camp benefits$") or
         text:match("^gained the following camp benefits$") or
         text:match("^the following camp benefits$")
-end
-function C:IsTimerLine(line)
-    local text=line:lower():gsub("[()]", ""):gsub("remaing", "remaining")
-        :gsub("%s+", " "):match("^%s*(.-)%s*$")
-    text=text:gsub("[%.!:%s]+$", "")
-    text=text:gsub("^time%s+remaining%s*:?%s*",""):gsub("^remaining%s+time%s*:?%s*","")
-        :gsub("^time%s+left%s*:?%s*",""):gsub("^remaining%s*:?%s*","")
-        :gsub("^duration%s*:?%s*",""):gsub("^expires?%s+in%s+","")
-        :gsub("%s+remaining[%.!]?%s*$",""):gsub("%s+left[%.!]?%s*$","")
-    if text:match("^%d+:%d%d$") or text:match("^%d+:%d%d:%d%d$") then return true end
-    local units={d=true,day=true,days=true,h=true,hr=true,hrs=true,hour=true,hours=true,
-        m=true,min=true,mins=true,minute=true,minutes=true,s=true,sec=true,secs=true,second=true,seconds=true}
-    local count=0
-    local remainder=text:gsub("(%d[%d%.,]*)%s*(%a+)",function(amount,unit)
-        if units[unit] then count=count+1;return "" end
-        return amount..unit
-    end):gsub("[%s,%.]+","")
-    return count>0 and remainder==""
 end
 function C:IsMetadata(line)
     local lower=line:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):lower()
@@ -296,28 +250,6 @@ end
 function C:HeaderText(text)
     return self:StyledText(text,self.db.headerColor,self.db.headerGradient and self.db.headerEndColor or self.db.headerColor,self.db.headerGradient)
 end
-function C:UpdateTimerText()
-    local label,seconds=self:TimerLabel()
-    local colored=self:StyledText(label,self.db.timerColor,self:TimerColor(seconds),self.db.timerGradient)
-    for _,f in pairs({self.frame,self.benefitsFrame}) do
-        if f and f.buffTimer and f:IsShown() and f.buffTimer:IsShown() then f.buffTimer:SetText(colored) end
-    end
-end
-function C:UpdateTimerDriver()
-    if not self.timerDriver then self.timerDriver=CreateFrame("Frame") end
-    self.timerDriver:SetScript("OnUpdate",nil)
-    local visible=false
-    for _,f in pairs({self.frame,self.benefitsFrame}) do
-        if f and f:IsShown() and f.buffTimer:IsShown() then visible=true end
-    end
-    if not visible or self:IsBuffSample() or self:Remaining()==nil then return end
-    local elapsed=0
-    self.timerDriver:SetScript("OnUpdate",function(_,dt)
-        elapsed=elapsed+dt
-        if elapsed>=1 then elapsed=0;self:UpdateTimerText() end
-    end)
-end
-
 function C:BuildBenefitsText()
     local s=self.snapshot or {}
     if self:IsBuffSample() then return "2% Crit\n8% Stats" end

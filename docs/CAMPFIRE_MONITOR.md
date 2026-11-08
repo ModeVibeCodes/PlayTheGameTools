@@ -83,274 +83,72 @@ display is click-through. Dragging/settings changes and preview require OOC.
 Preview is explicitly synthetic and ends on tab navigation, page close, combat
 or master disable. It is never stored as a real aura or saved enabled state.
 
-## Controls
+## Current controls and duration behavior
 
-Within **Campfire Monitor**:
+The owner still saw a duplicate timer and requested removal of the addon timer.
+There is now **no custom countdown label, timing loop or timer color/threshold
+control**. Native tooltip duration text remains under the stats. The reader still
+removes the gained-benefits intro and spell-ID metadata. Stored legacy timer
+preferences are left untouched but are inert; no SavedVariables file is edited.
 
-- **Enable Campfire Monitor** — independent opt-in beneath the parent master.
-- **Display Preview → Preview / Stop Preview** — synthetic labeled sample.
-- **Show Campfire Icon**, **Show Status Text**, **Show Your Camp Benefits**,
-  **Show Nearby Native Details**, **Show Profession Guide**.
-- **Always Show Monitor** — permits absent/unknown status and earned buffs to
-  remain visible away from a camp. Otherwise it requires proximity or joined earned buffs to display.
-- **Show In Combat** — optional public-only updates; off by default.
-- **Font Size**, **Icon Size**, **Monitor Width**, **Monitor Scale**,
-  **Monitor Opacity**, **Background Opacity**, **Text Color**.
-- **Lock Campfire Monitor**, **Horizontal Offset**, **Vertical Offset**,
-  **Monitor Position → Reset Position**. Unlock also keeps the display visible
-  for placement. Lock restores click-through behavior.
+Customization groups are compact and separated by window:
 
-If both icon and status text are switched off, status text remains visible to
-avoid an enabled indicator with no visible content. The profession guide is
-English reference text; native bonus descriptions retain the client's language.
+- **General:** enable, combat behavior, status, Tools → Open Edit Mode / Refresh
+  Status, Preview & Placement → Preview / Move Windows, shared text/header colors
+  and optional Header Gradient. Refresh Status is a small secondary button;
+  there is no Native Camp Data field. Header styling serves buffs/contributions.
+- **Campfire Icon:** icon/status/detail/guide visibility, lock, icon and status
+  text size, window width/scale/opacity/background, X/Y and Reset Position.
+- **Camp Buffs:** earned bonus visibility, compact formatting, detach/lock,
+  typed stat colors, Crit/Int color pickers, buff font size, detached window
+  width/scale/opacity/background/X/Y and Reset Buff Position. Buff font size
+  applies in joined mode too; joined size/background/position share the icon frame.
+- **Camp Contributions:** popup switch, Detected Kits with small Refresh button,
+  Open Contributions / Preview Contributions, Edit Contributions / Reset Position,
+  and its own scale/opacity/background. See [contributions](CAMP_CONTRIBUTIONS.md).
 
-## Static validation and native checklist
+Toggle grids use two columns, wrapping to one on narrow layouts. Color **Pick**
+opens the native wheel; hex entry remains available. Crit red/Int blue and distinct
+other stat colors remain defaults. Turning Color Stats by Type off uses shared
+Text Color. Optional header gradient defaults off. The icon stays centered above
+Campfire Nearby / No Nearby Campfire; no unsupported yards or arrow.
 
-Run `python tests/campfire_monitor.py`, `python tests/loot_sparkles.py`,
-`python tests/smoke.py` and `python tools/build_release.py`. Campfire fixtures
-exercise tab switching, independent opt-ins, native aura/tooltip extraction,
-restricted/unknown/absent data, combat, preview cleanup, position, saved settings
-and profile validation. Mocks cannot establish native rendering or support.
-
-**Native campfire validation and screenshots: pending.** Real before/after tab
-captures plus an actual nearby-fire/benefits display are required for the PR;
-exclude other players' names and chat.
-
-1. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Loot Sparkles / Campfire Monitor.
-   **Action:** `/reload`, open `/ptg`, click each tab, confirm existing sparkle
-   preferences; leave Enable Loot Sparkles as desired. **Required state:** OOC,
-   live-linked feature source; fully restart once if new TOC files are not seen.
-   **Confirmation:** exactly the two feature tabs, existing loot functionality,
-   no missing-file errors, and a Campfire Monitor tab with the controls above.
-2. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → header unlabeled toggle; Campfire Monitor → Enable Campfire
-   Monitor / Display Preview → Preview. **Action:** enable the parent master and
-   monitor, click Preview then Stop Preview. **Required state:** OOC.
-   **Confirmation:** readable labeled synthetic icon/text/benefit sample; Stop
-   Preview returns to live status. The sample is not claimed as detected benefits.
-3. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Show Your Camp Benefits / Show Nearby Native
-   Details. **Action:** approach a camp until Blizzard shows Campfire Nearby;
-   sit/craft normally, compare the monitor against native Camp Benefits once
-   earned, then walk away. **Required state:** OOC, master/monitor on, preview off,
-   Always Show Monitor off and monitor locked. **Confirmation:** icon/text appears
-   only for confirmed proximity; earned details match readable native tooltip
-   lines; walking out of proximity clears the nearby claim. Joined earned buffs remain
-   visible; separate mode keeps the earned-buff list visible independently.
-4. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Always Show Monitor / Show Profession Guide.
-   **Action:** enable both and inspect away from a camp. **Required state:** OOC,
-   monitor enabled, preview off. **Confirmation:** No nearby campfire is separate
-   from Your Camp Benefits; the twelve-profession list is titled Profession guide
-   (possible features), never presented as this campsite's detected inventory.
-5. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Appearance / Position → Lock Campfire
-   Monitor / Monitor Position → Reset Position. **Action:** adjust size, color,
-   opacity and width, unlock/drag/relock, then use Reset Position if desired.
-   **Required state:** OOC. **Confirmation:** readable non-overlapping display,
-   correct drag/save/reset behavior and click-through when locked. Review long
-   tooltip/guide wrapping on your actual resolution and both interface themes.
-6. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Show In Combat; Loot Sparkles → Enable Loot
-   Sparkles; Campfire Monitor → Enable Campfire Monitor. **Action:** first leave
-   combat display off and enter/exit safe ordinary combat; later, if desired,
-   enable Show In Combat OOC and repeat. Toggle each feature independently and
-   finally the parent master. **Required state:** safe encounter; configure OOC.
-   **Confirmation:** default monitor pauses in combat and resumes OOC; optional
-   unreadable data is not reported as nearby; no taint/blocked-action errors.
-   Each feature switch affects itself; master off stops both. Unavailable native
-   restriction scenarios remain pending rather than manufactured.
-7. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor; header → Reload. **Action:** save distinct
-   options/position, reload OOC, then log out/in normally. **Required state:** OOC,
-   preserve existing settings. **Confirmation:** preferences/position persist;
-   camp status is freshly read and no synthetic preview survives. Changing tabs
-   or closing the settings also ends Preview.
-
-Static checkpoint: 93 Lua chunks compile/load; smoke, campfire, existing Loot
-Sparkles and Dungeon Loot UI regression suites pass. The deterministic builder
-produces 168 package files. These are source/package checks, not native campfire
-acceptance. Local live-file paths are verified through the preserved junction.
-
-
-## Movable compact buff windows — November 7, 2026
-
-The owner reported the window was not movable and requested short earned-buff
-lines, optionally joined or detached. Saved locks prevented normal dragging;
-aura/font redraws could also reapply anchors mid-drag. Move Windows and directly
-draggable Preview temporarily override mouse locks. Rendering now leaves dragged
-frames alone until drag stop saves their coordinates. Existing settings are
-retained; placement mode is session-only and is canceled by combat/master disable.
-
-**Compact Buff Text** defaults on. Native amounts produce lines such as 2% Crit,
-8% Stats, 12 Stamina and 4 Int. Unrecognized or ambiguous descriptions stay in
-their original form; no guessed amounts or guide values appear as earned buffs.
-Turning Compact Buff Text off restores full readable native descriptions.
-
-**Separate Buff Window** defaults off. Joined mode keeps earned buffs inside the
-monitor after leaving the fire, with the proximity status updated independently.
-Detached mode keeps a simple buff-only list while its earned aura persists, even
-when the proximity monitor hides. The list defaults to a transparent background
-and saves its own position independently of the monitor.
-
-New controls in Campfire Monitor:
-
-- Display → Compact Buff Text / Separate Buff Window.
-- Position → Window Placement → Move Windows / Finish Moving. Right-click either
-  window to finish. Preview windows are directly draggable even when locked.
-- Buff Window → Lock Buff Window / Buff Text Size / Buff Window Width / Buff
-  Window Scale / Buff Window Opacity / Buff Background Opacity / Buff Horizontal
-  Offset / Buff Vertical Offset / Buff Window Position → Reset Buff Position.
-
-Existing runtime files only: `/reload` loads this revision. No SavedVariables
-files or junctions were edited. Run `python tests/campfire_movement.py` (includes
-smoke and existing campfire fixtures), `python tests/loot_sparkles.py` and the
-release builder. Native movement/compact-text screenshots remain pending.
-
-1. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Position → Window Placement → Move Windows.
-   **Action:** `/reload`, click Move Windows, drag the monitor by its body/handle,
-   then right-click it or click Finish Moving. Preview is directly draggable too.
-   **Required state:** OOC; live feature enabled or explicit placement/preview.
-   **Confirmation:** smooth movement despite aura updates, saved position after
-   reload, and click-through when placement ends and the saved lock is on.
-2. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Display → Show Your Camp Benefits / Compact
-   Buff Text / Separate Buff Window. **Action:** enable all three after earning
-   camp buffs. **Required state:** OOC, Camp Benefits present, Preview off.
-   **Confirmation:** actual native amounts appear as short lines, such as 2% Crit
-   and 8% Stats when those are the earned bonuses. The detached list has no nearby
-   icon and remains after leaving the camp. Unreadable data never reuses stale
-   amounts; unfamiliar text remains readable.
-3. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Position → Window Placement → Move Windows;
-   Buff Window → Buff Window Position → Reset Buff Position. **Action:** move
-   both windows independently, finish, join/detach again, and reload OOC.
-   **Required state:** OOC, separate mode on while placing the buff window.
-   **Confirmation:** each position persists independently; joined mode shows one
-   window; Reset Buff Position affects only the detached list. Combat ends
-   placement and stops both windows' dragging without protected actions.
-
-
-## Shared Edit Mode, buff colors and native timer — November 7, 2026
-
-Both configured elements now register with the shared Position Manager:
-**Campfire Monitor** and, in separate mode, **Camp Buffs**. Header Edit Mode and
-Campfire Monitor → Position → Addon Edit Mode → Open Edit Mode open the existing
-workspace. Its real handles, coordinate inputs, snapping and Exit / Save apply
-to these elements. Joined mode has one element; disabled/unconfigured elements
-are not selectable. Edit placeholders are labeled Preview when no live buff is
-available. Existing flat offsets initialize the manager's records only when no
-saved managed record exists; subsequent changes keep the existing controls in
-sync. Positions made while disabled also survive activation/reload. Shared
-Edit Mode infrastructure and other modules were not modified.
-
-Buff presentation:
-
-- Header **Camp Buffs**, colored per character from orange to red.
-- Remaining time directly underneath. It fades from white into the current
-  urgency color: green normally, yellow at/below 10 minutes, red at/below
-  2 minutes. Buff Timer → Yellow Below (Minutes) / Red Below (Minutes) configure
-  these defaults; red must be lower than yellow. At expiry the label is Expired.
-- Native `duration` and `expirationTime` fields plus public GetTime determine
-  time left. Restricted/missing timing shows Time unavailable; no assumed hour
-  or fabricated countdown. Static edit/preview samples say Preview.
-- Crit red, Int blue; Stats purple, Stamina green, Strength orange, Spirit cyan,
-  Armor blue-grey, AP amber, healing mint, mana light blue, rested XP gold and
-  resistances pink. General Text Color remains the fallback for unknown rows
-  and the monitor's caption/details; requested headings/stat colors override it.
-- Standalone spell-ID metadata, ID side columns and inline spell-ID suffixes
-  are removed before compact/full native-text display.
-
-The icon is centered above its centered status caption. Readable states are
-**Campfire Nearby** / **No Nearby Campfire**; unknown data says Campfire Status
-Unavailable. Existing Always Show Monitor still controls away-from-camp
-visibility. No supported camp object position was verified: the inspected
-Forever Forge source explicitly notes that Campfire Nearby has no coordinates,
-and the native aura API supplies no destination. No yards or directional arrow
-is displayed; the player's own location/radius is not substituted for a camp.
-
-`tests/campfire_editmode.py` covers shared handles/coordinates/dragging, position
-persistence, countdown updates and exact green/yellow/red boundaries, gradients,
-stat colors, ID removal and centered captions. Existing campfire movement,
-monitor, sparkle and smoke checks remain relevant. Native rendering, countdown
-field availability, Edit Mode movement and screenshots are still pending.
-
-1. **Navigation:** Play The Game Tools → header → Edit Mode; Campfire Monitor /
-   Camp Buffs handles; Edit Mode → X Position / Y Position → Exit / Save.
-   **Action:** `/reload`, enable Gameplay Enhancements and Campfire Monitor, turn
-   Separate Buff Window on, enter Edit Mode, drag each labeled handle and adjust
-   coordinates, then Exit / Save and reload. **Required state:** OOC.
-   **Confirmation:** both configured elements are selectable and move/save through
-   the existing workspace; joining the list removes the extra Camp Buffs handle.
-   No drag jumps on aura or timer updates, and other editable elements still work.
-2. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Display → Show Your Camp Benefits;
-   Display Preview → Preview. **Action:** inspect Preview, stop it and compare
-   with earned live buffs. **Required state:** OOC, enabled feature, actual earned
-   buffs for live comparison. **Confirmation:** Camp Buffs heading above remaining
-   time and colored stat lines; Crit red, Int blue and other stats distinct. No
-   spell-ID rows/suffixes. Sample time is labeled Preview; unavailable native
-   timing never becomes an assumed countdown.
-3. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Buff Timer → Yellow Below (Minutes) / Red
-   Below (Minutes). **Action:** compare the live timer with the native buff and
-   observe the applicable thresholds; adjust them OOC if useful, then restore
-   desired values. **Required state:** readable native timing; red below yellow.
-   **Confirmation:** once-per-second time updates; white-to-green normally,
-   white-to-yellow at warning and white-to-red at low remaining time. Unavailable
-   threshold/native scenarios remain pending rather than manufactured.
-4. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
-   Enhancements → Campfire Monitor → Display → Always Show Monitor / Show Campfire
-   Icon / Show Status Text. **Action:** enable these, approach and leave an actual
-   campfire. **Required state:** OOC, preview off. **Confirmation:** centered icon
-   with the matching centered nearby/absent caption underneath; no guessed yards
-   or arrow. Unknown native state remains explicitly unavailable.
-
-## Timer footer and quick contributions
-
-Native duration-only footer rows (clock or English time-unit/remaining forms)
-are filtered from the bonus list. The Camp Buffs countdown subheading remains
-the single timer in both joined/separate modes. Stat prose such as mana gained
-every 5 sec stays visible; unfamiliar localized prose is retained conservatively.
-Ready carried profession kits now have a separate movable action popup; see
-[Camp Contributions](CAMP_CONTRIBUTIONS.md) for APIs, limits and exact native tests.
-
-## Tooltip cleanup, optional colors and compact controls
-
-Owner reported the first footer filter still showed native boilerplate. The
-benefit reader now also removes the "You have gained the following camp benefits"
-intro and parenthesized hour/footer variants, including the reported "remaing"
-spelling. Periodic bonus prose remains. The only title is Camp Buffs and the only
-remaining-time display is its subheading; both compact and full-text modes filter
-boilerplate. No native buff tooltip is modified.
-
-Display toggles and sparkle toggles now share responsive two-column grids rather
-than one row each (one column on narrow layouts). Text Colors offers the existing
-native **Pick** color wheel and RGB entry for text, header/end, timer, urgency
-states, Crit and Int. **Header Gradient** and **Timer Gradient** are optional and
-default off. **Dynamic Timer Color** keeps the editable green/yellow/red states;
-turn it off to use the chosen Timer Color uniformly. **Color Stats by Type**
-retains distinct stats; turn it off to use Text Color for every stat. Header and
-contribution title use the same header style. Long help is condensed to TLDR rows.
+## Exact native checks
 
 1. **Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
-   Monitor → Text Colors → Header Color → Pick; Header Gradient / Timer Gradient.
-   **Action:** open Pick, choose/cancel a color, compare solid and gradient text.
-   **Required state:** OOC, monitor enabled, Preview or earned buffs visible.
-   **Confirmation:** native color wheel opens; the header uses the chosen solid
-   color unless its gradient is enabled. Cancel restores the previous color.
-2. **Navigation:** same tab → Text Colors → Timer Color → Pick; Dynamic Timer
-   Color / Color Stats by Type / Crit Color / Int Color.
-   **Action:** choose timer/stat colors, compare dynamic versus uniform timer and
-   typed versus uniform stats. **Required state:** OOC, preview or readable live
-   timing/earned bonuses. **Confirmation:** choices apply and survive reload;
-   typed Crit/Int use their chosen colors, other typed stats stay distinct.
-3. **Navigation:** same tab → Display → Compact Buff Text / Separate Buff Window.
-   **Action:** inspect earned buff text with both toggles on/off.
-   **Required state:** readable real Camp Benefits tooltip, Preview off.
-   **Confirmation:** Camp Buffs is the sole title, the timer is directly below it,
-   and no gained-benefits sentence or bottom hours-remaining footer appears.
+   Monitor → General → Enable Campfire Monitor; Camp Buffs → Show Your Camp
+   Benefits / Compact Buff Text / Separate Buff Window.
+   **Action:** /reload, enable parent/monitor, inspect earned buffs in compact/full
+   and joined/separate modes. **Required state:** OOC, actual earned Camp Benefits,
+   preview off. **Confirmation:** Camp Buffs followed by stats and native tooltip
+   duration only; no extra addon countdown above the list or update loop.
+2. **Navigation:** same tab → General → Preview & Placement → Preview; General →
+   Header Color → Pick / Header Gradient; Camp Buffs → Crit Color / Int Color.
+   **Action:** preview and change/cancel colors. **Required state:** OOC, enabled
+   parent/monitor. **Confirmation:** wheel works, samples have no timer, and
+   chosen colors/gradient apply and survive reload.
+3. **Navigation:** same tab → Campfire Icon → Icon Size / Status Text Size / Icon
+   Window Scale; Camp Buffs → Buff Text Size / Buff Window Scale / Separate Buff Window.
+   **Action:** adjust each window's controls. **Required state:** OOC, preview or
+   earned buffs visible. **Confirmation:** icon controls style the monitor; buff
+   font works joined or detached, and detached styling is independent.
+4. **Navigation:** same tab → General → Tools → Open Edit Mode; Campfire Monitor /
+   Camp Buffs / Camp Contributions handles; Edit Mode → X Position / Y Position →
+   Exit / Save. **Action:** drag/adjust eligible elements, save and reload.
+   **Required state:** OOC, monitor enabled, Separate Buff Window on for buff handle,
+   Show Contribution Popup on for contribution handle.
+   **Confirmation:** saved positions remain; contribution sample is visible/inert,
+   joined buffs have no separate handle, and aura refreshes do not interrupt drag.
 
-New native rendering/color-wheel/preview acceptance and screenshots are pending.
+## Validation and known limits
+
+tests/campfire_controls.py includes a scoped real-client-like geometry fixture:
+unanchored top-level frames have no GetCenter until positioned. It verifies the
+contribution preview constructs only after a valid anchor, with icon/title/size,
+appearance controls, handles/header drag, detected kits and native picker intent.
+tests/campfire_editmode.py verifies the absence of a custom timer/driver, native
+duration retained once, joined/detached/full-text behavior, stat styling and saved
+positions. Also run campfire_movement.py, loot_sparkles.py, smoke.py and the builder.
+Static tests do not establish native rendering or hardware item use. Owner confirms
+contribution detection is correct; visual correction and item placement still need
+in-game confirmation. Screenshots: pending.

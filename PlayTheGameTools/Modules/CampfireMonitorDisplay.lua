@@ -101,7 +101,6 @@ function C:HideDisplays()
     self.hiding=true
     for _,f in pairs({self.frame,self.benefitsFrame}) do if f then f:Hide() end end
     self.hiding=nil
-    if self.timerDriver then self.timerDriver:SetScript("OnUpdate",nil) end
 end
 function C:CreateDisplay(separate)
     local key=separate and "benefitsFrame" or "frame"
@@ -117,7 +116,7 @@ function C:CreateDisplay(separate)
     f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     f:Hide()
     f.icon=f:CreateTexture(nil,"ARTWORK");f.icon:SetTexCoord(0.06,0.94,0.06,0.94)
-    for _,name in ipairs({"text","caption","buffTitle","buffTimer","details","moveLabel"}) do
+    for _,name in ipairs({"text","caption","buffTitle","details","moveLabel"}) do
         f[name]=f:CreateFontString(nil,"OVERLAY","GameFontHighlight")
         f[name]:SetJustifyH("CENTER");f[name]:SetWordWrap(true)
     end
@@ -178,11 +177,9 @@ function C:PaintDisplay(f,separate)
         f.caption:SetTextColor(unpack(db.textColor));Row(f.caption,self:MonitorStatus(),size)
     else f.caption:Hide() end
     if db.showBenefits and (separate or not db.separateBenefits) and (s.benefits or self:IsBuffSample() or self.placing) then
-        Row(f.buffTitle,self:HeaderText("Camp Buffs"),size+3)
-        local timer,seconds=self:TimerLabel()
-        Row(f.buffTimer,self:StyledText(timer,db.timerColor,self:TimerColor(seconds),db.timerGradient),math.max(10,size-1))
-        Row(f.text,self:ColorBuffText(self:BuildBenefitsText()),size)
-    else f.buffTitle:Hide();f.buffTimer:Hide();f.text:Hide() end
+        Row(f.buffTitle,self:HeaderText("Camp Buffs"),db.benefitsFontSize+3)
+        Row(f.text,self:ColorBuffText(self:BuildBenefitsText()),db.benefitsFontSize)
+    else f.buffTitle:Hide();f.text:Hide() end
     local details=not separate and self:BuildText() or ""
     if details~="" then f.details:SetTextColor(unpack(db.textColor));Row(f.details,details,size)
     else f.details:Hide() end
@@ -205,6 +202,5 @@ function C:Render()
     local showBuffs=enabled and db.showBenefits and db.separateBenefits and (earned or self.editing or self.previewing or self.placing)
     if showBuffs then self:PaintDisplay(self:CreateDisplay(true),true)
     elseif self.benefitsFrame then self.benefitsFrame:Hide() end
-    self:UpdateTimerDriver()
     self.rendering=nil
 end
