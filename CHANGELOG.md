@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Merged the Class Training and Dungeon Loot icons into one Quick Actions button.
+  Clicking it opens the icons in a circle around it; clicking an icon closes the
+  ring. Only the button moves, through Edit Mode. It starts where the Class
+  Training icon was; older icon positions and the Dungeon Loot lock preference
+  stay in saved settings unused. The Lock Shortcut Icon control is removed.
+
 - Edit Mode's Exit / Save button is now Exit, since positions are written as they
   change. Exit keeps a typed coordinate that was not applied yet and can no longer
   be stranded by a module error. Combat ends Edit Mode without reopening settings.

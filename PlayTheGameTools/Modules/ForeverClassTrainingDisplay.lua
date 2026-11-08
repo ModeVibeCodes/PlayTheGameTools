@@ -19,68 +19,18 @@ function M:OpenTraining(section)
     if page and section then page:SelectSectionTab(section) end
 end
 
-local function number(value)
-    local G = P.NewGuard(_G)
-    return G:Public(value) and type(value)=="number" and value==value and math.abs(value)<10000
-end
-
 function M:CreateShortcut()
     if self.shortcut or not self:OutsideCombat() then return end
-    local button = CreateFrame("Button", nil, UIParent)
-    button:SetSize(40,40); button:SetFrameStrata("MEDIUM"); button:SetClampedToScreen(true)
-    local pos = self.db.shortcutPosition
-    local x,y = -180,-140
-    if type(pos)=="table" and number(pos.x) and number(pos.y) then x,y=pos.x,pos.y end
-    button:SetPoint("CENTER",UIParent,"CENTER",x,y)
-    local icon = button:CreateTexture(nil,"ARTWORK"); icon:SetSize(32,32); icon:SetPoint("CENTER");button.icon=icon
-    icon:SetTexture("Interface\\Icons\\INV_Misc_Book_09")
-    icon:SetTexCoord(0.07,0.93,0.07,0.93)
-    if icon.AddMaskTexture and button.CreateMaskTexture then
-        local mask=button:CreateMaskTexture(); mask:SetAllPoints(icon)
-        mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"); icon:AddMaskTexture(mask)
-        button.mask=mask
-    end
-    button.openGlow=button:CreateTexture(nil,"BACKGROUND")
-    button.openGlow:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-    button.openGlow:SetSize(44,44);button.openGlow:SetPoint("CENTER")
-    button.openGlow:SetVertexColor(0.25,0.9,0.4,0.2);button.openGlow:Hide()
-    -- Native owned textures form a thin circular green ring, no bundled artwork.
-    button.ring={}
-    for i=1,48 do
-        local angle=i*math.pi/24;local dot=button:CreateTexture(nil,"OVERLAY")
-        dot:SetSize(1.5,1.5);dot:SetPoint("CENTER",button,"CENTER",18*math.cos(angle),18*math.sin(angle))
-        dot:SetColorTexture(0.25,0.9,0.4,1)
-        button.ring[i]=dot
-    end
-    button:SetMovable(true);button:RegisterForDrag("LeftButton");button:RegisterForClicks("LeftButtonUp")
-    button:SetScript("OnDragStart",function()
-        local G=P.NewGuard(_G);local ok,shift=G:Call(IsShiftKeyDown)
-        if self:OutsideCombat() and ok and shift==true then self:CloseTrainingFlyout();button.wasDragged=true;button.moving=true;button:StartMoving() end
-    end)
-    button:SetScript("OnDragStop",function()
-        button:StopMovingOrSizing();button.moving=false
-        C_Timer.After(0,function() button.wasDragged=nil end)
-        if not self:OutsideCombat() then return end
-        local x,y=button:GetCenter();local px,py=UIParent:GetCenter()
-        if number(x) and number(y) and number(px) and number(py) then
-            self.db.shortcutPosition={x=x-px,y=y-py}
-            button:ClearAllPoints();button:SetPoint("CENTER",UIParent,"CENTER",x-px,y-py)
-        end
-    end)
-    button:SetScript("OnClick",function()
-        if button.wasDragged then button.wasDragged=nil;return end
-        self:ToggleTrainingFlyout()
-    end)
-    button:SetScript("OnEnter",function()
-        if GameTooltip then
-            GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Class Training")
-            GameTooltip:AddLine("Click to open · Shift-drag to move",0.8,0.8,0.8);GameTooltip:Show()
-        end
-    end)
-    button:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
-    button:SetScript("OnHide",function() self:CloseTrainingFlyout() end)
-    self.shortcut=button
-    self:ApplyShortcutSize()
+    self.shortcut=addon.QuickActions:AddAction("classTraining",{order=10,texture="Interface\\Icons\\INV_Misc_Book_09",
+        color={0.25,0.9,0.4},title="Class Training",hint="Click to open.",
+        onClick=function() self:ToggleTrainingFlyout() end})
+    if self.shortcut then self:ApplyShortcutSize() end
+end
+
+-- The popout outlives the ring, so losing the icon closes it explicitly.
+function M:SetShortcutAvailable(available)
+    addon.QuickActions:SetAvailable("classTraining",available)
+    if not available then self:CloseTrainingFlyout() end
 end
 
 function M:ShortcutSize()
@@ -92,12 +42,9 @@ function M:ApplyShortcutSize()
     if not self.shortcut or not self:OutsideCombat() then return end
     local b=self.shortcut;local size=self:ShortcutSize()
     if b.appliedSize==size then return end
-    local diameter=size*0.9-2 -- inset from the ring's inner edge at every supported size
-    if not b.mask then diameter=diameter/math.sqrt(2) end
-    b.appliedSize=size;b:SetSize(size,size);b.icon:SetSize(diameter,diameter);b.openGlow:SetSize(size+4,size+4)
-    for i,dot in ipairs(b.ring) do
-        local angle=i*math.pi/24;dot:ClearAllPoints();dot:SetPoint("CENTER",b,"CENTER",size*0.45*math.cos(angle),size*0.45*math.sin(angle))
-    end
+    b.appliedSize=size
+    addon.QuickActions.SizeIcon(b,size)
+    addon.QuickActions:Layout()
 end
 
 function M:PopupValue(key)
@@ -369,8 +316,8 @@ end
 function M:SyncTrainingDisplays()
     if not self.active or not self:OutsideCombat() then return end
     if self.snapshot and self.snapshot.class==P.class then
-        self:CreateShortcut();self:ApplyShortcutSize();self.shortcut:SetShown(self.db.showShortcut~=false)
-    elseif self.shortcut then self.shortcut:Hide() end
+        self:CreateShortcut();self:ApplyShortcutSize();self:SetShortcutAvailable(self.db.showShortcut~=false)
+    else self:SetShortcutAvailable(false) end
     if self.trainingFlyout and self.trainingFlyout:IsShown() then self:RenderTrainingFlyout() end
     -- The level event owns the celebration; readable training data only supplies optional rows.
     if self.pendingDing then

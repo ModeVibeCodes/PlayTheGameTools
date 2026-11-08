@@ -100,7 +100,6 @@ function M:OnEnable()
         if event == "PLAYER_REGEN_DISABLED" then
             self.dirty=true
             self:CloseTrainingFlyout()
-            if self.shortcut and self.shortcut.moving then self.shortcut:StopMovingOrSizing();self.shortcut.moving=false end
             if self.dingWindow then self.dingWindow:Hide() end
             return
         end
@@ -135,9 +134,8 @@ function M:OnDisable()
     self.pendingDing = nil
     self.pendingGuildDing=nil;self.guildDingDraft=nil;self.guildDingStatus=nil
     self:ResetLevelTime()
-    if self.shortcut then self.shortcut:Hide() end
+    self:SetShortcutAvailable(false)
     if self.dingWindow then self.dingWindow:Hide() end
-    self:CloseTrainingFlyout()
     if self.eventFrame then self.eventFrame:UnregisterAllEvents(); self.eventFrame:SetScript("OnEvent", nil) end
     if self.UpdateTrainingPage then self:UpdateTrainingPage() end
 end

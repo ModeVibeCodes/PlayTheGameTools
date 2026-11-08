@@ -19,10 +19,11 @@ lua.execute(r'''
     function IsAltKeyDown() return false end
     addon:SetModuleEnabled('dungeonLoot',true);addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
     M:Navigate(nil,'general')
-    local b=M.shortcut;local e=pm.elements.dungeonLootShortcut
-    assert(b and e and b.mouse and b.icon and #b.ring==48)
+    local b=M.shortcut;local e=pm.elements.quickActionsLauncher;local launcher=addon.QuickActions.launcher
+    assert(b and e and b.mouse and launcher.mouse and b.icon and #b.ring==48)
     assert(b.icon.texture=='Interface\\Buttons\\UI-GroupLoot-Dice-Up' and b.icon:GetWidth()>0,'native loot icon is explicitly sized')
-    assert(e.label=='Dungeon Loot Quick Icon' and e.draggable and e.editMode and not e.supportsAnchoring)
+    assert(e.label=='Quick Actions' and e.draggable and e.editMode and not e.supportsAnchoring)
+    assert(not pm.elements.dungeonLootShortcut,'only the launcher is an Edit Mode element')
     local function Click(label)
         if label=='Set Keybinding' then M.page.bindingControl.set.scripts.OnClick(M.page.bindingControl.set);return end
         for _,slot in ipairs(M.page.rootPane.slots) do if slot.visible and slot.button.label:GetText()==label then
@@ -34,15 +35,16 @@ lua.execute(r'''
     M.page.iconSize.slider:SetValue(64);M.page.iconOpacity.slider:SetValue(60)
     assert(M.db.shortcutSize==64 and b:GetWidth()==64 and b.alpha==.6)
     assert(not M:SetShortcutOption('shortcutSize',73) and not M:SetShortcutOption('shortcutOpacity',0))
-    assert(M:EditShortcutPosition() and addon.editMode and pm.selected=='dungeonLootShortcut')
+    assert(M:EditShortcutPosition() and addon.editMode and pm.selected=='quickActionsLauncher')
     assert(e.decoration.handle:IsShown())
     assert(pm:SetOffsets(e.id,120,-80))
-    assert(M.db.shortcutPosition.x==120 and M.db.shortcutPosition.y==-80,'managed coordinates sync legacy shortcut preferences')
-    b.scripts.OnClick(b);assert(addon.editMode,'edit clicks select instead of opening the browser')
-    b.centerX=700;b.centerY=500
-    b.scripts.OnDragStart(b);assert(e.dragging)
-    b.scripts.OnDragStop(b);assert(not e.dragging)
-    addon:SetEditMode(false);assert(b.mouse,'shared Edit Mode must not leave the launcher mouse-disabled')
+    assert(addon.db.positions.quickActionsLauncher.x==120 and addon.db.positions.quickActionsLauncher.y==-80)
+    assert(M.db.shortcutPosition.x==-230 and M.db.shortcutPosition.y==-140,'legacy icon position left untouched')
+    launcher.scripts.OnClick(launcher);assert(addon.editMode,'edit clicks select instead of opening the ring')
+    launcher.centerX=700;launcher.centerY=500
+    launcher.scripts.OnDragStart(launcher);assert(e.dragging)
+    launcher.scripts.OnDragStop(launcher);assert(not e.dragging)
+    addon:SetEditMode(false);assert(launcher.mouse,'shared Edit Mode must not leave the launcher mouse-disabled')
     M:Navigate(nil,'general')
     Click('Set Keybinding')
     local capture=M.bindingCapture
@@ -76,17 +78,17 @@ lua.execute(r'''
     assert(not bindings['CTRL-D'] and not bindings['ALT-D'] and bindings.F1=='UNRELATED' and M:ShortcutBindingLabel()=='Not bound' and M.page.bindingControl.field:GetText()=='Not bound')
     Click('Set Keybinding');M.page:Hide();assert(not capture:IsShown() and not capture.keyboard)
     M.page:Show();Click('Set Keybinding');addon:SetModuleEnabled('dungeonLoot',false)
-    assert(not capture.keyboard and not b:IsShown() and not e.editMode)
+    assert(not capture.keyboard and not b:IsShown())
 ''')
 encoded=lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored,_=load(encoded)
 restored.execute(r'''
     local M=addon.DungeonLoot
     assert(M.db.shortcutSize==64 and M.db.shortcutOpacity==60)
-    local before=addon.ProfileCodec.Copy(addon.db.positions.dungeonLootShortcut)
+    local before=addon.ProfileCodec.Copy(addon.db.positions.quickActionsLauncher)
     addon:SetModuleEnabled('dungeonLoot',true)
     assert(M.shortcut:GetWidth()==64 and M.shortcut.alpha==.6)
-    local position=addon.PositionManager:GetPosition('dungeonLootShortcut')
+    local position=addon.PositionManager:GetPosition('quickActionsLauncher')
     assert(position.x==before.x and position.y==before.y,'existing managed record survives reload')
     local candidate=addon.ProfileCodec.Copy(addon.db);candidate.modules.dungeonLoot.shortcutSize=23
     assert(not addon.ProfileValidation:Validate(candidate),'invalid imported icon size rejected')

@@ -25,7 +25,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 - **Class Training:** automatically selects your current class from all nine
   Forever classes. Browse To Learn, Upcoming, Learned and Directory; refresh from
   your spellbook and trainer interactions; see reference training costs; use a
-  movable shortcut and scrollable training popout. Level-up alerts have a preview
+  shortcut in the Quick Actions ring and scrollable training popout. Level-up alerts have a preview
   and optional time-to-level, money and profession summaries.
 - **Quick Access and Food Bar:** configurable profession/utility access, food
   selection and optional bandages with existing native click/combat guards.
@@ -109,12 +109,12 @@ Entertainment. Play The Game Tools is an independent community addon.
 
 ## Dungeon Loot
 
-With Dungeon Loot enabled, click its circular loot icon to open the dungeon
-index. General -> Quick Icon has show/lock, size, opacity, reset and shared Edit
+With Dungeon Loot enabled, click the Quick Actions button, then its loot icon, to open the dungeon
+index. General -> Quick Icon has show, size, opacity, reset and shared Edit
 Mode positioning controls. General -> Keybinding lets you assign or clear a key
 there; WoW Key Bindings also exposes Open Dungeon Loot. No key is assigned
 automatically. Choosing a key replaces its existing action; the field beside
-Set Keybinding shows the assigned key or Not bound. Opening, dragging and
+Set Keybinding shows the assigned key or Not bound. Opening and
 binding changes require being outside combat.
 
 Questing & Leveling -> Dungeon Loot is off by default and includes its own

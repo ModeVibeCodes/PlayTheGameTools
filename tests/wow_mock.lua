@@ -203,6 +203,7 @@ function methods:SetFrameLevel(value) self.frameLevel = value end
 function methods:GetFrameLevel() return self.frameLevel or (self.parent and self.parent:GetFrameLevel() + 1 or 0) end
 function methods:SetMovable() end
 function methods:SetClampedToScreen(value) self.clamped=value end
+function methods:SetClampRectInsets(...) self.clampInsets={...} end
 function methods:SetHighlightTexture(texture, blendMode)
     self.highlightTexture = texture
     if blendMode then texture:SetBlendMode(blendMode) end

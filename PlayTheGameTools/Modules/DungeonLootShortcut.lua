@@ -34,122 +34,38 @@ end
 BINDING_HEADER_PTGTOOLS="Play The Game Tools"
 BINDING_NAME_PTGTOOLS_DUNGEON_LOOT="Open Dungeon Loot"
 function PlayTheGameToolsOpenDungeonLoot() return M:OpenDungeonLoot() end
-local ELEMENT="dungeonLootShortcut"
+local QUICK_ACTION="dungeonLoot"
 local LOOT_ICON="Interface\\Buttons\\UI-GroupLoot-Dice-Up"
-function M:PositionShortcut()
-    local e=addon.PositionManager.elements[ELEMENT]
-    if e and not e.dragging and not (self.shortcut and self.shortcut.moving) then addon.PositionManager:ApplyPosition(ELEMENT) end
-end
-function M:StopShortcutDrag(save)
-    local b=self.shortcut;if not b then return end
-    local pm=addon.PositionManager
-    local e=pm.elements[ELEMENT]
-    if e and e.dragging then pm:StopDragging(ELEMENT) end
-    if b.moving then
-        b:StopMovingOrSizing();b.moving=false
-        if save and OutsideCombat() and e then
-            local x,y=addon.Positioning:ReadFrame(e.subject)
-            if Number(x) and Number(y) then pm:SetOffsets(ELEMENT,x,y) end
-        end
-    end
-    self:PositionShortcut()
-    if b.wasDragged then C_Timer.After(0,function() b.wasDragged=nil end) end
-end
 function M:ApplyShortcutAppearance()
     local b=self.shortcut;if not b or not OutsideCombat() then return end
-    self:StopShortcutDrag(true)
-    local size=self.db.shortcutSize
-    b:SetSize(size,size);b:SetAlpha(self.db.shortcutOpacity/100)
-    local diameter=size*.9-2
-    if not b.mask then diameter=diameter/math.sqrt(2) end
-    b.icon:SetSize(diameter,diameter);b.icon:ClearAllPoints();b.icon:SetPoint("CENTER")
-    for i,dot in ipairs(b.ring) do
-        local angle=i*math.pi/24;dot:ClearAllPoints()
-        dot:SetPoint("CENTER",b,"CENTER",size*.45*math.cos(angle),size*.45*math.sin(angle))
-    end
-    self:PositionShortcut()
+    addon.QuickActions.SizeIcon(b,self.db.shortcutSize)
+    b:SetAlpha(self.db.shortcutOpacity/100)
+    addon.QuickActions:Layout()
 end
 function M:SetShortcutOption(key,value)
     if not OutsideCombat() then return false end
     local valid=(key=="shortcutSize" and Number(value) and value>=24 and value<=72 and value%2==0)
         or (key=="shortcutOpacity" and Number(value) and value>=25 and value<=100 and value%5==0)
-        or ((key=="showShortcut" or key=="shortcutLocked") and type(value)=="boolean")
+        or (key=="showShortcut" and type(value)=="boolean")
     if not valid then return false end
-    self:StopShortcutDrag(true);self.db[key]=value;self:SyncShortcut();return true
+    self.db[key]=value;self:SyncShortcut();return true
 end
+-- The icon lives in the shared ring, so position controls act on its launcher.
 function M:ResetShortcutPosition()
     if not OutsideCombat() then return false end
-    self:StopShortcutDrag(false)
-    local ok=addon.PositionManager:ResetPosition(ELEMENT)
-    if ok then self:PositionShortcut() end
-    return ok
+    return addon.QuickActions:ResetPosition()
 end
 function M:EditShortcutPosition()
     if not self.active or not self.db.showShortcut or not OutsideCombat() then return false end
     self:SyncShortcut()
-    if not addon.PositionManager.elements[ELEMENT] then return false end
-    addon:SetEditMode(true)
-    return addon.PositionManager:SelectElement(ELEMENT)
+    return addon.QuickActions:EditPosition()
 end
 function M:CreateDungeonShortcut()
     if self.shortcut or not OutsideCombat() then return end
-    local b=CreateFrame("Button",nil,UIParent)
-    self.shortcut=b
-    b:SetSize(40,40);b:SetFrameStrata("MEDIUM");b:SetClampedToScreen(true);b:EnableMouse(true)
-    local p=self.db.shortcutPosition;b:SetPoint("CENTER",UIParent,"CENTER",p.x,p.y)
-    b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetSize(32,32);b.icon:SetPoint("CENTER")
-    b.icon:SetTexture(LOOT_ICON);b.icon:SetTexCoord(.07,.93,.07,.93)
-    if b.icon.AddMaskTexture and b.CreateMaskTexture then
-        b.mask=b:CreateMaskTexture();b.mask:SetAllPoints(b.icon)
-        b.mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask");b.icon:AddMaskTexture(b.mask)
-    end
-    b.ring={}
-    for i=1,48 do
-        local dot=b:CreateTexture(nil,"OVERLAY");dot:SetSize(1.5,1.5);dot:SetColorTexture(.38,.66,.96,1);b.ring[i]=dot
-    end
-    b:RegisterForClicks("LeftButtonUp");b:Show()
-    local pm=addon.PositionManager
-    local ok,e=pm:RegisterElement(ELEMENT,b,{moduleId=self.id,anchoring=false,allowedTargets={"screen"},
-        defaultPosition={target="screen",placement="center",x=p.x,y=p.y},
-        canDrag=function() return self.active and (self.db.showShortcut or addon.editMode) end,
-        onPositionChanged=function(_,pos) self.db.shortcutPosition={x=pos.x,y=pos.y} end,
-        onHighlight=function()
-            -- The launcher remains clickable outside Edit Mode. The manager owns
-            -- movement/selection in Edit Mode; plain dragging below covers normal use.
-            b:EnableMouse(self.active and self.db.showShortcut==true)
-        end})
-    if not ok then
-        b:Hide();self.shortcutFailure=tostring(e);self.shortcut=nil;return
-    end
-    self.shortcutFailure=nil
-    e.label="Dungeon Loot Quick Icon"
-    e.defaults={target="screen",placement="center",x=-230,y=-140}
-    b:HookScript("OnDragStart",function()
-        if addon.editMode then if e.dragging then b.wasDragged=true end
-        elseif self.active and not self.db.shortcutLocked and OutsideCombat() then
-            e.subject.appliedAnchor=nil;b.wasDragged=true;b.moving=true;b:StartMoving()
-        end
-    end)
-    b:HookScript("OnDragStop",function() self:StopShortcutDrag(true) end)
-    b:SetScript("OnClick",function()
-        if b.wasDragged then b.wasDragged=nil;return end
-        if addon.editMode then pm:SelectElement(ELEMENT)
-        elseif self.active then self:OpenDungeonLoot() end
-    end)
-    b:SetScript("OnEnter",function()
-        if GameTooltip then
-            GameTooltip:SetOwner(b,"ANCHOR_RIGHT");GameTooltip:SetText("Dungeon Loot")
-            GameTooltip:AddLine("Click to open. Drag while unlocked, or move in Edit Mode.",.8,.85,.9,true);GameTooltip:Show()
-        end
-    end)
-    b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
-    b:HookScript("OnHide",function() self:StopShortcutDrag(false);if GameTooltip then GameTooltip:Hide() end end)
+    self.shortcut=addon.QuickActions:AddAction(QUICK_ACTION,{order=20,texture=LOOT_ICON,color={.38,.66,.96},
+        title="Dungeon Loot",hint="Click to open.",
+        onClick=function() if self.active then self:OpenDungeonLoot() end end})
     self:ApplyShortcutAppearance()
-end
-function M:SetEditMode(enabled)
-    self:StopShortcutDrag(true)
-    local e=addon.PositionManager.elements[ELEMENT]
-    if e then e.editMode=self.active and self.db.showShortcut==true end
 end
 function M:SyncShortcut()
     self.shortcutEvents:UnregisterAllEvents()
@@ -159,16 +75,12 @@ function M:SyncShortcut()
         self.shortcutEvents:RegisterEvent("UPDATE_BINDINGS")
     end
     if not self.active or not self.db.showShortcut then
-        local e=addon.PositionManager.elements[ELEMENT];if e then e.editMode=false end
         self:CancelShortcutBinding()
-        if self.shortcut then self.shortcut:Hide() end
-        addon.PositionManager:RefreshSelection()
+        addon.QuickActions:SetAvailable(QUICK_ACTION,false)
         return
     end
-    local e=addon.PositionManager.elements[ELEMENT]
-    if e then e.editMode=self.active and self.db.showShortcut==true end
     if OutsideCombat() then self:CreateDungeonShortcut();self:ApplyShortcutAppearance() end
-    if self.shortcut then self.shortcut:Show() end
+    addon.QuickActions:SetAvailable(QUICK_ACTION,true)
 end
 function M:InitializeShortcut()
     M.InitializeShortcutSettings(self.db)
@@ -176,7 +88,7 @@ function M:InitializeShortcut()
     self.shortcutEvents:SetScript("OnEvent",function(_,event)
         if event=="UPDATE_BINDINGS" then
             if not self.bindingWriting and self.page and self.page:IsShown() and self.view.tab=="general" then self.page:Refresh() end
-        elseif event=="PLAYER_REGEN_DISABLED" then self:StopShortcutDrag(false);self:CancelShortcutBinding()
+        elseif event=="PLAYER_REGEN_DISABLED" then self:CancelShortcutBinding()
         else self:SyncShortcut() end
     end)
 end

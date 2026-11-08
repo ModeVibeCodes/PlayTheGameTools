@@ -19,28 +19,16 @@ lua.execute(r'''
     addon.DungeonLootProvider.Read=read
     addon:SetModuleEnabled('dungeonLoot',true)
     local b=M.shortcut
-    assert(b and b:IsShown() and b:GetWidth()==40 and b.clamped)
+    assert(b and b:IsShown() and b:GetWidth()==40 and b:GetParent()==addon.QuickActions.ring)
     M:Navigate('Shadowfang Keep','quests')
     b:GetScript('OnClick')(b)
     assert(M.view.dungeon==nil and M.view.tab=='loot' and M.page:IsShown())
     addon.configWindow:Hide();b:GetScript('OnClick')(b)
     assert(addon.configWindow:IsShown() and M.page:IsShown())
-    local queued={};local timer=C_Timer.After;C_Timer.After=function(_,fn) queued[#queued+1]=fn end
-    M:Navigate('Shadowfang Keep','quests')
-    b.scripts.OnDragStart(b);assert(b.moving)
-    local px,py=UIParent:GetCenter();local get=b.GetCenter
-    b.GetCenter=function() return px+70,py-90 end
-    b.scripts.OnDragStop(b)
-    assert(M.db.shortcutPosition.x==70 and M.db.shortcutPosition.y==-90 and not b.moving)
-    b:GetScript('OnClick')(b);assert(M.view.dungeon=='Shadowfang Keep','drag release must not open the index')
-    for _,fn in ipairs(queued) do fn() end;queued={};b.GetCenter=get
-    M.db.shortcutLocked=true;b.scripts.OnDragStart(b);assert(not b.moving)
-    M.db.shortcutLocked=false;b.scripts.OnDragStart(b);assert(b.moving)
-    testCombat=true;FireEvent('PLAYER_REGEN_DISABLED');assert(not b.moving and M.db.shortcutPosition.x==70)
+    assert(b:GetScript('OnDragStart')==nil,'ring icons do not move on their own')
+    testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
     assert(not PlayTheGameToolsOpenDungeonLoot())
-    b.scripts.OnDragStart(b);assert(not b.moving)
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
-    for _,fn in ipairs(queued) do fn() end;C_Timer.After=timer
     M.db.showShortcut=false;M:SyncShortcut();assert(not b:IsShown())
     assert(PlayTheGameToolsOpenDungeonLoot() and M.view.dungeon==nil,'keybind works when icon is hidden')
     M:Navigate(nil,'general')
@@ -51,9 +39,13 @@ lua.execute(r'''
         error('Missing '..label)
     end
     Click('Show Shortcut Icon: Off');assert(b:IsShown())
-    Click('Lock Shortcut Icon: Off');assert(M.db.shortcutLocked)
-    Click('Reset Shortcut Position');assert(M.db.shortcutPosition.x==-230 and M.db.shortcutPosition.y==-140)
-    M.db.shortcutPosition={x=70,y=-90}
+    for _,slot in ipairs(M.page.rootPane.slots) do
+        assert(not (slot.visible and slot.button.label:GetText():find('Lock Shortcut',1,true)),'lock row removed')
+    end
+    local launcher=addon.PositionManager.elements.quickActionsLauncher
+    assert(addon.PositionManager:SetOffsets(launcher.id,12,34))
+    Click('Reset Shortcut Position');assert(launcher.position.x==-180 and launcher.position.y==-140)
+    M.db.shortcutPosition={x=70,y=-90};M.db.shortcutLocked=true
     addon:SetModuleEnabled('dungeonLoot',false)
     assert(not b:IsShown() and next(M.shortcutEvents.events)==nil)
     assert(PlayTheGameToolsOpenDungeonLoot() and not M.active,'binding never enables a disabled module')
@@ -79,4 +71,4 @@ deferred.execute('''
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
     assert(M.shortcut and M.shortcut:IsShown())
 ''')
-print('PASS native binding payload, direct index routing, disabled/hidden icon behavior, drag/click separation, combat, General controls, profile validation/restore and deferred creation')
+print('PASS native binding payload, direct index routing, disabled/hidden icon behavior, ring-owned placement, combat, General controls, retained legacy settings, profile validation/restore and deferred creation')

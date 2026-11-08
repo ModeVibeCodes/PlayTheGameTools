@@ -29,6 +29,7 @@ Core\ContextualAlertDisplay.lua
 Core\PositionHighlights.lua
 Config\Theme.lua
 Modules\Foundation.lua
+Modules\QuickActions.lua
 Modules\CombatTimerDisplay.lua
 Modules\CombatTimer.lua
 Modules\ForeverAutomation.lua
