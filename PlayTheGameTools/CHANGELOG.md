@@ -4,10 +4,12 @@
 
 - Recruitment settings page no longer duplicates the Recruiter window: level
   range, levels per search, classes (All/None), Whisper After Invite and the
-  whisper text are set only in the Recruiter window (`/ptgr`). The page keeps
-  Open Recruiter, status, statistics, How It Works, Re-invite After (days) and
-  the History resets. Saved values are unchanged; searching "whisper" or
-  "classes" still finds Recruitment.
+  whisper text are set only in the Recruiter window (`/ptgr`). Recruitment
+  Status, Statistics, How It Works and the Invites section (Re-invite After
+  (days)) were removed from the page, which now holds only Open Recruiter and
+  the History resets. Saved values are unchanged (the re-invite window keeps
+  its saved days, default 7); searching "whisper" or "classes" still finds
+  Recruitment.
 
 - Removed the per-letter gradient text from Dungeon Loot: dungeon card titles,
   section and bracket headings, boss/quest names, list entries and NPC

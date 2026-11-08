@@ -152,7 +152,7 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Action:** Click X on a row, scan again, then click Clear Never-Invite List.
    **Required state:** OOC.
    **Confirmation:** The X'd player no longer appears until the list is cleared;
-   invited players stay hidden for the Re-invite After (days) window.
+   invited players stay hidden for the saved re-invite window (7 days by default).
 
 ## F. Reporting and release gate
 
@@ -186,7 +186,7 @@ Stock artwork, fonts, text fit and contrast require these in-game checks.
 | T8 Modern navigation and sections | Modern active; click a sidebar entry, then a module with several sections | Compare the selected sidebar entry with the others; scroll the page | Out of combat | Selected entry has a mint bar on its left edge; sections are separated by clearly more space than rows; dividers are visible but quiet |
 | T9 Modern checkboxes and sliders | Modern active; sidebar **Quality of Life** → **Automation**, then **Timers** → **Combat Timer** → **Display** | On Automation tick and untick any box; on Combat Timer drag the **Font Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
 | T10 Solid Dungeon Loot text | `/ptg` → Questing & Leveling → Dungeon Loot (enabled) | On **Dungeons** read the card titles and Suggested Starting Levels headings; open a dungeon and view **Boss Loot** and **Quests** | Out of combat | Every heading, card title, list entry and NPC name is one solid colour; the selected tab underline is one solid accent; bracket headings sit over a plain hairline |
-| T11 Recruitment page | `/ptg` → Guild Tools → Recruitment | Scroll the page, then click **Open Recruiter** | Out of combat | Page shows only Recruiter, Invites (**Re-invite After (days)**) and History; the Recruiter window still has Level range, Levels per search, Classes and the whisper box, and saved values are as before |
+| T11 Recruitment page | `/ptg` → Guild Tools → Recruitment | Scroll the page, then click **Open Recruiter** | Out of combat | Page shows only Recruiter (**Open Recruiter**) and History (**Clear Invite History**, **Clear Never-Invite List**, **Reset Statistics**); the Recruiter window still has Level range, Levels per search, Classes and the whisper box, and saved values are as before |
 
 ## Dungeon Loot
 

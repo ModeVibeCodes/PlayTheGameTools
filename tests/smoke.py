@@ -226,6 +226,7 @@ recruit.execute('''
     -- Search, class and whisper settings live only in the Recruiter window.
     for _,entry in ipairs(R.page.searchEntries) do
         assert(entry.label~='Minimum Level' and entry.label~='Whisper After Invite' and entry.label~='Search','no duplicated recruiter settings')
+        assert(entry.label~='Recruitment Status' and entry.label~='Statistics' and entry.label~='How It Works' and entry.label~='Invites' and entry.label~='Re-invite After (days)','page keeps only Recruiter and History')
     end
     local found=addon:SearchSettings('whisper')
     assert(found[1] and found[1].module==R,'whisper search still routes to Recruitment')

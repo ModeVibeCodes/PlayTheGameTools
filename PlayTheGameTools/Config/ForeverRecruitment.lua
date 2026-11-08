@@ -272,24 +272,11 @@ function M:CreateConfigPage(parent)
         local b=W.Button(page:Row(label,48),text,width or 180,28);b:SetPoint("LEFT")
         b:SetScript("OnClick",function() fn();page:Refresh() end);return b
     end
-    local function Numeric(label,key,low,high)
-        local input=W.NumericInput(page:Row(label,48),function() return self.db[key] end,function(v) self:SetOption(key,v) end,low,high,70)
-        input:SetPoint("LEFT");page.refreshers[#page.refreshers+1]=function() input:Refresh() end
-    end
 
+    -- Searching, status, statistics and invite options live in the Recruiter
+    -- window; this page only opens it and clears stored history.
     page:Section("Recruiter")
     Button("Recruiter Window","Open Recruiter",function() self:OpenWindow() end)
-    local status=W.Label(page:Row("Recruitment Status",72),"",nil,0,-4,390,T.muted);status:SetWordWrap(true)
-    page.refreshers[#page.refreshers+1]=function() status:SetText(self.status or "") end
-    local stats=W.Label(page:Row("Statistics",48),"",nil,0,-4,390,T.muted)
-    page.refreshers[#page.refreshers+1]=function() stats:SetText(self:StatsText()) end
-    local note=W.Label(page:Row("How It Works",128),"Search levels, classes and the invite whisper are set in the Recruiter window. Each Scan click clears the list and runs one Who search (also /ptgr). Invite shows the name highlighted: press Ctrl+C, then paste it into Guild > Add Member. Capped results are split and searched again.",nil,0,-4,390,T.muted)
-    note:SetWordWrap(true)
-
-    -- Level range, levels per search, classes and the whisper live only in the
-    -- Recruiter window; this page keeps what the window does not offer.
-    page:Section("Invites")
-    Numeric("Re-invite After (days)","reinviteDays",0,365)
 
     page:Section("History")
     Button("Invited Players","Clear Invite History",function() self:ClearInvited() end)
