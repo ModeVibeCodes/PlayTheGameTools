@@ -283,37 +283,12 @@ function M:CreateConfigPage(parent)
     page.refreshers[#page.refreshers+1]=function() status:SetText(self.status or "") end
     local stats=W.Label(page:Row("Statistics",48),"",nil,0,-4,390,T.muted)
     page.refreshers[#page.refreshers+1]=function() stats:SetText(self:StatsText()) end
-    local note=W.Label(page:Row("How It Works",110),"Each Scan click clears the list and runs one Who search (also /ptgr). Invite shows the name highlighted: press Ctrl+C, then paste it into Guild > Add Member. Capped results are split and searched again.",nil,0,-4,390,T.muted)
+    local note=W.Label(page:Row("How It Works",128),"Search levels, classes and the invite whisper are set in the Recruiter window. Each Scan click clears the list and runs one Who search (also /ptgr). Invite shows the name highlighted: press Ctrl+C, then paste it into Guild > Add Member. Capped results are split and searched again.",nil,0,-4,390,T.muted)
     note:SetWordWrap(true)
 
-    page:Section("Search")
-    Numeric("Minimum Level","minLevel",1,function() return self.db.maxLevel end)
-    Numeric("Maximum Level","maxLevel",function() return self.db.minLevel end,60)
-    Numeric("Levels Per Search","chunkSize",1,60)
-    local classButtons=page:Row("Classes",48)
-    local all=W.Button(classButtons,"All",80,28,"secondary");all:SetPoint("LEFT")
-    all:SetScript("OnClick",function() for _,c in ipairs(self.CLASSES) do self.db.classes[c]=true end;self:ResetScan();self:Refresh() end)
-    local none=W.Button(classButtons,"None",80,28,"secondary");none:SetPoint("LEFT",all,"RIGHT",8,0)
-    none:SetScript("OnClick",function() for _,c in ipairs(self.CLASSES) do self.db.classes[c]=false end;self:ResetScan();self:Refresh() end)
-    local items={}
-    for _,classFile in ipairs(self.CLASSES) do
-        items[#items+1]={label=self:ClassName(classFile),get=function() return self:IsClassEnabled(classFile) end,
-            set=function(value) self:SetClassEnabled(classFile,value) end}
-    end
-    local cells=page:ToggleGrid(items)
-    for i,classFile in ipairs(self.CLASSES) do cells[i].label:SetTextColor(self:ClassColor(classFile)) end
-
+    -- Level range, levels per search, classes and the whisper live only in the
+    -- Recruiter window; this page keeps what the window does not offer.
     page:Section("Invites")
-    page:ToggleGrid({{label="Whisper After Invite",get=function() return self.db.whisperEnabled end,
-        set=function(value) self:SetOption("whisperEnabled",value) end}})
-    local row=page:Row("Whisper Text (Enter saves)",48)
-    local e=CreateFrame("EditBox",nil,row);e:SetSize(340,28);e:SetPoint("LEFT")
-    e:SetFontObject(GameFontHighlight);e:SetAutoFocus(false);e:SetMaxLetters(200);e:SetTextInsets(6,6,0,0)
-    W.Texture(e,"InputField")
-    local function reset() e:SetText(self.db.message);e:ClearFocus() end
-    e:SetScript("OnEnterPressed",function() self:SetOption("message",e:GetText());reset() end)
-    e:SetScript("OnEscapePressed",reset)
-    page.refreshers[#page.refreshers+1]=function() if not e:HasFocus() then e:SetText(self.db.message) end end
     Numeric("Re-invite After (days)","reinviteDays",0,365)
 
     page:Section("History")

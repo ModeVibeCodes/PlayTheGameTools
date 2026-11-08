@@ -88,7 +88,10 @@ function W.Page(parent, minimumWidth)
         end
     end
     function page:Section(title, description, collapsible)
-        if self.cursor > 0 then self.cursor = self.cursor + 24 end
+        -- Modern separates sections with more air than rows, so each group
+        -- reads as one block; Blizzard keeps its tighter stock rhythm.
+        local sectionGap = T.blizzardArt and 24 or 32
+        if self.cursor > 0 then self.cursor = self.cursor + sectionGap end
         local header = CreateFrame("Frame", nil, content)
         header:SetPoint("TOPLEFT", 0, -self.cursor)
         header:SetSize(400, description and 62 or 36)
@@ -97,7 +100,7 @@ function W.Page(parent, minimumWidth)
         self.sections[#self.sections + 1] = section
         self.activeSection = section
         header.section, header.sectionHeader = section, true
-        header.gapBefore = #self.sections > 1 and 24 or 0
+        header.gapBefore = #self.sections > 1 and sectionGap or 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, section = section, row = header, kind = "section" }
         -- Plain heading on the canvas; rows below carry their own dividers.
         local heading = W.Heading(header, title, T.fontSize.section, 0, -8, 360, T.text)

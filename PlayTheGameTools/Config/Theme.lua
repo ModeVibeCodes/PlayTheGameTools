@@ -18,29 +18,36 @@ local function RGB(r, g, b, a) return { r / 255, g / 255, b / 255, a or 1 } end
 -- Configuration-only palettes. Gameplay consumers keep addon.Theme unchanged.
 -- Modern: graphite neutrals with one mint accent. The accent marks state only
 -- (on, selected, focused); headings and body copy stay neutral.
+-- Surfaces step in clear increments so the eye can tell them apart: the
+-- sidebar is recessed below the canvas, popups and resting controls sit above
+-- it, and hover is one more step up. Control edges (buttons, inputs, boxes,
+-- slider tracks) reach ~3:1 against the canvas so every target is findable;
+-- row dividers stay quiet at ~1.5:1 so they group without striping.
+-- Contrast on the canvas: text ~14:1, secondary ~9:1, muted ~6:1,
+-- unavailable ~3.5:1.
 local MODERN = {
     -- Accent and state
     primary = RGB(127, 219, 151),      -- #7FDB97 mint, kin to the gameplay #80EF80
     enabled = RGB(127, 219, 151),
-    off = RGB(128, 133, 141),          -- neutral: "off" is a state, not an error
-    unavailable = RGB(80, 84, 91),
+    off = RGB(146, 152, 161),          -- neutral: "off" is a state, not an error
+    unavailable = RGB(106, 111, 120),
     highlight = RGB(242, 243, 244),
     ink = RGB(12, 26, 16),             -- text placed on the accent
     -- Surfaces, darkest to lightest
-    background = RGB(15, 16, 18),      -- window canvas
-    sidebar = RGB(20, 21, 24),
-    panel = RGB(24, 25, 29),           -- popups, dialogs
-    surface = RGB(31, 33, 37),         -- resting controls
-    hover = RGB(38, 40, 45),
-    field = RGB(11, 12, 14),           -- text inputs sit below the canvas
+    sidebar = RGB(15, 16, 19),         -- recessed navigation column
+    field = RGB(13, 14, 17),           -- text inputs sit below the canvas
+    background = RGB(23, 24, 28),      -- window canvas
+    panel = RGB(33, 35, 41),           -- popups, dialogs
+    surface = RGB(39, 42, 49),         -- resting controls, selected rows
+    hover = RGB(52, 56, 65),
     -- Hairlines
-    line = RGB(36, 38, 43),
-    lineStrong = RGB(58, 61, 68),
-    -- Type
-    text = RGB(231, 232, 234),
-    heading = RGB(231, 232, 234),
-    secondary = RGB(169, 173, 180),
-    muted = RGB(128, 133, 141),
+    line = RGB(52, 55, 64),            -- dividers
+    lineStrong = RGB(98, 103, 115),    -- control edges
+    -- Type: off-white rather than pure white keeps long reading soft.
+    text = RGB(226, 228, 232),
+    heading = RGB(236, 237, 240),
+    secondary = RGB(180, 185, 193),
+    muted = RGB(146, 152, 161),
 }
 
 -- Blizzard: the stock look (gold headings, warm parchment labels, the stock

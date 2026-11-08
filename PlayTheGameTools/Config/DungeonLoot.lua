@@ -10,8 +10,7 @@ function M:CreateConfigPage(parent)
     local buttons = {}
     local function Tab(text, callback)
         local b=W.Button(nav,text,90,32,"underline")
-        b.underline=b:CreateTexture(nil,"OVERLAY");b.underline:SetColorTexture(1,1,1,1)
-        b.underline:SetGradient("HORIZONTAL",CreateColor(159/255,204/255,250/255,1),CreateColor(9/255,116/255,241/255,1))
+        b.underline=b:CreateTexture(nil,"OVERLAY");W.Paint(b.underline,T.primary)
         b.underline:SetPoint("BOTTOMLEFT",10,0);b.underline:SetPoint("BOTTOMRIGHT",-10,0);b.underline:SetHeight(2);b.underline:Hide()
         b:SetScript("OnClick",callback);buttons[#buttons+1]=b;return b
     end
@@ -60,7 +59,7 @@ function M:CreateConfigPage(parent)
     page.listPane,page.detailPane=left,right
     W.Fill(left,T.sidebar);W.Fill(right,T.panel)
     local function Add(...) return rightRows:Add(...) end
-    local function Heading(text) Add(text,nil,nil,T.secondary,nil,{heading=true,gradient=M.view.tab=="quests" and "quest" or "header"}) end
+    local function Heading(text) Add(text,nil,nil,T.secondary,nil,{heading=true}) end
     local function Item(item,prefix,expanded)
         local name,icon,quality,loaded=self:ItemInfo(item)
         local color=T.text
@@ -85,7 +84,7 @@ function M:CreateConfigPage(parent)
         end
     end
     local function Subheader(text)
-        if text then Add(text,nil,nil,T.text,nil,{subheader=true,gradient="npc"}) end
+        if text then Add(text,nil,nil,T.text,nil,{subheader=true}) end
     end
     local function LocationNotes(targets)
         local seen={}
@@ -126,7 +125,7 @@ function M:CreateConfigPage(parent)
     local function QuestDetail(record)
         local q=record.currentStage or record
         for _,stage in ipairs(record.stages or {}) do if stage.id==M.view.stageID then q=stage end end
-        Add(q.name,nil,nil,T.text,nil,{heading=true,gradient="quest",faction=q.faction})
+        Add(q.name,nil,nil,T.text,nil,{heading=true,faction=q.faction})
         Add(Status(record),nil,nil,T.secondary)
         if #record.stages>1 then
             rightRows:Stages(record.stages,q.id,function(id) M.view.stageID=id;page:Refresh() end)
@@ -200,7 +199,7 @@ function M:CreateConfigPage(parent)
         root:SetShown(not browser);left:SetShown(browser);right:SetShown(browser)
         toolbar:SetShown(M.active and v.tab~="general")
         self.context:SetShown(browser)
-        if browser then self.context:SetText(addon.DungeonLootWidgets.Gradient(data.name).."  ·  "..data.card.suggestedLevel) end
+        if browser then self.context:SetText(data.name.."  ·  "..data.card.suggestedLevel) end
         self.home:SetSelected(v.dungeon==nil and v.tab~="general")
         self.loot:SetSelected(v.dungeon~=nil and v.tab=="loot");self.quests:SetSelected(v.dungeon~=nil and v.tab=="quests")
         self.general:SetSelected(v.tab=="general")
@@ -228,7 +227,7 @@ function M:CreateConfigPage(parent)
                     local lower=dungeon.levelLow and (math.floor(dungeon.levelLow/10)*10)
                     local bracket=lower and (lower>=50 and "50–60" or (lower.."–"..(lower+9))) or "Unknown"
                     if bracket~=group then
-                        local heading=rootRows:Add("Suggested Starting Levels "..bracket,nil,nil,T.secondary,nil,{heading=true,gradient="bracket",underline=true})
+                        local heading=rootRows:Add("Suggested Starting Levels "..bracket,nil,nil,T.secondary,nil,{heading=true,underline=true})
                         self.bracketRows[bracket]=heading.row;group=bracket
                     end
                     local name=dungeon.name
@@ -243,7 +242,7 @@ function M:CreateConfigPage(parent)
         elseif not data.available then rootRows:Add(data.source,nil,nil,T.muted)
         else
             local entries={}
-            leftRows:Add(v.tab=="loot" and "Bosses" or "Quests",nil,nil,T.secondary,nil,{heading=true,gradient=v.tab=="quests" and "quest" or "header"})
+            leftRows:Add(v.tab=="loot" and "Bosses" or "Quests",nil,nil,T.secondary,nil,{heading=true})
             if v.tab=="loot" then
                 for _,extras in ipairs({false,true}) do
                     for index,boss in ipairs(data.bosses) do
@@ -267,7 +266,7 @@ function M:CreateConfigPage(parent)
             local extrasHeading=false
             for _,record in ipairs(entries) do
                 local entry,index=record.entry,record.index
-                local options={compact=true,selected=v[key]==index,gradient=key=="boss" and "boss" or "quest"}
+                local options={compact=true,selected=v[key]==index}
                 if key=="boss" then
                     if entry.extra and not extrasHeading then leftRows:Add("Other loot",nil,nil,T.secondary,nil,{heading=true});extrasHeading=true end
                     options.portrait=entry
@@ -284,7 +283,7 @@ function M:CreateConfigPage(parent)
                 else message=#data.quests==0 and "No quests recorded for this dungeon." or "No quests match your character or search." end
                 leftRows:Add(message);Add(message)
             elseif key=="boss" then
-                Add(selected.name,nil,nil,T.text,nil,{heading=true,gradient="boss",portrait=selected})
+                Add(selected.name,nil,nil,T.text,nil,{heading=true,portrait=selected})
                 if data.lootIncomplete then Add("Loot records may be incomplete.",nil,nil,T.muted) end
                 for _,item in ipairs(selected.items) do Item(item,nil,#selected.items<=5) end
                 if #selected.items==0 then Add("Loot unknown.") end
