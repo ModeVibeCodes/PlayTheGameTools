@@ -47,7 +47,7 @@ local legacy=addon.ProfileCodec.Copy(M.db);legacy.campfire.contributionX=52.5;le
 C.Initialize(legacy);assert(legacy.campfire.contributionX==53 and legacy.campfire.contributionY==-43)
 addon.editWindow.exitButton.scripts.OnClick()
 assert(not addon.editMode and A.window.strata=='DIALOG')
--- Reopen preview after Exit / Save; reset is the actual settings button.
+-- Reopen preview after Exit; reset is the actual settings button.
 if not A.previewing then page.contributionPreview.scripts.OnClick() end
 page.contributionReset.scripts.OnClick()
 assert(C.db.contributionX==0 and C.db.contributionY==120)
@@ -66,4 +66,4 @@ assert(C.db.contributionScale==85 and C.db.contributionOpacity==65 and C.db.cont
 A:TogglePreview();assert(A.window:GetScale()==0.85 and A.window:GetAlpha()==0.65)
 assert(C.db.contributionX==0 and C.db.contributionY==120)
 ''')
-print('PASS real sliders/numeric inputs, step normalization, edit layers/coordinates/handle drag/Exit Save, hidden reopen/reset, fixed Crit/Int and persistence (mock only)')
+print('PASS real sliders/numeric inputs, step normalization, edit layers/coordinates/handle drag/Exit, hidden reopen/reset, fixed Crit/Int and persistence (mock only)')

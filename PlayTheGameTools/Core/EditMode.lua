@@ -54,6 +54,29 @@ function E:SetAnchor(target, placement)
     return addon.PositionManager:SetAnchor(element.id, target, placement)
 end
 
+local function Anchorable()
+    local element = E:Selected()
+    return addon.editMode and element and element.supportsAnchoring and element or nil
+end
+
+function E:SetTarget(target)
+    local element = Anchorable()
+    if not element then return false end
+    return addon.PositionManager:ChangeTarget(element.id, target)
+end
+
+function E:SetPlacement(placement)
+    local element = Anchorable()
+    if not element then return false end
+    return addon.PositionManager:SetPlacement(element.id, placement)
+end
+
+function E:ResetOffset()
+    local element = Anchorable()
+    if not element then return false end
+    return addon.PositionManager:ResetOffsets(element.id)
+end
+
 function E:FinishDrags()
     addon.PositionManager:FinishDrags()
 end

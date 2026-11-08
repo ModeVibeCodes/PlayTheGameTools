@@ -80,7 +80,7 @@ new native interactions remain pending user confirmation.
    refresh after changing carried kits. **Required state:** OOC, ready kit.
    **Confirmation:** position persists; dismissal lasts this visit, reopening
    works while eligible, and a confirmed new visit can show ready items again.
-4. **Navigation:** /ptg → header → Edit Mode → Exit / Save; Camp Contributions.
+4. **Navigation:** /ptg → header → Edit Mode → Exit; Camp Contributions.
    **Action:** enter/exit Edit Mode, then enter/leave combat safely.
    **Required state:** a ready kit near a real fire; no placement while testing.
    **Confirmation:** only an inert sample appears in Edit Mode; all content hides in combat. Live actions resume only when
@@ -103,7 +103,7 @@ campfireContributions element (label Camp Contributions), using the same inert
 sample. Its handles, X/Y and header drag share one saved managed position; older
 contributionX/Y offsets migrate when the managed position is first created.
 Aura refreshes preserve a current drag. Combat/tab/page/disable transitions stop
-explicit samples; edit samples end with Exit / Save. Existing template-rejection
+explicit samples; edit samples end with Exit. Existing template-rejection
 state does not prevent a harmless non-action preview.
 
 **Detected Kits** lists names/counts from the latest ready-inventory scan, capped
@@ -119,7 +119,7 @@ explanations. No kit is presented as already installed at the camp.
   **Required state:** OOC; no carried item/profession/fire required.
   **Confirmation:** labeled sample appears, moves and disappears; no item is used.
 - **Navigation:** same tab → Camp Contributions → Contribution Position → Edit
-  Contributions; Edit Mode → X Position / Y Position → Exit / Save.
+  Contributions; Edit Mode → X Position / Y Position → Exit.
   **Action:** select/move Camp Contributions, adjust coordinates, save and reload.
   **Required state:** OOC, monitor and popup enabled.
   **Confirmation:** existing handles edit the inert sample; saved position applies

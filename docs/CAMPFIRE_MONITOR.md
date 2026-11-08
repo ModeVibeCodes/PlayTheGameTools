@@ -134,7 +134,7 @@ Campfire Nearby / No Nearby Campfire; no unsupported yards or arrow.
    font works joined or detached, and detached styling is independent.
 4. **Navigation:** same tab → General → Tools → Open Edit Mode; Campfire Monitor /
    Camp Buffs / Camp Contributions handles; Edit Mode → X Position / Y Position →
-   Exit / Save. **Action:** drag/adjust eligible elements, save and reload.
+   Exit. **Action:** drag/adjust eligible elements, save and reload.
    **Required state:** OOC, monitor enabled, Separate Buff Window on for buff handle,
    Show Contribution Popup on for contribution handle.
    **Confirmation:** saved positions remain; contribution sample is visible/inert,
@@ -173,7 +173,7 @@ in-game confirmation. Screenshots: pending.
 +**Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
 +Monitor → Camp Contributions → Contribution Window → Preview Contributions;
 +Contribution Scale / Contribution Opacity / Contribution Background; Contribution
-+Position → Edit Contributions; Edit Mode → X Position / Y Position → Exit / Save.
++Position → Edit Contributions; Edit Mode → X Position / Y Position → Exit.
 +**Action:** /reload, preview, change each appearance slider and numeric field,
 +drag at a non-100% scale, change opacity again, edit X/Y, save and reload.
 +**Required state:** OOC, parent/monitor/popup enabled.

@@ -460,12 +460,16 @@ function addon:CreateConfig()
         if self.CloseSettingsSearch then self:CloseSettingsSearch() end
         if window.editSuspended then return end
         self:ResetDisplayModes()
-        for _, module in pairs(self.modules) do
-            if module.OnConfigClosed then module:OnConfigClosed() end
-        end
-        self.ReloadManager:OnWindowClosed()
+        self:NotifyConfigClosed()
     end)
     self:UpdateWindowBounds(true)
+end
+
+function addon:NotifyConfigClosed()
+    for _, module in pairs(self.modules) do
+        if module.OnConfigClosed then module:OnConfigClosed() end
+    end
+    self.ReloadManager:OnWindowClosed()
 end
 
 function addon:ToggleConfig()
