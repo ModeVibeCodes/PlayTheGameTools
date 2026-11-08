@@ -47,6 +47,7 @@ Food Bar) and Recruitment. Existing game behavior and settings are preserved.
 ```sh
 python -m pip install lupa
 python tests/smoke.py
+python tests/edit_mode.py
 python tools/build_release.py
 ```
 

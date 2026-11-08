@@ -133,17 +133,17 @@ function addon:CreateEditWindow()
             if target.id == id then return id, target.label .. (P:Resolve(id) and "" or " (unavailable)") end
         end
         return id, "Saved target unavailable"
-    end, function(id) local p = Position(); if p then E:SetAnchor(id, p.placement or "center") end end)
+    end, function(id) E:SetTarget(id) end)
     targets:SetPoint("TOPLEFT", 20, -228)
     local placements = Dropdown(window, 188, function() return P.placements end, function()
         local p = Position()
         local placement = P:Placement(p and p.placement)
         return placement.id, placement.label
-    end, function(id) local p = Position(); if p then E:SetAnchor(p.target or "screen", id) end end)
+    end, function(id) E:SetPlacement(id) end)
     placements:SetPoint("TOPLEFT", 20, -266)
     local reset = W.Button(window, "Reset Offset", 104, 30, "secondary")
     reset:SetPoint("TOPLEFT", 216, -266)
-    reset:SetScript("OnClick", function() local p = Position(); if p then E:SetAnchor(p.target or "screen", p.placement or "center") end end)
+    reset:SetScript("OnClick", function() E:ResetOffset() end)
     local highlights = W.Button(window, "", 30, 30, "checkbox")
     highlights:SetPoint("TOPLEFT", 20, -310)
     highlights:SetScript("OnClick", function() E:SetHighlights(not E.highlights) end)
@@ -161,7 +161,7 @@ function addon:CreateEditWindow()
         self:SetEditMode(false)
         self:SelectConfigPage(id)
     end)
-    local exit = W.Button(window, "Exit / Save", 300, 32)
+    local exit = W.Button(window, "Exit", 300, 32)
     exit:SetPoint("TOPLEFT", 20, -386)
     exit:SetSelected(true)
     exit:SetScript("OnClick", function() self:SetEditMode(false) end)
@@ -182,6 +182,8 @@ function addon:CreateEditWindow()
         highlights:SetSelected(E.highlights)
         refreshing = false
     end
+    -- Clearing focus runs the numeric input's normal apply.
+    function self:CommitEditInputs() xInput:ClearFocus(); yInput:ClearFocus() end
     window.xInput, window.yInput = xInput, yInput
     window.xSlider, window.ySlider = xSlider, ySlider
     window.targetDropdown, window.placementDropdown, window.resetOffset = targets, placements, reset
@@ -220,5 +222,10 @@ function addon:FinishEditWorkspace()
     window:Hide()
     window.ending = false
     self.configWindow.editSuspended = false
-    self.configWindow:Show()
+    -- Never put the settings window over a pull; suspending skipped its close cleanup.
+    if InCombatLockdown() or UnitAffectingCombat("player") then
+        self:NotifyConfigClosed()
+    else
+        self.configWindow:Show()
+    end
 end

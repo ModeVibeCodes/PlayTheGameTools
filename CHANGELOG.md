@@ -11,6 +11,18 @@
   bounded by docs/FOREVER_ROGUE_POISONS.md.
 
 
+- Edit Mode's Exit / Save button is now Exit, since positions are written as they
+  change. Exit keeps a typed coordinate that was not applied yet and can no longer
+  be stranded by a module error. Combat ends Edit Mode without reopening settings.
+  Target, placement and Reset Offset no longer wipe offsets or custom attachment
+  points, and UI anchors no longer require `issecretvalue` to exist.
+
+- Recruiter candidates have a Whisper button that sends the whisper message
+  instead of an invite; the player then stays out of scans for the re-invite
+  window. The message box is multi-line and holds 500 letters; text over the
+  255-character chat limit goes out as consecutive whispers. Whisper After
+  Invite was removed, so confirmed invites no longer whisper.
+
 - Dungeon Loot's Set Keybinding now replaces the selected key's current action,
   with the assigned key or Not bound in a separate read-only field beside the
   button. Failed changes restore both the overwritten action and prior shortcut.

@@ -31,22 +31,38 @@ function addon:SetPreviewMode(enabled)
     return true
 end
 
+-- The flag is already off here, so a failed refresh must still close the panel;
+-- otherwise every later exit is a no-op. The error is re-raised to stay visible.
+local function RefreshAndFinishEditing(self)
+    local ok, message = pcall(self.RefreshDisplayModes, self)
+    self:FinishEditWorkspace()
+    if not ok then error(message, 0) end
+end
+
 function addon:SetEditMode(enabled)
     assert(type(enabled) == "boolean", "Play The Game Tools: Edit Mode requires a boolean.")
     if not CanEnterMode(enabled) then return false end
     if self.editMode == enabled then return true end
-    self.editMode = enabled
-    if not enabled then self.previewMode = false end
-    self:RefreshDisplayModes()
-    if enabled then self:BeginEditWorkspace() else self:FinishEditWorkspace() end
+    if enabled then
+        self.editMode = true
+        self:RefreshDisplayModes()
+        self:BeginEditWorkspace()
+        return true
+    end
+    -- Typed coordinates are only accepted while the mode is still on.
+    if self.CommitEditInputs then
+        local ok, message = pcall(self.CommitEditInputs, self)
+        if not ok then print("Play The Game Tools: typed position failed: " .. tostring(message)) end
+    end
+    self.editMode, self.previewMode = false, false
+    RefreshAndFinishEditing(self)
     return true
 end
 
 function addon:ResetDisplayModes()
     local editing = self.editMode
     self.previewMode, self.editMode = false, false
-    self:RefreshDisplayModes()
-    if editing then self:FinishEditWorkspace() end
+    if editing then RefreshAndFinishEditing(self) else self:RefreshDisplayModes() end
 end
 
 function addon:InitializeDisplayModes()
