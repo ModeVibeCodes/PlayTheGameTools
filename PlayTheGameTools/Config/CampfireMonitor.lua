@@ -2,7 +2,7 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local C,W,T=addon.CampfireMonitor,addon.ConfigWidgets,addon.InterfaceTheme
 function C:AddConfig(page)
-    page.campfireControls={};page.campfireColors={}
+    page.campfireControls={};page.campfireColors={};page.campfireSliders={}
     local A=addon.CampContributions
     local function Toggles(entries)
         local items={}
@@ -15,8 +15,14 @@ function C:AddConfig(page)
     end
     local function Slider(label,key,suffix)
         local r=self.ranges[key]
-        page.refreshers[#page.refreshers+1]=W.Slider(page:Row(label,42),r[1],r[2],r[3],
-            function() return self.db[key] end,function(v) self:SetOption(key,v) end,suffix,true)
+        local row=page:Row(label,42);page.campfireSliders[key]=row
+        page.refreshers[#page.refreshers+1]=W.Slider(row,r[1],r[2],r[3],
+            function() return self.db[key] end,function(v)
+                if addon.LootSparkles.Public(v) and type(v)=="number" and v==v and v>=r[1] and v<=r[2] then
+                    local stepped=r[1]+math.floor((v-r[1])/r[3]+0.5)*r[3]
+                    self:SetOption(key,stepped)
+                end
+            end,suffix,true)
     end
     local owner={db={appearance=self.db}}
     function owner:CanConfigure() return addon.LootSparkles:OutsideCombat() end
@@ -73,7 +79,6 @@ function C:AddConfig(page)
     page:Group("Camp Buffs")
     Toggles({{"Show Your Camp Benefits","showBenefits"},{"Compact Buff Text","compactBenefits"},
         {"Separate Buff Window","separateBenefits"},{"Lock Buff Window","benefitsLocked"},{"Color Stats by Type","colorStats"}})
-    Color("Crit Color","critColor");Color("Int Color","intColor")
     Slider("Buff Text Size","benefitsFontSize");Slider("Buff Window Width","benefitsWidth")
     Slider("Buff Window Scale","benefitsScale","%");Slider("Buff Window Opacity","benefitsOpacity","%")
     Slider("Buff Background Opacity","benefitsBackgroundOpacity","%")

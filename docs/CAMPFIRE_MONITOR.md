@@ -100,7 +100,7 @@ Customization groups are compact and separated by window:
 - **Campfire Icon:** icon/status/detail/guide visibility, lock, icon and status
   text size, window width/scale/opacity/background, X/Y and Reset Position.
 - **Camp Buffs:** earned bonus visibility, compact formatting, detach/lock,
-  typed stat colors, Crit/Int color pickers, buff font size, detached window
+  typed stat colors, fixed Crit/Int colors, buff font size, detached window
   width/scale/opacity/background/X/Y and Reset Buff Position. Buff font size
   applies in joined mode too; joined size/background/position share the icon frame.
 - **Camp Contributions:** popup switch, Detected Kits with small Refresh button,
@@ -123,10 +123,10 @@ Campfire Nearby / No Nearby Campfire; no unsupported yards or arrow.
    preview off. **Confirmation:** Camp Buffs followed by stats and native tooltip
    duration only; no extra addon countdown above the list or update loop.
 2. **Navigation:** same tab → General → Preview & Placement → Preview; General →
-   Header Color → Pick / Header Gradient; Camp Buffs → Crit Color / Int Color.
+   Header Color → Pick / Header Gradient; Camp Buffs → Color Stats by Type.
    **Action:** preview and change/cancel colors. **Required state:** OOC, enabled
-   parent/monitor. **Confirmation:** wheel works, samples have no timer, and
-   chosen colors/gradient apply and survive reload.
+   parent/monitor. **Confirmation:** wheel works for shared/header colors, samples have no timer, and
+   chosen colors/gradient apply and survive reload; typed Crit/Int stay red/blue.
 3. **Navigation:** same tab → Campfire Icon → Icon Size / Status Text Size / Icon
    Window Scale; Camp Buffs → Buff Text Size / Buff Window Scale / Separate Buff Window.
    **Action:** adjust each window's controls. **Required state:** OOC, preview or
@@ -152,3 +152,36 @@ positions. Also run campfire_movement.py, loot_sparkles.py, smoke.py and the bui
 Static tests do not establish native rendering or hardware item use. Owner confirms
 contribution detection is correct; visual correction and item placement still need
 in-game confirmation. Screenshots: pending.
+
+## Contribution edit and fixed-palette follow-up
++
++The owner confirms the contribution panel now generates, but reported all editing
++options ineffective. A fractional drag could leave non-integer managed offsets;
++the callback rounded a copy rather than the actual managed record, and later
++refreshes copied fractions into integer-only settings. Subsequent customization
++validation then failed. The actual managed coordinates are now rounded, and
++legacy finite in-range contribution offsets are normalized to the nearest pixel
++without resetting position. Placement applies only after the panel is shown.
++
++The contribution subject uses MEDIUM strata in Edit Mode so it cannot cover the
++DIALOG edit workspace; it returns to DIALOG for normal/live preview. Actual
++numeric/slider callbacks snap valid inputs to supported steps. Individual Crit
++Color and Int Color controls are removed; typed stats use the existing fixed
++palette (Crit red, Int blue), ignoring old per-stat customization values while
++preserving stored settings. Shared Text Color and header styling remain available.
++
++**Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
++Monitor → Camp Contributions → Contribution Window → Preview Contributions;
++Contribution Scale / Contribution Opacity / Contribution Background; Contribution
++Position → Edit Contributions; Edit Mode → X Position / Y Position → Exit / Save.
++**Action:** /reload, preview, change each appearance slider and numeric field,
++drag at a non-100% scale, change opacity again, edit X/Y, save and reload.
++**Required state:** OOC, parent/monitor/popup enabled.
++**Confirmation:** every change applies; input rounds to its slider step; settings
++still work after dragging; workspace controls are accessible and saved position
++survives. Under Camp Buffs, Crit/Int pickers are absent and typed colors stay fixed.
++
++tests/camp_contributions_editing.py exercises those actual controls, fractional
++drag followed by another edit, legacy-offset normalization, layering, hidden
++reopen/reset and persistence. Native editing acceptance/screenshots remain pending.
++

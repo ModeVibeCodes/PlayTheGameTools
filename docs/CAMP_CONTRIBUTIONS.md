@@ -195,3 +195,12 @@ screenshots remain pending; detection is owner-confirmed.
 +status replaces the error loop; report that status. Native use and screenshots
 +remain pending rather than inferred from fixtures.
 +
+## Editing after fractional drags
+
+Panel generation is owner-confirmed. Editing now rounds the actual managed
+coordinates rather than only the callback copy, repairs affected legacy offsets
+to the nearest pixel, places after Show and lowers the panel below the DIALOG
+workspace while editing. Appearance numeric fields snap to supported steps.
+See CAMPFIRE_MONITOR.md for exact current edit checks; run the new
+camp_contributions_editing.py with registration/controls suites. Native editing
+acceptance and screenshots remain pending.

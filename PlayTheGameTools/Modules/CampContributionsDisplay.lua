@@ -25,9 +25,9 @@ function A:RegisterWindow()
             defaultPosition={target="screen",placement="center",x=self.db.contributionX,y=self.db.contributionY},
             canDrag=function() return self.active end,
             onPositionChanged=function(element,position)
-                position.x=math.max(-10000,math.min(10000,math.floor(position.x+0.5)))
-                position.y=math.max(-10000,math.min(10000,math.floor(position.y+0.5)))
-                self.db.contributionX,self.db.contributionY=position.x,position.y
+                element.position.x=math.max(-10000,math.min(10000,math.floor(position.x+0.5)))
+                element.position.y=math.max(-10000,math.min(10000,math.floor(position.y+0.5)))
+                self.db.contributionX,self.db.contributionY=element.position.x,element.position.y
                 if not element.dragging then PM:ApplyPosition(element.id) end
             end,
         })
@@ -35,6 +35,8 @@ function A:RegisterWindow()
         e=value
     end
     e.label="Camp Contributions";e.editMode=self.active==true
+    e.position.x=math.max(-10000,math.min(10000,math.floor(e.position.x+0.5)))
+    e.position.y=math.max(-10000,math.min(10000,math.floor(e.position.y+0.5)))
     self.db.contributionX,self.db.contributionY=e.position.x,e.position.y
     return true
 end
@@ -159,13 +161,20 @@ function A:Layout(count,footer)
     f.viewport:SetVerticalScroll(f.scroll);f.footer:SetText(footer)
     f:SetAlpha(self.db.contributionOpacity/100)
     f:SetBackdropColor(0.035,0.045,0.06,self.db.contributionBackgroundOpacity/100)
+    -- The workspace is DIALOG level 80; the live/preview popup is level 90.
+    -- Keep its editable subject below that workspace so it cannot eat its input.
+    f:SetFrameStrata(self.camp.editing and "MEDIUM" or "DIALOG")
     local e=PM.elements.campfireContributions
-    if not f.dragging and not (e and e.dragging) then
+    local dragging=f.dragging or (e and e.dragging)
+    if not dragging then
         f:SetScale(math.max(0.25,math.min(self.db.contributionScale/100,(UIParent:GetHeight()-40)/height)));f:SetHeight(height)
-        if e then PM:ApplyPosition("campfireContributions") end
     end
     f:Show()
+    -- Both registration and subsequent re-anchoring need the shown rectangle.
     self:EnsurePositionRegistration()
+    if not dragging and self.window:IsShown() and PM.elements.campfireContributions then
+        PM:ApplyPosition("campfireContributions")
+    end
 end
 function A:RenderPreview()
     if not self.active or not D.OutsideCombat() or self.positionFailure then return end

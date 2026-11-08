@@ -27,8 +27,7 @@ C.defaults={headerGradient=false,contributionScale=100,contributionOpacity=100,c
     iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
     benefitsScale=100,benefitsOpacity=100,benefitsBackgroundOpacity=0}
-C.colorDefaults={textColor={1,0.85,0.5},headerColor={1,0.58,0.12},headerEndColor={1,0.12,0.08},
-    critColor={1,0.25,0.25},intColor={0.25,0.55,1}}
+C.colorDefaults={textColor={1,0.85,0.5},headerColor={1,0.58,0.12},headerEndColor={1,0.12,0.08}}
 function C.Initialize(db)
     if db.campfire==nil then db.campfire={} end
     local settings=db.campfire
@@ -36,6 +35,11 @@ function C.Initialize(db)
     for key,default in pairs(C.defaults) do
         if settings[key]==nil then settings[key]=default end
         local v,r=settings[key],C.ranges[key]
+        -- Earlier contribution drags could copy fractional managed coordinates
+        -- into integer-only settings, rejecting every subsequent customization.
+        if (key=="contributionX" or key=="contributionY") and Number(v,-10000,10000) then
+            v=math.floor(v+0.5);settings[key]=v
+        end
         assert(Public(v) and type(v)==type(default),"Invalid Campfire Monitor setting: "..key)
         if r then assert(Number(v,r[1],r[2]) and (v-r[1])%r[3]==0,"Invalid Campfire Monitor range: "..key) end
     end
@@ -202,8 +206,6 @@ local buffColors={
 function C:BuffColor(line)
     if not self.db.colorStats then return self.db.textColor end
     local lower=line:lower()
-    if lower:find("%f[%a]crit%f[%A]") or lower:find("critical",1,true) then return self.db.critColor end
-    if lower:find("%f[%a]int%f[%A]") or lower:find("intellect",1,true) then return self.db.intColor end
     for _,entry in ipairs(buffColors) do
         if lower:find("%f[%a]"..entry[1].."%f[%A]") then return entry[2] end
     end

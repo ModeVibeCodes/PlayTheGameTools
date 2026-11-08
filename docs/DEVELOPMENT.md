@@ -178,3 +178,16 @@ Manual Open/Preview/Refresh/Reset Position recovers; combat/hide/disable cancels
 the temporary driver. Shared manager checks remain unchanged. Run the new
 camp_contributions_registration.py plus campfire_controls.py and the builder.
 Native rendering/recovery and screenshots remain pending.
+
+## Contribution editing and fixed stat colors
+
+Owner confirms window generation, reports editing failure. Fractional managed
+offsets could leak back into integer-only settings and reject all subsequent
+edits. Round the actual managed record; normalize only legacy finite in-range
+contribution offsets without resetting position. Apply after Show; use MEDIUM
+for the contribution subject during Edit Mode below the DIALOG workspace.
+Numeric appearance fields snap to supported steps. Crit/Int custom pickers and
+setters are removed; fixed existing stat palette ignores old overrides while
+preserving saved fields. Run camp_contributions_editing.py, camp_contributions_registration.py,
+campfire_controls.py and builder.
+Native editing/screenshots pending; exact paths in CAMPFIRE_MONITOR.md.
