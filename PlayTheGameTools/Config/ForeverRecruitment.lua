@@ -3,7 +3,8 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 local M,W,T=addon.ForeverRecruitment,addon.ConfigWidgets,addon.InterfaceTheme
 
 local ROW_HEIGHT=22
-local WINDOW_W,WINDOW_H=470,660
+local WINDOW_W,WINDOW_H=536,712 -- room for the row Whisper button and message box
+local MESSAGE_H=84
 
 ---------------------------------------------------------------------------
 -- Copy-name box: the name is pre-highlighted so Ctrl+C copies it.
@@ -129,22 +130,47 @@ function M:CreateWindow()
             function(value) M:SetClassEnabled(classFile,value) end,20+((i-1)%3)*146,-120-math.floor((i-1)/3)*26,r,g,b)
     end
 
-    local whisperLabel
-    f.whisperCheck,whisperLabel=CheckBox("Whisper this message after each confirmed invite",function() return M.db.whisperEnabled end,
-        function(value) M:SetOption("whisperEnabled",value) end,20,-204)
-    f.whisperCheck:SetWidth(WINDOW_W-40);whisperLabel:SetWidth(WINDOW_W-70)
-    local message=CreateFrame("EditBox",nil,f);message:SetSize(WINDOW_W-48,26);message:SetPoint("TOPLEFT",24,-232)
-    message:SetFontObject(GameFontHighlight);message:SetAutoFocus(false);message:SetMaxLetters(200);message:SetTextInsets(6,6,0,0)
+    W.Label(f,"Whisper message",nil,16,-208,WINDOW_W-32,T.secondary)
+    local holder=CreateFrame("Frame",nil,f);holder:SetSize(WINDOW_W-48,MESSAGE_H);holder:SetPoint("TOPLEFT",24,-226)
+    W.Texture(holder,"InputField")
+    local viewHeight=MESSAGE_H-10
+    local messageScroll=CreateFrame("ScrollFrame",nil,holder)
+    messageScroll:SetPoint("TOPLEFT",6,-5);messageScroll:SetPoint("BOTTOMRIGHT",-6,5);messageScroll:EnableMouseWheel(true)
+    local message=CreateFrame("EditBox",nil,messageScroll);message:SetSize(WINDOW_W-60,viewHeight);message:SetMultiLine(true)
+    message:SetFontObject(GameFontHighlight);message:SetAutoFocus(false);message:SetMaxLetters(M.MESSAGE_LETTERS)
     addon.Media:BindInterfaceFont(message,GameFontHighlight)
-    W.Texture(message,"InputField")
+    messageScroll:SetScrollChild(message)
+    local function ScrollMessage(offset)
+        messageScroll:SetVerticalScroll(math.max(0,math.min(offset,message:GetHeight()-viewHeight)))
+    end
+    -- The box grows with its text and scrolls inside the fixed input field.
+    local function ResizeMessage()
+        local _,fontHeight=message:GetFont()
+        local lines=message:GetNumLines()
+        local height=math.max(viewHeight,lines*(fontHeight or 14)+math.max(0,lines-1)*message:GetSpacing()+4)
+        if message:GetHeight()~=height then message:SetHeight(height) end
+        ScrollMessage(messageScroll:GetVerticalScroll())
+    end
+    message:SetScript("OnTextChanged",ResizeMessage)
+    message:SetScript("OnCursorChanged",function(_,_,y,_,cursorHeight)
+        ResizeMessage()
+        local top,offset=-y,messageScroll:GetVerticalScroll()
+        if top<offset then ScrollMessage(top)
+        elseif top+cursorHeight>offset+viewHeight then ScrollMessage(top+cursorHeight-viewHeight) end
+    end)
+    messageScroll:SetScript("OnMouseWheel",function(_,delta) ScrollMessage(messageScroll:GetVerticalScroll()-delta*24) end)
+    local function SaveMessage()
+        local text=M.CleanMessage(message:GetText())
+        if text~=M.db.message then M:SetOption("message",text) end
+    end
     local function ResetMessage() message:SetText(M.db.message);message:ClearFocus() end
-    message:SetScript("OnEnterPressed",function() M:SetOption("message",message:GetText());ResetMessage() end)
-    message:SetScript("OnEditFocusLost",function() if message:GetText()~=M.db.message then M:SetOption("message",message:GetText()) end end)
+    message:SetScript("OnEnterPressed",function() SaveMessage();ResetMessage() end)
+    message:SetScript("OnEditFocusLost",SaveMessage)
     message:SetScript("OnEscapePressed",ResetMessage)
     Refresher(function() if not message:HasFocus() then message:SetText(M.db.message) end end)
-    f.message=message
+    f.message,f.SaveMessage=message,SaveMessage
 
-    local TOP=-274 -- action buttons, status and list sit below the settings
+    local TOP=-326 -- action buttons, status and list sit below the settings
     local scan=W.Button(f,"Scan",104,28);scan:SetPoint("TOPLEFT",16,TOP)
     scan:SetScript("OnClick",function() M:Scan() end)
     Tooltip(scan,"Scan","Clears the candidate list, then runs the next Who search.")
@@ -206,6 +232,10 @@ local function GetRow(f,i)
     row.skip:SetScript("OnClick",function(self) M:SkipCandidate(self:GetParent().index,false) end)
     row.invite=W.Button(row,"Invite",56,20);row.invite:SetPoint("RIGHT",row.skip,"LEFT",-3,0)
     row.invite:SetScript("OnClick",function(self) M:InviteCandidate(self:GetParent().index) end)
+    row.whisper=W.Button(row,"Whisper",64,20);row.whisper:SetPoint("RIGHT",row.invite,"LEFT",-3,0)
+    -- Clicking a button doesn't take focus from the box, so save unsaved edits first.
+    row.whisper:SetScript("OnClick",function(self) f.SaveMessage();M:WhisperCandidate(self:GetParent().index) end)
+    Tooltip(row.whisper,"Whisper this player","Sends the message above instead of inviting. Long messages go out as several whispers.")
     f.rows[i]=row
     return row
 end

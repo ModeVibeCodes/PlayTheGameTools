@@ -187,7 +187,9 @@ recruit.execute('''
     f.minInput:SetText('12');f.minInput.scripts.OnEnterPressed(f.minInput);assert(R.db.minLevel==12,'window level input')
     f.minInput:SetText('10');f.minInput.scripts.OnEnterPressed(f.minInput);assert(R.db.minLevel==10)
     f.message:SetText('Join us');f.message.scripts.OnEnterPressed(f.message);assert(R.db.message=='Join us')
-    f.whisperCheck.scripts.OnClick();assert(R.db.whisperEnabled==true);f.whisperCheck.scripts.OnClick()
+    assert(f.message.multiLine==true and f.whisperCheck==nil,'multi-line message box, no after-invite option')
+    f.message:SetText('Join\\nus |now ');f.message.scripts.OnEnterPressed(f.message);assert(R.db.message=='Join us now',R.db.message)
+    f.message:SetText('Join us');f.message.scripts.OnEnterPressed(f.message)
     f.power.scripts.OnClick();assert(not R.enabled);f.power.scripts.OnClick();assert(R.enabled)
     R:Scan()
     assert(sent[1]=='c-"Mage" 10-14' and R:QueueRemaining()==1,sent[1])
@@ -203,17 +205,41 @@ recruit.execute('''
     results={{fullName='Delta',level=11,filename='MAGE',fullGuildName='',area='Westfall'}}
     FireEvent('WHO_LIST_UPDATE')
     assert(#R.candidates==1)
-    R.db.whisperEnabled=true
     R:InviteCandidate(1)
     assert(#R.candidates==0 and R.copyFrame:IsShown() and R.copyFrame.eb:GetText()=='Delta')
     assert(type(R.db.history.Delta)=='number' and R:RecentlyInvited('Delta'))
     FireEvent('CHAT_MSG_SYSTEM','You have invited Delta to join your guild.')
-    assert(R.db.records.invited==1 and whispers[1][2]=='WHISPER' and whispers[1][3]=='Delta')
+    assert(R.db.records.invited==1 and #whispers==0,'a confirmed invite sends no whisper')
     FireEvent('CHAT_MSG_SYSTEM','Delta has joined the guild.')
     assert(R.db.records.joined==1)
     Advance(6);R:Scan()
     FireEvent('WHO_LIST_UPDATE')
     assert(#R.candidates==0,'recently invited players are skipped')
+    results={{fullName='Foxtrot',level=16,filename='MAGE',fullGuildName='',area='Duskwood'},
+        {fullName='Golf',level=17,filename='MAGE',fullGuildName='',area='Duskwood'}}
+    Advance(6);R:Scan();FireEvent('WHO_LIST_UPDATE')
+    assert(#R.candidates==2 and f.rows[2].whisper)
+    -- Unsaved box text is what gets sent; the row leaves the list without an invite.
+    f.message:SetFocus();f.message:SetText('Fresh text')
+    f.rows[2].whisper.scripts.OnClick(f.rows[2].whisper)
+    f.message:ClearFocus()
+    assert(#whispers==1 and whispers[1][1]=='Fresh text' and whispers[1][2]=='WHISPER' and whispers[1][3]=='Golf')
+    assert(#R.candidates==1 and R.candidates[1].name=='Foxtrot' and type(R.db.history.Golf)=='number')
+    assert(R.db.records.invited==1 and not R.awaitingConfirm.Golf,'a whisper is not an invite')
+    local long=string.rep('word ',100)..'end'
+    assert(R:SetOption('message',long),'messages longer than one whisper are accepted')
+    local parts=R.SplitWhisper(long)
+    assert(#parts==2 and table.concat(parts,' ')==long and #parts[1]<=255 and #parts[2]<=255,'split at spaces')
+    local unbroken=R.SplitWhisper(string.rep('\\195\\169',200))
+    assert(#unbroken==2 and #unbroken[1]==254 and #unbroken[2]==146,'unbroken text keeps UTF-8 characters whole')
+    R:WhisperCandidate(1)
+    assert(#whispers==3 and whispers[2][3]=='Foxtrot' and whispers[3][3]=='Foxtrot','long message sent in parts')
+    R:SetOption('message','')
+    results={{fullName='Hotel',level=18,filename='MAGE',fullGuildName='',area='Duskwood'}}
+    Advance(6);R:Scan();FireEvent('WHO_LIST_UPDATE')
+    R:WhisperCandidate(1)
+    assert(#whispers==3 and #R.candidates==1,'an empty message sends nothing and keeps the player')
+    R.db.whisperEnabled=true
     results={{fullName='Echo',level=15,filename='MAGE',fullGuildName='',area='Duskwood'}}
     Advance(6);R:Scan();FireEvent('WHO_LIST_UPDATE')
     R:SkipCandidate(1,true)
@@ -261,6 +287,7 @@ migrated.execute('''
     local R=addon.ForeverRecruitment
     assert(type(R.db.history.Legacy)=='number' and R.db.history.Echo=='skip','legacy contacted entries migrate')
     assert(R.db.records.invited==1 and R.db.minLevel==10 and R.db.classes.MAGE==true)
+    assert(R.db.whisperEnabled==nil,'retired after-invite option is dropped')
 ''')
 threat, _ = load()
 threat.execute('''

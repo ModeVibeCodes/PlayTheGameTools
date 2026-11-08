@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Recruiter candidates have a Whisper button that sends the whisper message
+  instead of an invite; the player then stays out of scans for the re-invite
+  window. The message box is multi-line and holds 500 letters; text over the
+  255-character chat limit goes out as consecutive whispers. Whisper After
+  Invite was removed, so confirmed invites no longer whisper.
+
 - Recruitment settings page no longer duplicates the Recruiter window: level
   range, levels per search, classes (All/None), Whisper After Invite and the
   whisper text are set only in the Recruiter window (`/ptgr`). Recruitment
