@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Enhanced Experience Bar offers Use PTG Only / Use Existing Bar and independent
+  Blizzard/Ellesmere XP hide toggles. Hides are opt-in, reversible and XP-only;
+  provider saved settings remain untouched. Native coexistence testing pending.
+
+- XP bar forecast priority is current XP, rested XP, then quest log XP. Quest
+  tint is clipped beneath rested coverage so overlay colors no longer mix.
+
+- Enhanced Experience Bar has independent Rested XP Overlay Color and Quest Log
+  XP Overlay Color pickers, available while the main fill uses native XP colors.
+
+- Added opt-in Enhanced Experience Bar under Questing & Leveling: flat/native
+  Blizzard/SharedMedia textures, XP/rested/total-quest-log XP, full-height tinted
+  overlays with independent opacity, session time/XP per hour, independent bar/
+  session text controls with dash/dot separators and shared Edit Mode.
+  Initial bar works per owner; revised native validation pending. See
+  docs/ENHANCED_EXPERIENCE_BAR.md.
+
 - Recruitment settings page no longer duplicates the Recruiter window: level
   range, levels per search, classes (All/None), Whisper After Invite and the
   whisper text are set only in the Recruiter window (`/ptgr`). Recruitment

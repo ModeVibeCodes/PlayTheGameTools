@@ -1,5 +1,9 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)
+on its local feature branch. Enable under Questing & Leveling; native acceptance
+is pending.
+
 Record PASS / FAIL / NOT TESTED for each item, with version, client build, class
 and level. These instructions do not claim native acceptance. Do one chunk at a
 time; start with A. Stop and report startup/errors/settings loss before continuing.

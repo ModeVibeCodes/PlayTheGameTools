@@ -1,5 +1,26 @@
 # Standalone Forever development
 
+Enhanced Experience Bar adds the tenth module and four Lua files (100 chunks).
+Run `python tests/enhanced_experience_bar.py` for forecasts/session/Edit Mode and
+profile coverage, plus regression/build checks. The contract and exact `/reload`
+test paths are in [ENHANCED_EXPERIENCE_BAR.md](ENHANCED_EXPERIENCE_BAR.md).
+Owner reports initial bar working/no errors. Revised full-height overlays,
+all-log/hidden-header scans, texture options and separate text customization
+remain pending native validation; no release publication is implied.
+
+XP provider choice uses an independent runtime visibility adapter; run
+`python tests/enhanced_experience_visibility.py` with the focused bar/smoke tests
+and builder. New helper is in the TOC; if /reload misses it, restart the client.
+Default hide toggles are off. Native and Ellesmere coexistence needs owner review.
+
+Owner accepted the completed local feature and authorized PR #13's main merge on
+2026-11-07. Runtime checkpoint 7054cc0 passes the focused bar/visibility suites,
+smoke, Campfire Edit Mode, Dungeon Loot and deterministic build (100 Lua / 175
+package files); prior scoped regressions also passed. Main had no intervening
+changes or conflicts. Merge closeout updates only owning docs; the clean existing
+live-linked checkout returns to merged main, preserving its junction and settings.
+Broad native/API/provider-version coverage remains bounded by the owning checklist.
+
 The editable addon is `PlayTheGameTools/`, displayed in WoW as Play The Game Tools.
 It contains all current Forever production Lua and runtime media. The repository
 starts with fresh history; no Retail modules, development-machine settings or
