@@ -6,6 +6,9 @@ moves, through the shared Edit Mode, where it is listed as **Quick Actions**.
 
 ## Behavior
 
+- While open, a solid gold ring runs through the icon centers on a dark translucent
+  dial, fading in over 0.12 seconds. The main button shows its state: closed is a
+  dimmed gear with a neutral edge; open is a gold gear with a gold edge and halo.
 - The ring closes when an icon inside it is clicked, when the main button is
   clicked again, when combat starts and when Edit Mode is entered. Clicking
   elsewhere on the screen does not close it.
@@ -53,9 +56,10 @@ Adding `Modules/QuickActions.lua` requires one full client restart.
 1. **Navigation:** on-screen Quick Actions button. **Action:** hover it, click it,
    click it again. **Required state:** Forever, out of combat, Class Training on
    with Shortcut Icon & Menu on, and Dungeon Loot on with Show Shortcut Icon: On.
-   **Confirmation:** a round gear icon with a light ring and a "Quick Actions"
-   tooltip; the old separate icons are gone; the book and loot dice open in a circle
-   and then close.
+   **Confirmation:** a round dimmed gear icon with a neutral edge and a "Quick
+   Actions" tooltip; the old separate icons are gone. Open shows the book and loot
+   dice on a solid gold ring over a dark dial, the gear turns gold with a halo and
+   stays undimmed, and the tooltip says "Click to close". Closing reverses all of it.
 2. **Navigation:** Quick Actions button -> loot dice icon. **Action:** click the
    icon. **Required state:** out of combat, ring open. **Confirmation:** the ring
    closes and Dungeons opens.

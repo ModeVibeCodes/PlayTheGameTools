@@ -26,6 +26,28 @@ lua.execute(r'''
     assert(CT.shortcut:GetParent()==ring and CT.shortcut.icon.texture=='Interface\\Icons\\INV_Misc_Book_09')
     assert(not ring:IsShown(),'starts closed')
 
+    -- A real ring on a dial, and a main button that shows which state it is in.
+    local dial=Q.dial
+    local function Lit() return b.expandedHalo:IsShown() and dial:IsShown() and b.ring[1].color[3]<0.5 end
+    assert(not dial:IsShown() and not b.expandedHalo:IsShown() and b.ring[1].color[3]>0.5,'closed reads neutral')
+    assert(b.icon.vertexColor[1]<0.8)
+    b.hovered=true;local tips={};GameTooltip={SetOwner=function() end,SetText=function() end,Show=function() end,Hide=function() end,
+        AddLine=function(_,text) tips[#tips+1]=text end}
+    Click(b);assert(ring:IsShown() and Lit() and b.icon.vertexColor[1]==1,'open is lit')
+    assert(tips[#tips]:find('close',1,true),'tooltip follows the state')
+    assert(ring.alpha==0);Advance(1);assert(ring.alpha==1 and dial.alpha==1 and ring.scripts.OnUpdate==nil,'fades in once')
+    local dots=#dial.track;assert(dots>=300,'dense enough to read as a line')
+    local dx,dy=dial.track[1].points[1][4],dial.track[1].points[1][5]
+    assert(math.abs(math.sqrt(dx*dx+dy*dy)-74)<0.001,'ring passes through the icon centers')
+    assert(dial.disc.width==2*(74+20+10) and dial.disc.texture==b.expandedHalo.texture)
+    assert(dial.frameLevel<b.frameLevel,'dial never dims the main button')
+    assert(CT.shortcut.backing.width==36,'icons hide the ring behind them')
+    Click(b);assert(not ring:IsShown() and not dial:IsShown() and not Lit() and b.icon.vertexColor[1]<0.8,'closed again')
+    GameTooltip=nil;b.hovered=nil
+    Click(b);testCombat=true;FireEvent('PLAYER_REGEN_DISABLED');assert(not dial:IsShown() and not b.expandedHalo:IsShown(),'combat resets the state')
+    testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
+    for _=1,3 do Q:Layout() end;assert(#dial.track==dots,'no dot growth on repeat layout')
+
     -- Only Class Training: one icon directly above.
     assert(Q.count==1);Click(b);assert(ring:IsShown())
     local x,y=Offset(CT.shortcut);assert(math.abs(x)<0.001 and y==74)
@@ -36,12 +58,12 @@ lua.execute(r'''
     assert(Q.count==2 and DL.shortcut:GetParent()==ring)
     local x1,y1=Offset(CT.shortcut);local x2,y2=Offset(DL.shortcut)
     assert(math.abs(x1)<0.001 and y1==74 and math.abs(x2)<0.001 and math.abs(y2+74)<0.001)
-    assert(b.clampInsets[1]==-74 and b.clampInsets[2]==74 and b.clampInsets[3]==74 and b.clampInsets[4]==-74,'ring stays on screen')
+    assert(b.clampInsets[1]==-84 and b.clampInsets[2]==84 and b.clampInsets[3]==84 and b.clampInsets[4]==-84,'dial stays on screen')
 
     -- Larger icons widen the ring and its screen margin.
     DL:SetShortcutOption('shortcutSize',72)
     local _,wide=Offset(CT.shortcut);assert(wide==20+36+34)
-    assert(b.clampInsets[2]==wide+36-20)
+    assert(b.clampInsets[2]==wide+36+10-20)
     DL:SetShortcutOption('shortcutSize',40)
 
     -- Clicking an icon closes the ring and runs that icon's action.

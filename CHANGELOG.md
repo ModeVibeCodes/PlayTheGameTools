@@ -3,8 +3,8 @@
 ## Unreleased
 
 - Merged the Class Training and Dungeon Loot icons into one Quick Actions button.
-  Clicking it opens the icons in a circle around it; clicking an icon closes the
-  ring. Only the button moves, through Edit Mode. It starts where the Class
+  Clicking it opens the icons on a gold ring around it, and the button lights up
+  while open; clicking an icon closes the ring. Only the button moves, through Edit Mode. It starts where the Class
   Training icon was; older icon positions and the Dungeon Loot lock preference
   stay in saved settings unused. The Lock Shortcut Icon control is removed.
 
