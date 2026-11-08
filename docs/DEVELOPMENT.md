@@ -72,7 +72,14 @@ and releases; passing static checks alone is not a release acceptance claim.
 
 ## Dungeon Loot feature work
 
-Dungeon Loot adds a seventh registered module, twelve Lua files and a virtual
+The new standalone shortcut/keybinding revision is on codex/dungeon-loot-shortcut
+for a separate PR. Startup/profile checks and focused shortcut tests cover
+routing, drag persistence, disabled/hidden behavior and combat lifecycle. The
+root Bindings.xml is auto-loaded by WoW, explicitly validated/packaged by the
+builder, and not listed in the TOC. Restart the client for native review. No
+release or live copy-sync is authorized. Native paths: docs/DUNGEON_LOOT.md.
+
+Dungeon Loot adds a seventh registered module, thirteen Lua files and a virtual
 map-pin XML template. The builder validates and packages the template immediately
 after its Lua mixin. Its owning
 document is [DUNGEON_LOOT.md](DUNGEON_LOOT.md), with source/provider limitations,

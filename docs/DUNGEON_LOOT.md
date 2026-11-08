@@ -6,6 +6,59 @@ to the other dungeons. The same appearance and interaction apply across the
 catalog. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
 and real screenshots remain pending; no release publication is authorized.
 
+## Standalone shortcut and keybinding (native review pending)
+
+Dungeon Loot now owns a 40px native chest-icon launcher with a thin blue gradient
+border. It appears by default when the module is enabled; disabling the module
+hides it. Left-click opens the Dungeon Loot page directly at the dungeon index.
+Left-drag moves it while unlocked, without requiring shared Edit Mode. The icon
+is clamped to screen; its position and lock/visibility preferences are saved in
+the active profile, filling missing keys without resetting existing settings.
+Default position is separate from the Class Training shortcut. No external addon
+is involved. General exposes **Show Shortcut Icon: On/Off**, **Lock Shortcut
+Icon: On/Off** and **Reset Shortcut Position**. Dragging does not trigger opening.
+
+The root Bindings.xml declares **Open Dungeon Loot**, unassigned by default,
+under native Key Bindings -> AddOns -> Play The Game Tools. The client owns
+assignment, conflict handling and account/character binding persistence; the addon
+does not call SetBinding or overwrite any key. The key works with the icon hidden.
+If Dungeon Loot is disabled, it opens the module settings with the existing
+master enable switch; it never enables browsing implicitly or reads the catalog.
+
+Both entry points use one guarded opener and open the index even if another
+settings page is already visible. Combat opening/dragging is rejected; an active
+drag is stopped and its last saved position restored when combat begins. Icon
+creation deferred by combat resumes on PLAYER_REGEN_ENABLED. Module disable
+unregisters its two combat transition listeners. No polling or secure actions.
+Native binding schema/reference:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Bindings.xml
+The release builder validates the explicit binding definition and includes it
+at the addon root in addition to the existing map XML. New shortcut Lua follows
+DungeonLoot.lua in the TOC. Native registration, rendering and drag timing still
+need client validation; mocks execute the binding body but do not load WoW XML.
+
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General.
+   **Action:** restart WoW for the new TOC/binding files; enable Dungeon Loot,
+   leave Show Shortcut Icon: On and Lock Shortcut Icon: Off. Close settings,
+   click the chest icon, then drag it and reload. **Required state:** Forever,
+   OOC. **Confirmation:** clicking opens Dungeons directly; dragging only moves
+   the icon, and its position survives reload.
+2. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
+   Lock Shortcut Icon: Off, then Reset Shortcut Position.
+   **Action:** toggle lock on, attempt dragging, then reset. **Required state:**
+   OOC. **Confirmation:** lock prevents movement; reset restores the default
+   position. Show Shortcut Icon: On toggles the icon off without disabling loot.
+3. **Navigation:** WoW Key Bindings -> AddOns -> Play The Game Tools -> Open
+   Dungeon Loot. **Action:** assign a free key using the native UI, hide the icon
+   in General, close settings and press the assigned key. **Required state:** OOC,
+   client restarted after installing new files. **Confirmation:** the dungeon
+   index opens directly; existing unrelated keys are unchanged. Disabled Dungeon
+   Loot instead opens its settings and remains disabled.
+4. **Navigation:** standalone chest icon or assigned Open Dungeon Loot key.
+   **Action:** attempt click/drag/key in combat, then repeat after combat.
+   **Required state:** compare combat and OOC. **Confirmation:** no settings open
+   or movement begins in combat; the shortcut works again afterward.
+
 ## Coverage and dependencies
 
 The bundled GPLv3 catalog contains **35 dungeon/wing entries**: **31 browsable**

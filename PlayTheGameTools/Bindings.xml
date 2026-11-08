@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="PTGTOOLS_DUNGEON_LOOT" category="ADDONS" header="PTGTOOLS">
+        PlayTheGameToolsOpenDungeonLoot();
+    </Binding>
+</Bindings>

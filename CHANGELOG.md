@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a standalone Dungeon Loot chest icon (shown while the module is enabled),
+  freely draggable while unlocked, with saved position and General visibility,
+  lock and reset controls. Added an unassigned Open Dungeon Loot action to native
+  Key Bindings. Both open the dungeon index outside combat; the keybind remains
+  available when the icon is hidden and never enables the module implicitly.
+
 - Enhanced Experience Bar offers Use PTG Only / Use Existing Bar and independent
   Blizzard/Ellesmere XP hide toggles. Hides are opt-in, reversible and XP-only;
   provider saved settings remain untouched. Native coexistence testing pending.

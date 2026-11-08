@@ -203,6 +203,7 @@ python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
 python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
+python tests/dungeon_loot_shortcut.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -236,3 +237,10 @@ Use the exact Navigation/Action/Required state/Confirmation checklist in
 Loot Sparkles has scoped positive owner feedback; the new two-tab layout and
 campfire monitor require native review. Campfire benefits are earned player buffs,
 not a detected inventory of objects at a nearby camp. Screenshots: pending.
+
+Dungeon Loot shortcut revision: run dungeon_loot_shortcut.py for binding payload
+validation/execution, direct routing, drag/click separation, position persistence,
+lock/show/reset controls, combat guards, deferred creation and invalid profile
+preferences. Restart the client to load the new TOC/root binding files; native
+appearance and binding registration remain pending. Exact paths are recorded in
+docs/DUNGEON_LOOT.md under Standalone shortcut and keybinding.
