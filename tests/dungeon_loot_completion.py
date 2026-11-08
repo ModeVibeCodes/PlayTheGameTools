@@ -28,7 +28,7 @@ lua.execute(r'''
     end end
     local heading=Find(page.rootPane,'Suggested Starting Levels 20–29')
     assert(heading.headingLine:IsShown() and heading.headingLine:GetHeight()==1)
-    assert(heading.button.label:GetText():find('|cff0974f1',1,true),'bracket gradient starts with stronger blue')
+    assert(heading.button.label:GetText()=='Suggested Starting Levels 20–29' and heading.headingLine.gradient==nil,'solid bracket heading and rule')
     local jump
     for _,button in ipairs(page.jumpButtons) do if button.bracket=='20–29' then jump=button end end
     assert(page.jumpBar:IsShown() and jump and jump:IsShown())

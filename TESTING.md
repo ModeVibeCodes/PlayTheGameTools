@@ -152,7 +152,7 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Action:** Click X on a row, scan again, then click Clear Never-Invite List.
    **Required state:** OOC.
    **Confirmation:** The X'd player no longer appears until the list is cleared;
-   invited players stay hidden for the Re-invite After (days) window.
+   invited players stay hidden for the saved re-invite window (7 days by default).
 
 ## F. Reporting and release gate
 
@@ -179,9 +179,14 @@ Stock artwork, fonts, text fit and contrast require these in-game checks.
 | T1 Choose Blizzard | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Blizzard**, then **Reload** in the window header | Out of combat | Header **Reload** shows pending before the click; after reload `/ptg` shows the gold dialog border, opaque dark stone, red header buttons, stock checkboxes and gold headings |
 | T2 Text fit | Blizzard active; open each sidebar entry | Read sidebar items, Dashboard module rows, dropdowns and search results | Out of combat | No clipped or overlapping labels in the game font |
 | T3 Selectors and inputs | Blizzard active; Dashboard → Appearance, a module's Positioning section, the search box | Click options; type in the search box | Out of combat | Selected option has a gold outline; input borders show no square corners |
-| T4 Return to Modern | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Modern**, then **Reload** | Out of combat | Window matches the previous graphite look exactly |
+| T4 Return to Modern | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Modern**, then **Reload** | Out of combat | Window shows the Modern graphite look: dark sidebar column, slightly lighter canvas, outlined header buttons |
 | T5 Fresh-launch labels | Quit WoW fully, relaunch | Type `/ptg` as soon as you are in the world | Out of combat | Sidebar labels and the window title are visible, at worst after about a second |
 | T6 Threat Meter | Quality of Life → Threat Meter enabled | Target an enemy; unlock the meter | Any | Header strip, class-coloured bars, accent edge on your row; "Drag to move" while unlocked |
+| T7 Modern edges and hover | Modern active; `/ptg` → Dashboard | Look at **Reload**, **Preview**, **Edit Mode**, **X**, the **Search settings...** box and Appearance → Interface Theme without hovering, then hover each | Out of combat | Every control shows a visible outline at rest; hovering lifts its fill; **Modern** has a solid mint outline and **Blizzard** a grey one |
+| T8 Modern navigation and sections | Modern active; click a sidebar entry, then a module with several sections | Compare the selected sidebar entry with the others; scroll the page | Out of combat | Selected entry has a mint bar on its left edge; sections are separated by clearly more space than rows; dividers are visible but quiet |
+| T9 Modern checkboxes and sliders | Modern active; sidebar **Quality of Life** → **Automation**, then **Timers** → **Combat Timer** → **Display** | On Automation tick and untick any box; on Combat Timer drag the **Font Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
+| T10 Solid Dungeon Loot text | `/ptg` → Questing & Leveling → Dungeon Loot (enabled) | On **Dungeons** read the card titles and Suggested Starting Levels headings; open a dungeon and view **Boss Loot** and **Quests** | Out of combat | Every heading, card title, list entry and NPC name is one solid colour; the selected tab underline is one solid accent; bracket headings sit over a plain hairline |
+| T11 Recruitment page | `/ptg` → Guild Tools → Recruitment | Scroll the page, then click **Open Recruiter** | Out of combat | Page shows only Recruiter (**Open Recruiter**) and History (**Clear Invite History**, **Clear Never-Invite List**, **Reset Statistics**); the Recruiter window still has Level range, Levels per search, Classes and the whisper box, and saved values are as before |
 
 ## Dungeon Loot
 

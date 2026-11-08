@@ -212,3 +212,13 @@ shared page changes or extra tabs. Selecting an explicit font exits interface
 font inheritance. Run camp_contributions_appearance.py,
 registration/editing/startup suites and builder. Existing runtime files only,
 96 chunks; local /reload applies source. Native visual acceptance pending.
+
+## Gameplay Enhancements merge closeout
+
+Owner accepted the latest contribution/customization UI and authorized merging
+PR #10 to main. Reconciled current main in an isolated worktree, retaining its
+Modern contrast and Recruitment cleanup. Both conflicting changelog additions
+are retained. Verify the combined feature/startup/profile/Recruitment/dungeon
+suites and release builder before publication, then fast-forward the existing
+live-linked checkout to merged main. Native item placement/broad combat coverage
+remain unconfirmed; no SavedVariables edits or release publication.

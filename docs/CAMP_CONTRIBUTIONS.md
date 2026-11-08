@@ -228,3 +228,11 @@ Live and preview rows share one style implementation; native OnClick is unchange
 Monitor / Camp Buffs / Contributions quick jumps expose the module elements near
 the top. See CAMPFIRE_MONITOR.md for exact controls, current native check paths
 and camp_contributions_appearance.py coverage. Native acceptance pending.
+
+## Owner acceptance and merge closeout
+
+Owner accepted the latest UI/customization with "Looks good" and requested the
+feature branch be merged to main. This supersedes pending appearance acceptance
+for the reviewed layout; it does not assert every native placement/combat case
+was tested. Current main reconciliation preserves its Modern contrast and
+Recruitment simplification changes; only changelog entries conflicted.

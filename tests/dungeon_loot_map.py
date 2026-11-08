@@ -140,7 +140,7 @@ lua.execute('''
         end
         assert(slot.mapKind~='objective','objective actions removed')
         if text=='Fixture Patrol' or text=='Patrol target' then
-            assert(slot.button.label:GetText():find('|cfff5f7fa',1,true),'NPC subheader gradient')
+            assert(not slot.button.label:GetText():find('|c',1,true),'NPC subheader is solid text')
             assert(slot.headerGlow[1]:IsShown())
         end
         assert(slot.button.label.spacing==4 or slot.mapKind,'moderate line leading')
@@ -155,8 +155,8 @@ lua.execute('''
     assert(not M.coordinateFrame:IsShown() and not M.coordinateFrame.edit:HasFocus(),'selection clears stale coordinates')
     assert(noteIndex and objectiveIndex and noteIndex<objectiveIndex and mapButton)
     assert(page.quests.underline:IsShown() and not page.home.underline:IsShown())
-    local gradientLine=page.quests.underline.gradient
-    assert(gradientLine.minimum.r==159/255 and gradientLine.maximum.b==241/255)
+    local accent=addon.InterfaceTheme.primary
+    assert(page.quests.underline.gradient==nil and page.quests.underline.color[2]==accent[2],'solid accent tab underline')
     mapButton:GetScript('OnClick')(mapButton)
     assert(Map.target and #Map.target.paths==1,'actual map action callback')
     local hasGlow=false
@@ -167,12 +167,7 @@ lua.execute('''
         end
     end
     assert(hasGlow)
-    local gradient=addon.DungeonLootWidgets.Gradient('Objective')
-    assert(Plain(gradient)=='Objective' and select(2,gradient:gsub('|cff',''))==9)
-    for kind,colors in pairs({header={'9fccfa','0974f1'},boss={'f83d5c','fd4b2f'},quest={'fada5e','faf2df'}}) do
-        local value=addon.DungeonLootWidgets.Gradient('AB',kind)
-        assert(value=='|cff'..colors[1]..'A|r|cff'..colors[2]..'B|r',kind..' exact gradient endpoints')
-    end
+    assert(addon.DungeonLootWidgets.Gradient==nil,'no per-letter gradient text')
     LibQuestieDB=nil;QuestieLoader=nil
     assert(#L:Targets(100002,'turnin')==0)
     assert(#L:Targets(100002,'pickup',{mapID=1421,x=.4,y=.5,label='Recorded pickup'})==1)

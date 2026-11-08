@@ -295,6 +295,34 @@ local BUTTON = {
 -- List rows draw exactly like plain buttons in Modern; in Blizzard they are
 -- stock list rows rather than push buttons.
 BUTTON.row = BUTTON.button
+-- Modern recipes. Every clickable edge rests at the control-edge contrast so
+-- targets read as buttons before they are hovered; hover lifts the fill one
+-- clear step, and a selected choice shows a full accent edge on a raised fill.
+local MODERN_BUTTON = {
+    button = {
+        fill = "surface", line = "lineStrong", label = "text",
+        hoverFill = "hover", hoverLine = "muted",
+        pressedFill = "panel", selectedLine = "primary",
+    },
+    secondary = {
+        line = "lineStrong", label = "secondary",
+        hoverFill = "hover", hoverLine = "muted", hoverLabel = "text",
+        pressedFill = "surface", selectedFill = "surface", selectedLine = "primary",
+    },
+    choice = {
+        line = "lineStrong", label = "secondary",
+        hoverFill = "hover", hoverLine = "muted", hoverLabel = "text",
+        selectedFill = "surface", selectedLine = "primary", selectedLabel = "text",
+    },
+    tab = {
+        label = "secondary", hoverFill = "hover", hoverLabel = "text",
+        selectedFill = "surface", selectedLabel = "text", edge = true,
+    },
+    underline = {
+        label = "secondary", hoverLabel = "text", selectedLabel = "text",
+    },
+}
+MODERN_BUTTON.row = MODERN_BUTTON.button
 -- Blizzard: styles drawn with the stock push-button art, and styles that
 -- receive the stock list highlight bar. Segmented choices stay flat: a row of
 -- red buttons is loud, and the pressed art alone barely shows which is chosen.
@@ -313,18 +341,20 @@ function W.Button(parent, text, width, height, style)
     style = style or "button"
     button.skinStyle = style
     if style == "toggle" or style == "checkbox" then return W.Switch(button, text, height, style) end
-    local recipe = BUTTON[style] or BUTTON.button
+    -- Resolved per button: the theme is applied after this file loads.
+    local recipe = (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
     button.fill = W.Fill(button, T.surface, "BACKGROUND")
     button.outline = W.Outline(button, T.line, "BORDER")
     -- Kept for consumers that tint the selected state directly.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0.08)
     button.activeGlow:Hide()
     if recipe.edge then
-        -- Selected navigation rows carry a 2px accent bar on the leading edge.
+        -- Selected navigation rows carry an accent bar on the leading edge
+        -- (3px in Modern, where it is the main "you are here" marker).
         button.selectionEdge = W.Fill(button, T.primary, "OVERLAY")
         button.selectionEdge:ClearAllPoints()
         button.selectionEdge:SetPoint("TOPLEFT"); button.selectionEdge:SetPoint("BOTTOMLEFT")
-        button.selectionEdge:SetWidth(2)
+        button.selectionEdge:SetWidth(T.blizzardArt and 2 or 3)
         button.selectionEdge:Hide()
     end
     button.label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -392,7 +422,7 @@ function W.Button(parent, text, width, height, style)
         end
         if fillColor then Paint(self.fill, fillColor) else Paint(self.fill, T.background, 0) end
         if lineColor then
-            self.outline:SetColor(lineColor, selected and line == "primary" and 0.7 or nil)
+            self.outline:SetColor(lineColor, T.blizzardArt and selected and line == "primary" and 0.7 or nil)
             self.outline:SetShown(true)
         else self.outline:SetShown(false) end
         local color = self.labelColor or Color(label) or T.text
@@ -482,15 +512,15 @@ function W.Switch(button, text, height, style)
         if check then return check end
     end
     local toggle = style == "toggle"
-    local h = toggle and 18 or 16
-    local w = toggle and 34 or 16
+    local h = 18
+    local w = toggle and 34 or 18
     local track = button:CreateTexture(nil, "BACKGROUND")
     track:SetPoint("CENTER"); track:SetSize(w, h)
     local frame = CreateFrame("Frame", nil, button)
     frame:SetPoint("CENTER"); frame:SetSize(w, h)
     local outline = W.Outline(frame, T.lineStrong, "BORDER")
     local mark = button:CreateTexture(nil, "ARTWORK")
-    mark:SetSize(toggle and 12 or 8, toggle and 12 or 8)
+    mark:SetSize(toggle and 12 or 10, toggle and 12 or 10)
     button.fill, button.knob, button.switchOutline = track, mark, outline
     -- Inert stand-in so shared consumers can still address the glow region.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0)
@@ -504,7 +534,10 @@ function W.Switch(button, text, height, style)
         local available = self:IsEnabled()
         local on = self.selected == true
         local hovered = available and self.hovered
-        Paint(track, toggle and (on and T.primary or T.surface) or T.field)
+        if toggle then Paint(track, on and T.primary or T.surface)
+        -- A ticked box carries a faint accent wash behind its mark, so checked
+        -- and unchecked differ in area as well as in the small mark.
+        elseif on then Paint(track, T.primary, 0.16) else Paint(track, T.field) end
         outline:SetColor(on and T.primary or (hovered and T.secondary or T.lineStrong))
         mark:ClearAllPoints()
         if toggle then
@@ -669,15 +702,20 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     slider:SetMinMaxValues(minimum, maximum)
     slider:SetValueStep(step)
     slider:SetObeyStepOnDrag(true)
+    -- Modern draws a thicker track at control-edge contrast and a larger thumb
+    -- so the slider reads as draggable; Blizzard keeps its hairline.
+    local modern = not T.blizzardArt
+    local trackHeight = modern and 4 or 2
     local track = W.Texture(slider, "SliderTrack")
     track:ClearAllPoints()
-    track:SetPoint("LEFT", 0, 0); track:SetPoint("RIGHT", 0, 0); track:SetHeight(2)
+    track:SetPoint("LEFT", 0, 0); track:SetPoint("RIGHT", 0, 0); track:SetHeight(trackHeight)
+    if modern then Paint(track, T.lineStrong) end
     local progress = W.Fill(slider, T.primary, "BORDER")
     progress:ClearAllPoints()
-    progress:SetPoint("LEFT", 0, 0); progress:SetHeight(2); progress:SetWidth(1)
+    progress:SetPoint("LEFT", 0, 0); progress:SetHeight(trackHeight); progress:SetWidth(1)
     local thumb = W.Texture(slider, "SliderThumb", "OVERLAY")
     thumb:ClearAllPoints()
-    thumb:SetSize(8, 16)
+    thumb:SetSize(modern and 10 or 8, modern and 20 or 16)
     thumb:SetVertexColor(unpack(T.text))
     -- Blizzard: the stock slider knob, untinted.
     local stockThumb = T.blizzardArt and thumb:SetTexture(ART.sliderThumb) ~= false

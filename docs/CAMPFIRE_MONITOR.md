@@ -243,3 +243,10 @@ in-game confirmation. Screenshots: pending.
 +native action retention, profile validation and persistence. Native rendering,
 +readability at extreme sizes and screenshots remain pending owner confirmation.
 +
+## Owner acceptance and merge closeout
+
+Owner accepted the latest UI/customization with "Looks good" and requested the
+feature branch be merged to main. This supersedes pending appearance acceptance
+for the reviewed layout; it does not assert every native placement/combat case
+was tested. Current main reconciliation preserves its Modern contrast and
+Recruitment simplification changes; only changelog entries conflicted.

@@ -7,7 +7,9 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 -- decline tracking from system messages.
 addon:RegisterCategory("guildTools",{title="Guild Tools"})
 local M={title="Recruitment",category="guildTools",defaultEnabled=false,
-    configDescription="Find guildless players by level and class, then invite them through Guild > Add Member."}
+    configDescription="Find guildless players by level and class, then invite them through Guild > Add Member.",
+    -- Settings that live only in the Recruiter window still route search here.
+    searchAliases={"whisper","whisper text","minimum level","maximum level","levels per search","classes","recruiter window"}}
 addon.ForeverRecruitment=M
 addon:RegisterModule("foreverRecruitment",M)
 

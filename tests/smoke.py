@@ -85,6 +85,20 @@ restored.execute('''
     SlashCmdList.PLAYTHEGAMETOOLS()
     local themes=addon.configWindow.pages.dashboard.themeButtons
     assert(#themes==2 and themes[1].selected and not themes[2].selected,'theme choice')
+    -- Modern contrast: findable control edges, readable muted copy, and
+    -- surfaces that step up from the recessed sidebar to hover.
+    local function lum(c)
+        local function ch(v) return v<=0.03928 and v/12.92 or ((v+0.055)/1.055)^2.4 end
+        return 0.2126*ch(c[1])+0.7152*ch(c[2])+0.0722*ch(c[3])
+    end
+    local function ratio(a,b) local x,y=lum(a),lum(b); if x<y then x,y=y,x end; return (x+0.05)/(y+0.05) end
+    assert(ratio(T.lineStrong,T.background)>=3 and ratio(T.lineStrong,T.sidebar)>=3,'control edges findable')
+    assert(ratio(T.text,T.background)>=12 and ratio(T.muted,T.background)>=4.5 and ratio(T.muted,T.surface)>=4.5,'readable text')
+    assert(lum(T.sidebar)<lum(T.background) and lum(T.background)<lum(T.surface) and lum(T.surface)<lum(T.hover),'surface steps')
+    local resting,chosen=themes[2].outline.edges[1].color,themes[1].outline.edges[1].color
+    assert(resting[1]==T.lineStrong[1] and resting[4]==1,'unselected choice keeps a visible edge')
+    assert(chosen[2]==T.primary[2] and chosen[4]==1,'selected choice has a full accent edge')
+    assert(addon.configWindow.navigationButtons.dashboard.selectionEdge.width==3,'selected navigation marker')
     themes[2].scripts.OnClick()
     assert(addon.db.window.theme=='blizzard' and addon.ReloadManager.requests.interfaceTheme,'theme reload request')
     assert(themes[2].selected and T.id=='modern','theme applies only after reload')
@@ -209,6 +223,13 @@ recruit.execute('''
     assert(text and not addon.ProfileCodec.Decode(text).profile.modules.foreverRecruitment.history,'history is not exported')
     addon:ToggleConfig();addon:SelectConfigPage('foreverRecruitment')
     assert(addon.configWindow.pages.foreverRecruitment==R.page)
+    -- Search, class and whisper settings live only in the Recruiter window.
+    for _,entry in ipairs(R.page.searchEntries) do
+        assert(entry.label~='Minimum Level' and entry.label~='Whisper After Invite' and entry.label~='Search','no duplicated recruiter settings')
+        assert(entry.label~='Recruitment Status' and entry.label~='Statistics' and entry.label~='How It Works' and entry.label~='Invites' and entry.label~='Re-invite After (days)','page keeps only Recruiter and History')
+    end
+    local found=addon:SearchSettings('whisper')
+    assert(found[1] and found[1].module==R,'whisper search still routes to Recruitment')
 ''')
 ding, _ = load()
 ding.execute('''
