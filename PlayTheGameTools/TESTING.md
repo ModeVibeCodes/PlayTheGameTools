@@ -152,7 +152,7 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Action:** Click X on a row, scan again, then click Clear Never-Invite List.
    **Required state:** OOC.
    **Confirmation:** The X'd player no longer appears until the list is cleared;
-   invited players stay hidden for the Re-invite After (days) window.
+   invited players stay hidden for the saved re-invite window (7 days by default).
 
 ## F. Reporting and release gate
 

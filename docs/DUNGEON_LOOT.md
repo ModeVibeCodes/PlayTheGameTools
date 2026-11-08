@@ -47,7 +47,7 @@ log** appears only when that character has recorded class-specific quests.
 Pickup progress is larger (14px), right aligned at the bottom of the tile. On
 wide cards it shares the footer with metadata; narrow cards stack the footer
 sections and can grow to avoid overlap. Titles and adjacent faction icons form
-one centered group within the title band. Their existing gradient/glow remains.
+one centered group within the title band, in solid theme text with a soft glow.
 Preview and missing-data cards retain their explicit unavailable states.
 
 The SFK pilot lists Test of Righteousness and Horn of Xelthos by their final
@@ -136,8 +136,8 @@ Native follow-up regression checks (owner confirmed intended behavior on 2026-11
    the **20–29** bracket button below search. **Action:** click it, try another
    range, search for a dungeon, then resize the window. **Required state:** OOC.
    **Confirmation:** the list scrolls to Suggested Starting Levels 20–29;
-   unavailable search-result ranges are hidden, headers have a subtle underline
-   and reversed blue gradient, and the strip disappears inside a dungeon.
+   unavailable search-result ranges are hidden, headers are solid text over a
+   quiet hairline, and the strip disappears inside a dungeon.
 4. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons.
    **Action:** inspect a neutral dungeon and a faction dungeon at wide/narrow
    widths. **Required state:** OOC. **Confirmation:** title and emblem(s) center
@@ -180,12 +180,14 @@ Extra sources remain under **Other loot** and do not inflate boss totals.
 Quest steps remain **1. Starts at / 2. Objective / 3. Turn in**, then rewards and
 optional prerequisites. Notes remain near the top; useful interior/entrance hints
 are retained and missing hints are not invented. Known NPC/target names appear
-below their heading in a subtle glowing white/gray gradient. Class names retain
+below their heading in solid text with a subtle glow. Class names retain
 native class colors and recorded chains show **Chain**. Moderate line leading
 and reduced row gaps preserve the accepted compact layout.
 
-Gradients: general #9fccfa to #0974f1, boss #f83d5c to #fd4b2f, quest #FADA5E to
-#FAF2DF, NPC #F5F7FA to #A0A8B4. Heading glow is static and restrained.
+Headings, card titles, list entries and NPC subheaders use solid interface-theme
+colours (no per-letter gradients); hierarchy comes from size. Tab underlines are
+a solid accent and bracket rules a theme hairline. Heading glow is static and
+restrained. Map pins keep their blue rim.
 
 ## Locations and map controls
 

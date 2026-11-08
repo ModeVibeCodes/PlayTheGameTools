@@ -30,21 +30,6 @@ function UI.Portrait(texture, entry)
     elseif entry.icon then texture:SetTexture(entry.icon) end
 end
 local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.5),math.floor(g*255+.5),math.floor(b*255+.5)) end
-local PALETTES={header={{159,204,250},{9,116,241}},boss={{248,61,92},{253,75,47}},quest={{250,218,94},{250,242,223}},npc={{245,247,250},{160,168,180}}}
-function UI.Gradient(text,kind)
-    local colors=kind=="bracket" and {PALETTES.header[2],PALETTES.header[1]} or PALETTES[kind] or PALETTES.header
-    local chars={};for char in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars+1]=char end
-    local out={}
-    for index,char in ipairs(chars) do
-        local t=(index-1)/math.max(1,#chars-1)
-        local r,g,b
-        r=(colors[1][1]+(colors[2][1]-colors[1][1])*t)/255
-        g=(colors[1][2]+(colors[2][2]-colors[1][2])*t)/255
-        b=(colors[1][3]+(colors[2][3]-colors[1][3])*t)/255
-        out[index]="|cff"..Hex(r,g,b)..char.."|r"
-    end
-    return table.concat(out)
-end
 function UI.ClassText(token)
     if not token then return "All classes" end
     local name=LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token] or (token:sub(1,1)..token:sub(2):lower())
@@ -107,7 +92,9 @@ function UI.New(page, module)
         button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, item and -10 or -12)
         local factionWidth = UI.Factions(button, options.faction)
         button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
-        button.label:SetText((options.heading or options.gradient) and UI.Gradient(text,options.gradient) or text); button:SetLabelColor(color or T.text)
+        -- Solid theme colours throughout: hierarchy comes from size and weight,
+        -- not per-letter colour ramps.
+        button.label:SetText(text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
         addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.subheader and 14 or (options.expandedItem and 14 or 12)))
         button:EnableMouse(callback ~= nil or item ~= nil)
@@ -149,8 +136,7 @@ function UI.New(page, module)
         end
         if options.underline then
             slot.headingLine=slot.headingLine or button:CreateTexture(nil,"OVERLAY")
-            slot.headingLine:SetColorTexture(1,1,1,1)
-            slot.headingLine:SetGradient("HORIZONTAL",CreateColor(9/255,116/255,241/255,.5),CreateColor(159/255,204/255,250/255,.08))
+            W.Paint(slot.headingLine,T.line)
             slot.headingLine:ClearAllPoints();slot.headingLine:SetPoint("BOTTOMLEFT",12,1);slot.headingLine:SetPoint("BOTTOMRIGHT",-12,1);slot.headingLine:SetHeight(1);slot.headingLine:Show()
         end
         slot.subtitle:SetText(options.subtitle or "")

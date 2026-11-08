@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Recruitment settings page no longer duplicates the Recruiter window: level
+  range, levels per search, classes (All/None), Whisper After Invite and the
+  whisper text are set only in the Recruiter window (`/ptgr`). Recruitment
+  Status, Statistics, How It Works and the Invites section (Re-invite After
+  (days)) were removed from the page, which now holds only Open Recruiter and
+  the History resets. Saved values are unchanged (the re-invite window keeps
+  its saved days, default 7); searching "whisper" or "classes" still finds
+  Recruitment.
+
+- Removed the per-letter gradient text from Dungeon Loot: dungeon card titles,
+  section and bracket headings, boss/quest names, list entries and NPC
+  subheaders now use solid theme colours. Tab underlines are a solid accent and
+  bracket heading rules a plain hairline. Map pin rims are unchanged.
+
+- Refreshed the Modern interface theme for contrast and focus: the sidebar is
+  recessed below the canvas, popups and controls step up from it, and buttons,
+  inputs, choices, checkboxes and slider tracks have edges you can find before
+  hovering. Hover is a clear step brighter, selected choices show a full accent
+  edge, the selected sidebar entry has a wider accent bar, ticked boxes carry
+  an accent wash, sliders are thicker, and sections have more space between
+  them. Text is softer off-white with brighter headings. Blizzard is unchanged.
+
 - Added interface themes: Dashboard > Appearance > Interface Theme chooses
   Modern (default, unchanged) or Blizzard (stock dialog border and stone, red
   push buttons, stock checkboxes, input borders and slider knob, the game font
