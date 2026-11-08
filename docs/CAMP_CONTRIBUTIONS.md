@@ -204,3 +204,17 @@ workspace while editing. Appearance numeric fields snap to supported steps.
 See CAMPFIRE_MONITOR.md for exact current edit checks; run the new
 camp_contributions_editing.py with registration/controls suites. Native editing
 acceptance and screenshots remain pending.
+
+## Fractional-offset startup check
+
+The startup repair is included in a427bc2. Historical 007819a rejects the same
+fractional offsets that the current source normalizes. The dedicated
+camp_contributions_startup.py regression runs full profile initialization and a
+second reload, preserving unrelated preferences and existing recovery snapshots.
+This follow-up changes tests/docs only; local runtime bytes already contain the
+repair. No SavedVariables file was modified.
+
+**Navigation:** in-game chat. **Action:** /reload. **Required state:** OOC.
+**Confirmation:** addon initializes without contributionX/Y range errors and
+retains the selected profile and settings; position is rounded to the nearest
+pixel. Native confirmation remains pending.

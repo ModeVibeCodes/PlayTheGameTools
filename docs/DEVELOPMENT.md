@@ -191,3 +191,12 @@ setters are removed; fixed existing stat palette ignores old overrides while
 preserving saved fields. Run camp_contributions_editing.py, camp_contributions_registration.py,
 campfire_controls.py and builder.
 Native editing/screenshots pending; exact paths in CAMPFIRE_MONITOR.md.
+
+## Fractional contribution startup regression
+
+Owner reported initialization rejecting contributionX. A read-only targeted check
+confirmed fractional legacy offsets; no SavedVariables were changed. Historical
+007819a reproduces the startup failure, while live a427bc2 already repairs the
+same profile. Added camp_contributions_startup.py to exercise the full startup
+path, unrelated preference/recovery retention and a second reload. No additional
+runtime change or profile reset is required. Native reload confirmation pending.
