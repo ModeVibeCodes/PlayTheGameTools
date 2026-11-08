@@ -1,5 +1,11 @@
 # Standalone Forever development
 
+Enhanced Experience Bar adds the tenth module and three Lua files (99 chunks).
+Run `python tests/enhanced_experience_bar.py` for forecasts/session/Edit Mode and
+profile coverage, plus regression/build checks. The contract and exact `/reload`
+test paths are in [ENHANCED_EXPERIENCE_BAR.md](ENHANCED_EXPERIENCE_BAR.md).
+Native acceptance remains pending; no release publication is implied.
+
 The editable addon is `PlayTheGameTools/`, displayed in WoW as Play The Game Tools.
 It contains all current Forever production Lua and runtime media. The repository
 starts with fresh history; no Retail modules, development-machine settings or

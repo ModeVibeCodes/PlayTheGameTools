@@ -75,6 +75,8 @@ Modules\CampfireMonitorDisplay.lua
 Modules\CampContributionsData.lua
 Modules\CampContributions.lua
 Modules\CampContributionsDisplay.lua
+Modules\EnhancedExperienceBar.lua
+Modules\EnhancedExperienceBarDisplay.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -103,5 +105,6 @@ Config\DungeonLootWidgets.lua
 Config\DungeonLoot.lua
 Config\CampfireMonitor.lua
 Config\LootSparkles.lua
+Config\EnhancedExperienceBar.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua

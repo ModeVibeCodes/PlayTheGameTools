@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added opt-in Enhanced Experience Bar under Questing & Leveling: flat/native
+  Blizzard textures, XP/rested/completed-quest percentages, independent forecast
+  lanes, session time/XP per hour, appearance controls and shared Edit Mode.
+  Native validation pending; partial rewards are marked incomplete. See
+  docs/ENHANCED_EXPERIENCE_BAR.md.
+
 - Recruitment settings page no longer duplicates the Recruiter window: level
   range, levels per search, classes (All/None), Whisper After Invite and the
   whisper text are set only in the Recruiter window (`/ptgr`). Recruitment
