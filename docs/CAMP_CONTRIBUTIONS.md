@@ -218,3 +218,13 @@ repair. No SavedVariables file was modified.
 **Confirmation:** addon initializes without contributionX/Y range errors and
 retains the selected profile and settings; position is rounded to the nearest
 pixel. Native confirmation remains pending.
+
+## Full appearance suite
+
+Contribution Window Style, Contribution Text and Contribution Icons & Rows now
+provide independent window/border/background, fonts and every text size/color,
+icon/row dimensions, visibility/tooltip/lock settings and direct managed offsets.
+Live and preview rows share one style implementation; native OnClick is unchanged.
+Monitor / Camp Buffs / Contributions quick jumps expose the module elements near
+the top. See CAMPFIRE_MONITOR.md for exact controls, current native check paths
+and camp_contributions_appearance.py coverage. Native acceptance pending.

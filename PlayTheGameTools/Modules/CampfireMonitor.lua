@@ -28,6 +28,29 @@ C.defaults={headerGradient=false,contributionScale=100,contributionOpacity=100,c
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
     benefitsScale=100,benefitsOpacity=100,benefitsBackgroundOpacity=0}
 C.colorDefaults={textColor={1,0.85,0.5},headerColor={1,0.58,0.12},headerEndColor={1,0.12,0.08}}
+-- Contribution appearance stays independent of the icon and Camp Buffs.
+C.contributionDefaults={contributionWidth=450,contributionPadding=10,contributionRowHeight=44,
+    contributionRowGap=4,contributionVisibleRows=6,contributionIconSize=36,
+    contributionTitleSize=14,contributionNameSize=13,contributionInfoSize=11,contributionActionSize=11,
+    contributionHintSize=11,contributionFooterSize=11,contributionDismissSize=11,contributionBorderSize=1,contributionBorderOpacity=100,
+    contributionRowOpacity=95,contributionIconOpacity=100,contributionHoverOpacity=15,
+    contributionShowTitle=true,contributionShowHint=true,contributionShowFooter=true,
+    contributionShowIcons=true,contributionShowNames=true,contributionShowProfession=true,
+    contributionShowCount=true,contributionShowAction=true,contributionTooltips=true,
+    contributionLocked=false,contributionOutline=false,contributionHeaderGradient=false,
+    contributionUseInterfaceFont=true,contributionFont="game",contributionFontMedia="",
+    contributionTitleAlign="LEFT",contributionTextAlign="LEFT"}
+local contributionRanges={Width={280,700,10},Padding={6,24,1},RowHeight={32,96,1},RowGap={0,16,1},VisibleRows={1,12,1},
+    IconSize={16,64,1},TitleSize={10,28,1},NameSize={10,24,1},InfoSize={9,20,1},ActionSize={9,24,1},
+    HintSize={9,20,1},FooterSize={9,20,1},DismissSize={9,20,1},BorderSize={1,4,1},BorderOpacity={0,100,5},
+    RowOpacity={0,100,5},IconOpacity={0,100,5},HoverOpacity={0,100,5}}
+for key,value in pairs(C.contributionDefaults) do C.defaults[key]=value end
+for key,value in pairs(contributionRanges) do C.ranges["contribution"..key]=value end
+C.contributionColors={contributionBackgroundColor={0.035,0.045,0.06},contributionBorderColor={0.32,0.40,0.48},
+    contributionRowColor={0.10,0.14,0.18},contributionHoverColor={1,1,1},contributionTitleColor={1,0.58,0.12},
+    contributionTitleEndColor={1,0.12,0.08},contributionNameColor={1,1,1},contributionInfoColor={0.65,0.72,0.8},
+    contributionDismissColor={1,1,1},contributionActionColor={1,0.82,0.35},contributionHintColor={0.65,0.72,0.8},contributionFooterColor={0.65,0.72,0.8}}
+for key,value in pairs(C.contributionColors) do C.colorDefaults[key]=value end
 function C.Initialize(db)
     if db.campfire==nil then db.campfire={} end
     local settings=db.campfire
@@ -42,6 +65,11 @@ function C.Initialize(db)
         end
         assert(Public(v) and type(v)==type(default),"Invalid Campfire Monitor setting: "..key)
         if r then assert(Number(v,r[1],r[2]) and (v-r[1])%r[3]==0,"Invalid Campfire Monitor range: "..key) end
+    end
+    assert(settings.contributionFont=="game" or settings.contributionFont=="chat","Invalid contribution font")
+    assert(#settings.contributionFontMedia<=128,"Invalid contribution media font")
+    for _,key in ipairs({"contributionTitleAlign","contributionTextAlign"}) do
+        assert(settings[key]=="LEFT" or settings[key]=="CENTER" or settings[key]=="RIGHT","Invalid contribution alignment")
     end
     for key,default in pairs(C.colorDefaults) do
         if settings[key]==nil then settings[key]={unpack(default)} end
@@ -289,7 +317,15 @@ function C:SetOption(key,value)
     local candidate=addon.ProfileCodec.Copy(self.owner.db);candidate.campfire[key]=value
     if not pcall(self.Initialize,candidate) then return false end
     self.db[key]=type(value)=="table" and {unpack(value)} or value
-    if self.SyncPositionOption then self:SyncPositionOption(key) end
+    if key=="contributionFont" then self.db.contributionFontMedia="" end
+    if key=="contributionX" or key=="contributionY" then
+        local PM=addon.PositionManager
+        if PM.elements.campfireContributions then PM:SetOffsets("campfireContributions",self.db.contributionX,self.db.contributionY)
+        elseif addon.db.positions and addon.db.positions.campfireContributions then
+            local saved=addon.db.positions.campfireContributions
+            saved.x,saved.y=self.db.contributionX,self.db.contributionY
+        end
+    elseif self.SyncPositionOption then self:SyncPositionOption(key) end
     self:SyncEnabled()
     if self.owner.page then self.owner.page:Refresh() end
     return true

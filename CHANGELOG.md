@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Monitor / Camp Buffs / Contributions quick jumps and an element overview near the top of Campfire Monitor. Expanded independent Contributions styling for window/border/background, row dimensions and spacing, icons, fonts, every text size/color/alignment, optional title gradient, visibility, tooltips and lock/offset controls. Preview and live kits share the same styling path.
+
 - Fixed contribution editing after fractional drags by rounding managed coordinates and repairing affected offsets without resetting positions. Apply geometry after Show, keep the panel below the Edit Mode workspace, and snap numeric appearance edits to supported steps. Removed Crit/Int pickers; typed stats use the fixed existing palette.
 
 - Fixed repeated Camp Contributions invalid-frame assertions: finish and show the panel before registering its position, retry unavailable geometry once on the next frame, then suppress event-driven retries and expose manual recovery if layout stays unavailable. Shared position safety checks and native item actions are unchanged.

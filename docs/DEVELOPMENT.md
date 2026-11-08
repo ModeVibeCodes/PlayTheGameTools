@@ -200,3 +200,15 @@ confirmed fractional legacy offsets; no SavedVariables were changed. Historical
 same profile. Added camp_contributions_startup.py to exercise the full startup
 path, unrelated preference/recovery retention and a second reload. No additional
 runtime change or profile reset is required. Native reload confirmation pending.
+
+## Contribution appearance and section navigation
+
+Added independent contribution styles/default validation for window dimensions,
+border/background, rows/viewport, font/outline, every text color/size, alignment,
+icons, visibility, lock/tooltips and direct managed offsets. Live/preview use one
+layout/style path; hardware item action ownership is unchanged. Full-width Jump
+To buttons use existing page Reveal for Monitor/Buffs/Contributions groups; no
+shared page changes or extra tabs. Selecting an explicit font exits interface
+font inheritance. Run camp_contributions_appearance.py,
+registration/editing/startup suites and builder. Existing runtime files only,
+96 chunks; local /reload applies source. Native visual acceptance pending.

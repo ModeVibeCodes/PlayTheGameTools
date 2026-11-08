@@ -38,6 +38,26 @@ function C:AddConfig(page)
     local function Note(label,text,height)
         local text=W.Label(page:Row(label,height or 52),text,nil,0,-4,440,T.muted);text:SetWordWrap(true);return text
     end
+    local targets={};page.campfireJumpTargets=targets;page.campfireJumps={}
+    local jump=page:Row("Jump To",36)
+    jump.rowLabel:Hide();jump:ClearAllPoints();jump:SetAllPoints(jump.row)
+    for i,entry in ipairs({{"monitor","Monitor"},{"buffs","Camp Buffs"},{"contributions","Contributions"}}) do
+        local id=entry[1]
+        page.campfireJumps[id]=Button(jump,entry[2],(i-1)*132,function()
+            if targets[id] then page:Reveal(targets[id]) end
+        end,124)
+    end
+    jump.row.layoutChildren=function(_,width)
+        local cell=(width-16)/3
+        for i,id in ipairs({"monitor","buffs","contributions"}) do
+            local button=page.campfireJumps[id];button:SetWidth(cell);button:ClearAllPoints();button:SetPoint("LEFT",(i-1)*(cell+8),0)
+        end
+    end
+    Note("Module Elements","Nearby-fire monitor, earned Camp Buffs, and profession contributions.",42)
+    local function WindowGroup(id,title)
+        page:Group(title);local row=page.rows[#page.rows]
+        targets[id]={section=row.section,row=row}
+    end
     page:Group("General")
     Toggles({{"Enable Campfire Monitor","enabled"},{"Show In Combat","showInCombat"}})
     local status=Note("Campfire Status","",42);page.campfireStatus=status
@@ -55,7 +75,7 @@ function C:AddConfig(page)
     page.campfireMove=Button(placement,"Move Windows",190,function() self:SetPlacementMode(not self.placing) end)
     Toggles({{"Header Gradient","headerGradient"}})
     Color("Text Color","textColor");Color("Header Color","headerColor");Color("Header Gradient End","headerEndColor")
-    Note("Shared Style","Text Color is shared by status and untyped stats. Header colors apply to Camp Buffs and Contributions. Pick opens the color wheel.")
+    Note("Shared Style","Text Color is shared by status and untyped stats. Header colors apply to Camp Buffs; Contributions has its own style. Pick opens the color wheel.")
     page.refreshers[#page.refreshers+1]=function()
         local s=self.snapshot or {}
         status:SetText(self.previewing and "Preview only." or
@@ -65,7 +85,7 @@ function C:AddConfig(page)
         page.campfirePreview.label:SetText(self.previewing and "Stop Preview" or "Preview")
         page.campfireMove.label:SetText(self.placing and "Finish Moving" or "Move Windows")
     end
-    page:Group("Campfire Icon")
+    WindowGroup("monitor","Campfire Icon")
     Toggles({{"Show Campfire Icon","showIcon"},{"Show Status Text","showText"},
         {"Show Nearby Native Details","showNearbyDetails"},{"Show Profession Guide","showProfessionGuide"},
         {"Always Show Monitor","alwaysShow"},{"Lock Campfire Monitor","locked"}})
@@ -76,7 +96,7 @@ function C:AddConfig(page)
     page.campfireReset=Button(page:Row("Icon Position",34),"Reset Position",0,function()
         if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(false) end
     end)
-    page:Group("Camp Buffs")
+    WindowGroup("buffs","Camp Buffs")
     Toggles({{"Show Your Camp Benefits","showBenefits"},{"Compact Buff Text","compactBenefits"},
         {"Separate Buff Window","separateBenefits"},{"Lock Buff Window","benefitsLocked"},{"Color Stats by Type","colorStats"}})
     Slider("Buff Text Size","benefitsFontSize");Slider("Buff Window Width","benefitsWidth")
@@ -87,7 +107,7 @@ function C:AddConfig(page)
         if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(true) end
     end)
     Note("Buffs TLDR","Detach for independent size, background and position. Joined buffs share the icon window. Duration comes from the native tooltip; no added countdown.")
-    page:Group("Camp Contributions")
+    WindowGroup("contributions","Camp Contributions")
     Toggles({{"Show Contribution Popup","showContributionPopup"}})
     local detected=page:Row("Detected Kits",64)
     page.contributionStatus=W.Label(detected,"",nil,0,-4,280,T.muted);page.contributionStatus:SetWordWrap(true)
@@ -111,6 +131,50 @@ function C:AddConfig(page)
     end)
     Slider("Contribution Scale","contributionScale","%");Slider("Contribution Opacity","contributionOpacity","%")
     Slider("Contribution Background","contributionBackgroundOpacity","%")
+    page:Group("Contribution Window Style")
+    Toggles({{"Lock Contribution Window","contributionLocked"},{"Show Contribution Title","contributionShowTitle"},
+        {"Show Contribution Hint","contributionShowHint"},{"Show Contribution Footer","contributionShowFooter"}})
+    Slider("Contribution Width","contributionWidth");Slider("Contribution Padding","contributionPadding")
+    Slider("Contribution Border Size","contributionBorderSize");Slider("Contribution Border Opacity","contributionBorderOpacity","%")
+    Color("Contribution Background Color","contributionBackgroundColor");Color("Contribution Border Color","contributionBorderColor")
+    Slider("Contribution Horizontal Offset","contributionX");Slider("Contribution Vertical Offset","contributionY")
+    page:Group("Contribution Text")
+    Toggles({{"Use Interface Font","contributionUseInterfaceFont"},{"Contribution Text Outline","contributionOutline"},
+        {"Contribution Title Gradient","contributionHeaderGradient"}})
+    local fontOwner={db={appearance={}}}
+    function fontOwner:CanConfigure() return addon.LootSparkles:OutsideCombat() end
+    function fontOwner:GetFonts() return addon.Media:GetFonts() end
+    function fontOwner:SetAppearance(key,value)
+        C:SetOption("contributionUseInterfaceFont",false)
+        return C:SetOption(key=="font" and "contributionFont" or "contributionFontMedia",value)
+    end
+    local font,refreshFont=W.FontDropdown(page:Row("Contribution Font"),fontOwner);page.contributionFont=font
+    page.refreshers[#page.refreshers+1]=function()
+        fontOwner.db.appearance.font=self.db.contributionFont;fontOwner.db.appearance.fontMedia=self.db.contributionFontMedia
+        refreshFont()
+        if self.db.contributionUseInterfaceFont then font.label:SetText("Interface font (choose to override)") end
+    end
+    for _,entry in ipairs({{"Title Text Size","TitleSize"},{"Kit Name Size","NameSize"},{"Profession / Count Size","InfoSize"},
+        {"Place Text Size","ActionSize"},{"Hint Text Size","HintSize"},{"Footer Text Size","FooterSize"},{"Dismiss Text Size","DismissSize"}}) do Slider(entry[1],"contribution"..entry[2]) end
+    for _,entry in ipairs({{"Title Color","TitleColor"},{"Title Gradient End","TitleEndColor"},{"Kit Name Color","NameColor"},
+        {"Profession / Count Color","InfoColor"},{"Place Text Color","ActionColor"},{"Dismiss Text Color","DismissColor"},{"Hint Text Color","HintColor"},{"Footer Text Color","FooterColor"}}) do Color(entry[1],"contribution"..entry[2]) end
+    local function Alignment(label,key)
+        local row=page:Row(label,36)
+        for i,value in ipairs({"LEFT","CENTER","RIGHT"}) do
+            local button=Button(row,value:sub(1,1)..value:sub(2):lower(),(i-1)*96,function() self:SetOption(key,value) end,88)
+            page.refreshers[#page.refreshers+1]=function() button:SetSelected(self.db[key]==value) end
+        end
+    end
+    Alignment("Title Alignment","contributionTitleAlign");Alignment("Row Text Alignment","contributionTextAlign")
+    page:Group("Contribution Icons & Rows")
+    Toggles({{"Show Kit Icons","contributionShowIcons"},{"Show Kit Names","contributionShowNames"},
+        {"Show Profession","contributionShowProfession"},{"Show Bag Count","contributionShowCount"},
+        {"Show Place Text","contributionShowAction"},{"Contribution Tooltips","contributionTooltips"}})
+    Slider("Kit Icon Size","contributionIconSize");Slider("Kit Icon Opacity","contributionIconOpacity","%")
+    Slider("Contribution Row Height","contributionRowHeight");Slider("Contribution Row Spacing","contributionRowGap")
+    Slider("Visible Contribution Rows","contributionVisibleRows")
+    Color("Contribution Row Color","contributionRowColor");Slider("Contribution Row Opacity","contributionRowOpacity","%")
+    Color("Contribution Hover Color","contributionHoverColor");Slider("Contribution Hover Opacity","contributionHoverOpacity","%")
     page.refreshers[#page.refreshers+1]=function()
         page.contributionStatus:SetText(A:Summary())
         page.contributionPreview.label:SetText(A.previewing and "Stop Preview" or "Preview Contributions")

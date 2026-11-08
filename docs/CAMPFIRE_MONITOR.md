@@ -96,7 +96,7 @@ Customization groups are compact and separated by window:
 - **General:** enable, combat behavior, status, Tools → Open Edit Mode / Refresh
   Status, Preview & Placement → Preview / Move Windows, shared text/header colors
   and optional Header Gradient. Refresh Status is a small secondary button;
-  there is no Native Camp Data field. Header styling serves buffs/contributions.
+  there is no Native Camp Data field. General header styling serves buffs; Contributions now has independent styling.
 - **Campfire Icon:** icon/status/detail/guide visibility, lock, icon and status
   text size, window width/scale/opacity/background, X/Y and Reset Position.
 - **Camp Buffs:** earned bonus visibility, compact formatting, detach/lock,
@@ -184,4 +184,62 @@ in-game confirmation. Screenshots: pending.
 +tests/camp_contributions_editing.py exercises those actual controls, fractional
 +drag followed by another edit, legacy-offset normalization, layering, hidden
 +reopen/reset and persistence. Native editing acceptance/screenshots remain pending.
++
+## Contribution customization suite and quick jumps
++
++**Jump To** is a full-width button strip near the top of Campfire Monitor:
++**Monitor**, **Camp Buffs**, **Contributions**. Each scrolls to its existing group
++and highlights it, using the shared page Reveal behavior. Module Elements briefly
++identifies the nearby-fire monitor, earned bonuses and profession contribution
++popup. These controls do not add extra feature tabs or stop a contribution preview.
++
++Contribution appearance is now independent of the icon/buff windows:
++
++- **Camp Contributions:** existing scale/opacity/background opacity and live,
++  preview, edit, detection and reset-position controls.
++- **Contribution Window Style:** lock, title/hint/footer visibility, width,
++  padding, border size/color/opacity, background color, X/Y offsets.
++- **Contribution Text:** interface-font inheritance or Game/Chat/available media
++  font, outline, independent title gradient/colors, size/color for title, kit
++  name, profession/count, Place, hint, footer and Dismiss; title/row alignment.
++  Selecting a font disables interface inheritance automatically. Native kit
++  identities/content are retained; styling never substitutes item data.
++- **Contribution Icons & Rows:** icon/name/profession/count/Place visibility,
++  native tooltips, icon size/opacity, row height/spacing, visible row count,
++  row and hover colors/opacities. If both icons and names are disabled, the kit
++  name remains for identity. Row height grows to fit the selected icon/fonts.
++
++Preview and live rows call one style/layout implementation; sample rows remain
++inert and visibly marked Preview. Dismiss remains available even if the title
++is hidden. Lock applies to the ordinary live header; preview/Edit Mode can still
++move the window. Scroll distance and viewport height follow actual styled rows.
++Oversized configurations scale to the screen. Changes are OOC; position safety,
++fractional-offset migration, bounded registration retry and native click dispatch
++are unchanged. No shared infrastructure or Retail changes.
++
++1. **Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
++   Monitor → Jump To → Monitor / Camp Buffs / Contributions.
++   **Action:** click each button. **Required state:** config open.
++   **Confirmation:** the corresponding Campfire Icon / Camp Buffs / Camp
++   Contributions heading scrolls into view and highlights.
++2. **Navigation:** same tab → Camp Contributions → Contribution Window → Preview
++   Contributions; Contribution Window Style → Contribution Width / Contribution
++   Padding; Contribution Text → Contribution Font / Title Text Size / Kit Name
++   Color → Pick; Contribution Icons & Rows → Kit Icon Size / Contribution Row Spacing.
++   **Action:** preview, adjust the named fields, choose/cancel a color, select a
++   font and compare with live kits at a real fire. **Required state:** OOC, enabled
++   parent/monitor/popup; live comparison requires a ready learned-profession kit.
++   **Confirmation:** chosen window/text/icon/row styles apply in both modes;
++   Preview has no item action, live Place still uses native click/targeting.
++3. **Navigation:** same tab → Contribution Window Style → Lock Contribution
++   Window / Contribution Horizontal Offset / Contribution Vertical Offset;
++   Contribution Text → Title Alignment / Row Text Alignment.
++   **Action:** change offsets, alignment, lock, then reload and reopen preview.
++   **Required state:** OOC. **Confirmation:** settings/position persist; a live
++   locked header does not drag, while preview/Edit Mode remains movable.
++
++tests/camp_contributions_appearance.py checks actual jumps/width input/color
++picker/font choice plus all styling categories, preview/live parity, scrolling,
++native action retention, profile validation and persistence. Native rendering,
++readability at extreme sizes and screenshots remain pending owner confirmation.
 +
