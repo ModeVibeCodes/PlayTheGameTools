@@ -60,7 +60,6 @@ end
 
 function P:Resolve(id)
     if id ~= "screen" and Combat() then return end
-    if id ~= "screen" and not issecretvalue then return end
     if addon.FrameAnchors and addon.FrameAnchors:ValidID(id) then return addon.FrameAnchors:Resolve(id) end
     for _, item in ipairs(self.targets) do
         if item.id == id then

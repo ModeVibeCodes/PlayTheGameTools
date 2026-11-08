@@ -339,6 +339,29 @@ function PM:ChangeTarget(id,target)
     position.target=target
     return self:SetPosition(id,position,true)
 end
+-- The gap a placement applies with no user nudge; custom points define their own.
+local function PlacementOffsets(position)
+    if position.point then return 0,0 end
+    local item,sign=P:Placement(position.placement),position.target=="screen" and -1 or 1
+    return item.x*sign,item.y*sign
+end
+-- A preset replaces custom points (they would override it) and carries nudges across.
+function PM:SetPlacement(id,placement)
+    if not Known(P.placements,placement) then return false,"invalid-placement" end
+    local position,reason=self:GetPosition(id)
+    if not position then return false,reason end
+    local oldX,oldY=PlacementOffsets(position)
+    position.placement,position.point,position.relativePoint=placement,nil,nil
+    local newX,newY=PlacementOffsets(position)
+    position.x,position.y=position.x-oldX+newX,position.y-oldY+newY
+    return self:SetPosition(id,position)
+end
+function PM:ResetOffsets(id)
+    local position,reason=self:GetPosition(id)
+    if not position then return false,reason end
+    position.x,position.y=PlacementOffsets(position)
+    return self:SetPosition(id,position)
+end
 function PM:SetAttachment(id,point,relativePoint)
     local position,reason=self:GetPosition(id)
     if not position then return false,reason end
