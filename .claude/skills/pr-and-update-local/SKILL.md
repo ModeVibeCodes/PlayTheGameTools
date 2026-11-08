@@ -36,13 +36,9 @@ Use the shell, `git`, and `gh`. Grok Build and Claude both load this skill from 
 - python tests/smoke.py — <result>
 - <every other command you actually ran, with its result>
 - In game: not claimed. `/reload` loads this branch after the live update below.
-
-## Screenshots
-
-Screenshots: pending
 ```
 
-Replace the Screenshots section only with real Forever captures the user supplied in this session. A branch with nothing ahead of `main` and a clean tree gets no PR. If a PR already exists, push any new commits and use that PR.
+A branch with nothing ahead of `main` and a clean tree gets no PR. If a PR already exists, push any new commits and use that PR.
 
 ## Point the running client at this branch
 
