@@ -224,3 +224,11 @@ anchors and bracket jumps. The owner confirmed the revised behavior in-game;
 exact regression paths remain in docs/DUNGEON_LOOT.md. This does not establish
 every catalog fact or server availability.
 Screenshots: pending.
+
+## Gameplay Enhancements / Campfire Monitor
+
+Use the exact Navigation/Action/Required state/Confirmation checklist in
+[Campfire Monitor](docs/CAMPFIRE_MONITOR.md#static-validation-and-native-checklist).
+Loot Sparkles has scoped positive owner feedback; the new two-tab layout and
+campfire monitor require native review. Campfire benefits are earned player buffs,
+not a detected inventory of objects at a nearby camp. Screenshots: pending.

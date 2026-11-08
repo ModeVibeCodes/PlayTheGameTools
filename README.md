@@ -29,6 +29,8 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   ranges are split and searched again), a Recruiter window (`/ptgr`) with a
   copy-name box for Guild > Add Member, optional whisper after a confirmed invite,
   a re-invite window, a never-invite list and invite/join/decline statistics.
+- **Loot Sparkles:** opt-in Gameplay Enhancements under Questing & Leveling; clearer quest objects, herbs, ore and lootable corpses with optional names and range text. Custom indicators pause in combat.
+- **Campfire Monitor:** Gameplay Enhancements tab with an optional native nearby-fire icon/text display, compact earned bonuses in a joined or separately movable window, appearance/position controls and a profession reference guide. Campfire monitoring starts off. Includes a movable Camp Contributions popup for ready carried profession kits, with native click-to-place actions, detected-kit summary, safe sample preview and shared Edit Mode positioning. Text colors use the native picker; gradients are optional. Contributions has independent window, icon, row and text styling; quick jumps link the three campfire elements.
 - **Shared configuration:** independent module switches, saved settings, appearance
   controls and positioning/preview tools where supported by the module.
 

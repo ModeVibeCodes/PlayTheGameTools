@@ -32,6 +32,7 @@ function V:Normalize(source)
         if db.enabled==nil then db.enabled=addon.modules[id].defaultEnabled~=false end
         assert(type(db.enabled)=="boolean","Invalid module enable state: "..id)
     end
+    if addon.LootSparkles then addon.LootSparkles.Initialize(profile.modules.lootSparkles) end
     Colors(profile.modules)
     local display=addon.modules.battleRez and profile.modules.battleRez.display
     if type(display)=="table" then

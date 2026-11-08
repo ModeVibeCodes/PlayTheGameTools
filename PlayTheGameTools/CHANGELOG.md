@@ -24,6 +24,26 @@
   an accent wash, sliders are thicker, and sections have more space between
   them. Text is softer off-white with brighter headings. Blizzard is unchanged.
 
+
+- Added Monitor / Camp Buffs / Contributions quick jumps and an element overview near the top of Campfire Monitor. Expanded independent Contributions styling for window/border/background, row dimensions and spacing, icons, fonts, every text size/color/alignment, optional title gradient, visibility, tooltips and lock/offset controls. Preview and live kits share the same styling path.
+
+- Fixed contribution editing after fractional drags by rounding managed coordinates and repairing affected offsets without resetting positions. Apply geometry after Show, keep the panel below the Edit Mode workspace, and snap numeric appearance edits to supported steps. Removed Crit/Int pickers; typed stats use the fixed existing palette.
+
+- Fixed repeated Camp Contributions invalid-frame assertions: finish and show the panel before registering its position, retry unavailable geometry once on the next frame, then suppress event-driven retries and expose manual recovery if layout stays unavailable. Shared position safety checks and native item actions are unchanged.
+
+- Removed the addon Camp Buffs countdown and timer controls; native tooltip duration remains. Grouped customizations by General, Campfire Icon, Camp Buffs and Camp Contributions. Fixed missing contribution rendering by anchoring before position registration; added contribution scale/opacity/background/reset controls and reduced status refresh to a secondary tool.
+
+- Camp Buffs now drops native intro and parenthesized duration footer text. Added plain text color-wheel controls with optional header/timer gradients, compact toggle grids, concise help, detected kits, an inert Contributions preview and shared Edit Mode placement. Native visual acceptance pending.
+
+- Removed duplicate duration-only footer text beneath Camp Buffs; the countdown stays in its subheading. Added a movable Camp Contributions popup for ready carried profession kits at a nearby fire, native click-to-place actions, per-visit dismissal and reopen/refresh controls. Native item placement/screenshots pending.
+
+- Campfire elements now use shared Edit Mode handles, coordinates and saved positions. Added an orange/red Camp Buffs heading, native countdown with white-to-green/yellow/red urgency gradients, distinct stat colors and spell-ID filtering. Centered the camp icon above its status; no unsupported yards/navigation are fabricated.
+
+- Fixed campfire movement with Move Windows and draggable previews; aura/font refreshes no longer reset dragged anchors. Added compact earned-buff lines and optional independently positioned buff text that remains while its earned buffs last.
+
+- Gameplay Enhancements now has separate Loot Sparkles and Campfire Monitor tabs with per-feature switches. Added an opt-in native campfire proximity icon/text monitor, earned bonus details, appearance/position controls, preview and a clearly labeled profession guide. Campfire native validation/screenshots pending.
+
+- Added default-off Loot Sparkles under Questing & Leveling -> Gameplay Enhancements, with quest/node/corpse switches, animated glints, optional object names/range text, appearance controls and owned client-setting restoration. Native validation and screenshots pending; see docs/LOOT_SPARKLES.md.
 - Added interface themes: Dashboard > Appearance > Interface Theme chooses
   Modern (default, unchanged) or Blizzard (stock dialog border and stone, red
   push buttons, stock checkboxes, input borders and slider knob, the game font
