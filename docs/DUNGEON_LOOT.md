@@ -6,9 +6,12 @@ to the other dungeons. The same appearance and interaction apply across the
 catalog. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
 and real screenshots remain pending; no release publication is authorized.
 
-## Standalone shortcut and keybinding (native revision review pending)
+## Standalone shortcut and keybinding (binding refinement review pending)
 
-The first PR #14 prototype rendered as a blue square and did not move in the
+The owner confirmed the revised Quick Icon/editor working on 2026-11-07, then
+requested direct key overrides and a separate assignment field. Those binding
+refinements await native review. The first PR #14 prototype rendered as a blue
+square and did not move in the
 owner's client. This revision replaces the unsupported chest-art setup with
 explicitly sized native loot dice art (`Interface/Buttons/UI-GroupLoot-Dice-Up`),
 a portrait mask and a thin circular blue ring matching the Class Training icon's
@@ -31,14 +34,15 @@ No existing managed record is overwritten. Screen clamping and shared coordinate
 scaling apply. Clicking in Edit Mode selects; it never opens the browser. Drag
 release does not open it. Show/disable hides both the icon and its Edit selection.
 
-Keybinding shows the current assignment and exposes **Set Keybinding** and
-**Clear Keybinding** directly. Set starts an OOC-only keyboard capture panel:
-modifiers are supported, Escape/Cancel closes it, and a conflicting action is
-reported without modifying any bindings. A successful assignment replaces only
-Dungeon Loot's prior keys. Clear removes only keys still owned by that action.
+Keybinding pairs a **Set Keybinding** button with a read-only field showing the
+assigned key (or **Not bound**). **Clear Keybinding** remains available. Set starts
+an OOC-only keyboard capture panel: modifiers are supported and Escape/Cancel
+closes it. At the owner's request the chosen key replaces its current action,
+even if it was already bound. Prior Dungeon Loot keys are cleared on success;
+other keys stay unchanged. Clear removes only keys still owned by Dungeon Loot.
 The editor uses native GetBindingKey/GetBindingAction/SetBinding and
 SaveBindings(GetCurrentBindingSet()), preserving the current account/character
-context. It validates read/return values and restores the prior action keys on
+context. It validates read/return values and restores both the overwritten action and prior Dungeon Loot keys on
 failed mutation/save attempts. It does not claim a save when the client rejects
 one. Capture releases keyboard input on tab/page navigation, hiding, combat or
 module disable. The native WoW binding entry remains available as an alternative.
@@ -78,7 +82,8 @@ workspace behavior or live key persistence):
    close settings and press it, then return and Clear Keybinding. **Required
    state:** OOC, native binding APIs available. **Confirmation:** assignment shown
    in General, Dungeons opens, binding survives reload and clear removes only
-   Dungeon Loot's keys. A conflicting key reports its existing action unchanged.
+   Dungeon Loot's keys. A previously bound key now opens Dungeon Loot; its old
+   action is replaced on that key. Escape cancels without any binding changes.
 4. **Navigation:** same Set Keybinding panel. **Action:** cancel with Escape,
    navigate away, close settings or enter combat; separately attempt opening/
    dragging/binding changes in combat. **Required state:** compare OOC/combat.

@@ -249,7 +249,14 @@ docs/DUNGEON_LOOT.md under Standalone shortcut and keybinding.
 
 Quick Icon revision: dungeon_loot_quick_icon.py covers native texture dimensions,
 circular ring, size/opacity, shared Edit Mode selection/drag/coordinates and mouse
-restoration, inline binding capture/conflict/save/rollback/clear and input cleanup.
+restoration, inline binding field/capture/override/save/rollback/clear and input cleanup.
 The failed blue-square prototype is not native acceptance for this replacement.
 Use the exact revised checklist in docs/DUNGEON_LOOT.md; `/reload` applies these
 Lua-only edits once the initial PR's files are loaded. Native review pending.
+
+Binding-field refinement: verify an already-bound key can replace its previous
+action using General -> Keybinding -> Set Keybinding; the adjacent field shows
+its key or Not bound after Clear Keybinding. Automated coverage includes occupied
+key capture, failed-save restoration of the overwritten action and previous
+Dungeon Loot keys, and live field updates. The Quick Icon revision has positive
+owner confirmation; this latest binding refinement remains pending native review.

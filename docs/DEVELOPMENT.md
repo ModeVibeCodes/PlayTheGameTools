@@ -76,7 +76,11 @@ PR #14's Quick Icon revision replaces the failed square prototype with explicit
 native loot art and the Class Training circle construction. It registers
 positions.dungeonLootShortcut with the shared manager and exposes size/opacity,
 normal drag/lock and Edit Mode controls. General now owns key capture, native
-conflict-aware SetBinding/SaveBindings and Clear, scoped to the existing action.
+SetBinding/SaveBindings and Clear for Dungeon Loot. The owner confirmed the
+revised icon/editor working, then requested overriding the chosen key regardless
+of its old action and a separate assignment field. Failure rollback restores the
+overwritten action and prior Dungeon Loot keys. This binding refinement needs
+native review.
 Capture cleanup and managed mouse-state regression checks are in
 dungeon_loot_quick_icon.py (under tests/). No new runtime files for this revision;
 /reload applies it after initial installation. Native confirmation pending.

@@ -113,7 +113,8 @@ With Dungeon Loot enabled, click its circular loot icon to open the dungeon
 index. General -> Quick Icon has show/lock, size, opacity, reset and shared Edit
 Mode positioning controls. General -> Keybinding lets you assign or clear a key
 there; WoW Key Bindings also exposes Open Dungeon Loot. No key is assigned
-automatically and conflicting actions are left intact. Opening, dragging and
+automatically. Choosing a key replaces its existing action; the field beside
+Set Keybinding shows the assigned key or Not bound. Opening, dragging and
 binding changes require being outside combat.
 
 Questing & Leveling -> Dungeon Loot is off by default and includes its own

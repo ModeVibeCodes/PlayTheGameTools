@@ -74,6 +74,7 @@ function UI.New(page, module)
         end
         slot.visible = true
         if slot.copyButton then slot.copyButton:Hide() end
+        if slot.bindingControl then slot.bindingControl:Hide() end
         for _,host in pairs(slot.settingSliders or {}) do host:Hide() end
         slot.button:ClearAllPoints();slot.button:SetAllPoints(slot.control)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
@@ -151,6 +152,23 @@ function UI.New(page, module)
             self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (questText and (options.heading and 28 or 18) or (options.heading and 40 or (options.subtitle and 56 or 40)))), height + (item and 8 or 0)))
         end
         return slot
+    end
+    function pool:BindingControl(value,callback)
+        local slot=self:Add("");slot.button:Hide()
+        local host=slot.bindingControl
+        if not host then
+            host=CreateFrame("Frame",nil,slot.control);host:SetAllPoints()
+            host.set=W.Button(host,"Set Keybinding",128,28);host.set:SetPoint("LEFT",12,0)
+            host.field=CreateFrame("EditBox",nil,host)
+            host.field:SetPoint("LEFT",host.set,"RIGHT",10,0);host.field:SetPoint("RIGHT",-12,0);host.field:SetHeight(28)
+            host.field:SetAutoFocus(false);host.field:EnableMouse(false);host.field:EnableKeyboard(false)
+            host.field:SetFontObject(GameFontHighlight);host.field:SetTextInsets(8,8,0,0)
+            W.Texture(host.field,"InputField");slot.bindingControl=host
+        end
+        host.field:SetText(value);host.set:SetScript("OnClick",function() if module.active then callback() end end)
+        host:Show()
+        function slot.row:layoutChildren() self:SetHeight(44) end
+        return host
     end
     function pool:SettingSlider(label,minimum,maximum,step,getter,setter,suffix)
         local slot=self:Add("");slot.button:Hide()

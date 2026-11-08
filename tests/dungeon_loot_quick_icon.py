@@ -5,7 +5,7 @@ lua,_=load()
 lua.execute(r'''
     local M,pm=addon.DungeonLoot,addon.PositionManager
     local action='PTGTOOLS_DUNGEON_LOOT'
-    local bindings={F1='UNRELATED'};local saved=0
+    local bindings={F1='UNRELATED',['CTRL-D']='OTHER_ACTION'};local saved=0
     function GetBindingKey(a)
         local keys={};for key,owner in pairs(bindings) do if owner==a then keys[#keys+1]=key end end
         table.sort(keys);return unpack(keys)
@@ -24,12 +24,13 @@ lua.execute(r'''
     assert(b.icon.texture=='Interface\\Buttons\\UI-GroupLoot-Dice-Up' and b.icon:GetWidth()>0,'native loot icon is explicitly sized')
     assert(e.label=='Dungeon Loot Quick Icon' and e.draggable and e.editMode and not e.supportsAnchoring)
     local function Click(label)
+        if label=='Set Keybinding' then M.page.bindingControl.set.scripts.OnClick(M.page.bindingControl.set);return end
         for _,slot in ipairs(M.page.rootPane.slots) do if slot.visible and slot.button.label:GetText()==label then
             if slot.callback then slot.button.scripts.OnClick(slot.button) end;return slot
         end end
         error('Missing '..label)
     end
-    Click('Quick Icon');Click('Keybinding')
+    Click('Quick Icon');Click('Keybinding');assert(M.page.bindingControl.field:GetText()=='Not bound')
     M.page.iconSize.slider:SetValue(64);M.page.iconOpacity.slider:SetValue(60)
     assert(M.db.shortcutSize==64 and b:GetWidth()==64 and b.alpha==.6)
     assert(not M:SetShortcutOption('shortcutSize',73) and not M:SetShortcutOption('shortcutOpacity',0))
@@ -49,10 +50,11 @@ lua.execute(r'''
     capture.scripts.OnKeyDown(capture,'LSHIFT');assert(saved==0)
     capture.scripts.OnKeyDown(capture,'D')
     assert(bindings['CTRL-D']==action and saved==1 and not capture:IsShown() and not capture.keyboard and capture.propagate)
-    Click('Open Dungeon Loot: CTRL-D')
-    bindings['ALT-D']=action;FireEvent('UPDATE_BINDINGS');Click('Open Dungeon Loot: ALT-D, CTRL-D');bindings['ALT-D']=nil
+    assert(M.page.bindingControl.field:GetText()=='CTRL-D' and not M.page.bindingControl.field.keyboard and not M.page.bindingControl.field.mouse)
+    bindings['ALT-D']=action;FireEvent('UPDATE_BINDINGS');assert(M.page.bindingControl.field:GetText()=='ALT-D, CTRL-D');bindings['ALT-D']=nil
     local ok,reason=M:SaveShortcutBinding('F1')
-    assert(not ok and reason:find('Already bound',1,true) and bindings.F1=='UNRELATED' and bindings['CTRL-D']==action)
+    assert(ok and bindings.F1==action and not bindings['CTRL-D'],'chosen key overrides its previous action')
+    assert(M:SaveShortcutBinding('CTRL-D') and not bindings.F1);bindings.F1='UNRELATED'
     -- Failure before any write when ownership cannot be read.
     local getAction=GetBindingAction;GetBindingAction=function() error('unavailable') end
     assert(not M:SaveShortcutBinding('F3') and bindings['CTRL-D']==action and not bindings.F3)
@@ -62,7 +64,7 @@ lua.execute(r'''
     SetBinding=setBinding
     -- Failed persistence rolls this action back, preserving unrelated bindings.
     local save=SaveBindings;SaveBindings=function() error('rejected save') end
-    assert(not M:SaveShortcutBinding('F2') and bindings['CTRL-D']==action and not bindings.F2 and bindings.F1=='UNRELATED')
+    assert(not M:SaveShortcutBinding('F1') and bindings['CTRL-D']==action and bindings.F1=='UNRELATED','failed save restores overwritten action and previous shortcut')
     SaveBindings=save
     Click('Set Keybinding');capture.scripts.OnKeyDown(capture,'ESCAPE');assert(not capture.keyboard and bindings['CTRL-D']==action)
     Click('Set Keybinding');M:Navigate(nil,'loot');assert(not capture:IsShown() and not capture.keyboard)
@@ -71,7 +73,7 @@ lua.execute(r'''
     assert(not capture:IsShown() and not capture.keyboard and not M:SaveShortcutBinding('F4'))
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
     M:Navigate(nil,'general');bindings['ALT-D']=action;Click('Clear Keybinding')
-    assert(not bindings['CTRL-D'] and not bindings['ALT-D'] and bindings.F1=='UNRELATED' and M:ShortcutBindingLabel()=='Not bound')
+    assert(not bindings['CTRL-D'] and not bindings['ALT-D'] and bindings.F1=='UNRELATED' and M:ShortcutBindingLabel()=='Not bound' and M.page.bindingControl.field:GetText()=='Not bound')
     Click('Set Keybinding');M.page:Hide();assert(not capture:IsShown() and not capture.keyboard)
     M.page:Show();Click('Set Keybinding');addon:SetModuleEnabled('dungeonLoot',false)
     assert(not capture.keyboard and not b:IsShown() and not e.editMode)
@@ -89,4 +91,4 @@ restored.execute(r'''
     local candidate=addon.ProfileCodec.Copy(addon.db);candidate.modules.dungeonLoot.shortcutSize=23
     assert(not addon.ProfileValidation:Validate(candidate),'invalid imported icon size rejected')
 ''')
-print('PASS native icon geometry/ring, size/opacity controls, managed Edit Mode coordinates/drag/mouse state, inline binding capture/save/conflicts/rollback and cleanup')
+print('PASS native icon geometry/ring, size/opacity controls, managed Edit Mode coordinates/drag/mouse state, inline binding field/capture/override/save/rollback and cleanup')

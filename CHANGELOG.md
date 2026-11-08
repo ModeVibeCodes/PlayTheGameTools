@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Dungeon Loot's Set Keybinding now replaces the selected key's current action,
+  with the assigned key or Not bound in a separate read-only field beside the
+  button. Failed changes restore both the overwritten action and prior shortcut.
+
 - Reworked the Dungeon Loot launcher after the blue-square/non-moving report:
   native circular loot dice icon, explicit dimensions, Class Training-style ring,
   size/opacity controls and shared Edit Mode drag/coordinate integration. General

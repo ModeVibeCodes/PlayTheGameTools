@@ -181,8 +181,8 @@ function M:InitializeShortcut()
     end)
 end
 
--- Hardware-driven binding editor. Only this action is replaced; conflicting
--- actions are left untouched and reported before any write.
+-- Hardware-driven binding editor. The selected key replaces its current action;
+-- failed writes restore both that action and Dungeon Loot's previous keys.
 local ACTION="PTGTOOLS_DUNGEON_LOOT"
 local function Read(fn,...)
     if type(fn)~="function" then return nil end
@@ -217,7 +217,6 @@ function M:SaveShortcutBinding(key)
     local oldAction=""
     if key then oldAction=Read(GetBindingAction,key) end
     if key and type(oldAction)~="string" then return false,"Cannot read this key's binding." end
-    if key and oldAction~="" and oldAction~=ACTION then return false,"Already bound to "..oldAction..". Choose another key." end
     -- Verify ownership again before clearing existing keys.
     for _,old in ipairs(keys) do if Read(GetBindingAction,old)~=ACTION then return false,"Bindings changed; try again." end end
     local function Bind(k,action)
@@ -225,7 +224,7 @@ function M:SaveShortcutBinding(key)
         return ok and result==true
     end
     local function Restore()
-        if key and oldAction=="" then Bind(key,nil) end
+        if key then Bind(key,oldAction~="" and oldAction or nil) end
         for _,old in ipairs(keys) do Bind(old,ACTION) end
     end
     local function Finish(ok,message) self.bindingWriting=nil;return ok,message end
