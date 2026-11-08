@@ -2,6 +2,8 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local A,D=addon.CampContributions,addon.ForeverQuickAccessData
 function A:Hide(cancel)
+    if self.positionDriver then self.positionDriver:SetScript("OnUpdate",nil) end
+    self.positionRetryPending=nil
     if cancel then self.generation=(self.generation or 0)+1;self.dirty=true end
     if self.window then self.window:Hide() end
     if D.OutsideCombat() then
@@ -28,6 +30,7 @@ function A:OnSnapshot(snapshot)
 end
 function A:Open()
     if not self.active or not D.OutsideCombat() then return false end
+    self.positionFailure=nil
     self.previewing=false;self.dismissed=false;self.dirty=true;self:OnSnapshot(self.camp.snapshot)
     return self.window and self.window:IsShown() or false
 end
@@ -36,7 +39,9 @@ function A:Dismiss()
 end
 function A:TogglePreview()
     if not self.active or not D.OutsideCombat() then return false end
-    self.previewing=not self.previewing;self:OnSnapshot(self.camp.snapshot)
+    local retry=self.positionFailure
+    self.positionFailure=nil
+    self.previewing=retry and true or not self.previewing;self:OnSnapshot(self.camp.snapshot)
     if self.camp.owner.page then self.camp.owner.page:Refresh() end
     return self.previewing
 end
@@ -45,9 +50,11 @@ function A:StopPreview()
 end
 function A:RefreshDetected()
     if not self.active or not D.OutsideCombat() then return end
+    self.positionFailure=nil
     self:Scan();self:OnSnapshot(self.camp.snapshot)
 end
 function A:Summary()
+    if self.positionFailure then return "Contribution window unavailable ("..self.positionFailure.."). Open or Preview to retry." end
     if not self.active then return "Enable the monitor and contribution popup to detect kits." end
     if #self.items==0 then return self.message or "Not scanned yet. Refresh to check your bags." end
     local names={}
@@ -58,7 +65,8 @@ function A:SyncEnabled(camp)
     local active=camp.active and camp.db.showContributionPopup
     local changed=self.active~=active or self.db~=camp.db
     self.camp=camp;self.db=camp.db;self.active=active
-    if self.window and D.OutsideCombat() then self:RegisterWindow() end
+    local e=addon.PositionManager.elements.campfireContributions
+    if e then e.editMode=self.active==true end
     if not self.events then
         self.events=CreateFrame("Frame")
         self.events:SetScript("OnEvent",function(_,event,id)
@@ -68,6 +76,7 @@ function A:SyncEnabled(camp)
         end)
     end
     if changed then
+        self.positionFailure=nil
         self.events:UnregisterAllEvents();self.dirty=true;self.dismissed=false;self.wasNearby=false
         if active then
             for _,event in ipairs({"BAG_UPDATE_DELAYED","BAG_UPDATE_COOLDOWN","ITEM_LOCK_CHANGED",

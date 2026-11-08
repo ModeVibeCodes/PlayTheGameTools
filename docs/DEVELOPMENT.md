@@ -166,3 +166,15 @@ Run campfire_controls.py, campfire_editmode.py, campfire_movement.py,
 loot_sparkles.py, smoke.py and builder. Owner confirms detection, but native
 visual rendering/item dispatch and screenshots remain pending. See owning docs
 for exact paths. No shared core/Retail/SavedVariables/junction changes.
+
+## Contribution registration error follow-up
+
+Owner supplied 174 invalid-frame assertions after the earlier anchor fix. That
+fix was insufficient; the broad geometry rejection does not identify the native
+field/restriction. Construction is now complete and shown before registration;
+one next-frame retry handles delayed layout. Repeated failure latches a short
+Detected Kits status, clears OOC action attributes and stops event-driven retries.
+Manual Open/Preview/Refresh/Reset Position recovers; combat/hide/disable cancels
+the temporary driver. Shared manager checks remain unchanged. Run the new
+camp_contributions_registration.py plus campfire_controls.py and the builder.
+Native rendering/recovery and screenshots remain pending.

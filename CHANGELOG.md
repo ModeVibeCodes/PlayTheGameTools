@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed repeated Camp Contributions invalid-frame assertions: finish and show the panel before registering its position, retry unavailable geometry once on the next frame, then suppress event-driven retries and expose manual recovery if layout stays unavailable. Shared position safety checks and native item actions are unchanged.
+
 - Removed the addon Camp Buffs countdown and timer controls; native tooltip duration remains. Grouped customizations by General, Campfire Icon, Camp Buffs and Camp Contributions. Fixed missing contribution rendering by anchoring before position registration; added contribution scale/opacity/background/reset controls and reduced status refresh to a secondary tool.
 
 - Camp Buffs now drops native intro and parenthesized duration footer text. Added plain text color-wheel controls with optional header/timer gradients, compact toggle grids, concise help, detected kits, an inert Contributions preview and shared Edit Mode placement. Native visual acceptance pending.

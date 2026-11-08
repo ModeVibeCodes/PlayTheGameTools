@@ -101,7 +101,7 @@ function C:AddConfig(page)
             if addon.PositionManager.elements.campfireContributions then
                 addon.PositionManager:SetPosition("campfireContributions",{target="screen",placement="center",x=0,y=120})
             else self.db.contributionX=0;self.db.contributionY=120 end
-            A:OnSnapshot(self.snapshot)
+            A.positionFailure=nil;A:OnSnapshot(self.snapshot)
         end
     end)
     Slider("Contribution Scale","contributionScale","%");Slider("Contribution Opacity","contributionOpacity","%")

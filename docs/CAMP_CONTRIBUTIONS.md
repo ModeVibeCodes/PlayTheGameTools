@@ -138,13 +138,26 @@ saved positions, tab/combat teardown and disabled edit membership (mock only).
 ## Visibility correction and per-window styling
 
 Owner confirms detection is correct but reports invisible live/preview content.
-Root cause found: the initial frame had size but no screen anchor when registered
-with Position Manager. Native GetCenter may be nil there, so geometry validation
-rejects construction. The broad mock supplied a center even when unanchored.
-Construction now sets a CENTER screen anchor before registration and uses the
-existing addon preview layer (DIALOG level 90) above the settings window; a scoped
-native-like geometry fixture guards this path. The sample includes an explicit
-icon, title, dark row and panel, independently of item dispatch support.
+The owner then supplied 174 repeated position-registration errors with the
+invalid-frame result. The earlier anchor correction was insufficient. This code
+means one of the manager's public/accessible geometry checks failed; the stack
+does not identify which value or restriction was responsible. Treating it as
+proof of a missing anchor was too specific.
+
+Construction now completes the entire panel before registration. Layout sizes
+and shows it, then registers. An invalid-frame result gets one next-frame retry
+on a dedicated temporary OnUpdate driver, accommodating delayed layout. A second
+failure hides the window, clears native actions OOC and latches the reason in
+Detected Kits; bag/aura events cannot repeatedly register or assert. Other
+rejections such as protected-frame stop immediately. The driver is removed after
+use and canceled on hide/disable/combat. No shared manager safety checks are
+weakened, restrictions bypassed or geometry values fabricated.
+
+Open Contributions, Preview Contributions, Detected Kits → Refresh and
+Contribution Position → Reset Position explicitly clear the failure and retry.
+The displayed error status is runtime-only; settings and item detection persist.
+Native confirmation is still required: the trace proves the registration failure,
+not which part of native geometry validation failed.
 
 Camp Contributions has separate Contribution Scale / Contribution Opacity /
 Contribution Background controls. Contribution Position → Reset Position restores
@@ -162,3 +175,23 @@ enabled; preview needs no item/fire. **Confirmation:** visible panel, title and
 sample icon; live ready kit has its native icon and Place action. Click once and
 complete native targeting to confirm placement. Native visual/use acceptance and
 screenshots remain pending; detection is owner-confirmed.
+
+## Registration failure regression check
++
++tests/camp_contributions_registration.py models shown-but-not-yet-laid-out frames,
++permanent invalid-frame and protected-frame rejection. It checks full construction
++before registration, one next-frame retry, no retries through 174 subsequent
++events, cleared native action attributes, manual recovery and combat/disable/
++dismiss cancellation. Existing controls/monitor/smoke suites remain required.
++
++**Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
++Monitor → Camp Contributions → Contribution Window → Preview Contributions /
++Open Contributions; Detected Kits; Contribution Position → Reset Position.
++**Action:** /reload, preview the panel, then open it at a fire with a ready kit;
++change bag contents and leave/reenter camp. Use Reset Position if needed.
++**Required state:** OOC, parent/monitor/popup enabled; preview needs no kit/fire.
++**Confirmation:** no repeated invalid-frame Lua error; panel/icon/Place action
++appears when eligible. If layout is still unavailable, one short Detected Kits
++status replaces the error loop; report that status. Native use and screenshots
++remain pending rather than inferred from fixtures.
++

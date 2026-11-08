@@ -14,7 +14,7 @@ function A:StopDrag()
     end
 end
 function A:RegisterWindow()
-    if not self.window or not D.OutsideCombat() then return end
+    if not self.window or not self.window:IsShown() or not D.OutsideCombat() then return false,"layout-pending" end
     local e=PM.elements.campfireContributions
     if e and e.position~=(addon.db.positions or {}).campfireContributions then
         PM:UnregisterElement(e.id);e=nil
@@ -31,13 +31,40 @@ function A:RegisterWindow()
                 if not element.dragging then PM:ApplyPosition(element.id) end
             end,
         })
-        assert(ok,"Camp Contributions position registration failed: "..tostring(value));e=value
+        if not ok then return false,value end
+        e=value
     end
     e.label="Camp Contributions";e.editMode=self.active==true
     self.db.contributionX,self.db.contributionY=e.position.x,e.position.y
+    return true
+end
+function A:FinishPositionRegistration(ok,reason)
+    if not ok then
+        self.positionFailure=tostring(reason or "unavailable")
+        self:Hide(false)
+    elseif self.camp.editing then
+        PM:SelectElement("campfireContributions");PM:RefreshSelection()
+    end
+    if self.camp.owner.page then self.camp.owner.page:Refresh() end
+end
+function A:EnsurePositionRegistration()
+    if self.positionFailure or self.positionRetryPending then return end
+    local ok,reason=self:RegisterWindow()
+    if ok then return end
+    if reason~="invalid-frame" then self:FinishPositionRegistration(false,reason);return end
+    -- Rectangles can be unavailable until a shown frame receives a layout pass.
+    -- One next-frame retry, never an assertion or a bag-event retry loop.
+    self.positionDriver=self.positionDriver or CreateFrame("Frame")
+    self.positionRetryPending=true
+    self.positionDriver:SetScript("OnUpdate",function(driver)
+        driver:SetScript("OnUpdate",nil);self.positionRetryPending=nil
+        if not self.active or not D.OutsideCombat() or not self.window:IsShown() then return end
+        local registered,status=self:RegisterWindow()
+        self:FinishPositionRegistration(registered,status)
+    end)
 end
 function A:CreateWindow()
-    if self.window then self:RegisterWindow();return end
+    if self.window then return end
     if not D.OutsideCombat() then return end
     local W,T=addon.ConfigWidgets,addon.InterfaceTheme
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.window=f
@@ -52,7 +79,6 @@ function A:CreateWindow()
     end)
     header:SetScript("OnDragStop",function() self:StopDrag() end)
     f:SetScript("OnHide",function() self:StopDrag() end)
-    self:RegisterWindow()
     f.title=W.Label(header,"",nil,4,-5,330,T.text)
     f.title:SetText(self.camp:HeaderText("Camp Contributions"))
     local close=W.Button(f,"Dismiss",68,24);close:SetPoint("TOPRIGHT",-8,-8)
@@ -98,7 +124,7 @@ function A:CreateButton(index)
     self.buttons[index]=b;return b
 end
 function A:Render()
-    if not self.active or not D.OutsideCombat() or self.dismissed or self.blocked or
+    if not self.active or not D.OutsideCombat() or self.dismissed or self.blocked or self.positionFailure or
         not self.camp.snapshot or self.camp.snapshot.nearby~=true or self.camp.previewing or self.camp.editing or self.camp.placing then
         self:Hide(false);return
     end
@@ -136,12 +162,13 @@ function A:Layout(count,footer)
     local e=PM.elements.campfireContributions
     if not f.dragging and not (e and e.dragging) then
         f:SetScale(math.max(0.25,math.min(self.db.contributionScale/100,(UIParent:GetHeight()-40)/height)));f:SetHeight(height)
-        PM:ApplyPosition("campfireContributions")
+        if e then PM:ApplyPosition("campfireContributions") end
     end
     f:Show()
+    self:EnsurePositionRegistration()
 end
 function A:RenderPreview()
-    if not self.active or not D.OutsideCombat() then return end
+    if not self.active or not D.OutsideCombat() or self.positionFailure then return end
     -- Clear native attributes before showing a separate, non-action sample.
     for _,button in ipairs(self.buttons or {}) do
         button:SetAttribute("type1",nil);button:SetAttribute("macrotext1",nil)
