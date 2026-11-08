@@ -47,6 +47,24 @@ function C:AddConfig(page)
     function owner:CanConfigure() return addon.LootSparkles:OutsideCombat() end
     function owner:SetAppearance(key,value) return C:SetOption(key,value) end
     W.ColorRow(page,owner,"Text Color","textColor")
+    page:Group("Camp Contributions")
+    Toggle("Show Contribution Popup","showContributionPopup")
+    local contributionStatus=W.Label(page:Row("Contribution Availability",92),"",nil,0,-4,440,T.muted)
+    contributionStatus:SetWordWrap(true);page.contributionStatus=contributionStatus
+    page.refreshers[#page.refreshers+1]=function()
+        contributionStatus:SetText(addon.CampContributions.message or "Ready carried kits for your learned professions appear at a nearby fire, outside combat.")
+    end
+    local open=W.Button(page:Row("Contribution Window",48),"Open Contributions",180,28);open:SetPoint("LEFT")
+    open:SetScript("OnClick",function() addon.CampContributions:Open();page:Refresh() end)
+    page.contributionOpen=open
+    local refreshContributions=W.Button(page:Row("Carried Camp Kits",48),"Refresh Contributions",180,28);refreshContributions:SetPoint("LEFT")
+    refreshContributions:SetScript("OnClick",function()
+        if addon.LootSparkles:OutsideCombat() then
+            addon.CampContributions.dirty=true;addon.CampContributions:OnSnapshot(self.snapshot);page:Refresh()
+        end
+    end);page.contributionRefresh=refreshContributions
+    local contributionHelp=W.Label(page:Row("Contribution Help",120),"Shows ready camp contribution kits carried in your bags for professions you know. Click Place to use one; finish any native placement targeting. The game enforces range, skill, camp slots and shared cooldowns. Dismiss hides this visit's popup; Open Contributions reopens it. Fire-building kits and unrelated items are excluded.",nil,0,-4,440,T.muted)
+    contributionHelp:SetWordWrap(true)
     page:Group("Buff Timer")
     Slider("Yellow Below (Minutes)","timerWarningMinutes")
     Slider("Red Below (Minutes)","timerCriticalMinutes")

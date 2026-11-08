@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed duplicate duration-only footer text beneath Camp Buffs; the countdown stays in its subheading. Added a movable Camp Contributions popup for ready carried profession kits at a nearby fire, native click-to-place actions, per-visit dismissal and reopen/refresh controls. Native item placement/screenshots pending.
+
 - Campfire elements now use shared Edit Mode handles, coordinates and saved positions. Added an orange/red Camp Buffs heading, native countdown with white-to-green/yellow/red urgency gradients, distinct stat colors and spell-ID filtering. Centered the camp icon above its status; no unsupported yards/navigation are fabricated.
 
 - Fixed campfire movement with Move Windows and draggable previews; aura/font refreshes no longer reset dragged anchors. Added compact earned-buff lines and optional independently positioned buff text that remains while its earned buffs last.

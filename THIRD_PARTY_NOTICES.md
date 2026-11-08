@@ -82,3 +82,34 @@ The owned SFK location catalog is a manually curated set of rounded planning
 facts with public references listed in docs/DUNGEON_LOOT.md. No source-page prose,
 artwork or addon database is bundled. Approximate/interior-proxy labels distinguish
 these estimates from native observations or optional recorded patrols.
+
+
+## Forever Forge camp contribution item identities
+
+The independently grouped contribution lookup was informed by native item IDs
+listed in Forever Forge's Modules/CampfireAlert.lua (MIT), source commit 94b37bfe89832050a45641786f74d38fd024fca4.
+Source: https://github.com/crumpshot-forever/ForeverForge
+No action-dispatch implementation or artwork was copied. The upstream MIT notice
+is retained below for attribution of this item identity reference.
+
+MIT License
+
+Copyright (c) 2026 crumpshot-forever
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -12,6 +12,11 @@ tips[102]={lines={{leftText='Camp Benefits'},
  {leftText='Spell ID:',rightText='999999'},
  {leftText='|cffff0000Spell ID:|r',rightText='777777'},
  {leftText='Stamina +12 (Spell ID: 1230124)'},
+ {leftText='59 minutes remaining'},
+ {leftText='Time remaining: 59:42'},
+ {leftText='Time remaining 59:42'},
+ {leftText='1 hr 5 min'},
+ {leftText='Mana Well: Regenerate 29 Mana every 5 sec'},
 }}
 auras={{spellId=C.NEARBY,auraInstanceID=101,icon=135805},
  {spellId=C.BENEFITS,auraInstanceID=102,duration=3600,expirationTime=testClock+3600}}
@@ -27,6 +32,9 @@ assert(C.frame.text:GetText():find('|cff408cff4 Int|r',1,true),'Int blue')
 assert(C:BuffColor('8% Stats')[3]~=C:BuffColor('12 Stamina')[3],'other stats distinct')
 assert(not ShownText(C.frame):find('Spell ID',1,true) and not ShownText(C.frame):find('999999',1,true) and not ShownText(C.frame):find('777777',1,true))
 assert(Plain(C.frame.text:GetText()):find('12 Stamina',1,true),'inline ID removed without losing amount')
+assert(not Plain(C.frame.text:GetText()):find('remaining',1,true),'native duration footer does not duplicate countdown')
+assert(not Plain(C.frame.text:GetText()):find('59:42',1,true))
+assert(Plain(C.frame.text:GetText()):find('29 Mana / 5 sec',1,true),'periodic stat amount preserved')
 assert(C.frame.icon.anchor[1]=='TOP' and C.frame.icon.anchor[2]==C.frame and C.frame.icon.anchor[4]==0)
 assert(C.frame.caption.justifyH=='CENTER' and Plain(C.frame.caption:GetText())=='Campfire Nearby')
 assert(C.frame.caption.anchor[3]<C.frame.icon.anchor[5],'status is below centered icon')

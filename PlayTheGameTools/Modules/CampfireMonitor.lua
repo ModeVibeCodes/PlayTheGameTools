@@ -18,11 +18,11 @@ local function Field(t,key)
     local ok,v=Call(function() return t[key] end)
     if ok then return v end
 end
-C.ranges={timerWarningMinutes={1,60,1},timerCriticalMinutes={1,30,1},fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
+C.ranges={contributionX={-10000,10000,1},contributionY={-10000,10000,1},timerWarningMinutes={1,60,1},timerCriticalMinutes={1,30,1},fontSize={10,24,1},iconSize={16,64,2},width={200,600,10},scale={50,150,5},
     opacity={20,100,5},backgroundOpacity={0,100,5},benefitsX={-10000,10000,1},benefitsY={-10000,10000,1},
     benefitsWidth={100,600,10},benefitsFontSize={10,24,1},benefitsScale={50,150,5},
     benefitsOpacity={20,100,5},benefitsBackgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
-C.defaults={timerWarningMinutes=10,timerCriticalMinutes=2,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
+C.defaults={showContributionPopup=true,contributionX=0,contributionY=120,timerWarningMinutes=10,timerCriticalMinutes=2,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
     showProfessionGuide=false,alwaysShow=false,showInCombat=false,locked=true,fontSize=14,
     iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
@@ -102,7 +102,7 @@ function C:TooltipLines(aura)
                             lower:find("%s*%[%s*spell%s*id%s*:%s*#?%s*%d+%s*%]%s*$") or
                             lower:find("%s+spell%s*id%s*:%s*#?%s*%d+%s*$")
                         if metadata then line=line:sub(1,metadata-1):match("^%s*(.-)%s*$") end
-                        if line~="" and not self:IsMetadata(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
+                        if line~="" and not self:IsMetadata(line) and not self:IsTimerLine(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
                     end
                 end
             end
@@ -236,6 +236,23 @@ function C:ColorBuffText(text)
     end
     return table.concat(lines,"\n")
 end
+-- Strip native aura footer timing, not amounts such as Mana every 5 sec.
+function C:IsTimerLine(line)
+    local text=line:lower():match("^%s*(.-)%s*$")
+    text=text:gsub("^time%s+remaining%s*:?%s*",""):gsub("^remaining%s+time%s*:?%s*","")
+        :gsub("^time%s+left%s*:?%s*",""):gsub("^remaining%s*:?%s*","")
+        :gsub("^duration%s*:?%s*",""):gsub("^expires?%s+in%s+","")
+        :gsub("%s+remaining[%.!]?%s*$",""):gsub("%s+left[%.!]?%s*$","")
+    if text:match("^%d+:%d%d$") or text:match("^%d+:%d%d:%d%d$") then return true end
+    local units={d=true,day=true,days=true,h=true,hr=true,hrs=true,hour=true,hours=true,
+        m=true,min=true,mins=true,minute=true,minutes=true,s=true,sec=true,secs=true,second=true,seconds=true}
+    local count=0
+    local remainder=text:gsub("(%d[%d%.,]*)%s*(%a+)",function(amount,unit)
+        if units[unit] then count=count+1;return "" end
+        return amount..unit
+    end):gsub("[%s,%.]+","")
+    return count>0 and remainder==""
+end
 function C:IsMetadata(line)
     local lower=line:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):lower()
     if lower:match("^spell%s*id%s*[:#%-]?%s*#?%s*%d+%s*$") or
@@ -316,7 +333,11 @@ function C:SetOption(key,value)
     return true
 end
 function C:Refresh()
-    if not self.active and not self.previewing and not self.placing then self:HideDisplays();return end
+    if not self.active and not self.previewing and not self.placing then
+        self:HideDisplays()
+        if addon.CampContributions then addon.CampContributions:OnSnapshot(self.snapshot) end
+        return
+    end
     local combat=not P:OutsideCombat()
     if combat and (not self.db.showInCombat or self.previewing or self.placing) then
         self.previewing=false;self.placing=false;self.snapshot={known=false,message="Paused during combat."}
@@ -325,6 +346,7 @@ function C:Refresh()
         self.snapshot=self.active and self:Scan() or {known=false}
         self:Render()
     end
+    if addon.CampContributions then addon.CampContributions:OnSnapshot(self.snapshot) end
     if self.owner.page then self.owner.page:Refresh() end
 end
 function C:SyncEnabled()
@@ -345,6 +367,7 @@ function C:SyncEnabled()
         end
         self:Refresh()
     end)
+    if addon.CampContributions then addon.CampContributions:SyncEnabled(self) end
     self:SyncEditDisplays()
     self:Refresh()
 end

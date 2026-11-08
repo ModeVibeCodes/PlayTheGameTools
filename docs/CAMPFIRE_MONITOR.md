@@ -307,3 +307,12 @@ field availability, Edit Mode movement and screenshots are still pending.
    campfire. **Required state:** OOC, preview off. **Confirmation:** centered icon
    with the matching centered nearby/absent caption underneath; no guessed yards
    or arrow. Unknown native state remains explicitly unavailable.
+
+## Timer footer and quick contributions
+
+Native duration-only footer rows (clock or English time-unit/remaining forms)
+are filtered from the bonus list. The Camp Buffs countdown subheading remains
+the single timer in both joined/separate modes. Stat prose such as mana gained
+every 5 sec stays visible; unfamiliar localized prose is retained conservatively.
+Ready carried profession kits now have a separate movable action popup; see
+[Camp Contributions](CAMP_CONTRIBUTIONS.md) for APIs, limits and exact native tests.

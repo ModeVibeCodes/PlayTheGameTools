@@ -72,6 +72,9 @@ Modules\LootSparklesTarget.lua
 Modules\LootSparklesDisplay.lua
 Modules\CampfireMonitor.lua
 Modules\CampfireMonitorDisplay.lua
+Modules\CampContributionsData.lua
+Modules\CampContributions.lua
+Modules\CampContributionsDisplay.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua

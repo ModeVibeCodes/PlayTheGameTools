@@ -123,3 +123,17 @@ and ID filtering. Centered icon uses status only; no supported camp coordinates
 were verified, so yards/arrows are omitted. Run tests/campfire_editmode.py,
 campfire_movement.py, loot_sparkles.py and the builder. Existing runtime files
 only; /reload loads local source. Native rendering/movement/screenshots pending.
+
+## Camp contribution popup and duplicate duration footer
+
+Added three Forever-only child-helper files after CampfireMonitorDisplay in the
+TOC (96 runtime chunks). The opt-in monitor offers Show Contribution Popup,
+Open Contributions and Refresh Contributions. Native OOC action-template clicks
+use carried ready profession kits; no crafting/auto-use/targeting bypass. Events
+and cached scans replace polling. Separate popup header dragging persists its
+position. Camp Buffs filters native duration-only footer rows while retaining
+its countdown subheading and periodic stats. See CAMP_CONTRIBUTIONS.md for
+research/licensing and exact native checks. Run camp_contributions.py,
+campfire_editmode.py, campfire_movement.py, loot_sparkles.py, smoke.py and the
+release builder. Native item dispatch, rendering and screenshots remain pending.
+The existing owner-authorized live junction is preserved; no SavedVariables edits.
