@@ -147,12 +147,19 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Confirmation:** The list empties before the next search's results appear.
 3. **Navigation:** Recruiter window.
    **Action:** Click Invite on a row, press Ctrl+C, open Guild â†’ Add Member,
-   paste and confirm. Repeat with Whisper After Invite on.
+   paste and confirm.
    **Required state:** OOC, invite permission, a willing test player.
    **Confirmation:** The copy box shows the name; the game invites without a
    blocked-action message; Statistics show Invited +1 (and Joined/Declined after
-   the reply); the whisper is sent only when Whisper After Invite is on.
-4. **Navigation:** Recruiter window, then Guild Tools â†’ Recruitment â†’ History.
+   the reply); no whisper is sent.
+4. **Navigation:** Recruiter window.
+   **Action:** Type a message longer than 255 characters in the Whisper message
+   box, then click Whisper on a row without pressing Enter.
+   **Required state:** OOC, candidates listed, a willing test player.
+   **Confirmation:** The box scrolls as you type; the player receives the whole
+   message as consecutive whispers with no blocked-action message; the row leaves
+   the list; Statistics do not change.
+5. **Navigation:** Recruiter window, then Guild Tools â†’ Recruitment â†’ History.
    **Action:** Click X on a row, scan again, then click Clear Never-Invite List.
    **Required state:** OOC.
    **Confirmation:** The X'd player no longer appears until the list is cleared;

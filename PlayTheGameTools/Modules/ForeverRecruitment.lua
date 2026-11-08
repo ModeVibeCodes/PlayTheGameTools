@@ -19,7 +19,10 @@ M.MAX_WHO_RESULTS=50 -- the server returns at most 50 Who results
 M.WHO_DELAY=5        -- seconds between Who searches
 M.HISTORY_LIMIT=1000 -- bounded so profile copies stay well inside codec limits
 local MAX_LEVEL=60
-local DEFAULT_MESSAGE="Hey! <Play The Game> is recruiting - I just sent you a guild invite. Come play with us!"
+local DEFAULT_MESSAGE="Hey! <Play The Game> is recruiting. Want a guild invite? Come play with us!"
+M.MESSAGE_LETTERS=500 -- what the message box accepts
+local MESSAGE_BYTES=M.MESSAGE_LETTERS*4 -- the same letters in the widest UTF-8 encoding
+local WHISPER_BYTES=255 -- the game truncates a single chat message past this
 
 local function Public(v) return not (issecretvalue and issecretvalue(v)) end
 local function Text(v,limit)
@@ -42,9 +45,10 @@ local validClass={};for _,c in ipairs(M.CLASSES) do validClass[c]=true end
 -- records: invite statistics. Both are runtime keys excluded from profile export.
 function M.Initialize(db)
     for k,v in pairs({minLevel=10,maxLevel=MAX_LEVEL,message=DEFAULT_MESSAGE,chunkSize=5,
-        reinviteDays=7,whisperEnabled=false}) do
+        reinviteDays=7}) do
         if db[k]==nil then db[k]=v end
     end
+    db.whisperEnabled=nil -- retired "whisper after invite" option
     if db.classes==nil then db.classes={} end
     if db.history==nil then db.history={} end
     if db.records==nil then db.records={} end
@@ -54,8 +58,7 @@ function M.Initialize(db)
     assert(Number(db.minLevel,1,MAX_LEVEL) and Number(db.maxLevel,1,MAX_LEVEL) and db.minLevel<=db.maxLevel,"Invalid recruitment level range")
     assert(Number(db.chunkSize,1,MAX_LEVEL),"Invalid recruitment levels per search")
     assert(Number(db.reinviteDays,0,365),"Invalid recruitment re-invite days")
-    assert(type(db.whisperEnabled)=="boolean","Invalid recruitment whisper setting")
-    assert(Text(db.message,200),"Invalid recruitment message")
+    assert(Text(db.message,MESSAGE_BYTES),"Invalid recruitment message")
     assert(type(db.classes)=="table","Invalid recruitment classes")
     for classFile,enabled in pairs(db.classes) do
         assert(validClass[classFile] and type(enabled)=="boolean","Invalid recruitment class")
@@ -313,6 +316,45 @@ function M:SkipCandidate(index,blacklist)
     if c and blacklist and self:Remember(c.name,"skip") then self:Print(c.name.." added to the never-invite list.") end
     self:Refresh()
 end
+-- Chat messages are one line and "|" starts an escape sequence, so a message
+-- from the multi-line box is flattened before it is stored.
+function M.CleanMessage(text)
+    return (text:gsub("|",""):gsub("%c+"," "):match("^ *(.-) *$"))
+end
+-- Splits a message into whispers that fit the chat limit, at spaces when possible.
+function M.SplitWhisper(text)
+    local parts={}
+    while #text>WHISPER_BYTES do
+        local cut=WHISPER_BYTES+1
+        while cut>1 and text:sub(cut,cut)~=" " do cut=cut-1 end
+        local rest=cut+1
+        if cut==1 then
+            -- One unbroken word: cut it without splitting a UTF-8 character.
+            cut=WHISPER_BYTES+1
+            while cut>2 and text:byte(cut)>=0x80 and text:byte(cut)<0xC0 do cut=cut-1 end
+            rest=cut
+        end
+        parts[#parts+1]=text:sub(1,cut-1)
+        text=text:sub(rest):match("^ *(.*)$")
+    end
+    if text~="" then parts[#parts+1]=text end
+    return parts
+end
+function M:WhisperCandidate(index)
+    if not self:Ready() then return end
+    index=index or 1
+    local c=self.candidates[index]
+    if not c then self:SetStatus("No candidates. Scan first.");return end
+    local parts=self.SplitWhisper(self.db.message)
+    if not parts[1] then self:SetStatus("Enter a whisper message first.");return end
+    local send=(C_ChatInfo and C_ChatInfo.SendChatMessage) or SendChatMessage
+    if type(send)~="function" then self:SetStatus("Whispers are unavailable.");return end
+    for _,part in ipairs(parts) do send(part,"WHISPER",nil,c.name) end
+    -- Recorded like an invite so later scans don't message them again.
+    self:RemoveCandidate(index)
+    self:Remember(c.name,Now())
+    self:SetStatus(string.format("Whispered %s. %d candidates left.",c.name,#self.candidates))
+end
 -- Next: invite the first candidate, or run the next search when the list is empty.
 function M:Next()
     if self.candidates[1] then self:InviteCandidate(1) else self:SendNextQuery() end
@@ -333,11 +375,6 @@ function M:OnInviteConfirmed(who)
     self.awaitingConfirm[BaseName(who)]=nil
     self:Remember(full,Now())
     self.db.records.invited=self.db.records.invited+1
-    local text=self.db.message
-    if self.db.whisperEnabled and text~="" then
-        local send=(C_ChatInfo and C_ChatInfo.SendChatMessage) or SendChatMessage
-        if send then send(text,"WHISPER",nil,full) end
-    end
     self:Refresh()
 end
 function M:OnSystemMessage(message)
