@@ -18,7 +18,7 @@ SETUP = r'''
 lua, _ = load()
 lua.execute(SETUP)
 lua.execute(r'''
-    assert(not addon.modules.quickActions and #addon.moduleOrder==10,'no page or switch of its own')
+    assert(not addon.modules.quickActions,'no page or switch of its own')
     ForceTraining()
     local b,ring=Q.launcher,Q.ring
     assert(b and b:IsShown() and b.icon.texture=='Interface\\Icons\\INV_Misc_Gear_01' and b.clamped)

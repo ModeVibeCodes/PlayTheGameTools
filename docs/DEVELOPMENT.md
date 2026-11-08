@@ -21,6 +21,16 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Rogue poison tools add Class Tools -> Rogue (eleventh module/fifth category),
+five Lua files, 106 chunks. The first buttons were owner-reported inert; revision 2
+adds inventory-backed item actions, confirmed last-use and independent styling.
+Owner reports revision 2 working in quick testing and authorizes main merge on
+November 8, 2026. Run `python tests/rogue_poisons.py` plus smoke/build; broader
+native coverage remains bounded by the owning test packet.
+[API assumptions and exact local test packet](FOREVER_ROGUE_POISONS.md). Local
+source is available through the existing installation link for /reload. The
+authorized PR merge does not publish a release or reset SavedVariables.
+
 The editable addon is `PlayTheGameTools/`, displayed in WoW as Play The Game Tools.
 It contains all current Forever production Lua and runtime media. The repository
 starts with fresh history; no Retail modules, development-machine settings or
@@ -270,6 +280,5 @@ remain unconfirmed; no SavedVariables edits or release publication.
 
 Modules/QuickActions.lua owns one Edit Mode button and the ring of module icons
 around it; see [QUICK_ACTIONS.md](QUICK_ACTIONS.md). It is not a registered module,
-so the module count stays ten while the runtime has 102 Lua chunks. New TOC file:
-restart the client once. Run tests/quick_actions.py with the Dungeon Loot icon
+so it adds no page, switch or module count. New TOC file: restart the client once. Run tests/quick_actions.py with the Dungeon Loot icon
 suites, edit_mode.py, smoke.py and the builder. Native confirmation pending.
