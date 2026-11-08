@@ -156,7 +156,7 @@ function addon:CreateEditWindow()
             return
         end
         local element = E:Selected()
-        if not element then return end
+        if not element or not self.modules[element.module.id] then return end
         local id = element.module.id
         self:SetEditMode(false)
         self:SelectConfigPage(id)
@@ -170,7 +170,7 @@ function addon:CreateEditWindow()
         refreshing = true
         local element = E:Selected()
         selected:SetText(element and (element.label or element.module.title) or "No enabled movable element")
-        settings:SetEnabled(element ~= nil)
+        settings:SetEnabled(element ~= nil and self.modules[element.module.id] ~= nil)
         local anchoring = element ~= nil and element.supportsAnchoring == true
         local available = element ~= nil and (not anchoring or P:Resolve(element.position.target or "screen") ~= nil)
         xInput:SetEnabled(available)

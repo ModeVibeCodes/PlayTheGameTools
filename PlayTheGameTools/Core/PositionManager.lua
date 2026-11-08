@@ -58,8 +58,9 @@ function PM:RegisterElement(id, frame, options)
         local protected = frame:IsProtected()
         if not Plain(protected) or protected then return false, "protected-frame" end
     end
-    if not Plain(options.moduleId) or type(options.moduleId) ~= "string" then return false, "unknown-module" end
-    local module = addon.modules[options.moduleId]
+    -- owner: an addon-owned table with id/title/db/enabled that has no module page.
+    if options.owner == nil and (not Plain(options.moduleId) or type(options.moduleId) ~= "string") then return false, "unknown-module" end
+    local module = options.owner or addon.modules[options.moduleId]
     if not module or not module.db or not addon.db then return false, "unknown-module" end
     for _, key in ipairs({ "draggable", "editMode", "anchoring", "legacyPosition" }) do
         if options[key] ~= nil and type(options[key]) ~= "boolean" then return false, "invalid-options" end

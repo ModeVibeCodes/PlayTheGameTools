@@ -275,3 +275,10 @@ are retained. Verify the combined feature/startup/profile/Recruitment/dungeon
 suites and release builder before publication, then fast-forward the existing
 live-linked checkout to merged main. Native item placement/broad combat coverage
 remain unconfirmed; no SavedVariables edits or release publication.
+
+## Quick Actions launcher
+
+Modules/QuickActions.lua owns one Edit Mode button and the ring of module icons
+around it; see [QUICK_ACTIONS.md](QUICK_ACTIONS.md). It is not a registered module,
+so it adds no page, switch or module count. New TOC file: restart the client once. Run tests/quick_actions.py with the Dungeon Loot icon
+suites, edit_mode.py, smoke.py and the builder. Native confirmation pending.

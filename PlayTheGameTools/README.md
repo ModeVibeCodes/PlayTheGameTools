@@ -19,7 +19,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 - **Class Training:** automatically selects your current class from all nine
   Forever classes. Browse To Learn, Upcoming, Learned and Directory; refresh from
   your spellbook and trainer interactions; see reference training costs; use a
-  movable shortcut and scrollable training popout. Level-up alerts have a preview
+  shortcut in the Quick Actions ring and scrollable training popout. Level-up alerts have a preview
   and optional time-to-level, money and profession summaries.
 - **Quick Access and Food Bar:** configurable profession/utility access, food
   selection and optional bandages with existing native click/combat guards.

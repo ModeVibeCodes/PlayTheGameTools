@@ -49,14 +49,14 @@ separate result from the existing-settings upgrade check above.
    **Confirmation:** Only your class appears; learned/superseded ranks are handled
    sensibly, estimates remain estimates, uncertain entries are not guaranteed offers.
 2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut;
-   green on-screen Class Training shortcut → Minimize / Full Configuration.
+   Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
    **Action:** Turn Show Shortcut on, click the book, scroll, minimize, reopen,
-   click Full Configuration; Shift-left-drag the shortcut near screen edges OOC.
+   click Jump to Settings; move the Quick Actions button near screen edges in Edit Mode.
    **Required state:** OOC, enabled module; preserve preferred final position.
    **Confirmation:** Bounded translucent list scrolls, glow follows open state,
-   Minimize closes it and Full Configuration opens the Class Training page.
-3. **Navigation:** Green Class Training shortcut → open popout → ordinary combat.
-   **Action:** Enter and leave safe ordinary combat, then click the shortcut OOC.
+   Minimize closes it and Jump to Settings opens the Class Training page.
+3. **Navigation:** Quick Actions button → green Class Training icon → open popout → ordinary combat.
+   **Action:** Enter and leave safe ordinary combat, then reopen it from the ring OOC.
    **Required state:** Normal safe gameplay, enabled module and shortcut.
    **Confirmation:** Popout closes on combat entry, stays closed afterward, and
    reopens on the next OOC click without blocked/forbidden action errors.

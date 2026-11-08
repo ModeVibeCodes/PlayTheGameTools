@@ -35,12 +35,13 @@ function M:CloseTrainingFlyout()
         self.trainingFlyout:StopMovingOrSizing();self.trainingFlyout.resizing=nil
         self.trainingFlyout:Hide()
     end
-    if self.shortcut and self.shortcut.openGlow then self.shortcut.openGlow:Hide() end
+    addon.QuickActions:SetActive("classTraining",false)
 end
 
 function M:PlaceTrainingFlyout()
     if not self.shortcut or not self.trainingFlyout or not self:OutsideCombat() then return false end
-    local x,y=self.shortcut:GetCenter()
+    -- Anchored to the launcher: the Class Training icon hides as soon as the ring closes.
+    local x,y=addon.QuickActions:Center()
     local px,py,w,h,up=P.TrainingFlyoutBounds(x,y,UIParent:GetLeft(),UIParent:GetBottom(),UIParent:GetWidth(),UIParent:GetHeight(),self.db.flyoutWidth,self.db.flyoutHeight)
     if not px then self:CloseTrainingFlyout();return false end
     local f=self.trainingFlyout
@@ -194,7 +195,7 @@ function M:CreateTrainingFlyout()
     end)
     f:SetScript("OnHide",function()
         CancelResizeLayout(f)
-        if self.shortcut and self.shortcut.openGlow then self.shortcut.openGlow:Hide() end
+        addon.QuickActions:SetActive("classTraining",false)
     end)
     f:Hide();self.trainingFlyout=f
 end
@@ -282,7 +283,7 @@ function M:ToggleTrainingFlyout()
     if not self.rows then return false end
     self:CreateTrainingFlyout();self.trainingFlyout.scrollbar:SetValue(0)
     self:RenderTrainingFlyout();if not self:PlaceTrainingFlyout() then return false end
-    self.trainingFlyout:Show();self.shortcut.openGlow:Show()
+    self.trainingFlyout:Show();addon.QuickActions:SetActive("classTraining",true)
     self:UpdateFlyoutMoney()
     return true
 end

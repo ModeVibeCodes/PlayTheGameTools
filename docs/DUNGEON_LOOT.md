@@ -19,21 +19,16 @@ a portrait mask and a thin circular blue ring matching the Class Training icon's
 construction. No third-party artwork or Class Training dependency is added.
 
 General now separates **Quick Icon**, **Keybinding** and **Dungeon Data**.
-Quick Icon has Show Shortcut Icon, Lock Shortcut Icon, Icon Size (24–72px),
-Icon Opacity (25–100%), Edit Icon Position and Reset Shortcut Position. Visibility,
-lock, size and opacity persist in the active profile. Defaults fill missing keys
-without replacing existing settings. The icon appears only with the module on.
+Quick Icon has Show Shortcut Icon, Icon Size (24–72px), Icon Opacity (25–100%),
+Edit Icon Position and Reset Shortcut Position. Visibility, size and opacity
+persist in the active profile. Defaults fill missing keys without replacing
+existing settings. The icon appears only with the module on.
 
-Unlocked normal left-drag moves the icon and persists through the shared position
-manager; the launcher remains mouse-enabled after shared Edit Mode refreshes.
-Edit Icon Position enters the shared workspace and selects **Dungeon Loot Quick
-Icon**, with native drag handles and coordinate controls. Edit Mode intentionally
-allows movement even when the normal shortcut is locked. Its canonical position
-is `positions.dungeonLootShortcut`; existing shortcutPosition offsets seed the
-record only if absent, and managed movement keeps legacy offsets synchronized.
-No existing managed record is overwritten. Screen clamping and shared coordinate
-scaling apply. Clicking in Edit Mode selects; it never opens the browser. Drag
-release does not open it. Show/disable hides both the icon and its Edit selection.
+The icon now opens from the shared Quick Actions ring and no longer moves on its
+own; see [QUICK_ACTIONS.md](QUICK_ACTIONS.md). Edit Icon Position enters the
+shared workspace and selects **Quick Actions**, and Reset Shortcut Position resets
+that button. `positions.dungeonLootShortcut`, `shortcutPosition` and
+`shortcutLocked` remain in saved settings but no longer place the icon.
 
 Keybinding pairs a **Set Keybinding** button with a read-only field showing the
 assigned key (or **Not bound**). **Clear Keybinding** remains available. Set starts
@@ -66,18 +61,15 @@ Native regression checks (owner confirmed the Quick Icon/editor and final
 binding refinement working on 2026-11-07; this is not exhaustive coverage):
 
 1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
-   Quick Icon. **Action:** `/reload`; enable Show Shortcut Icon: On and leave
-   Lock Shortcut Icon: Off, adjust Icon Size and Icon Opacity, then close settings
-   and click/drag the icon. **Required state:** Forever, OOC; initial PR #14 files
-   already loaded. **Confirmation:** visible circular native loot icon, resizing
-   and opacity apply, unlocked dragging moves it without opening the page,
-   ordinary clicking opens Dungeons, and position survives another reload.
+   Quick Icon. **Action:** enable Show Shortcut Icon: On, adjust Icon Size and
+   Icon Opacity, then close settings, click the Quick Actions button and click the
+   loot icon. **Required state:** Forever, OOC. **Confirmation:** circular native
+   loot icon in the ring, resizing and opacity apply, and clicking opens Dungeons.
 2. **Navigation:** same Quick Icon section -> Edit Icon Position. **Action:**
-   select the Dungeon Loot Quick Icon handle, drag it or change X/Y, leave Edit
-   Mode and use the icon again; repeat with normal locking on. **Required state:**
-   OOC, Show Shortcut Icon: On. **Confirmation:** shared handle/coordinate edits
-   move the correct icon, locking affects normal dragging only, click/drag still
-   work outside Edit Mode, and Reset Shortcut Position restores its default.
+   drag the Quick Actions handle or change X/Y, leave Edit Mode, use the button
+   again, then click Reset Shortcut Position. **Required state:** OOC, Show Shortcut
+   Icon: On. **Confirmation:** the Quick Actions button moves, still opens outside
+   Edit Mode, and Reset Shortcut Position restores its default.
 3. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
    Keybinding -> Set Keybinding. **Action:** press a free key/modifier combination,
    close settings and press it, then return and Clear Keybinding. **Required
