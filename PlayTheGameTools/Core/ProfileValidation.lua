@@ -48,6 +48,7 @@ function V:Normalize(source)
             end
         end
     end
+    if addon.ForeverRogue then addon.ForeverRogue.Initialize(profile.modules.foreverRogue) end
     if addon.ForeverRecruitment then addon.ForeverRecruitment.Initialize(profile.modules.foreverRecruitment) end
     if addon.ThreatMeter then addon.ThreatMeter.Initialize(profile.modules.threatMeter) end
     if addon.EnhancedExperienceBar then addon.EnhancedExperienceBar.Initialize(profile.modules.enhancedExperienceBar) end

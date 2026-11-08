@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added Class Tools -> Rogue: per-hand poison reminders and inventory-backed OOC
+  item applications; Last Used Poison tracking and Poison Refresh Quick Apply
+  selection; threshold-only Poisons profession icon with Always Show option;
+  independent watcher/icon/menu appearance, layout, position and preview controls.
+  First button candidate was owner-reported inert; revised item dispatch is
+  owner-confirmed working in quick testing. Broader native coverage remains
+  bounded by docs/FOREVER_ROGUE_POISONS.md.
+
+
 - Edit Mode's Exit / Save button is now Exit, since positions are written as they
   change. Exit keeps a typed coordinate that was not applied yet and can no longer
   be stranded by a module error. Combat ends Edit Mode without reopening settings.

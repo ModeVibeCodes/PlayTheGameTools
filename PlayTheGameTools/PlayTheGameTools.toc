@@ -79,6 +79,10 @@ Modules\CampContributionsDisplay.lua
 Modules\EnhancedExperienceBar.lua
 Modules\EnhancedExperienceBarDisplay.lua
 Modules\EnhancedExperienceBarVisibility.lua
+Modules\ForeverRogueData.lua
+Modules\ForeverRogue.lua
+Modules\ForeverRogueInventory.lua
+Modules\ForeverRogueDisplay.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -108,5 +112,6 @@ Config\DungeonLoot.lua
 Config\CampfireMonitor.lua
 Config\LootSparkles.lua
 Config\EnhancedExperienceBar.lua
+Config\ForeverRogue.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua
