@@ -69,7 +69,7 @@ function M:RenderSession()
 end
 function M:Render()
     if not self.frame then return end
-    if not self.active then self.frame:Hide(); return end
+    if not self.active or self.db.barChoice == "existing" then self.frame:Hide(); return end
     local db, data = self.db, self:ReadXP()
     local sample = self.preview or self.editing
     if sample then data = {xp = 4200, maximum = 10000, level = 20} end

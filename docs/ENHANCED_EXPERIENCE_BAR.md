@@ -6,6 +6,14 @@ workspace for its owned frame. Existing modules, settings and stock XP UI stay i
 
 ## Behavior
 
+- **XP Bar Choice → Choose Your XP Bar → Use PTG Only** enables PTG and hides
+  detected Blizzard/Ellesmere XP displays. **Use Existing Bar** hides PTG and
+  returns display control to their owners. **Hide Blizzard XP Bar** and **Hide
+  Ellesmere XP Bar** can be set separately while using PTG. Both default off.
+  Detection/status is shown in **Detected XP Bars**; unrelated suites are left
+  alone, with their own settings used to enable/disable their bars. No automatic
+  popup or external SavedVariables edits. Disable PTG to release its hides.
+
 - **Colors → Rested XP Overlay Color → Pick** and **Quest Log XP Overlay Color →
   Pick** customize the forecast tints independently. These stay available with
   **Use Native XP Colors** enabled; that toggle only governs the normal/rested
@@ -50,6 +58,30 @@ workspace for its owned frame. Existing modules, settings and stock XP UI stay i
 
 ## API research and licensing
 
+XP-bar coexistence adds `EnhancedExperienceBarVisibility.lua` (100 runtime Lua
+chunks total). Current native status containers expose `bars[Experience]`,
+`GetShownBar` and `UpdateShownState`; suppress a container only while it displays
+XP, preserving reputation/honor selection and leaving the manager/event handlers
+intact. Protected/forbidden frames are skipped. Inert `OnShow` hooks suppress
+later owner refreshes only while opted in; disable/Existing releases control.
+Restoration invokes the owner's normal visibility refresh OOC; combat-delayed
+restoration runs on PLAYER_REGEN_ENABLED. Unavailable owners may require /reload.
+
+Inspected installed **EllesmereUIActionBars 9.7.8**:
+`EUI_ActionBars_DataBars.lua` (CreateDataBarFrame and `_updateFunc`) and
+`EUI_ActionBars_XPBar.lua` (XP holder creation/style switching). Its shared
+Blizzard-style switch also affects reputation/other data bars, so PTG does not
+change it. The adapter targets only `EllesmereEAB_XPBar` and uses its owned
+`_updateFunc` for restoration. Other versions may be unsupported; status reports
+missing/protected/unsupported targets. `EllesmereUIDataBars` XP/rep text blocks
+and other suites are not modified. The parent license reserves all rights;
+no Ellesmere implementation, assets or license material are copied/distributed.
+This integration is independently written from the inspected frame contract.
+Native hide/restore/layout/combat coexistence remains unconfirmed.
+
+Native sources: [container ownership and refresh](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_StatusTrackingBar/Shared/StatusTrackingManager.lua),
+[XP registration](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_StatusTrackingBar/Mainline/StatusTrackingManagerOverrides.lua).
+
 Inspected current `forever` Blizzard UI source on 2026-11-07. Independent code;
 no reference addon code/assets or Blizzard implementation bodies copied.
 Existing project licenses/notices remain applicable.
@@ -76,6 +108,7 @@ if `/reload` does not discover them. This does not publish a release.
 ## Validation and exact native checks
 
 Run `python tests/enhanced_experience_bar.py` (also smoke),
+`python tests/enhanced_experience_visibility.py` for provider choice/restoration,
 `python tests/campfire_editmode.py`, `python tests/camp_contributions_startup.py`,
 `python tests/dungeon_loot_standalone.py`, `python tests/loot_sparkles.py` and
 `python tools/build_release.py`. Native acceptance and screenshots remain pending.
@@ -99,7 +132,7 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
    **Confirmation:** bar shows current XP %, rested % and total quest log XP without
    errors. This revision uses existing runtime files; `/reload` loads it.
 2. **Navigation:** Native Quest Log → zone headers, then Play The Game Tools →
-   Questing & Leveling → Enhanced Experience Bar → General → Forecasts;
+   Questing & Leveling → Enhanced Experience Bar → Bar Appearance → Forecasts;
    **Action:** accept an unfinished quest, collapse headers, complete it, then
    turn it in; **Required state:** OOC, below max level; **Confirmation:** total
    includes its reward before completion, does not double-count completion,
@@ -112,7 +145,7 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
    then quest tint only beyond the rested endpoint. No color blending between
    forecasts, no split lanes, and no change to the total quest XP label.
 4. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → General → Bar Texture, then Bar Text / Session Text / Colors;
+   Bar → Bar Appearance → Bar Texture, then Bar Text / Session Text / Colors;
    **Action:** choose Flat, Blizzard XP, Blizzard Status Bar and an installed
    SharedMedia texture; independently change Bar Font / Session Font, text colors,
    sizes, outlines, alignment and separators; disable
@@ -142,3 +175,23 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
    overlays enabled with rested XP and quest log rewards (or Preview enabled);
    **Confirmation:** only the selected overlay tint changes, both colors persist,
    and Use Native XP Colors can remain enabled for the main fill.
+
+9. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
+   Bar → XP Bar Choice → Choose Your XP Bar → Use PTG Only;
+   **Action:** click Use PTG Only, then gain XP; **Required state:** OOC for the
+   choice, leveling character with native/Ellesmere XP visible beforehand;
+   **Confirmation:** PTG stays visible, detected duplicate XP bars hide and stay
+   hidden after XP refresh; native reputation/other suite bars remain available.
+10. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
+    Bar → XP Bar Choice → Hide Blizzard XP Bar / Hide Ellesmere XP Bar;
+    **Action:** toggle each separately, then choose Choose Your XP Bar → Use
+    Existing Bar; **Required state:** OOC; **Confirmation:** individual hides are
+    independent, Existing hides PTG and the owners decide their normal visibility.
+    Toggle General → Enable Enhanced Experience Bar off to verify restoration
+    on disable. No external addon settings are reset.
+11. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
+    Bar → XP Bar Choice → Detected XP Bars; **Action:** `/reload`, enter/leave
+    combat and inspect status; **Required state:** Use PTG Only chosen OOC;
+    **Confirmation:** choice persists, no blocked-action/errors; unsupported
+    targets are reported rather than forced. Missing new runtime files may need
+    one client restart after this TOC addition.

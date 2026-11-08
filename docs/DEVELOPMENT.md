@@ -1,12 +1,17 @@
 # Standalone Forever development
 
-Enhanced Experience Bar adds the tenth module and three Lua files (99 chunks).
+Enhanced Experience Bar adds the tenth module and four Lua files (100 chunks).
 Run `python tests/enhanced_experience_bar.py` for forecasts/session/Edit Mode and
 profile coverage, plus regression/build checks. The contract and exact `/reload`
 test paths are in [ENHANCED_EXPERIENCE_BAR.md](ENHANCED_EXPERIENCE_BAR.md).
 Owner reports initial bar working/no errors. Revised full-height overlays,
 all-log/hidden-header scans, texture options and separate text customization
 remain pending native validation; no release publication is implied.
+
+XP provider choice uses an independent runtime visibility adapter; run
+`python tests/enhanced_experience_visibility.py` with the focused bar/smoke tests
+and builder. New helper is in the TOC; if /reload misses it, restart the client.
+Default hide toggles are off. Native and Ellesmere coexistence needs owner review.
 
 The editable addon is `PlayTheGameTools/`, displayed in WoW as Play The Game Tools.
 It contains all current Forever production Lua and runtime media. The repository

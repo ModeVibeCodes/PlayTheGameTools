@@ -38,7 +38,8 @@ local defaults = { width = 600, height = 24, scale = 100, opacity = 100, overlay
     barTexture = "default", questFormat = "percent", separator = "dash", sessionSeparator = "dash",
     restedOpacity = 45, questOpacity = 35, textOpacity = 100, sessionOpacity = 100,
     sessionFont = "game", sessionFontMedia = "", sessionOutline = true, sessionAlign = "CENTER",
-    sessionTextColor = {0.95, 0.96, 1}, sessionWidth = 600, sessionX = 0 }
+    sessionTextColor = {0.95, 0.96, 1}, sessionWidth = 600, sessionX = 0,
+    barChoice = "ptg", hideBlizzardXP = false, hideEllesmereXP = false }
 function M.Initialize(db)
     if db.restedOverlayColor == nil and db.nativeColors == false and type(db.restedColor) == "table" then
         db.restedOverlayColor = {unpack(db.restedColor)}
@@ -70,6 +71,7 @@ function M.Initialize(db)
     assert(db.questFormat == "percent" or db.questFormat == "value" or db.questFormat == "both", "Invalid quest XP format")
     assert(db.separator == "dash" or db.separator == "dot", "Invalid experience separator")
     assert(db.sessionSeparator == "dash" or db.sessionSeparator == "dot", "Invalid session separator")
+    assert(db.barChoice == "ptg" or db.barChoice == "existing", "Invalid XP bar choice")
     assert(db.barTexture == "default" or db.barTexture == "blizzardXP" or db.barTexture == "blizzardStatus"
         or (#db.barTexture <= 166 and db.barTexture:sub(1, 6) == "media:" and #db.barTexture > 6), "Invalid bar texture")
 end
@@ -82,6 +84,9 @@ function M:SetOption(key, value)
     self.db[key] = copy[key]
     if key == "font" then self.db.fontMedia = "" end
     if key == "sessionFont" then self.db.sessionFontMedia = "" end
+    if key == "barChoice" or key == "hideBlizzardXP" or key == "hideEllesmereXP" then
+        self:SyncOtherBars(); addon.EditMode:RefreshElements()
+    end
     self:ApplyAppearance(); if self.page then self.page:Refresh() end
     return true
 end
@@ -195,6 +200,7 @@ function M:Refresh()
 end
 function M:OnEnable()
     self.active = true
+    self:SyncOtherBars()
     self.sessionStart, self.sessionXP, self.sessionIncomplete = GetTime(), 0, false
     self.lastXP = self:ReadXP()
     if not self.events then self.events = CreateFrame("Frame") end
@@ -218,6 +224,7 @@ function M:OnEnable()
 end
 function M:OnDisable()
     self.active, self.editing, self.preview = false, false, false
+    self:SyncOtherBars()
     if self.events then self.events:UnregisterAllEvents() end
     if self.tick then self.tick:Cancel(); self.tick = nil end
     addon.PositionManager:StopDragging(self.id); self.frame:Hide()

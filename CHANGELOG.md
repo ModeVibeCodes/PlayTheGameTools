@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Enhanced Experience Bar offers Use PTG Only / Use Existing Bar and independent
+  Blizzard/Ellesmere XP hide toggles. Hides are opt-in, reversible and XP-only;
+  provider saved settings remain untouched. Native coexistence testing pending.
+
 - XP bar forecast priority is current XP, rested XP, then quest log XP. Quest
   tint is clipped beneath rested coverage so overlay colors no longer mix.
 

@@ -77,6 +77,7 @@ Modules\CampContributions.lua
 Modules\CampContributionsDisplay.lua
 Modules\EnhancedExperienceBar.lua
 Modules\EnhancedExperienceBarDisplay.lua
+Modules\EnhancedExperienceBarVisibility.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua

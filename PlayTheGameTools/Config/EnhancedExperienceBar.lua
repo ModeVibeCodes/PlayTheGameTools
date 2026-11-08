@@ -35,6 +35,24 @@ function M:CreateConfigPage(parent)
     page:Section("General")
     page:ToggleGrid({{label = "Enable Enhanced Experience Bar", get = function() return self.enabled end,
         set = function(v) if self:CanConfigure() then addon:SetModuleEnabled(self.id, v) end end}})
+    page:Section("XP Bar Choice")
+    local status = W.Label(page:Row("Detected XP Bars", 70), "", nil, 0, -4, 360, addon.Theme.muted)
+    status:SetWordWrap(true)
+    page.refreshers[#page.refreshers + 1] = function() status:SetText(self:OtherBarsStatus()) end
+    local choiceRow = page:Row("Choose Your XP Bar", 48)
+    local ptg = W.Button(choiceRow, "Use PTG Only", 160, 28); ptg:SetPoint("LEFT")
+    local existing = W.Button(choiceRow, "Use Existing Bar", 160, 28); existing:SetPoint("LEFT", 168, 0)
+    ptg:SetScript("OnClick", function() self:ChooseXPBar(true) end)
+    existing:SetScript("OnClick", function() self:ChooseXPBar(false) end)
+    page.refreshers[#page.refreshers + 1] = function()
+        ptg:SetSelected(self.db.barChoice == "ptg" and self.db.hideBlizzardXP and self.db.hideEllesmereXP)
+        existing:SetSelected(self.db.barChoice == "existing")
+    end
+    Toggles({{"Hide Blizzard XP Bar", "hideBlizzardXP"}, {"Hide Ellesmere XP Bar", "hideEllesmereXP"}})
+    local coexist = W.Label(page:Row("Other Addon Suites", 100),
+        "Use PTG Only hides detected Blizzard/Ellesmere XP bars while this module is enabled. Use Existing Bar hides PTG and returns visibility to their owners. The toggles let you hide each bar separately while using PTG. Other suites remain controlled in their own settings. No external saved settings are changed.", nil, 0, -4, 360, addon.Theme.muted)
+    coexist:SetWordWrap(true)
+    page:Section("Bar Appearance")
     Toggles({{"Hide at Maximum Level", "hideAtMax"}})
     local texture = W.Select(page:Row("Bar Texture", 48), 280, function() return self:GetTextureChoices() end,
         function()
