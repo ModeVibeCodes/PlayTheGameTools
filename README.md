@@ -12,8 +12,8 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 ## Included features
 
 - **Enhanced Experience Bar:** opt-in under Questing & Leveling; flat or native
-  Blizzard fill, current/rested/completed-quest percentages, forecast overlays,
-  session time/XP per hour, customizable appearance and shared Edit Mode movement.
+  Blizzard/SharedMedia fill, current/rested/total-quest-log XP, full-height tinted
+  overlays, session time/XP per hour, separate bar/session text controls and shared Edit Mode movement.
   See [behavior, limits and testing](docs/ENHANCED_EXPERIENCE_BAR.md).
 
 - **Combat Timer:** player combat elapsed time, configurable appearance and
