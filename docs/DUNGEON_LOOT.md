@@ -6,11 +6,12 @@ to the other dungeons. The same appearance and interaction apply across the
 catalog. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
 and real screenshots remain pending; no release publication is authorized.
 
-## Standalone shortcut and keybinding (binding refinement review pending)
+## Standalone shortcut and keybinding (owner accepted)
 
 The owner confirmed the revised Quick Icon/editor working on 2026-11-07, then
 requested direct key overrides and a separate assignment field. Those binding
-refinements await native review. The first PR #14 prototype rendered as a blue
+refinements were confirmed working by the owner on 2026-11-07, with explicit
+authorization to merge PR #14. Real screenshots remain pending. The first PR #14 prototype rendered as a blue
 square and did not move in the
 owner's client. This revision replaces the unsupported chest-art setup with
 explicitly sized native loot dice art (`Interface/Buttons/UI-GroupLoot-Dice-Up`),
@@ -61,8 +62,8 @@ Primary Forever references, inspected 2026-11-07:
 - [Native key capture/conflict/save implementation](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_Settings_Shared/Blizzard_Keybindings.lua)
 - [Binding XML schema in use](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Bindings.xml)
 
-Native checks (pending; mocks do not establish rendering, drag timing, shared
-workspace behavior or live key persistence):
+Native regression checks (owner confirmed the Quick Icon/editor and final
+binding refinement working on 2026-11-07; this is not exhaustive coverage):
 
 1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
    Quick Icon. **Action:** `/reload`; enable Show Shortcut Icon: On and leave

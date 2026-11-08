@@ -79,8 +79,9 @@ normal drag/lock and Edit Mode controls. General now owns key capture, native
 SetBinding/SaveBindings and Clear for Dungeon Loot. The owner confirmed the
 revised icon/editor working, then requested overriding the chosen key regardless
 of its old action and a separate assignment field. Failure rollback restores the
-overwritten action and prior Dungeon Loot keys. This binding refinement needs
-native review.
+overwritten action and prior Dungeon Loot keys. The owner confirmed the final
+Quick Icon/binding revision working on 2026-11-07 and authorized merging PR #14.
+Screenshots remain pending; no release publication is included.
 Capture cleanup and managed mouse-state regression checks are in
 dungeon_loot_quick_icon.py (under tests/). No new runtime files for this revision;
 /reload applies it after initial installation. Native confirmation pending.

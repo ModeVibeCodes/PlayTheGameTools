@@ -259,4 +259,6 @@ action using General -> Keybinding -> Set Keybinding; the adjacent field shows
 its key or Not bound after Clear Keybinding. Automated coverage includes occupied
 key capture, failed-save restoration of the overwritten action and previous
 Dungeon Loot keys, and live field updates. The Quick Icon revision has positive
-owner confirmation; this latest binding refinement remains pending native review.
+owner confirmation; the owner also confirmed the final binding refinement
+working on 2026-11-07 and authorized merging PR #14. The checks above remain
+regression guidance; no release publication is authorized.
