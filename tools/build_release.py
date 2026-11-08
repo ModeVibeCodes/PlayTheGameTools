@@ -51,13 +51,20 @@ def payload():
             or len(nodes[0]) != 0):
         raise ValueError('Unexpected map pin template contents')
     actual_xml = {p.relative_to(ADDON).as_posix() for p in ADDON.rglob('*.xml')}
-    if actual_xml != {xml_name}:
+    binding_name='Bindings.xml'
+    binding=ET.fromstring(source_path(binding_name).read_bytes())
+    entries=list(binding)
+    if (binding.tag!='Bindings' or len(entries)!=1 or entries[0].tag!='Binding'
+            or entries[0].attrib!={'name':'PTGTOOLS_DUNGEON_LOOT','category':'ADDONS','header':'PTGTOOLS'}
+            or len(entries[0]) or (entries[0].text or '').strip()!='PlayTheGameToolsOpenDungeonLoot();'):
+        raise ValueError('Unexpected Dungeon Loot binding definition')
+    if actual_xml != {xml_name,binding_name}:
         raise ValueError('XML source inventory differs from TOC')
     order = [name for name in runtime if name != xml_name]
     for name in order:
         if not re.fullmatch(r'(?:Core|Config|Modules)/.+\.lua', name):
             raise ValueError(f'Unsupported runtime source: {name}')
-    files = {'PlayTheGameTools.toc': (ADDON / 'PlayTheGameTools.toc').read_bytes()}
+    files = {'PlayTheGameTools.toc': (ADDON / 'PlayTheGameTools.toc').read_bytes(), binding_name:source_path(binding_name).read_bytes()}
     files.update({name: source_path(name).read_bytes() for name in runtime})
     for path in (ADDON / 'Media').rglob('*'):
         ordinary(path)

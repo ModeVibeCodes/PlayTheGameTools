@@ -7,6 +7,7 @@ addon:RegisterModule("dungeonLoot", M)
 
 local function Public(v) return not (issecretvalue and issecretvalue(v)) end
 function M:OnInitialize()
+    self:InitializeShortcut()
     self.view = { tab = "loot", search = "" }
     self.requested, self.attempted, self.tooltipInstances = {}, {}, {}
     self.events = CreateFrame("Frame")
@@ -33,12 +34,15 @@ function M:SyncEvents()
 end
 function M:OnEnable()
     self.active = true
+    self:SyncShortcut()
     self:SyncEvents()
 end
 function M:OnDisable()
+    self:CancelShortcutBinding()
     if self.coordinateFrame then self.coordinateFrame:Hide() end
     if addon.DungeonLootMap then addon.DungeonLootMap:Clear() end
     self.active = false
+    self:SyncShortcut()
     self.events:UnregisterAllEvents()
     self:HideTooltip()
 end
@@ -113,6 +117,7 @@ function M:SelectEntry(kind, index)
     end
 end
 function M:Navigate(dungeon, tab, boss, quest)
+    self:CancelShortcutBinding()
     if self.coordinateFrame then self.coordinateFrame:Hide() end
     self:HideTooltip()
     local sameDungeon = self.view.dungeon == dungeon

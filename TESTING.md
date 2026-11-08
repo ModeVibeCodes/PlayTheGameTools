@@ -203,6 +203,8 @@ python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
 python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
+python tests/dungeon_loot_shortcut.py
+python tests/dungeon_loot_quick_icon.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -236,3 +238,27 @@ Use the exact Navigation/Action/Required state/Confirmation checklist in
 Loot Sparkles has scoped positive owner feedback; the new two-tab layout and
 campfire monitor require native review. Campfire benefits are earned player buffs,
 not a detected inventory of objects at a nearby camp. Screenshots: pending.
+
+Dungeon Loot shortcut revision: run dungeon_loot_shortcut.py for binding payload
+validation/execution, direct routing, drag/click separation, position persistence,
+lock/show/reset controls, combat guards, deferred creation and invalid profile
+preferences. Initial installation requires a client restart for the new
+TOC/root binding files; subsequent Lua-only Quick Icon fixes use /reload.
+Native appearance and binding registration remain pending. Exact paths are recorded in
+docs/DUNGEON_LOOT.md under Standalone shortcut and keybinding.
+
+Quick Icon revision: dungeon_loot_quick_icon.py covers native texture dimensions,
+circular ring, size/opacity, shared Edit Mode selection/drag/coordinates and mouse
+restoration, inline binding field/capture/override/save/rollback/clear and input cleanup.
+The failed blue-square prototype is not native acceptance for this replacement.
+Use the exact revised checklist in docs/DUNGEON_LOOT.md; `/reload` applies these
+Lua-only edits once the initial PR's files are loaded. Native review pending.
+
+Binding-field refinement: verify an already-bound key can replace its previous
+action using General -> Keybinding -> Set Keybinding; the adjacent field shows
+its key or Not bound after Clear Keybinding. Automated coverage includes occupied
+key capture, failed-save restoration of the overwritten action and previous
+Dungeon Loot keys, and live field updates. The Quick Icon revision has positive
+owner confirmation; the owner also confirmed the final binding refinement
+working on 2026-11-07 and authorized merging PR #14. The checks above remain
+regression guidance; no release publication is authorized.

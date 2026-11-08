@@ -67,6 +67,7 @@ Modules\DungeonLootProvider.lua
 Modules\DungeonLootMap.lua
 Modules\DungeonLootMapPins.xml
 Modules\DungeonLoot.lua
+Modules\DungeonLootShortcut.lua
 Modules\LootSparkles.lua
 Modules\LootSparklesTarget.lua
 Modules\LootSparklesDisplay.lua

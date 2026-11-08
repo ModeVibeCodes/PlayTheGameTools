@@ -210,7 +210,27 @@ function M:CreateConfigPage(parent)
         if not M.active then
             rootRows:Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
         elseif v.tab=="general" then
-            rootRows:Add("General",nil,nil,T.secondary,nil,{heading=true})
+            rootRows:Add("Quick Icon",nil,nil,T.secondary,nil,{heading=true})
+            rootRows:Add("Show Shortcut Icon: "..(M.db.showShortcut and "On" or "Off"),function()
+                M:SetShortcutOption("showShortcut",not M.db.showShortcut);page:Refresh()
+            end)
+            rootRows:Add("Lock Shortcut Icon: "..(M.db.shortcutLocked and "On" or "Off"),function()
+                M:SetShortcutOption("shortcutLocked",not M.db.shortcutLocked);page:Refresh()
+            end)
+            page.iconSize=rootRows:SettingSlider("Icon Size",24,72,2,function() return M.db.shortcutSize end,function(value) M:SetShortcutOption("shortcutSize",value) end," px")
+            page.iconOpacity=rootRows:SettingSlider("Icon Opacity",25,100,5,function() return M.db.shortcutOpacity end,function(value) M:SetShortcutOption("shortcutOpacity",value) end,"%")
+            rootRows:Add("Edit Icon Position",function() M:EditShortcutPosition() end)
+            rootRows:Add("Reset Shortcut Position",function() M:ResetShortcutPosition() end)
+            rootRows:Add("Click to open. Drag while unlocked; Edit Mode can move the icon even while locked.",nil,nil,T.muted)
+            if M.shortcutFailure then rootRows:Add("Icon positioning unavailable: "..M.shortcutFailure,nil,nil,T.primary) end
+            rootRows:Add("Keybinding",nil,nil,T.secondary,nil,{heading=true})
+            page.bindingControl=rootRows:BindingControl(M:ShortcutBindingLabel(),function() M:CaptureShortcutBinding() end)
+            rootRows:Add("Clear Keybinding",function()
+                local _,message=M:SaveShortcutBinding(nil);M.bindingStatus=message;page:Refresh()
+            end)
+            if M.bindingStatus then rootRows:Add(M.bindingStatus,nil,nil,T.secondary) end
+            rootRows:Add("The selected key replaces its current binding. Uses your current WoW account/character bindings.",nil,nil,T.muted)
+            rootRows:Add("Dungeon Data",nil,nil,T.secondary,nil,{heading=true})
             rootRows:Add(data.providerSource or data.source,nil,nil,T.muted)
             rootRows:Add("Bundled data: Lootified by Alen / CMaNGOS. GPLv3; no warranty. See CATALOG_SOURCES.md and LICENSES/GPL-3.0.txt.",nil,nil,T.muted)
             rootRows:Add("Loot and quest availability can change. Suggested levels are a guide, not an entry requirement.",nil,nil,T.muted)
@@ -293,7 +313,7 @@ function M:CreateConfigPage(parent)
     end
     page:SetScript("OnSizeChanged",function() page:Layout() end)
     page:SetScript("OnShow",function() if self.active then self:ReadData() end;self:SyncEvents();page:Refresh() end)
-    page:SetScript("OnHide",function() self:SyncEvents();self:HideTooltip();if self.coordinateFrame then self.coordinateFrame:Hide() end end)
+    page:SetScript("OnHide",function() self:CancelShortcutBinding();self:SyncEvents();self:HideTooltip();if self.coordinateFrame then self.coordinateFrame:Hide() end end)
     page:Refresh()
     return page
 end

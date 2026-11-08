@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Dungeon Loot's Set Keybinding now replaces the selected key's current action,
+  with the assigned key or Not bound in a separate read-only field beside the
+  button. Failed changes restore both the overwritten action and prior shortcut.
+
+- Reworked the Dungeon Loot launcher after the blue-square/non-moving report:
+  native circular loot dice icon, explicit dimensions, Class Training-style ring,
+  size/opacity controls and shared Edit Mode drag/coordinate integration. General
+  now groups Quick Icon settings and provides direct Set/Clear Keybinding with
+  current assignment, conflict checks and native account/character persistence.
+
+- Added a standalone Dungeon Loot chest icon (shown while the module is enabled),
+  freely draggable while unlocked, with saved position and General visibility,
+  lock and reset controls. Added an unassigned Open Dungeon Loot action to native
+  Key Bindings. Both open the dungeon index outside combat; the keybind remains
+  available when the icon is hidden and never enables the module implicitly.
+
 - Enhanced Experience Bar offers Use PTG Only / Use Existing Bar and independent
   Blizzard/Ellesmere XP hide toggles. Hides are opt-in, reversible and XP-only;
   provider saved settings remain untouched. Native coexistence testing pending.
