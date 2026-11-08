@@ -4,6 +4,16 @@ Forever only; opt-in tenth module. Open `/ptg`, expand **Questing & Leveling**,
 then select **Enhanced Experience Bar**. Uses the addon's shared **Edit Mode**
 workspace for its owned frame. Existing modules, settings and stock XP UI stay intact.
 
+## Owner acceptance and merge closeout — 2026-11-07
+
+Owner accepted the current feature and requested merging PR #13 to main after
+local testing/refinements, including the provider-choice controls. Earlier
+pending statements below retain the bounded test contracts and historical
+observations; they do not negate this merge authorization. Broad reward accuracy,
+all provider versions, combat coverage and screenshots are not established by
+that feedback. Current static checks passed at 100 Lua / 175 packaged files;
+no release publication or SavedVariables changes are part of this merge.
+
 ## Behavior
 
 - **XP Bar Choice → Choose Your XP Bar → Use PTG Only** enables PTG and hides

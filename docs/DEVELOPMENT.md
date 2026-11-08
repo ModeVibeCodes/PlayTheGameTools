@@ -13,6 +13,14 @@ XP provider choice uses an independent runtime visibility adapter; run
 and builder. New helper is in the TOC; if /reload misses it, restart the client.
 Default hide toggles are off. Native and Ellesmere coexistence needs owner review.
 
+Owner accepted the completed local feature and authorized PR #13's main merge on
+2026-11-07. Runtime checkpoint 7054cc0 passes the focused bar/visibility suites,
+smoke, Campfire Edit Mode, Dungeon Loot and deterministic build (100 Lua / 175
+package files); prior scoped regressions also passed. Main had no intervening
+changes or conflicts. Merge closeout updates only owning docs; the clean existing
+live-linked checkout returns to merged main, preserving its junction and settings.
+Broad native/API/provider-version coverage remains bounded by the owning checklist.
+
 The editable addon is `PlayTheGameTools/`, displayed in WoW as Play The Game Tools.
 It contains all current Forever production Lua and runtime media. The repository
 starts with fresh history; no Retail modules, development-machine settings or
