@@ -2,11 +2,16 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local C,W,T=addon.CampfireMonitor,addon.ConfigWidgets,addon.InterfaceTheme
 function C:AddConfig(page)
-    local function Toggle(label,key)
-        local cell=page:ToggleGrid({{label=label,get=function() return self.db[key] end,
-            set=function(v) self:SetOption(key,v) end}})[1]
-        page.campfireControls[key]=cell
+    local function Toggles(entries)
+        local items={}
+        for _,entry in ipairs(entries) do
+            local key=entry[2]
+            items[#items+1]={label=entry[1],get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
+        end
+        local cells=page:ToggleGrid(items,{maxColumns=2,minimumCellWidth=210})
+        for i,entry in ipairs(entries) do page.campfireControls[entry[2]]=cells[i] end
     end
+    local function Toggle(label,key) Toggles({{label,key}}) end
     local function Slider(label,key,suffix)
         local r=self.ranges[key]
         page.refreshers[#page.refreshers+1]=W.Slider(page:Row(label,48),r[1],r[2],r[3],
@@ -32,13 +37,11 @@ function C:AddConfig(page)
         if addon.LootSparkles:OutsideCombat() then self:StopPreview();self:Refresh();page:Refresh() end
     end);page.campfireRefresh=refresh
     page:Group("Display")
-    Toggle("Show Campfire Icon","showIcon");Toggle("Show Status Text","showText")
-    Toggle("Show Your Camp Benefits","showBenefits")
-    Toggle("Compact Buff Text","compactBenefits")
-    Toggle("Separate Buff Window","separateBenefits")
-    Toggle("Show Nearby Native Details","showNearbyDetails")
-    Toggle("Show Profession Guide","showProfessionGuide")
-    Toggle("Always Show Monitor","alwaysShow");Toggle("Show In Combat","showInCombat")
+    Toggles({{"Show Campfire Icon","showIcon"},{"Show Status Text","showText"},
+        {"Show Your Camp Benefits","showBenefits"},{"Compact Buff Text","compactBenefits"},
+        {"Separate Buff Window","separateBenefits"},{"Show Nearby Native Details","showNearbyDetails"},
+        {"Show Profession Guide","showProfessionGuide"},{"Always Show Monitor","alwaysShow"},
+        {"Show In Combat","showInCombat"},{"Lock Campfire Monitor","locked"},{"Lock Buff Window","benefitsLocked"}})
     page:Group("Appearance")
     Slider("Font Size","fontSize");Slider("Icon Size","iconSize");Slider("Monitor Width","width")
     Slider("Monitor Scale","scale","%");Slider("Monitor Opacity","opacity","%")
@@ -46,29 +49,47 @@ function C:AddConfig(page)
     local owner={db={appearance=self.db}}
     function owner:CanConfigure() return addon.LootSparkles:OutsideCombat() end
     function owner:SetAppearance(key,value) return C:SetOption(key,value) end
-    W.ColorRow(page,owner,"Text Color","textColor")
+    page:Group("Text Colors")
+    Toggles({{"Header Gradient","headerGradient"},{"Timer Gradient","timerGradient"},
+        {"Dynamic Timer Color","dynamicTimerColor"},{"Color Stats by Type","colorStats"}})
+    page.campfireColors={}
+    for _,entry in ipairs({{"Text Color","textColor"},{"Header Color","headerColor"},
+        {"Header Gradient End","headerEndColor"},{"Timer Color","timerColor"},
+        {"Timer Green","timerGoodColor"},{"Timer Yellow","timerWarningColor"},
+        {"Timer Red","timerCriticalColor"},{"Crit Color","critColor"},{"Int Color","intColor"}}) do
+        local pick,hex,apply=W.ColorRow(page,owner,entry[1],entry[2])
+        page.campfireColors[entry[2]]={pick=pick,hex=hex,apply=apply}
+    end
     page:Group("Camp Contributions")
     Toggle("Show Contribution Popup","showContributionPopup")
-    local contributionStatus=W.Label(page:Row("Contribution Availability",92),"",nil,0,-4,440,T.muted)
-    contributionStatus:SetWordWrap(true);page.contributionStatus=contributionStatus
-    page.refreshers[#page.refreshers+1]=function()
-        contributionStatus:SetText(addon.CampContributions.message or "Ready carried kits for your learned professions appear at a nearby fire, outside combat.")
-    end
-    local open=W.Button(page:Row("Contribution Window",48),"Open Contributions",180,28);open:SetPoint("LEFT")
-    open:SetScript("OnClick",function() addon.CampContributions:Open();page:Refresh() end)
-    page.contributionOpen=open
-    local refreshContributions=W.Button(page:Row("Carried Camp Kits",48),"Refresh Contributions",180,28);refreshContributions:SetPoint("LEFT")
-    refreshContributions:SetScript("OnClick",function()
-        if addon.LootSparkles:OutsideCombat() then
-            addon.CampContributions.dirty=true;addon.CampContributions:OnSnapshot(self.snapshot);page:Refresh()
+    local A=addon.CampContributions
+    local detected=W.Label(page:Row("Detected Kits",68),"",nil,0,-4,440,T.muted)
+    detected:SetWordWrap(true);page.contributionStatus=detected
+    local tools=page:Row("Contribution Window",42)
+    local open=W.Button(tools,"Open Contributions",180,28);open:SetPoint("LEFT")
+    open:SetScript("OnClick",function() A:Open();page:Refresh() end);page.contributionOpen=open
+    local sample=W.Button(tools,"Preview Contributions",180,28);sample:SetPoint("LEFT",190,0)
+    sample:SetScript("OnClick",function() A:TogglePreview();page:Refresh() end);page.contributionPreview=sample
+    local actions=page:Row("Contribution Tools",42)
+    local refresh=W.Button(actions,"Refresh Contributions",180,28);refresh:SetPoint("LEFT")
+    refresh:SetScript("OnClick",function() A:RefreshDetected();page:Refresh() end);page.contributionRefresh=refresh
+    local editContributions=W.Button(actions,"Edit Contributions",180,28);editContributions:SetPoint("LEFT",190,0)
+    editContributions:SetScript("OnClick",function()
+        if A.active and addon.LootSparkles:OutsideCombat() then
+            addon:SetEditMode(true);addon.PositionManager:SelectElement("campfireContributions")
         end
-    end);page.contributionRefresh=refreshContributions
-    local contributionHelp=W.Label(page:Row("Contribution Help",120),"Shows ready camp contribution kits carried in your bags for professions you know. Click Place to use one; finish any native placement targeting. The game enforces range, skill, camp slots and shared cooldowns. Dismiss hides this visit's popup; Open Contributions reopens it. Fire-building kits and unrelated items are excluded.",nil,0,-4,440,T.muted)
-    contributionHelp:SetWordWrap(true)
+    end);page.contributionEdit=editContributions
+    page.refreshers[#page.refreshers+1]=function()
+        detected:SetText(A:Summary())
+        sample.label:SetText(A.previewing and "Stop Preview" or "Preview Contributions")
+    end
+    local help=W.Label(page:Row("Contributions TLDR",76),
+        "Ready profession kits from your bags appear at a fire. Place uses the native item; finish targeting. Dismiss hides this visit. Preview is safe anywhere; drag its header or use Edit Contributions.",nil,0,-4,440,T.muted)
+    help:SetWordWrap(true)
     page:Group("Buff Timer")
     Slider("Yellow Below (Minutes)","timerWarningMinutes")
     Slider("Red Below (Minutes)","timerCriticalMinutes")
-    local timerHelp=W.Label(page:Row("Timer Colors",72),"The countdown fades from white into green, yellow or red. Red must be below the yellow threshold. Hidden native timing shows Time unavailable.",nil,0,-4,440,T.muted)
+    local timerHelp=W.Label(page:Row("Timer Colors",72),"Dynamic color: green > yellow > red. Red threshold must be lower. Gradients are optional; Pick opens the color wheel. Unreadable timing stays unavailable.",nil,0,-4,440,T.muted)
     timerHelp:SetWordWrap(true)
     page:Group("Position")
     local edit=W.Button(page:Row("Addon Edit Mode",48),"Open Edit Mode",160,28);edit:SetPoint("LEFT")
@@ -81,14 +102,12 @@ function C:AddConfig(page)
     move:SetScript("OnClick",function() self:SetPlacementMode(not self.placing);page:Refresh() end)
     page.campfireMove=move
     page.refreshers[#page.refreshers+1]=function() move.label:SetText(self.placing and "Finish Moving" or "Move Windows") end
-    Toggle("Lock Campfire Monitor","locked")
     Slider("Horizontal Offset","x");Slider("Vertical Offset","y")
     local reset=W.Button(page:Row("Monitor Position",48),"Reset Position",160,28);reset:SetPoint("LEFT")
     reset:SetScript("OnClick",function()
         if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(false);page:Refresh() end
     end);page.campfireReset=reset
     page:Group("Buff Window")
-    Toggle("Lock Buff Window","benefitsLocked")
     Slider("Buff Text Size","benefitsFontSize");Slider("Buff Window Width","benefitsWidth")
     Slider("Buff Window Scale","benefitsScale","%");Slider("Buff Window Opacity","benefitsOpacity","%")
     Slider("Buff Background Opacity","benefitsBackgroundOpacity","%")
@@ -97,7 +116,7 @@ function C:AddConfig(page)
     resetBuffs:SetScript("OnClick",function()
         if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(true);page:Refresh() end
     end);page.campfireBuffReset=resetBuffs
-    local note=W.Label(page:Row("Campfire Help",220),
-        "Move Windows lets you drag the monitor and detached buffs outside combat, even when locked. Preview windows can also be dragged. Right-click either window or choose Finish Moving to stop. Separate Buff Window keeps earned buffs in their own window with a saved position and its own size and opacity. Compact Buff Text shortens readable native bonuses; unfamiliar text stays unchanged. Earned buffs can outlast the nearby fire. The profession guide lists possible contributions, not this camp's detected objects. Combat display is off by default.",nil,0,-4,440,T.muted)
+    local note=W.Label(page:Row("Campfire TLDR",76),
+        "Move Windows or Edit Mode positions the monitor/buffs. Separate Buff Window detaches earned bonuses. Compact Buff Text shortens stats. The guide is a reference, not a detected camp inventory.",nil,0,-4,440,T.muted)
     note:SetWordWrap(true)
 end

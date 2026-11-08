@@ -178,9 +178,9 @@ function C:PaintDisplay(f,separate)
         f.caption:SetTextColor(unpack(db.textColor));Row(f.caption,self:MonitorStatus(),size)
     else f.caption:Hide() end
     if db.showBenefits and (separate or not db.separateBenefits) and (s.benefits or self:IsBuffSample() or self.placing) then
-        Row(f.buffTitle,self.Gradient("Camp Buffs",{1,0.58,0.12},{1,0.12,0.08}),size+3)
+        Row(f.buffTitle,self:HeaderText("Camp Buffs"),size+3)
         local timer,seconds=self:TimerLabel()
-        Row(f.buffTimer,self.Gradient(timer,{1,1,1},self:TimerColor(seconds)),math.max(10,size-1))
+        Row(f.buffTimer,self:StyledText(timer,db.timerColor,self:TimerColor(seconds),db.timerGradient),math.max(10,size-1))
         Row(f.text,self:ColorBuffText(self:BuildBenefitsText()),size)
     else f.buffTitle:Hide();f.buffTimer:Hide();f.text:Hide() end
     local details=not separate and self:BuildText() or ""

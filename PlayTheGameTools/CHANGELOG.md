@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Camp Buffs now drops native intro and parenthesized duration footer text. Added plain text color-wheel controls with optional header/timer gradients, compact toggle grids, concise help, detected kits, an inert Contributions preview and shared Edit Mode placement. Native visual acceptance pending.
+
 - Removed duplicate duration-only footer text beneath Camp Buffs; the countdown stays in its subheading. Added a movable Camp Contributions popup for ready carried profession kits at a nearby fire, native click-to-place actions, per-visit dismissal and reopen/refresh controls. Native item placement/screenshots pending.
 
 - Campfire elements now use shared Edit Mode handles, coordinates and saved positions. Added an orange/red Camp Buffs heading, native countdown with white-to-green/yellow/red urgency gradients, distinct stat colors and spell-ID filtering. Centered the camp icon above its status; no unsupported yards/navigation are fabricated.

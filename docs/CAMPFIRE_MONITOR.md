@@ -316,3 +316,41 @@ the single timer in both joined/separate modes. Stat prose such as mana gained
 every 5 sec stays visible; unfamiliar localized prose is retained conservatively.
 Ready carried profession kits now have a separate movable action popup; see
 [Camp Contributions](CAMP_CONTRIBUTIONS.md) for APIs, limits and exact native tests.
+
+## Tooltip cleanup, optional colors and compact controls
+
+Owner reported the first footer filter still showed native boilerplate. The
+benefit reader now also removes the "You have gained the following camp benefits"
+intro and parenthesized hour/footer variants, including the reported "remaing"
+spelling. Periodic bonus prose remains. The only title is Camp Buffs and the only
+remaining-time display is its subheading; both compact and full-text modes filter
+boilerplate. No native buff tooltip is modified.
+
+Display toggles and sparkle toggles now share responsive two-column grids rather
+than one row each (one column on narrow layouts). Text Colors offers the existing
+native **Pick** color wheel and RGB entry for text, header/end, timer, urgency
+states, Crit and Int. **Header Gradient** and **Timer Gradient** are optional and
+default off. **Dynamic Timer Color** keeps the editable green/yellow/red states;
+turn it off to use the chosen Timer Color uniformly. **Color Stats by Type**
+retains distinct stats; turn it off to use Text Color for every stat. Header and
+contribution title use the same header style. Long help is condensed to TLDR rows.
+
+1. **Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
+   Monitor → Text Colors → Header Color → Pick; Header Gradient / Timer Gradient.
+   **Action:** open Pick, choose/cancel a color, compare solid and gradient text.
+   **Required state:** OOC, monitor enabled, Preview or earned buffs visible.
+   **Confirmation:** native color wheel opens; the header uses the chosen solid
+   color unless its gradient is enabled. Cancel restores the previous color.
+2. **Navigation:** same tab → Text Colors → Timer Color → Pick; Dynamic Timer
+   Color / Color Stats by Type / Crit Color / Int Color.
+   **Action:** choose timer/stat colors, compare dynamic versus uniform timer and
+   typed versus uniform stats. **Required state:** OOC, preview or readable live
+   timing/earned bonuses. **Confirmation:** choices apply and survive reload;
+   typed Crit/Int use their chosen colors, other typed stats stay distinct.
+3. **Navigation:** same tab → Display → Compact Buff Text / Separate Buff Window.
+   **Action:** inspect earned buff text with both toggles on/off.
+   **Required state:** readable real Camp Benefits tooltip, Preview off.
+   **Confirmation:** Camp Buffs is the sole title, the timer is directly below it,
+   and no gained-benefits sentence or bottom hours-remaining footer appears.
+
+New native rendering/color-wheel/preview acceptance and screenshots are pending.

@@ -22,11 +22,14 @@ C.ranges={contributionX={-10000,10000,1},contributionY={-10000,10000,1},timerWar
     opacity={20,100,5},backgroundOpacity={0,100,5},benefitsX={-10000,10000,1},benefitsY={-10000,10000,1},
     benefitsWidth={100,600,10},benefitsFontSize={10,24,1},benefitsScale={50,150,5},
     benefitsOpacity={20,100,5},benefitsBackgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
-C.defaults={showContributionPopup=true,contributionX=0,contributionY=120,timerWarningMinutes=10,timerCriticalMinutes=2,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
+C.defaults={headerGradient=false,timerGradient=false,dynamicTimerColor=true,colorStats=true,showContributionPopup=true,contributionX=0,contributionY=120,timerWarningMinutes=10,timerCriticalMinutes=2,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
     showProfessionGuide=false,alwaysShow=false,showInCombat=false,locked=true,fontSize=14,
     iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
     benefitsScale=100,benefitsOpacity=100,benefitsBackgroundOpacity=0}
+C.colorDefaults={textColor={1,0.85,0.5},headerColor={1,0.58,0.12},headerEndColor={1,0.12,0.08},
+    timerColor={1,1,1},timerGoodColor={0.25,1,0.4},timerWarningColor={1,0.85,0.15},
+    timerCriticalColor={1,0.22,0.16},critColor={1,0.25,0.25},intColor={0.25,0.55,1}}
 function C.Initialize(db)
     if db.campfire==nil then db.campfire={} end
     local settings=db.campfire
@@ -38,9 +41,11 @@ function C.Initialize(db)
         if r then assert(Number(v,r[1],r[2]) and (v-r[1])%r[3]==0,"Invalid Campfire Monitor range: "..key) end
     end
     assert(settings.timerCriticalMinutes<settings.timerWarningMinutes,"Red threshold must be below yellow threshold")
-    if settings.textColor==nil then settings.textColor={1,0.85,0.5} end
-    assert(type(settings.textColor)=="table","Invalid Campfire Monitor color")
-    for i=1,3 do assert(Number(settings.textColor[i],0,1),"Invalid Campfire Monitor color") end
+    for key,default in pairs(C.colorDefaults) do
+        if settings[key]==nil then settings[key]={unpack(default)} end
+        assert(Public(settings[key]) and type(settings[key])=="table","Invalid Campfire Monitor color: "..key)
+        for i=1,3 do assert(Number(settings[key][i],0,1),"Invalid Campfire Monitor color: "..key) end
+    end
 end
 
 -- Read only player HELPFUL auras through the documented modern accessor.
@@ -93,7 +98,8 @@ function C:TooltipLines(aura)
             for _,key in ipairs({"leftText","rightText"}) do
                 local text=Field(row,key)
                 if type(text)=="string" then
-                    text=text:sub(1,2048):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+                    text=text:sub(1,2048):gsub("|cn[%w_]+:",""):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+                    text=text:gsub("\194\160"," ")
                     text=text:gsub("|T.-|t",""):gsub("|A.-|a","")
                     for line in text:gmatch("[^\r\n]+") do
                         line=line:match("^%s*(.-)%s*$")
@@ -102,7 +108,7 @@ function C:TooltipLines(aura)
                             lower:find("%s*%[%s*spell%s*id%s*:%s*#?%s*%d+%s*%]%s*$") or
                             lower:find("%s+spell%s*id%s*:%s*#?%s*%d+%s*$")
                         if metadata then line=line:sub(1,metadata-1):match("^%s*(.-)%s*$") end
-                        if line~="" and not self:IsMetadata(line) and not self:IsTimerLine(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
+                        if line~="" and not self:IsMetadata(line) and not self:IsTimerLine(line) and not self:IsBuffPreamble(line) and not seen[line] then lines[#lines+1]=line;seen[line]=true end
                     end
                 end
             end
@@ -186,10 +192,11 @@ function C:Remaining()
     if ok and Number(now,0,1e12) then return math.max(0,aura.expiration-now) end
 end
 function C:TimerColor(seconds)
-    if not Number(seconds,0,1e12) then return {0.7,0.75,0.8} end
-    if seconds<=self.db.timerCriticalMinutes*60 then return {1,0.22,0.16} end
-    if seconds<=self.db.timerWarningMinutes*60 then return {1,0.85,0.15} end
-    return {0.25,1,0.4}
+    if not self.db.dynamicTimerColor then return self.db.timerColor end
+    if not Number(seconds,0,1e12) then return self.db.timerColor end
+    if seconds<=self.db.timerCriticalMinutes*60 then return self.db.timerCriticalColor end
+    if seconds<=self.db.timerWarningMinutes*60 then return self.db.timerWarningColor end
+    return self.db.timerGoodColor
 end
 function C:TimerLabel()
     local seconds=self:Remaining()
@@ -221,7 +228,10 @@ local buffColors={
     {"resistances",{1,0.5,0.85}},
 }
 function C:BuffColor(line)
+    if not self.db.colorStats then return self.db.textColor end
     local lower=line:lower()
+    if lower:find("%f[%a]crit%f[%A]") or lower:find("critical",1,true) then return self.db.critColor end
+    if lower:find("%f[%a]int%f[%A]") or lower:find("intellect",1,true) then return self.db.intColor end
     for _,entry in ipairs(buffColors) do
         if lower:find("%f[%a]"..entry[1].."%f[%A]") then return entry[2] end
     end
@@ -237,8 +247,18 @@ function C:ColorBuffText(text)
     return table.concat(lines,"\n")
 end
 -- Strip native aura footer timing, not amounts such as Mana every 5 sec.
+function C:IsBuffPreamble(line)
+    local text=line:lower():gsub("folloing","following"):gsub("[%p]", " "):gsub("%s+", " "):match("^%s*(.-)%s*$")
+    return text=="camp benefits" or text=="camp buffs" or
+        text:match("^you have gained the following camp benefits$") or
+        text:match("^you gained the following camp benefits$") or
+        text:match("^gained the following camp benefits$") or
+        text:match("^the following camp benefits$")
+end
 function C:IsTimerLine(line)
-    local text=line:lower():match("^%s*(.-)%s*$")
+    local text=line:lower():gsub("[()]", ""):gsub("remaing", "remaining")
+        :gsub("%s+", " "):match("^%s*(.-)%s*$")
+    text=text:gsub("[%.!:%s]+$", "")
     text=text:gsub("^time%s+remaining%s*:?%s*",""):gsub("^remaining%s+time%s*:?%s*","")
         :gsub("^time%s+left%s*:?%s*",""):gsub("^remaining%s*:?%s*","")
         :gsub("^duration%s*:?%s*",""):gsub("^expires?%s+in%s+","")
@@ -268,9 +288,17 @@ function C:MonitorStatus()
     if s.known or self.editing or self.placing then return "No Nearby Campfire" end
     return "Campfire Status Unavailable"
 end
+function C:StyledText(text,first,last,gradient)
+    if gradient then return self.Gradient(text,first,last) end
+    return string.format("|cff%02x%02x%02x%s|r",math.floor(last[1]*255+0.5),
+        math.floor(last[2]*255+0.5),math.floor(last[3]*255+0.5),text)
+end
+function C:HeaderText(text)
+    return self:StyledText(text,self.db.headerColor,self.db.headerGradient and self.db.headerEndColor or self.db.headerColor,self.db.headerGradient)
+end
 function C:UpdateTimerText()
     local label,seconds=self:TimerLabel()
-    local colored=self.Gradient(label,{1,1,1},self:TimerColor(seconds))
+    local colored=self:StyledText(label,self.db.timerColor,self:TimerColor(seconds),self.db.timerGradient)
     for _,f in pairs({self.frame,self.benefitsFrame}) do
         if f and f.buffTimer and f:IsShown() and f.buffTimer:IsShown() then f.buffTimer:SetText(colored) end
     end
@@ -322,7 +350,7 @@ function C:BuildText()
     return table.concat(parts,"\n")
 end
 function C:SetOption(key,value)
-    if not P:OutsideCombat() or (self.defaults[key]==nil and key~="textColor") then return false end
+    if not P:OutsideCombat() or (self.defaults[key]==nil and self.colorDefaults[key]==nil) then return false end
     if not Public(value) then return false end
     local candidate=addon.ProfileCodec.Copy(self.owner.db);candidate.campfire[key]=value
     if not pcall(self.Initialize,candidate) then return false end
@@ -363,6 +391,7 @@ function C:SyncEnabled()
     self.events:SetScript("OnEvent",function(_,event,unit)
         if event=="UNIT_AURA" and (not Public(unit) or unit~="player") then return end
         if event=="PLAYER_REGEN_DISABLED" then
+            if addon.CampContributions then addon.CampContributions.previewing=false end
             self:StopDrag();self.previewing=false;self.placing=false;self:SyncEnabled();return
         end
         self:Refresh()
@@ -381,6 +410,7 @@ function C:TogglePreview()
     self.previewing=not self.previewing;self:SyncEnabled();return true
 end
 function C:StopPreview()
+    if addon.CampContributions then addon.CampContributions:StopPreview() end
     if self.previewing then self.previewing=false;self:SyncEnabled() end
 end
 function C:Attach(owner)

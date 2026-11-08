@@ -24,7 +24,7 @@ separate registered module or changes to Retail/shared core are involved.
   native /use macro outside combat. No synthetic clicks, direct use API, OnClick
   replacement, automatic ground targeting or placement bypass. Finish any native
   ground reticle/cast required by the item. Unsupported dispatch hides actions.
-- The popup hides during combat, Preview, Edit Mode and Move Windows. Existing
+- The live actions hide during combat, monitor Preview, Edit Mode and Move Windows. Contribution Preview and Edit Mode show an inert sample instead. Existing
   attributes are not mutated in combat; native template/macro combat guards also
   block use. Drag the popup header outside combat to save its separate position.
 - Dismiss suppresses the popup for the current camp visit. Confirmed absence of
@@ -75,7 +75,7 @@ new native interactions remain pending user confirmation.
    events remove unavailable rows. Native rejection remains authoritative.
 3. **Navigation:** Camp Contributions → header / Dismiss; /ptg → Questing &
    Leveling → Gameplay Enhancements → Campfire Monitor → Camp Contributions →
-   Contribution Window → Open Contributions; Carried Camp Kits → Refresh Contributions.
+   Contribution Window → Open Contributions / Preview Contributions; Contribution Tools → Refresh Contributions / Edit Contributions.
    **Action:** drag the header, Dismiss, reopen, leave/reenter camp, and reload;
    refresh after changing carried kits. **Required state:** OOC, ready kit.
    **Confirmation:** position persists; dismissal lasts this visit, reopening
@@ -83,7 +83,7 @@ new native interactions remain pending user confirmation.
 4. **Navigation:** /ptg → header → Edit Mode → Exit / Save; Camp Contributions.
    **Action:** enter/exit Edit Mode, then enter/leave combat safely.
    **Required state:** a ready kit near a real fire; no placement while testing.
-   **Confirmation:** actions hide in Edit Mode/combat and resume only when
+   **Confirmation:** only an inert sample appears in Edit Mode; all content hides in combat. Live actions resume only when
    eligible outside combat; no automatic item use occurs.
 5. **Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
    Monitor → Display → Show Your Camp Benefits / Separate Buff Window.
@@ -91,3 +91,46 @@ new native interactions remain pending user confirmation.
    **Required state:** readable native Camp Benefits timing, Preview off.
    **Confirmation:** the sole remaining-time display is the Camp Buffs subheading;
    native duration-only footer rows are absent and periodic stat text is retained.
+
+## Preview and detected-kit controls
+
+Open Contributions opens the eligible live window at a fire. **Preview Contributions**
+is a distinct toggle: it shows one explicitly labeled sample row anywhere, even
+with no carried kit or learned profession. It creates no action button, fabricates
+no detected item and clears any cached native action attributes outside combat.
+**Edit Contributions** enters the existing workspace and selects the registered
+campfireContributions element (label Camp Contributions), using the same inert
+sample. Its handles, X/Y and header drag share one saved managed position; older
+contributionX/Y offsets migrate when the managed position is first created.
+Aura refreshes preserve a current drag. Combat/tab/page/disable transitions stop
+explicit samples; edit samples end with Exit / Save. Existing template-rejection
+state does not prevent a harmless non-action preview.
+
+**Detected Kits** lists names/counts from the latest ready-inventory scan, capped
+at three names plus a remaining count. Refresh Contributions explicitly scans
+outside combat even away from a fire; no placement window opens without confirmed
+proximity. The concise Contributions TLDR combines the former availability/help
+explanations. No kit is presented as already installed at the camp.
+
+- **Navigation:** /ptg → Questing & Leveling → Gameplay Enhancements → Campfire
+  Monitor → Camp Contributions → Contribution Window → Preview Contributions.
+  **Action:** enable the parent, monitor and Show Contribution Popup, start preview
+  away from a fire, drag the header, then choose Stop Preview.
+  **Required state:** OOC; no carried item/profession/fire required.
+  **Confirmation:** labeled sample appears, moves and disappears; no item is used.
+- **Navigation:** same tab → Camp Contributions → Contribution Tools → Edit
+  Contributions; Edit Mode → X Position / Y Position → Exit / Save.
+  **Action:** select/move Camp Contributions, adjust coordinates, save and reload.
+  **Required state:** OOC, monitor and popup enabled.
+  **Confirmation:** existing handles edit the inert sample; saved position applies
+  to preview and live windows. The sample never has a Place action.
+- **Navigation:** same tab → Camp Contributions → Contribution Tools → Refresh
+  Contributions; Detected Kits.
+  **Action:** refresh while carrying a ready learned-profession kit, then remove
+  it and refresh again. **Required state:** OOC, monitor/popup enabled.
+  **Confirmation:** the detected name/count reflects each scan, including away
+  from camp; sample text does not appear as a detected kit.
+
+tests/campfire_controls.py exercises the actual settings buttons, color-wheel
+apply/cancel, compact grid membership, inert sample and handle/header dragging,
+saved positions, tab/combat teardown and disabled edit membership (mock only).

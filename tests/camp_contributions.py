@@ -99,7 +99,7 @@ b.nativeClick(b,'LeftButton',false);assert(#macroCalls==1,'combat blocks action'
 testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED');assert(A.window:IsShown())
 C:TogglePreview();assert(not A.window:IsShown(),'preview never authorizes actions')
 C:StopPreview();assert(A.window:IsShown())
-addon:SetEditMode(true);assert(not A.window:IsShown(),'Edit Mode hides actions')
+addon:SetEditMode(true);assert(A.window:IsShown() and A.window.sample:IsShown() and b:GetAttribute('type1')==nil,'Edit Mode shows only inert sample')
 addon:SetEditMode(false);assert(A.window:IsShown())
 bag={{itemID=279970,stackCount=1,isLocked=false,start=testClock,duration=60}}
 FireEvent('BAG_UPDATE_COOLDOWN');assert(#A.items==0 and not A.window:IsShown())

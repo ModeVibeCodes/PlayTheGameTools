@@ -7,13 +7,16 @@ function M:CreateConfigPage(parent)
     page:Section("Loot Sparkles",nil,false)
     page:Group("Options")
     page.sparkleControls={}
+    local options,keys={},{}
     for _,entry in ipairs({{"Enable Loot Sparkles","sparklesEnabled"},{"Quest Item Sparkles","questSparkles"},{"Ore Veins","ore"},
         {"Herbs","herbs"},{"Quest Objects","questObjects"},{"Corpses With Loot","corpses"},
         {"Show Object Names","showNames"}}) do
         local key=entry[2]
-        page.sparkleControls[key]=page:ToggleGrid({{label=entry[1],
-            get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}})[1]
+        keys[#keys+1]=key
+        options[#options+1]={label=entry[1],get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
     end
+    local cells=page:ToggleGrid(options,{maxColumns=2,minimumCellWidth=210})
+    for i,key in ipairs(keys) do page.sparkleControls[key]=cells[i] end
     page:Group("Appearance")
     for _,entry in ipairs({{"Sparkle Size","size"},{"Sparkle Opacity","opacity"},
         {"Name Font Size","fontSize"},{"Vertical Offset","offsetY"}}) do

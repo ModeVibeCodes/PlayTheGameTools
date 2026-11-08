@@ -1,26 +1,47 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local A,D=addon.CampContributions,addon.ForeverQuickAccessData
+local PM=addon.PositionManager
 function A:StopDrag()
     local f=self.window
     if not f or not f.dragging then return end
     f:StopMovingOrSizing();f.dragging=nil
     if not D.OutsideCombat() then return end
-    local x,y=f:GetCenter();local cx,cy=UIParent:GetCenter();local scale=f:GetScale()
-    if D.Number(x,-100000,100000) and D.Number(y,-100000,100000) and
-        D.Number(cx,-100000,100000) and D.Number(cy,-100000,100000) and D.Number(scale,0.1,2) then
-        self.db.contributionX=math.max(-10000,math.min(10000,math.floor(x*scale-cx+0.5)))
-        self.db.contributionY=math.max(-10000,math.min(10000,math.floor(y*scale-cy+0.5)))
+    local e=PM.elements.campfireContributions
+    if e then
+        local x,y=addon.Positioning:ReadFrame(e.subject)
+        PM:SetOffsets(e.id,x,y)
     end
 end
-function A:CreateWindow()
-    if self.window or self.blocked or not D.OutsideCombat() then return end
-    if not C_Macro or type(C_Macro.RunMacroText)~="function" then
-        self.message="Camp contribution shortcuts are unavailable in this client. Use your bags.";return
+function A:RegisterWindow()
+    if not self.window or not D.OutsideCombat() then return end
+    local e=PM.elements.campfireContributions
+    if e and e.position~=(addon.db.positions or {}).campfireContributions then
+        PM:UnregisterElement(e.id);e=nil
     end
+    if not e then
+        local ok,value=PM:RegisterElement("campfireContributions",self.window,{
+            moduleId=self.camp.owner.id,
+            defaultPosition={target="screen",placement="center",x=self.db.contributionX,y=self.db.contributionY},
+            canDrag=function() return self.active end,
+            onPositionChanged=function(element,position)
+                position.x=math.max(-10000,math.min(10000,math.floor(position.x+0.5)))
+                position.y=math.max(-10000,math.min(10000,math.floor(position.y+0.5)))
+                self.db.contributionX,self.db.contributionY=position.x,position.y
+                if not element.dragging then PM:ApplyPosition(element.id) end
+            end,
+        })
+        assert(ok,"Camp Contributions position registration failed: "..tostring(value));e=value
+    end
+    e.label="Camp Contributions";e.editMode=self.active==true
+    self.db.contributionX,self.db.contributionY=e.position.x,e.position.y
+end
+function A:CreateWindow()
+    if self.window then self:RegisterWindow();return end
+    if not D.OutsideCombat() then return end
     local W,T=addon.ConfigWidgets,addon.InterfaceTheme
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.window=f
-    f:Hide();f:SetWidth(450);f:SetMovable(true);f:SetClampedToScreen(true);f:SetFrameStrata("DIALOG")
+    f:Hide();f:SetSize(450,166);f:SetMovable(true);f:SetClampedToScreen(true);f:SetFrameStrata("DIALOG")
     f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     f:SetBackdropColor(0.035,0.045,0.06,0.96);f:SetBackdropBorderColor(0.32,0.40,0.48,1)
     local header=CreateFrame("Frame",nil,f);f.header=header
@@ -31,12 +52,13 @@ function A:CreateWindow()
     end)
     header:SetScript("OnDragStop",function() self:StopDrag() end)
     f:SetScript("OnHide",function() self:StopDrag() end)
+    self:RegisterWindow()
     f.title=W.Label(header,"",nil,4,-5,330,T.text)
-    f.title:SetText(addon.CampfireMonitor.Gradient("Camp Contributions",{1,0.58,0.12},{1,0.12,0.08}))
+    f.title:SetText(self.camp:HeaderText("Camp Contributions"))
     local close=W.Button(f,"Dismiss",68,24);close:SetPoint("TOPRIGHT",-8,-8)
     close:SetScript("OnClick",function() self:Dismiss() end);f.close=close
     local hint=W.Label(f,"Click a kit to use it; finish any native ground placement.",nil,12,-40,426,T.muted)
-    hint:SetWordWrap(true)
+    hint:SetWordWrap(true);f.hint=hint
     local viewport=CreateFrame("ScrollFrame",nil,f);f.viewport=viewport
     viewport:SetPoint("TOPLEFT",10,-74);viewport:SetWidth(430)
     local content=CreateFrame("Frame",nil,viewport);content:SetWidth(430);viewport:SetScrollChild(content)
@@ -49,6 +71,9 @@ function A:CreateWindow()
     f.footer:ClearAllPoints();f.footer:SetPoint("BOTTOMLEFT",12,12);f.footer:SetWordWrap(true)
 end
 function A:CreateButton(index)
+    if not C_Macro or type(C_Macro.RunMacroText)~="function" then
+        self.message="Camp shortcuts unavailable; use your bags.";return
+    end
     local b=CreateFrame("Button",nil,self.window.content,"InsecureActionButtonTemplate")
     if not D.Public(b:IsProtected()) or b:IsProtected()~=false or type(b:GetScript("OnClick"))~="function" then
         self.blocked=true;self.message="Camp contribution shortcuts were rejected by this client. Use your bags.";b:Hide();return
@@ -80,6 +105,9 @@ function A:Render()
     if #self.items==0 then self:Hide(false);return end
     self:CreateWindow();if not self.window or self.blocked then return end
     local f=self.window;local font=addon.Media:GetInterfaceFont()
+    if f.sample then f.sample:Hide() end
+    f.hint:SetText("Click a kit; finish any native ground placement.")
+    f.title:SetText(self.camp:HeaderText("Camp Contributions"))
     for i,item in ipairs(self.items) do
         local b=self.buttons[i] or self:CreateButton(i)
         if not b then self:Hide(false);return end
@@ -96,16 +124,37 @@ function A:Render()
     for i=#self.items+1,#self.buttons do
         local b=self.buttons[i];b.item=nil;b:SetAttribute("type1",nil);b:SetAttribute("macrotext1",nil);b:Hide()
     end
-    local rows=math.min(6,#self.items);local height=74+rows*48+44
-    f.content:SetHeight(#self.items*48);f.viewport:SetHeight(rows*48)
-    f.maxScroll=math.max(0,(#self.items-rows)*48);f.scroll=math.min(f.scroll,f.maxScroll)
-    f.viewport:SetVerticalScroll(f.scroll)
-    f.footer:SetText(#self.items>6 and "Scroll for more kits. Native range, camp slots and cooldown rules apply." or
-        "Native range, camp slots and cooldown rules apply.")
-    if not f.dragging then
-        local scale=math.max(0.5,math.min(1,(UIParent:GetHeight()-40)/height))
-        f:SetScale(scale);f:SetHeight(height);f:ClearAllPoints()
-        f:SetPoint("CENTER",UIParent,"CENTER",self.db.contributionX/scale,self.db.contributionY/scale)
+    self:Layout(#self.items,#self.items>6 and "Scroll for more kits. Native placement rules apply." or "Native placement rules apply.")
+end
+function A:Layout(count,footer)
+    local f=self.window;local rows=math.min(6,count);local height=74+rows*48+44
+    f.content:SetHeight(count*48);f.viewport:SetHeight(rows*48)
+    f.maxScroll=math.max(0,(count-rows)*48);f.scroll=math.min(f.scroll,f.maxScroll)
+    f.viewport:SetVerticalScroll(f.scroll);f.footer:SetText(footer)
+    local e=PM.elements.campfireContributions
+    if not f.dragging and not (e and e.dragging) then
+        f:SetScale(math.max(0.5,math.min(1,(UIParent:GetHeight()-40)/height)));f:SetHeight(height)
+        PM:ApplyPosition("campfireContributions")
     end
     f:Show()
+end
+function A:RenderPreview()
+    if not self.active or not D.OutsideCombat() then return end
+    -- Clear native attributes before showing a separate, non-action sample.
+    for _,button in ipairs(self.buttons or {}) do
+        button:SetAttribute("type1",nil);button:SetAttribute("macrotext1",nil)
+    end
+    self:CreateWindow();if not self.window then return end
+    local f=self.window
+    for _,button in ipairs(self.buttons or {}) do button:Hide() end
+    if not f.sample then
+        local row=CreateFrame("Frame",nil,f.content);f.sample=row;row:SetSize(430,44);row:SetPoint("TOPLEFT")
+        local icon=row:CreateTexture(nil,"ARTWORK");icon:SetSize(36,36);icon:SetPoint("LEFT",4,0);icon:SetTexture(135805)
+        row.text=addon.ConfigWidgets.Label(row,"Preview kit - no item use",nil,48,-5,370,addon.InterfaceTheme.text)
+        row.note=addon.ConfigWidgets.Label(row,"Sample profession contribution",nil,48,-25,370,addon.InterfaceTheme.muted)
+    end
+    f.sample:Show();f.title:SetText(self.camp:HeaderText("Camp Contributions"))
+    f.hint:SetText("Preview only. Drag the header or use Edit Mode.")
+    self:Layout(1,"Sample kit; no profession, item or nearby fire required.")
+    PM:RefreshSelection()
 end

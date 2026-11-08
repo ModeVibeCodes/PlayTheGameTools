@@ -13,6 +13,12 @@ tips[102]={lines={{leftText='Camp Benefits'},
  {leftText='|cffff0000Spell ID:|r',rightText='777777'},
  {leftText='Stamina +12 (Spell ID: 1230124)'},
  {leftText='59 minutes remaining'},
+ {leftText='You have gained the following camp benefits:'},
+ {leftText='(2) hours remaining.'},
+ {leftText='|cnNORMAL_FONT_COLOR:(2) hours remaining|r'},
+ {leftText='2\194\160hours remaining'},
+ {leftText='(1) hours remaing'},
+ {leftText='2 hours remaining!'},
  {leftText='Time remaining: 59:42'},
  {leftText='Time remaining 59:42'},
  {leftText='1 hr 5 min'},
@@ -22,6 +28,8 @@ auras={{spellId=C.NEARBY,auraInstanceID=101,icon=135805},
  {spellId=C.BENEFITS,auraInstanceID=102,duration=3600,expirationTime=testClock+3600}}
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
 assert(C.active and addon.PositionManager.elements.campfireMonitor)
+assert(not C.db.headerGradient and not C.db.timerGradient,'plain colors are the default')
+C:SetOption('headerGradient',true);C:SetOption('timerGradient',true)
 assert(Plain(C.frame.buffTitle:GetText())=='Camp Buffs')
 assert(Plain(C.frame.buffTimer:GetText())=='1:00:00 remaining')
 assert(C.frame.buffTitle:GetText():find('|cffff941fC',1,true),'orange gradient begins title')
@@ -34,6 +42,8 @@ assert(not ShownText(C.frame):find('Spell ID',1,true) and not ShownText(C.frame)
 assert(Plain(C.frame.text:GetText()):find('12 Stamina',1,true),'inline ID removed without losing amount')
 assert(not Plain(C.frame.text:GetText()):find('remaining',1,true),'native duration footer does not duplicate countdown')
 assert(not Plain(C.frame.text:GetText()):find('59:42',1,true))
+assert(not Plain(C.frame.text:GetText()):find('gained',1,true))
+assert(not Plain(C.frame.text:GetText()):find('hours',1,true))
 assert(Plain(C.frame.text:GetText()):find('29 Mana / 5 sec',1,true),'periodic stat amount preserved')
 assert(C.frame.icon.anchor[1]=='TOP' and C.frame.icon.anchor[2]==C.frame and C.frame.icon.anchor[4]==0)
 assert(C.frame.caption.justifyH=='CENTER' and Plain(C.frame.caption:GetText())=='Campfire Nearby')
@@ -79,6 +89,7 @@ assert(C:Remaining()==nil and Plain(C.frame.buffTimer:GetText())=='Time unavaila
 assert(not C.timerDriver:GetScript('OnUpdate'))
 assert(C:SetOption('compactBenefits',false))
 assert(not ShownText(C.frame):find('Spell ID',1,true),'full native-text mode also removes IDs')
+assert(not Plain(C.frame.text:GetText()):find('hours',1,true) and not Plain(C.frame.text:GetText()):find('gained',1,true),'full text also filters footer/preamble')
 auras={{spellId=C.BENEFITS,auraInstanceID=102,duration=3600,expirationTime=testClock+300}}
 C:Refresh();assert(Plain(C.frame.caption:GetText())=='No Nearby Campfire')
 assert(not ShownText(C.frame):find('yards',1,true) and C.frame.arrow==nil,'no fabricated position/navigation')

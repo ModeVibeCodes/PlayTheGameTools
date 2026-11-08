@@ -137,3 +137,17 @@ research/licensing and exact native checks. Run camp_contributions.py,
 campfire_editmode.py, campfire_movement.py, loot_sparkles.py, smoke.py and the
 release builder. Native item dispatch, rendering and screenshots remain pending.
 The existing owner-authorized live junction is preserved; no SavedVariables edits.
+
+## Campfire settings and safe contribution samples
+
+Owner correction removes native gained-benefits boilerplate and parenthesized
+time-only footers. Campfire and sparkle toggles now batch into two-column grids.
+Text Colors uses the native picker with plain defaults and optional gradients;
+dynamic urgency and typed stat colors can be disabled/customized. Contributions
+has Detected Kits, concise TLDR help, a separate Preview Contributions control
+and shared Edit Contributions handles/coordinates using an inert non-action row.
+The live action path remains native user-click-only; samples do not scan/use
+items. Explicit Refresh Contributions reads inventory OOC even away from camp.
+Run campfire_controls.py (imports contributions/monitor/smoke), campfire_editmode.py,
+campfire_movement.py, loot_sparkles.py and the builder. Native acceptance pending;
+owning docs contain exact paths. No shared core/Retail/SavedVariables changes.
