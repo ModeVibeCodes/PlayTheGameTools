@@ -48,8 +48,13 @@ assert(M.text:GetText():find('XP 42.0%%') and M.text:GetText():find('Rested 150.
 assert(M.text:GetText():find('Quest log %+108.0%%'))
 assert(math.abs(M.xpFill.width-598*0.42)<0.001)
 assert(math.abs(M.restedFill.width-598*0.58)<0.001,'rested clipped at next level')
-assert(math.abs(M.questFill.width-598*0.58)<0.001,'quest pool clipped at next level')
-assert(M.restedFill.points[1][5]==M.questFill.points[1][5],'same full-height overlay origin')
+assert(not M.questFill:IsShown(),'rested span fully masks the shorter quest forecast')
+rested=100;M:Render()
+assert(math.abs(M.questFill.width-598*0.48)<0.001,'only quest forecast beyond rested is visible')
+assert(math.abs(M.questFill.points[1][4]-(1+598*0.52))<0.001,'quest begins after the rested span')
+assert(math.abs(M.questFill.points[1][4]+M.questFill.width-(1+598))<0.001,'quest endpoint still measures from current XP')
+assert(M:SetOption('showRestedOverlay',false) and math.abs(M.questFill.width-598*0.58)<0.001)
+assert(M:SetOption('showRestedOverlay',true) and math.abs(M.questFill.width-598*0.48)<0.001)
 assert(M.restedFill.height==22 and M.questFill.height==22,'no split lanes')
 assert(M.restedFill.vertexColor[4]==0.45 and M.questFill.vertexColor[4]==0.35,'independent translucent tints')
 assert(M:SetOption('restedOverlayColor',{0.9,0.2,0.3}) and M.db.nativeColors)
@@ -92,7 +97,7 @@ local media=addon.Media
 local oldTexture,oldChoices=media.GetStatusBar,media.GetStatusBars
 function media:GetStatusBar(key) if key=='media:Fixture' then return 'FixtureTexture' end;return oldTexture(self,key) end
 function media:GetStatusBars() return {{key='default',label='Flat'},{key='media:Fixture',label='Fixture'}} end
-rested=1500
+rested=100
 assert(#M:GetTextureChoices()==4)
 assert(M:SetOption('barTexture','media:Fixture') and M.xpFill.texture=='FixtureTexture' and M.restedFill.texture=='FixtureTexture')
 media.GetStatusBar,media.GetStatusBars=oldTexture,oldChoices

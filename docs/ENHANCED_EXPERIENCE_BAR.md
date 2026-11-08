@@ -15,9 +15,13 @@ workspace for its owned frame. Existing modules, settings and stock XP UI stay i
   SharedMedia textures, with flat fallback if unavailable. Normal purple/rested blue is the default;
   disable **Use Native XP Colors** to customize/tint the XP fill.
 - Current XP fills the full height. Independent forecasts start at its edge:
-  rested bonus pool and total quest log XP as full-height, overlapping tints.
+  rested bonus pool and total quest log XP as full-height tints, with priority
+  **current XP > rested XP > quest log XP**. Quest tint is clipped out of the
+  rested span, so translucent colors do not mix. A quest forecast entirely inside
+  rested coverage is hidden, while its text still reports the full total.
   **Rested Overlay Opacity** and **Quest Overlay Opacity** independently reach
-  100% opaque; lower opacity blends overlapping states. Forecasts clip at the next-level edge;
+  100% opaque; each tint fades against the bar background. Both forecast endpoints
+  still measure from current XP (they are not added together). Forecasts clip at the next-level edge;
   labels retain full percentages of the current level requirement, even above
   100%. Rested XP is not added to or multiplied into quest rewards.
 - All quests are deduplicated by ID and included regardless of completion.
@@ -104,8 +108,9 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
 3. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
    Bar → Layout → Rested Overlay Opacity / Quest Overlay Opacity; **Action:** tune each, toggle Show Rested Overlay
    and Show Quest Overlay separately; **Required state:** OOC, rested pool and
-   quests available; **Confirmation:** full-height blended tints clip at the edge
-   without multiplying quest rewards; no split lanes.
+   quests available; **Confirmation:** current XP has priority, then rested,
+   then quest tint only beyond the rested endpoint. No color blending between
+   forecasts, no split lanes, and no change to the total quest XP label.
 4. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
    Bar → General → Bar Texture, then Bar Text / Session Text / Colors;
    **Action:** choose Flat, Blizzard XP, Blizzard Status Bar and an installed

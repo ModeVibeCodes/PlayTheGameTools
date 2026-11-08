@@ -46,7 +46,7 @@ function M:CreateConfigPage(parent)
     page.textureDropdown = texture
     page.refreshers[#page.refreshers + 1] = function() texture:Refresh() end
     local help = W.Label(page:Row("Forecasts", 110),
-        "Full-height tints show rested bonus and total quest log XP, including unfinished quests. Both start at current XP and clip at the next level. Overlap blends the tints; tune each opacity below. Rested does not boost quest rewards. Collapsed headers are scanned and restored outside combat.", nil, 0, -4, 360, addon.Theme.muted)
+        "Priority: current XP, then rested XP, then quest log XP. Rested hides the overlapping quest tint; quest color appears only beyond the rested forecast. Both forecasts measure from current XP, including unfinished quests. Rested does not boost quest rewards. Collapsed headers are scanned and restored outside combat.", nil, 0, -4, 360, addon.Theme.muted)
     help:SetWordWrap(true)
     page:Section("Layout")
     Slider("Bar Width", "width"); Slider("Bar Height", "height"); Slider("Bar Scale", "scale", "%")

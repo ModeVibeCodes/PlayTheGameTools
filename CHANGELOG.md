@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- XP bar forecast priority is current XP, rested XP, then quest log XP. Quest
+  tint is clipped beneath rested coverage so overlay colors no longer mix.
+
 - Enhanced Experience Bar has independent Rested XP Overlay Color and Quest Log
   XP Overlay Color pickers, available while the main fill uses native XP colors.
 

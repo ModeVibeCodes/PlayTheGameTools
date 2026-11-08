@@ -7,8 +7,8 @@ function M:CreateDisplay()
     self.frame = f; f:SetSize(self.db.width, self.db.height)
     f:SetPoint("CENTER", UIParent, "CENTER", 0, -300); f:SetFrameStrata("MEDIUM")
     self.background = f:CreateTexture(nil, "BACKGROUND"); self.background:SetAllPoints()
-    self.restedFill = f:CreateTexture(nil, "ARTWORK", nil, 0)
-    self.questFill = f:CreateTexture(nil, "ARTWORK", nil, 1)
+    self.questFill = f:CreateTexture(nil, "ARTWORK", nil, 0)
+    self.restedFill = f:CreateTexture(nil, "ARTWORK", nil, 1)
     self.xpFill = f:CreateTexture(nil, "ARTWORK", nil, 2)
     self.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     self.sessionText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -93,11 +93,14 @@ function M:Render()
     local path = db.barTexture == "blizzardStatus" and "Interface\\TargetingFrame\\UI-StatusBar" or addon.Media:GetStatusBar(db.barTexture)
     local predictionAtlas = db.barTexture == "blizzardXP" and "UI-HUD-ExperienceBar-Fill-Prediction"
     Segment(self.xpFill, self.frame, 1, current, 1, height, color, db.opacity / 100, atlas, not db.nativeColors, path)
-    -- Full-height, translucent forecasts overlap at the same current-XP origin.
-    -- Their pools remain independent, rather than summing rested bonus into quests.
-    Segment(self.restedFill, self.frame, 1 + current, db.showRestedOverlay and not data.disabled and Length(rested) or 0,
+    -- Priority: earned XP > rested forecast > quest forecast. Exclude the
+    -- higher-priority span rather than alpha-blending lower-priority colors through it.
+    -- Both forecast endpoints still measure from current XP, never from each other.
+    local restedLength = db.showRestedOverlay and not data.disabled and Length(rested) or 0
+    local questLength = db.showQuestOverlay and not data.disabled and Length(quests) or 0
+    Segment(self.restedFill, self.frame, 1 + current, restedLength,
         1, height, db.restedOverlayColor, db.restedOpacity * db.opacity / 10000, predictionAtlas, true, path)
-    Segment(self.questFill, self.frame, 1 + current, db.showQuestOverlay and not data.disabled and Length(quests) or 0,
+    Segment(self.questFill, self.frame, 1 + current + restedLength, math.max(0, questLength - restedLength),
         1, height, db.questColor, db.questOpacity * db.opacity / 10000, predictionAtlas, true, path)
     local parts = {}
     if sample then parts[#parts + 1] = "PREVIEW" end
