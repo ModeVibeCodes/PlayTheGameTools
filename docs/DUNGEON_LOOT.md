@@ -6,58 +6,84 @@ to the other dungeons. The same appearance and interaction apply across the
 catalog. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
 and real screenshots remain pending; no release publication is authorized.
 
-## Standalone shortcut and keybinding (native review pending)
+## Standalone shortcut and keybinding (native revision review pending)
 
-Dungeon Loot now owns a 40px native chest-icon launcher with a thin blue gradient
-border. It appears by default when the module is enabled; disabling the module
-hides it. Left-click opens the Dungeon Loot page directly at the dungeon index.
-Left-drag moves it while unlocked, without requiring shared Edit Mode. The icon
-is clamped to screen; its position and lock/visibility preferences are saved in
-the active profile, filling missing keys without resetting existing settings.
-Default position is separate from the Class Training shortcut. No external addon
-is involved. General exposes **Show Shortcut Icon: On/Off**, **Lock Shortcut
-Icon: On/Off** and **Reset Shortcut Position**. Dragging does not trigger opening.
+The first PR #14 prototype rendered as a blue square and did not move in the
+owner's client. This revision replaces the unsupported chest-art setup with
+explicitly sized native loot dice art (`Interface/Buttons/UI-GroupLoot-Dice-Up`),
+a portrait mask and a thin circular blue ring matching the Class Training icon's
+construction. No third-party artwork or Class Training dependency is added.
 
-The root Bindings.xml declares **Open Dungeon Loot**, unassigned by default,
-under native Key Bindings -> AddOns -> Play The Game Tools. The client owns
-assignment, conflict handling and account/character binding persistence; the addon
-does not call SetBinding or overwrite any key. The key works with the icon hidden.
-If Dungeon Loot is disabled, it opens the module settings with the existing
-master enable switch; it never enables browsing implicitly or reads the catalog.
+General now separates **Quick Icon**, **Keybinding** and **Dungeon Data**.
+Quick Icon has Show Shortcut Icon, Lock Shortcut Icon, Icon Size (24–72px),
+Icon Opacity (25–100%), Edit Icon Position and Reset Shortcut Position. Visibility,
+lock, size and opacity persist in the active profile. Defaults fill missing keys
+without replacing existing settings. The icon appears only with the module on.
 
-Both entry points use one guarded opener and open the index even if another
-settings page is already visible. Combat opening/dragging is rejected; an active
-drag is stopped and its last saved position restored when combat begins. Icon
-creation deferred by combat resumes on PLAYER_REGEN_ENABLED. Module disable
-unregisters its two combat transition listeners. No polling or secure actions.
-Native binding schema/reference:
-https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Bindings.xml
-The release builder validates the explicit binding definition and includes it
-at the addon root in addition to the existing map XML. New shortcut Lua follows
-DungeonLoot.lua in the TOC. Native registration, rendering and drag timing still
-need client validation; mocks execute the binding body but do not load WoW XML.
+Unlocked normal left-drag moves the icon and persists through the shared position
+manager; the launcher remains mouse-enabled after shared Edit Mode refreshes.
+Edit Icon Position enters the shared workspace and selects **Dungeon Loot Quick
+Icon**, with native drag handles and coordinate controls. Edit Mode intentionally
+allows movement even when the normal shortcut is locked. Its canonical position
+is `positions.dungeonLootShortcut`; existing shortcutPosition offsets seed the
+record only if absent, and managed movement keeps legacy offsets synchronized.
+No existing managed record is overwritten. Screen clamping and shared coordinate
+scaling apply. Clicking in Edit Mode selects; it never opens the browser. Drag
+release does not open it. Show/disable hides both the icon and its Edit selection.
 
-1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General.
-   **Action:** restart WoW for the new TOC/binding files; enable Dungeon Loot,
-   leave Show Shortcut Icon: On and Lock Shortcut Icon: Off. Close settings,
-   click the chest icon, then drag it and reload. **Required state:** Forever,
-   OOC. **Confirmation:** clicking opens Dungeons directly; dragging only moves
-   the icon, and its position survives reload.
-2. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
-   Lock Shortcut Icon: Off, then Reset Shortcut Position.
-   **Action:** toggle lock on, attempt dragging, then reset. **Required state:**
-   OOC. **Confirmation:** lock prevents movement; reset restores the default
-   position. Show Shortcut Icon: On toggles the icon off without disabling loot.
-3. **Navigation:** WoW Key Bindings -> AddOns -> Play The Game Tools -> Open
-   Dungeon Loot. **Action:** assign a free key using the native UI, hide the icon
-   in General, close settings and press the assigned key. **Required state:** OOC,
-   client restarted after installing new files. **Confirmation:** the dungeon
-   index opens directly; existing unrelated keys are unchanged. Disabled Dungeon
-   Loot instead opens its settings and remains disabled.
-4. **Navigation:** standalone chest icon or assigned Open Dungeon Loot key.
-   **Action:** attempt click/drag/key in combat, then repeat after combat.
-   **Required state:** compare combat and OOC. **Confirmation:** no settings open
-   or movement begins in combat; the shortcut works again afterward.
+Keybinding shows the current assignment and exposes **Set Keybinding** and
+**Clear Keybinding** directly. Set starts an OOC-only keyboard capture panel:
+modifiers are supported, Escape/Cancel closes it, and a conflicting action is
+reported without modifying any bindings. A successful assignment replaces only
+Dungeon Loot's prior keys. Clear removes only keys still owned by that action.
+The editor uses native GetBindingKey/GetBindingAction/SetBinding and
+SaveBindings(GetCurrentBindingSet()), preserving the current account/character
+context. It validates read/return values and restores the prior action keys on
+failed mutation/save attempts. It does not claim a save when the client rejects
+one. Capture releases keyboard input on tab/page navigation, hiding, combat or
+module disable. The native WoW binding entry remains available as an alternative.
+
+The unassigned root Bindings.xml action and icon still share one guarded opener.
+Both open the Dungeons index; a binding with the module disabled opens its
+settings without enabling it or querying the catalog. Hidden icons do not disable
+the assigned key. No polling or protected-action workaround is added. Normal
+movement/opening and binding writes are OOC-only. Interrupted movement stops;
+the saved position is reapplied safely after combat. Creation deferred by combat
+resumes afterward. This revision edits loaded Lua files only: `/reload` applies
+it after the first PR's TOC/binding files have been loaded by a client restart.
+
+Primary Forever references, inspected 2026-11-07:
+- [Native loot dice texture](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Mainline/GroupLootFrame.xml)
+- [Native key capture/conflict/save implementation](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_Settings_Shared/Blizzard_Keybindings.lua)
+- [Binding XML schema in use](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Bindings.xml)
+
+Native checks (pending; mocks do not establish rendering, drag timing, shared
+workspace behavior or live key persistence):
+
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
+   Quick Icon. **Action:** `/reload`; enable Show Shortcut Icon: On and leave
+   Lock Shortcut Icon: Off, adjust Icon Size and Icon Opacity, then close settings
+   and click/drag the icon. **Required state:** Forever, OOC; initial PR #14 files
+   already loaded. **Confirmation:** visible circular native loot icon, resizing
+   and opacity apply, unlocked dragging moves it without opening the page,
+   ordinary clicking opens Dungeons, and position survives another reload.
+2. **Navigation:** same Quick Icon section -> Edit Icon Position. **Action:**
+   select the Dungeon Loot Quick Icon handle, drag it or change X/Y, leave Edit
+   Mode and use the icon again; repeat with normal locking on. **Required state:**
+   OOC, Show Shortcut Icon: On. **Confirmation:** shared handle/coordinate edits
+   move the correct icon, locking affects normal dragging only, click/drag still
+   work outside Edit Mode, and Reset Shortcut Position restores its default.
+3. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General ->
+   Keybinding -> Set Keybinding. **Action:** press a free key/modifier combination,
+   close settings and press it, then return and Clear Keybinding. **Required
+   state:** OOC, native binding APIs available. **Confirmation:** assignment shown
+   in General, Dungeons opens, binding survives reload and clear removes only
+   Dungeon Loot's keys. A conflicting key reports its existing action unchanged.
+4. **Navigation:** same Set Keybinding panel. **Action:** cancel with Escape,
+   navigate away, close settings or enter combat; separately attempt opening/
+   dragging/binding changes in combat. **Required state:** compare OOC/combat.
+   **Confirmation:** no stuck keyboard capture, no combat binding writes or
+   opening/dragging, and normal access returns afterward.
 
 ## Coverage and dependencies
 

@@ -204,6 +204,7 @@ python tests/dungeon_loot_standalone.py
 python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
 python tests/dungeon_loot_shortcut.py
+python tests/dungeon_loot_quick_icon.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -241,6 +242,14 @@ not a detected inventory of objects at a nearby camp. Screenshots: pending.
 Dungeon Loot shortcut revision: run dungeon_loot_shortcut.py for binding payload
 validation/execution, direct routing, drag/click separation, position persistence,
 lock/show/reset controls, combat guards, deferred creation and invalid profile
-preferences. Restart the client to load the new TOC/root binding files; native
-appearance and binding registration remain pending. Exact paths are recorded in
+preferences. Initial installation requires a client restart for the new
+TOC/root binding files; subsequent Lua-only Quick Icon fixes use /reload.
+Native appearance and binding registration remain pending. Exact paths are recorded in
 docs/DUNGEON_LOOT.md under Standalone shortcut and keybinding.
+
+Quick Icon revision: dungeon_loot_quick_icon.py covers native texture dimensions,
+circular ring, size/opacity, shared Edit Mode selection/drag/coordinates and mouse
+restoration, inline binding capture/conflict/save/rollback/clear and input cleanup.
+The failed blue-square prototype is not native acceptance for this replacement.
+Use the exact revised checklist in docs/DUNGEON_LOOT.md; `/reload` applies these
+Lua-only edits once the initial PR's files are loaded. Native review pending.

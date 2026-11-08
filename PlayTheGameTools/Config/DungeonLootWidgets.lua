@@ -74,6 +74,7 @@ function UI.New(page, module)
         end
         slot.visible = true
         if slot.copyButton then slot.copyButton:Hide() end
+        for _,host in pairs(slot.settingSliders or {}) do host:Hide() end
         slot.button:ClearAllPoints();slot.button:SetAllPoints(slot.control)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
         for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
@@ -150,6 +151,22 @@ function UI.New(page, module)
             self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (questText and (options.heading and 28 or 18) or (options.heading and 40 or (options.subtitle and 56 or 40)))), height + (item and 8 or 0)))
         end
         return slot
+    end
+    function pool:SettingSlider(label,minimum,maximum,step,getter,setter,suffix)
+        local slot=self:Add("");slot.button:Hide()
+        slot.settingSliders=slot.settingSliders or {}
+        local host=slot.settingSliders[label]
+        if not host then
+            host=CreateFrame("Frame",nil,slot.control);host:SetAllPoints();host.getter,host.setter=getter,setter
+            host.title=W.Label(host,label,nil,12,-4,240,T.secondary)
+            local track=CreateFrame("Frame",nil,host)
+            track:SetPoint("TOPLEFT",12,-30);track:SetPoint("TOPRIGHT",-12,-30);track:SetHeight(26)
+            host.refresh=W.Slider(track,minimum,maximum,step,function() return host.getter() end,function(value) host.setter(value) end,suffix)
+            host.slider=track.slider;slot.settingSliders[label]=host
+        end
+        host.getter,host.setter=getter,setter;host:Show();host.refresh()
+        function slot.row:layoutChildren() self:SetHeight(66) end
+        return host
     end
     function pool:MapAction(target,kind,callback)
         local slot=self:Add("View on Map",callback)

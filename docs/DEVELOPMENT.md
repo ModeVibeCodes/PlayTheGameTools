@@ -72,6 +72,15 @@ and releases; passing static checks alone is not a release acceptance claim.
 
 ## Dungeon Loot feature work
 
+PR #14's Quick Icon revision replaces the failed square prototype with explicit
+native loot art and the Class Training circle construction. It registers
+positions.dungeonLootShortcut with the shared manager and exposes size/opacity,
+normal drag/lock and Edit Mode controls. General now owns key capture, native
+conflict-aware SetBinding/SaveBindings and Clear, scoped to the existing action.
+Capture cleanup and managed mouse-state regression checks are in
+dungeon_loot_quick_icon.py (under tests/). No new runtime files for this revision;
+/reload applies it after initial installation. Native confirmation pending.
+
 The new standalone shortcut/keybinding revision is on codex/dungeon-loot-shortcut
 for a separate PR. Startup/profile checks and focused shortcut tests cover
 routing, drag persistence, disabled/hidden behavior and combat lifecycle. The

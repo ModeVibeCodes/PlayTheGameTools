@@ -27,18 +27,18 @@ lua.execute(r'''
     assert(addon.configWindow:IsShown() and M.page:IsShown())
     local queued={};local timer=C_Timer.After;C_Timer.After=function(_,fn) queued[#queued+1]=fn end
     M:Navigate('Shadowfang Keep','quests')
-    b:GetScript('OnDragStart')(b);assert(b.moving)
+    b.scripts.OnDragStart(b);assert(b.moving)
     local px,py=UIParent:GetCenter();local get=b.GetCenter
     b.GetCenter=function() return px+70,py-90 end
-    b:GetScript('OnDragStop')(b)
+    b.scripts.OnDragStop(b)
     assert(M.db.shortcutPosition.x==70 and M.db.shortcutPosition.y==-90 and not b.moving)
     b:GetScript('OnClick')(b);assert(M.view.dungeon=='Shadowfang Keep','drag release must not open the index')
     for _,fn in ipairs(queued) do fn() end;queued={};b.GetCenter=get
-    M.db.shortcutLocked=true;b:GetScript('OnDragStart')(b);assert(not b.moving)
-    M.db.shortcutLocked=false;b:GetScript('OnDragStart')(b);assert(b.moving)
+    M.db.shortcutLocked=true;b.scripts.OnDragStart(b);assert(not b.moving)
+    M.db.shortcutLocked=false;b.scripts.OnDragStart(b);assert(b.moving)
     testCombat=true;FireEvent('PLAYER_REGEN_DISABLED');assert(not b.moving and M.db.shortcutPosition.x==70)
     assert(not PlayTheGameToolsOpenDungeonLoot())
-    b:GetScript('OnDragStart')(b);assert(not b.moving)
+    b.scripts.OnDragStart(b);assert(not b.moving)
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
     for _,fn in ipairs(queued) do fn() end;C_Timer.After=timer
     M.db.showShortcut=false;M:SyncShortcut();assert(not b:IsShown())

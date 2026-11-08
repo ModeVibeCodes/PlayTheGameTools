@@ -38,6 +38,7 @@ function M:OnEnable()
     self:SyncEvents()
 end
 function M:OnDisable()
+    self:CancelShortcutBinding()
     if self.coordinateFrame then self.coordinateFrame:Hide() end
     if addon.DungeonLootMap then addon.DungeonLootMap:Clear() end
     self.active = false
@@ -116,6 +117,7 @@ function M:SelectEntry(kind, index)
     end
 end
 function M:Navigate(dungeon, tab, boss, quest)
+    self:CancelShortcutBinding()
     if self.coordinateFrame then self.coordinateFrame:Hide() end
     self:HideTooltip()
     local sameDungeon = self.view.dungeon == dungeon
