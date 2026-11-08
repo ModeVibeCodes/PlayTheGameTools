@@ -138,4 +138,3 @@ addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
 assert(A.blocked and not A.window:IsShown() and #macroCalls==0)
 ''')
 print('PASS camp contribution profession/bag/readiness filters, native-template click intent, cache/cooldown wake, dismissal/rearm, metadata, combat, preview/Edit Mode, persistence and template rejection (mock only)')
-
