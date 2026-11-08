@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Enhanced Experience Bar has independent Rested XP Overlay Color and Quest Log
+  XP Overlay Color pickers, available while the main fill uses native XP colors.
+
 - Added opt-in Enhanced Experience Bar under Questing & Leveling: flat/native
   Blizzard/SharedMedia textures, XP/rested/total-quest-log XP, full-height tinted
   overlays with independent opacity, session time/XP per hour, independent bar/

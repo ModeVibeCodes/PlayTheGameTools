@@ -81,8 +81,8 @@ function M:CreateConfigPage(parent)
     reset:SetScript("OnClick", function() self:ResetSession() end)
     page:Section("Colors")
     Toggles({{"Use Native XP Colors", "nativeColors"}})
-    for _, item in ipairs({{"Normal XP Color", "normalColor"}, {"Rested XP Color", "restedColor"},
-        {"Quest Forecast Color", "questColor"},
+    for _, item in ipairs({{"Normal XP Fill Color", "normalColor"}, {"Rested XP Fill Color", "restedColor"},
+        {"Rested XP Overlay Color", "restedOverlayColor"}, {"Quest Log XP Overlay Color", "questColor"},
         {"Background Color", "backgroundColor"}, {"Border Color", "borderColor"}}) do
         local native = item[2] == "normalColor" or item[2] == "restedColor"
         W.ColorRow(page, owner, item[1], item[2], function() return not native or not self.db.nativeColors end)

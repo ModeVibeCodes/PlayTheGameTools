@@ -34,11 +34,15 @@ local defaults = { width = 600, height = 24, scale = 100, opacity = 100, overlay
     showRestedOverlay = true, showQuestOverlay = true, showSession = true, showRate = true,
     hideAtMax = true, normalColor = {0.58, 0, 0.55}, restedColor = {0, 0.39, 0.88},
     questColor = {1, 0.78, 0.2}, textColor = {0.95, 0.96, 1}, backgroundColor = {0.07, 0.08, 0.1},
-    borderColor = {0.26, 0.31, 0.38}, barTexture = "default", questFormat = "percent", separator = "dash", sessionSeparator = "dash",
+    borderColor = {0.26, 0.31, 0.38}, restedOverlayColor = {0, 0.39, 0.88},
+    barTexture = "default", questFormat = "percent", separator = "dash", sessionSeparator = "dash",
     restedOpacity = 45, questOpacity = 35, textOpacity = 100, sessionOpacity = 100,
     sessionFont = "game", sessionFontMedia = "", sessionOutline = true, sessionAlign = "CENTER",
     sessionTextColor = {0.95, 0.96, 1}, sessionWidth = 600, sessionX = 0 }
 function M.Initialize(db)
+    if db.restedOverlayColor == nil and db.nativeColors == false and type(db.restedColor) == "table" then
+        db.restedOverlayColor = {unpack(db.restedColor)}
+    end
     -- Split the old shared text settings without changing the player's current look.
     if db.barTexture == nil then db.barTexture = db.blizzardStyle and "blizzardXP" or "default" end
     for target, source in pairs({sessionFont = "font", sessionFontMedia = "fontMedia", sessionOutline = "outline",

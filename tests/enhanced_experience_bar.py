@@ -52,6 +52,10 @@ assert(math.abs(M.questFill.width-598*0.58)<0.001,'quest pool clipped at next le
 assert(M.restedFill.points[1][5]==M.questFill.points[1][5],'same full-height overlay origin')
 assert(M.restedFill.height==22 and M.questFill.height==22,'no split lanes')
 assert(M.restedFill.vertexColor[4]==0.45 and M.questFill.vertexColor[4]==0.35,'independent translucent tints')
+assert(M:SetOption('restedOverlayColor',{0.9,0.2,0.3}) and M.db.nativeColors)
+assert(M.restedFill.vertexColor[1]==0.9 and M.xpFill.vertexColor[1]==0,'overlay color independent of native XP fill')
+assert(M:SetOption('questColor',{0.2,0.8,0.4}) and M.questFill.vertexColor[2]==0.8)
+assert(M.restedFill.vertexColor[1]==0.9 and M.restedFill.vertexColor[4]==0.45,'quest picker preserves rested color/opacity')
 assert(not M.text:GetText():find('|',1,true) and not M.sessionText:GetText():find('|',1,true))
 testClock=testClock+60;xp=520;FireEvent('PLAYER_XP_UPDATE','player')
 assert(M.sessionXP==100 and M.sessionText:GetText():find('6000 XP/hr'))
@@ -138,6 +142,7 @@ restored.execute('''
 local M=addon.EnhancedExperienceBar
 assert(M.enabled and M.db.width==800 and M.db.barTexture=='blizzardXP' and M.sessionXP==0)
 assert(M.db.sessionFont=='chat' and M.db.font=='game' and M.db.sessionOpacity==60)
+assert(M.db.restedOverlayColor[1]==0.9 and M.db.questColor[2]==0.8,'overlay colors survive reload')
 local p=addon.PositionManager:GetPosition(M.id);assert(p.x==125 and p.y==-210)
 SlashCmdList.PLAYTHEGAMETOOLS();addon:SelectConfigPage(M.id)
 assert(M.page and M.page.resetPositionButton and M.page.xPositionInput)
@@ -151,6 +156,9 @@ M.Initialize(old)
 assert(old.barTexture=='blizzardXP' and old.sessionFont=='chat' and not old.sessionOutline)
 assert(old.sessionAlign=='RIGHT' and old.sessionWidth==800 and old.sessionTextColor[1]==0.1)
 old.sessionTextColor[1]=0.9;assert(old.textColor[1]==0.1,'copied legacy color is independent')
+local custom={nativeColors=false,restedColor={0.3,0.5,0.7}}
+M.Initialize(custom);assert(custom.restedOverlayColor[1]==0.3)
+custom.restedOverlayColor[1]=0.8;assert(custom.restedColor[1]==0.3,'legacy overlay migration preserves fill color')
 questRows={{isHeader=true,isCollapsed=true},{isHeader=false,questID=11},{isHeader=false,questID=12},
  {isHeader=true,isCollapsed=true},{isHeader=false,questID=13},{isHeader=false,questID=14}}
 rewards[14]=250

@@ -96,7 +96,7 @@ function M:Render()
     -- Full-height, translucent forecasts overlap at the same current-XP origin.
     -- Their pools remain independent, rather than summing rested bonus into quests.
     Segment(self.restedFill, self.frame, 1 + current, db.showRestedOverlay and not data.disabled and Length(rested) or 0,
-        1, height, restedColor, db.restedOpacity * db.opacity / 10000, predictionAtlas, true, path)
+        1, height, db.restedOverlayColor, db.restedOpacity * db.opacity / 10000, predictionAtlas, true, path)
     Segment(self.questFill, self.frame, 1 + current, db.showQuestOverlay and not data.disabled and Length(quests) or 0,
         1, height, db.questColor, db.questOpacity * db.opacity / 10000, predictionAtlas, true, path)
     local parts = {}

@@ -6,6 +6,11 @@ workspace for its owned frame. Existing modules, settings and stock XP UI stay i
 
 ## Behavior
 
+- **Colors → Rested XP Overlay Color → Pick** and **Quest Log XP Overlay Color →
+  Pick** customize the forecast tints independently. These stay available with
+  **Use Native XP Colors** enabled; that toggle only governs the normal/rested
+  XP fill. Existing custom rested tint is retained when splitting the setting.
+
 - **Bar Texture** offers Flat, Blizzard XP, Blizzard Status Bar and registered
   SharedMedia textures, with flat fallback if unavailable. Normal purple/rested blue is the default;
   disable **Use Native XP Colors** to customize/tint the XP fill.
@@ -76,6 +81,9 @@ initial display, but does not establish reward totals or revised behavior. This
 follow-up changes overlays, all-log scanning, texture selection and separate text;
 those revisions need the native checks below.
 
+Owner subsequently reports the XP bar looks good. Independent overlay color
+pickers are the next scoped revision and still need native confirmation.
+
 2026-11-07: all six listed validation commands passed locally, including smoke
 and the deterministic release build (99 Lua / 174 packaged files). These are
 Lua 5.1 mock/static results; no in-game acceptance is claimed.
@@ -122,3 +130,10 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
    after a combat/XP gain check; **Required state:** settings OOC;
    **Confirmation:** combat XP updates without blocked-action errors, disable
    hides the bar, re-enable starts a fresh session and other features still work.
+
+8. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
+   Bar → Colors → Rested XP Overlay Color / Quest Log XP Overlay Color → Pick;
+   **Action:** choose distinct colors, then `/reload`; **Required state:** OOC,
+   overlays enabled with rested XP and quest log rewards (or Preview enabled);
+   **Confirmation:** only the selected overlay tint changes, both colors persist,
+   and Use Native XP Colors can remain enabled for the main fill.
