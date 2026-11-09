@@ -22,6 +22,8 @@ events:SetScript("OnEvent", function(self, _, loadedName)
     if addon.Edition and not addon.Edition:CheckClient() then return end
     addon.Media:AttachLibrary()
     addon:InitializeDatabase()
+    addon.Media:EnsureSharedMedia()
+    addon.Media:DiscoverMedia()
     -- Before modules or settings build frames; a theme change applies on the next reload.
     addon:ApplyInterfaceTheme(addon.db.window.theme)
     local ok,reason=pcall(addon.InitializeModules,addon)
@@ -30,6 +32,7 @@ events:SetScript("OnEvent", function(self, _, loadedName)
     addon.initialized = true
     addon:InitializeDisplayModes()
     addon.Media:Initialize()
+    addon.GlobalSettings:Start()
     addon.ProfileManager:Start()
     if not addon.Edition or addon.Edition.name ~= "Forever" then
         addon.PartyCooldownSessions:Initialize(PTGToolsDB)

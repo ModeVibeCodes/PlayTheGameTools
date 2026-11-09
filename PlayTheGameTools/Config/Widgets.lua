@@ -15,6 +15,7 @@ function W.PlacePopup(menu,button)
 end
 function W.Popup(button,width,height)
     local menu=CreateFrame("Frame",nil,UIParent)
+    menu.ptgMediaScope=addon.Media:FrameScope(button)
     menu:Hide();menu:SetSize(width,height);menu:SetFrameStrata("TOOLTIP")
     menu:SetFrameLevel(200);menu:SetClampedToScreen(true);menu:EnableMouse(true)
     W.PlacePopup(menu,button)
@@ -70,12 +71,16 @@ function W.Fill(frame, color, layer, inset, alpha)
     texture:SetPoint("TOPLEFT", inset, -inset)
     texture:SetPoint("BOTTOMRIGHT", -inset, inset)
     Paint(texture, color, alpha)
+    if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background then
+        addon.Media:PaintSurface(texture,color,alpha)
+    end
     return texture
 end
 
 -- Four 1px edges. Vertical edges stop short of the corners so translucent
 -- outlines never double up.
-function W.Outline(frame, color, layer, inset, alpha)
+function W.Outline(frame, color, layer, inset, alpha, scope)
+    scope=scope or addon.Media:FrameScope(frame)
     inset = inset or 0
     local edges = {}
     local function Edge(a, ax, ay, b, bx, by, horizontal)
@@ -89,12 +94,25 @@ function W.Outline(frame, color, layer, inset, alpha)
     Edge("BOTTOMLEFT", inset, inset, "BOTTOMRIGHT", -inset, inset, true)
     Edge("TOPLEFT", inset, -inset - 1, "BOTTOMLEFT", inset, inset + 1)
     Edge("TOPRIGHT", -inset, -inset - 1, "BOTTOMRIGHT", -inset, inset + 1)
-    local outline = { edges = edges }
+    local outline = { edges = edges, shown = true }
     function outline:SetColor(value, opacity)
         for _, edge in ipairs(self.edges) do Paint(edge, InterfaceColor(value), opacity) end
+        local style=addon.Media:GlobalStyle("border",scope) or "thin"
+        self.kind=style=="none" and "none" or style=="thin" and "thin" or "shared"
+        if self.kind=="shared" then
+            if not self.view then self.view={};addon.Border.Create(self.view,frame) end
+            addon.Border.Apply(self.view,{borderStyle=style,borderColor=InterfaceColor(value),
+                borderOpacity=opacity or 1,inset=true,size=64})
+        end
+        self:SetShown(self.shown)
     end
     function outline:SetShown(shown)
-        for _, edge in ipairs(self.edges) do edge:SetShown(shown) end
+        self.shown=shown
+        for _,edge in ipairs(self.edges) do edge:SetShown(shown and self.kind=="thin") end
+        if self.view then
+            self.view.iconBorder:SetShown(shown and self.kind=="shared" and self.view.borderKind=="thin")
+            if self.view.borderFrame then self.view.borderFrame:SetShown(shown and self.kind=="shared" and self.view.borderKind=="shared") end
+        end
     end
     outline:SetColor(color, alpha)
     return outline
@@ -159,11 +177,11 @@ function W.BlizzardBackdrop(frame, kind)
         if frame.OnBackdropSizeChanged then frame:HookScript("OnSizeChanged", frame.OnBackdropSizeChanged) end
     end
     local dialog = kind == "dialog"
-    local ok = pcall(frame.SetBackdrop, frame, {
+    local ok = pcall(addon.Media.ApplyBackdrop, addon.Media, frame, {
         -- The dialog owner draws its own opaque canvas and stone (Window.lua).
         bgFile = not dialog and ART.tooltipBackground or nil,
         edgeFile = dialog and ART.dialogBorder or ART.tooltipBorder,
-        tile = true, tileSize = dialog and 32 or 16, edgeSize = dialog and 32 or 16,
+        tile = true, tileSize = dialog and 32 or 16, edgeSize = 1,
         insets = dialog and { left = 11, right = 12, top = 12, bottom = 11 } or { left = 4, right = 4, top = 4, bottom = 4 },
     })
     if not ok then return false end

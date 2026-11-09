@@ -32,7 +32,7 @@ function M:ShowTarget(plate,name,state)
     local r,g,b=1,0.82,0.3
     if state=="Unavailable" then r,g,b=0.6,0.6,0.6 end
     self.tint={r,g,b}
-    f.label:SetFont(addon.Media:GetInterfaceFont(),db.fontSize,"OUTLINE")
+    f.label:SetFont(addon.Media:GetInterfaceFont(nil,"lootSparkles"),db.fontSize,"OUTLINE")
     f.label:SetTextColor(r,g,b)
     f.label:ClearAllPoints(); f.label:SetPoint("TOP",f,"BOTTOM",0,-db.size*0.65)
     f.label:SetText(name~="" and (name.."\n"..state) or state)

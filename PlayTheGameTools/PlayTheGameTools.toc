@@ -9,6 +9,9 @@
 ## X-License: GPL-3.0-only (bundled distribution; original MIT grants retained)
 
 Core\Edition.lua
+Core\Libs\LibStub.lua
+Core\Libs\CallbackHandler-1.0.lua
+Core\Libs\LibSharedMedia-3.0.lua
 Core\Database.lua
 Core\ProfileCodec.lua
 Core\ReloadManager.lua
@@ -20,6 +23,9 @@ Core\Positioning.lua
 Core\PositionManager.lua
 Core\FrameAnchors.lua
 Core\Media.lua
+Core\MediaCatalog.lua
+Core\MediaDiscovery.lua
+Core\GlobalSettings.lua
 Core\Feedback.lua
 Core\AlertEffects.lua
 Core\PreviewStates.lua
@@ -98,6 +104,7 @@ Config\GlowControls.lua
 Config\Developer.lua
 Config\Categories.lua
 Config\Profiles.lua
+Config\GlobalSettings.lua
 Config\Reload.lua
 Config\Window.lua
 Config\EditMode.lua

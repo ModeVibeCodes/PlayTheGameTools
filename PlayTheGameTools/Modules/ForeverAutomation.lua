@@ -28,6 +28,7 @@ end
 
 function M:ApplyAutoLoot()
     -- Same one-shot policy as Retail: no loot engine, watcher or disable restore.
+    if addon.GlobalSettings then return end
     if not self.active or self.db.autoLoot ~= true or not addon.Feedback:Allowed() or not self:Capability() then return end
     if Read(C_CVar.GetCVarBool, "autoLootDefault") ~= false then return end
     local ok, result = pcall(C_CVar.SetCVar, "autoLootDefault", "1")

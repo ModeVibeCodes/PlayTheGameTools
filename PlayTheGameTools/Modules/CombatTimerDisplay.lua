@@ -21,5 +21,8 @@ function D.Apply(view, appearance, layout)
         view.frame:SetScale(appearance.scale)
     end
     view.text:SetTextColor(appearance.textColor[1], appearance.textColor[2], appearance.textColor[3], 1)
-    view.background:SetColorTexture(appearance.backgroundColor[1], appearance.backgroundColor[2], appearance.backgroundColor[3], appearance.backgroundOpacity)
+    addon.Media:PaintSurface(view.background,appearance.backgroundColor,appearance.backgroundOpacity,"combatTimer")
+    if not view.globalBorder then view.globalBorder={};addon.Border.Create(view.globalBorder,view.frame) end
+    addon.Border.Apply(view.globalBorder,{borderStyle=addon.Media:GlobalStyle("border","combatTimer"),borderColor={1,1,1},borderOpacity=1,inset=true})
+    addon.Border.Render(view.globalBorder)
 end

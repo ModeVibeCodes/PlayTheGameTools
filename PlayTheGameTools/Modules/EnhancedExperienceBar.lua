@@ -72,7 +72,7 @@ function M.Initialize(db)
     assert(db.separator == "dash" or db.separator == "dot", "Invalid experience separator")
     assert(db.sessionSeparator == "dash" or db.sessionSeparator == "dot", "Invalid session separator")
     assert(db.barChoice == "ptg" or db.barChoice == "existing", "Invalid XP bar choice")
-    assert(db.barTexture == "default" or db.barTexture == "blizzardXP" or db.barTexture == "blizzardStatus"
+    assert(db.barTexture == "default" or db.barTexture == "flat" or db.barTexture == "blizzardXP" or db.barTexture == "blizzardStatus"
         or (#db.barTexture <= 166 and db.barTexture:sub(1, 6) == "media:" and #db.barTexture > 6), "Invalid bar texture")
 end
 function M:CanConfigure() return not InCombatLockdown() and not UnitAffectingCombat("player") end
@@ -92,7 +92,7 @@ function M:SetOption(key, value)
 end
 function M:SetAppearance(key, value) return self:SetOption(key, value) end
 function M:GetTextureChoices()
-    local choices = {{id = "default", label = "Flat"}, {id = "blizzardXP", label = "Blizzard XP"},
+    local choices = {{id = "default", label = "Use Global Setting"}, {id = "flat", label = "Flat"}, {id = "blizzardXP", label = "Blizzard XP"},
         {id = "blizzardStatus", label = "Blizzard Status Bar"}}
     for _, item in ipairs(addon.Media:GetStatusBars()) do
         if item.key ~= "default" then choices[#choices + 1] = {id = item.key, label = item.label} end

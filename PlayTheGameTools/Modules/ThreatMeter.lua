@@ -82,7 +82,7 @@ local function Paint(texture,color,alpha) texture:SetColorTexture(color[1],color
 
 local function Text(parent,size,color,justify)
     local text=parent:CreateFontString(nil,"OVERLAY","GameFontHighlight")
-    addon.Media:BindInterfaceFont(text,GameFontHighlight,size)
+    addon.Media:BindInterfaceFont(text,GameFontHighlight,size,"threatMeter")
     text:SetTextColor(color[1],color[2],color[3],1)
     text:SetJustifyH(justify or "LEFT");text:SetWordWrap(false)
     return text
@@ -117,10 +117,10 @@ function M:CreateFrame()
     f:SetScript("OnEnter",function() if not self.db.locked then f.border:SetColor(T.secondary) end end)
     f:SetScript("OnLeave",function() f.border:SetColor(T.lineStrong) end)
 
-    local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();Paint(bg,T.panel,0.94)
-    f.border=Outline(f);f.border:SetColor(T.lineStrong)
+    local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();addon.Media:PaintSurface(bg,T.panel,0.94,"threatMeter")
+    f.border=addon.ConfigWidgets.Outline(f,T.lineStrong,nil,nil,nil,"threatMeter");f.border:SetColor(T.lineStrong)
     local header=f:CreateTexture(nil,"BORDER")
-    header:SetPoint("TOPLEFT",1,-1);header:SetPoint("TOPRIGHT",-1,-1);header:SetHeight(HEADER);Paint(header,T.surface)
+    header:SetPoint("TOPLEFT",1,-1);header:SetPoint("TOPRIGHT",-1,-1);header:SetHeight(HEADER);addon.Media:PaintSurface(header,T.surface,1,"threatMeter")
     local rule=f:CreateTexture(nil,"BORDER")
     rule:SetPoint("TOPLEFT",1,-1-HEADER);rule:SetPoint("TOPRIGHT",-1,-1-HEADER);rule:SetHeight(1);Paint(rule,T.line)
     f.title=Text(f,12,T.text)
@@ -135,8 +135,8 @@ function M:CreateFrame()
         local bar=CreateFrame("StatusBar",nil,f)
         bar:SetSize(WIDTH-PAD*2,ROW)
         bar:SetPoint("TOPLEFT",PAD,-(HEADER+1+PAD+(i-1)*(ROW+GAP)))
-        bar:SetStatusBarTexture(FLAT);bar:SetMinMaxValues(0,100)
-        local track=bar:CreateTexture(nil,"BACKGROUND");track:SetAllPoints();Paint(track,T.field)
+        bar:SetStatusBarTexture(addon.Media:GetSurfaceTexture("threatMeter"));bar:SetMinMaxValues(0,100)
+        local track=bar:CreateTexture(nil,"BACKGROUND");track:SetAllPoints();addon.Media:PaintSurface(track,T.field,1,"threatMeter")
         bar.edge=bar:CreateTexture(nil,"OVERLAY")
         bar.edge:SetPoint("TOPLEFT");bar.edge:SetPoint("BOTTOMLEFT");bar.edge:SetWidth(2)
         bar.nameText=Text(bar,11,T.text)
@@ -233,7 +233,7 @@ function M:Entry(u)
         e.color=PET_COLOR
     else
         local _,classFile=Call(UnitClass,u.unit)
-        local c=Public(classFile) and type(classFile)=="string" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
+        local c=Public(classFile) and type(classFile)=="string" and addon.GlobalSettings:GetClassColor(classFile)
         e.color=c and {c.r,c.g,c.b} or DEFAULT_COLOR
     end
     e.unit,e.player=u.unit,u.player

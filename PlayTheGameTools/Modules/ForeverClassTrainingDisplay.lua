@@ -183,6 +183,7 @@ function M:ShowDing(level, rows, preview)
     local W,T=addon.ConfigWidgets,addon.Theme
     if not self.dingWindow then
         local frame=CreateFrame("Frame",nil,UIParent);frame:SetSize(440,160)
+        frame.ptgMediaScope="foreverClassTraining"
         frame:SetPoint("CENTER",UIParent,"CENTER",-300,60)
         frame:SetFrameStrata("DIALOG");frame:SetClampedToScreen(true)
         self.dingBackground=W.Texture(frame,"Window","BACKGROUND")

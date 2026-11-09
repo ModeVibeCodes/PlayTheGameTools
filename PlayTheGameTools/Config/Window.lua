@@ -142,15 +142,6 @@ local function Dashboard(parent)
         page.cursor = page.cursor + 56
         end
     end
-    -- Frames keep the theme they were drawn with, so a change applies on reload.
-    page:Section("Appearance", "Theme changes apply after reloading the interface.", false)
-    local themes, choices = addon.InterfaceThemes, {}
-    for _, id in ipairs(themes.order) do choices[#choices + 1] = { label = themes[id].label, value = id, width = 108 } end
-    local themeButtons, refreshTheme = W.Exclusive(page:Row("Interface Theme", 48, { "theme", "appearance", "modern", "blizzard", "default" }),
-        choices, function() return addon:ResolveInterfaceTheme(addon.db.window.theme) end,
-        function(value) addon:SetInterfaceTheme(value) end)
-    page.themeButtons = themeButtons
-    page.refreshers[#page.refreshers + 1] = refreshTheme
     page:Finish()
     return page
 end
@@ -307,9 +298,13 @@ function addon:CreateConfig()
     function self:EnsureConfigPage(id)
         if not pages[id] then
             local module = self.modules[id]
+            pageHost.ptgMediaScope=module and id or nil
             if id == "dashboard" then pages[id] = Dashboard(pageHost)
+            elseif id == "globalSettings" then pages[id] = self:CreateGlobalSettingsPage(pageHost)
             elseif module.CreateConfigPage then pages[id] = module:CreateConfigPage(pageHost)
             else pages[id] = GenericPage(pageHost, module) end
+            pages[id].ptgMediaScope=pageHost.ptgMediaScope
+            pageHost.ptgMediaScope=nil
             pages[id]:Hide()
         end
         return pages[id]
@@ -342,6 +337,10 @@ function addon:CreateConfig()
         pageHost:SetPoint("TOPLEFT", 0, -top - W.PAGE_HEADER_HEIGHT)
         pageHost:SetPoint("BOTTOMRIGHT", 0, 0)
         moduleHeader:SetModule(module)
+        if id=="globalSettings" then
+            moduleHeader.title:SetText("Global Settings")
+            moduleHeader.description:SetText("Shared appearance defaults for the entire addon suite.")
+        end
         self:EnsureConfigPage(id)
         if not pages[id].UpdatePreviewLayout then
             pages[id]:ClearAllPoints();pages[id]:SetPoint("TOPLEFT");pages[id]:SetPoint("BOTTOMRIGHT")
@@ -352,7 +351,7 @@ function addon:CreateConfig()
         self:RefreshConfig()
     end
     function self:SelectConfigPage(id)
-        assert(id == "dashboard" or self.modules[id] or (self.categories[id] and #self.categories[id].modules > 0), "Play The Game Tools: unknown settings page.")
+        assert(id == "dashboard" or id == "globalSettings" or self.modules[id] or (self.categories[id] and #self.categories[id].modules > 0), "Play The Game Tools: unknown settings page.")
         Select(id)
     end
     local function AddNavigation(id, label, developer)
@@ -383,6 +382,7 @@ function addon:CreateConfig()
     end
     local sidebarRoots = {}
     AddNavigation("dashboard", "Dashboard")
+    AddNavigation("globalSettings", "Global Settings")
     for _, id in ipairs(self.categoryOrder) do
         if #self.categories[id].modules > 0 then AddNavigation(id, self.categories[id].title) end
     end

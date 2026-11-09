@@ -34,19 +34,22 @@ local function MediaDropdown(parent, timer, border)
         local media = a.fontMedia or ""
         if statusbar then
             local style=a.barTexture
-            button.label:SetText((style=="default" and "Play The Game Tools Default" or style:sub(7))
-                ..(addon.Media:GetStatusBar(style) and "" or " (default fallback)"))
+            button.label:SetText(addon.Media:MediaLabel(style=="default" and "Play The Game Tools Default" or style:sub(7)))
         elseif border then
             local style = timer.db.display.icon.borderStyle
             local label = style == "none" and "None" or style == "thin" and "Play The Game Tools Thin" or style:sub(7)
-            button.label:SetText(label .. (addon.Media:GetBorder(style) and "" or " (unavailable; Thin fallback)"))
+            button.label:SetText(addon.Media:MediaLabel(label))
+        elseif media=="builtin:game" or media=="builtin:chat" then
+            button.label:SetText(media=="builtin:chat" and "Chat font" or "Game font")
+        elseif media=="" and a.font=="game" then
+            button.label:SetText("Use Global Setting")
         else
-            button.label:SetText((media ~= "" and (media .. (addon.Media:GetFont(media) and "" or " (unavailable)"))
-                or (a.font == "chat" and "Chat font" or "Game font")))
+            button.label:SetText(addon.Media:MediaLabel(media~="" and media or (a.font=="chat" and "Chat font" or "Game font")))
         end
         if not menu:IsShown() then return end
         W.PlacePopup(menu,button)
         local choices = statusbar and addon.Media:GetStatusBars() or border and addon.Media:GetBorders() or timer:GetFonts()
+        if not statusbar and not border then table.insert(choices,1,{key="global",label="Use Global Setting"}) end
         for index, choice in ipairs(choices) do
             local row = rows[index]
             if not row then
@@ -59,16 +62,22 @@ local function MediaDropdown(parent, timer, border)
                     local item = row.choice
                     if statusbar then timer:SetAppearance("barTexture",item.key)
                     elseif border then timer:SetComponent("icon", "borderStyle", item.key)
+                    elseif item.key=="global" then
+                        timer:SetAppearance("font","game");timer:SetAppearance("fontMedia","")
                     elseif item.media then timer:SetAppearance("fontMedia", item.media)
-                    else timer:SetAppearance("font", item.key) end
+                    else timer:SetAppearance("font", item.key);timer:SetAppearance("fontMedia","builtin:"..item.key) end
                     menu:Hide()
                     Refresh()
                 end)
             end
             row.choice = choice
-            row.label:SetText(choice.label)
+            row.label:SetText(addon.Media:MediaLabel(choice.label))
+            local fontSelected=choice.media and media==choice.media
+                or choice.key=="global" and media=="" and a.font=="game"
+                or choice.key=="game" and media=="builtin:game"
+                or choice.key=="chat" and (media=="builtin:chat" or media=="" and a.font=="chat")
             row:SetSelected(statusbar and a.barTexture==choice.key or border and timer.db.display.icon.borderStyle == choice.key
-                or (not statusbar and not border and (choice.media and media == choice.media or (not choice.media and media == "" and a.font == choice.key))))
+                or not statusbar and not border and fontSelected or false)
             row:Show()
         end
         for index = #choices + 1, #rows do rows[index]:Hide() end

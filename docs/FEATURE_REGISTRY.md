@@ -1,7 +1,10 @@
 # Feature registry
 
+Global Settings: Appearance / Profiles / Optimizations / Class Colors, with bundled LSM media, standard game fonts, account-wide profiles, fast loot, scale/zoom and red-error controls. Previous page was user-reviewed; additions are static/mock validated, native review pending. See [Global Settings](GLOBAL_SETTINGS.md).
+
 | Feature | Configuration | Scope | Native status |
 | --- | --- | --- | --- |
+| Global Settings | Sidebar → Global Settings → Appearance / Profiles / Optimizations / Class Colors | Bundled LSM/media, standard game fonts, module-local customization, account-wide profile selection/import/export/positions, Auto Loot/Fast Loot, camera/scale/error controls and nine-class color grid | Earlier page owner-reviewed; expanded native behavior pending; [checklist](GLOBAL_SETTINGS.md) |
 | Guild Roster | Guild Tools -> Roster | Opt-in, read-only: every guild member listed by class from native `C_Club` data, Class Summary totals, session-only with no saved roster | Static fixtures only; native validation pending |
 | Rogue Poisons | Class Tools -> Rogue -> Display / Settings / Position | Poison Reminder: independent time/5–25 charge thresholds, minimal defaults, right-click dismissal, Recent/family grid, true Main Hand/Off Hand Icon Gap and custom borders; customizable Quick Access Poisons; shared Edit Mode/coordinates and class branding | Prior application version quick-tested by owner; current layout/dismissal/Edit Mode native review pending; [details](FOREVER_ROGUE_POISONS.md) |
 | Enhanced Experience Bar | Questing & Leveling -> Enhanced Experience Bar | Opt-in XP/rested/full-log XP, priority tints, texture choices, independent text, shared Edit Mode and native/Ellesmere provider choice | Owner accepted current feature and authorized PR #13 merge; broader native coverage remains bounded; [details](ENHANCED_EXPERIENCE_BAR.md) |

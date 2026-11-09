@@ -6,6 +6,25 @@ testClock = 100
 testCombat = false
 testLockdown = false
 clockReads = 0
+function GetLocale() return "enUS" end
+strmatch=string.match
+bit={band=function(a,b)
+    local value,place=0,1
+    while a>0 and b>0 do
+        if a%2==1 and b%2==1 then value=value+place end
+        a,b,place=math.floor(a/2),math.floor(b/2),place*2
+    end
+    return value
+end}
+C_UIFileAsset={IsKnownFile=function(path)
+    if type(path)~="string" then return false end
+    if path:find("AddOns\\EllesmereUI\\",1,true) or path:find("AddOns\\AyijeUI\\",1,true) then
+        return testProviderFonts and testProviderFonts[path]==true or false
+    end
+    return not (testMissingTextures and testMissingTextures[path])
+end}
+function securecallfunction(fn,...) return fn(...) end
+function geterrorhandler() return function(message) error(message) end end
 function GetTime() clockReads = clockReads + 1; return testClock end
 function UnitAffectingCombat(unit) assert(unit == "player"); return testCombat end
 function InCombatLockdown() return testLockdown end
@@ -51,6 +70,7 @@ function methods:UnregisterEvent(event)
     if self.unitEvents then self.unitEvents[event] = nil end
 end
 function methods:UnregisterAllEvents() self.events = {}; self.unitEvents = nil end
+function methods:IsEventRegistered(event) return self.events[event]==true end
 function methods:Show()
     if self.shown then return end
     self.shown = true
@@ -242,6 +262,7 @@ GameFontDisableSmall = Object()
 GameFontDisableSmall.font = {"Fonts/FRIZQT__.TTF", 10, ""}
 ChatFontNormal = Object()
 ChatFontNormal.font = {"Fonts/ARIALN.TTF", 12, ""}
+for _,font in ipairs({GameFontHighlight,GameFontNormalLarge,GameFontDisableSmall,ChatFontNormal}) do font.kind="Font" end
 ColorPickerFrame = Object(UIParent)
 ColorPickerFrame:Hide()
 function ColorPickerFrame:SetupColorPickerAndShow(info)

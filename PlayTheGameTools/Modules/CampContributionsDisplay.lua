@@ -71,7 +71,7 @@ function A:CreateWindow()
     local W,T=addon.ConfigWidgets,addon.InterfaceTheme
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.window=f
     f:Hide();f:SetSize(self.db.contributionWidth,166);f:SetPoint("CENTER",UIParent,"CENTER",self.db.contributionX,self.db.contributionY);f:SetMovable(true);f:SetClampedToScreen(true);f:SetFrameStrata("DIALOG");f:SetFrameLevel(90)
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"lootSparkles")
     f:SetBackdropColor(0.035,0.045,0.06,0.96);f:SetBackdropBorderColor(0.32,0.40,0.48,1)
     local header=CreateFrame("Frame",nil,f);f.header=header
     header:SetPoint("TOPLEFT",8,-6);header:SetPoint("TOPRIGHT",-78,-6);header:SetHeight(30)
@@ -157,15 +157,15 @@ function A:Render()
 end
 function A:StyleLabel(label,size,color)
     local db=self.db
-    local font=db.contributionUseInterfaceFont and addon.Media:GetInterfaceFont() or
-        addon.Media:GetDisplayFont({font=db.contributionFont,fontMedia=db.contributionFontMedia})
+    local font=db.contributionUseInterfaceFont and addon.Media:GetInterfaceFont(nil,"lootSparkles") or
+        addon.Media:GetDisplayFont({font=db.contributionFont,fontMedia=db.contributionFontMedia},false,"lootSparkles")
     local flags=db.contributionOutline and "OUTLINE" or ""
     if not label:SetFont(font,size,flags) then label:SetFont(GameFontHighlight:GetFont(),size,flags) end
     label:SetTextColor(unpack(color))
 end
 function A:StyleRow(row,index,preview,width,height,pitch)
     local db=self.db;row:SetSize(width,height);row:ClearAllPoints();row:SetPoint("TOPLEFT",0,-(index-1)*pitch)
-    row.bg:SetColorTexture(unpack(db.contributionRowColor));row.bg:SetAlpha(db.contributionRowOpacity/100)
+    addon.Media:PaintSurface(row.bg,db.contributionRowColor,1,"lootSparkles");row.bg:SetAlpha(db.contributionRowOpacity/100)
     if row.highlight then row.highlight:SetColorTexture(unpack(db.contributionHoverColor));row.highlight:SetAlpha(db.contributionHoverOpacity/100) end
     row.icon:SetSize(db.contributionIconSize,db.contributionIconSize);row.icon:SetAlpha(db.contributionIconOpacity/100)
     row.icon:SetShown(db.contributionShowIcons)
@@ -224,7 +224,7 @@ function A:Layout(count,footer)
     if f.sample and f.sample:IsShown() then self:StyleRow(f.sample,1,true,inner,rowHeight,pitch)
     else for i,row in ipairs(self.buttons) do if i<=count then self:StyleRow(row,i,false,inner,rowHeight,pitch) end end end
     f:SetAlpha(db.contributionOpacity/100)
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=db.contributionBorderSize})
+    addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=db.contributionBorderSize},"lootSparkles")
     f:SetBackdropColor(db.contributionBackgroundColor[1],db.contributionBackgroundColor[2],db.contributionBackgroundColor[3],db.contributionBackgroundOpacity/100)
     f:SetBackdropBorderColor(db.contributionBorderColor[1],db.contributionBorderColor[2],db.contributionBorderColor[3],db.contributionBorderOpacity/100)
     -- The workspace is DIALOG level 80; the live/preview popup is level 90.

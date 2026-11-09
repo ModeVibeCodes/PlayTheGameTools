@@ -1,5 +1,15 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+SharedMedia pack integration: run tests/shared_media.py. After OOC reload, Global
+Settings → Appearance → SharedMedia should report Ready for the installed pack;
+its fonts/textures/borders and optional MyMedia choices should have plain names.
+
+Disabled-provider media: run tests/media_discovery.py and use the
+[known-path/cache native check](docs/GLOBAL_SETTINGS.md#validation-and-native-checklist).
+Test providers already disabled; PTG must not change their enabled state.
+
+Global Settings: use the exact [four-tab native checklist](docs/GLOBAL_SETTINGS.md). Run tests/global_settings.py for bundled LSM/media, standard game font inheritance and local overrides, account-wide profile selection/import/export/positions, class picker, native loot-session cancellation, camera/scale readback and combat guards.
+
 Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)
 on its local feature branch. Enable under Questing & Leveling; native acceptance
 is pending.
@@ -107,12 +117,12 @@ Review each switch before enabling the Automation header switch. Test on ordinar
 interactions you intend to perform: quest actions, sales and repair spend/change
 game state. Leave a feature off if you are not ready to exercise it.
 
-1. **Navigation:** Play The Game Tools → Quality of Life → Automation → Convenience → Auto Loot.
-   **Action:** Enable Automation and Auto Loot OOC, inspect Availability and the
-   native loot setting. Disable the option afterward if desired.
+1. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Auto Loot.
+   **Action:** Enable Auto Loot OOC, inspect Applied Settings and the native loot
+   setting. Disable it afterward if desired; Automation may remain disabled.
    **Required state:** OOC, native setting available.
-   **Confirmation:** Native Auto Loot becomes enabled; disabling this option does
-   not claim to restore the previous Blizzard setting. Unavailability is explicit.
+   **Confirmation:** Native Auto Loot follows the selected on/off value after its
+   initial preference adoption; profile changes restore that choice. Unavailability is explicit.
 2. **Navigation:** Play The Game Tools → Quality of Life → Automation → Quests → Auto Accept
    Quests / Auto Turn-In Quests / Modifier Bypass.
    **Action:** Select Shift; test an ordinary eligible offer/turn-in, then hold
@@ -200,13 +210,13 @@ Stock artwork, fonts, text fit and contrast require these in-game checks.
 
 | Check | Navigation | Action | Required state | Confirmation |
 | --- | --- | --- | --- | --- |
-| T1 Choose Blizzard | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Blizzard**, then **Reload** in the window header | Out of combat | Header **Reload** shows pending before the click; after reload `/ptg` shows the gold dialog border, opaque dark stone, red header buttons, stock checkboxes and gold headings |
+| T1 Choose Blizzard | `/ptg` → Global Settings → Appearance → Interface Theme | Click **Blizzard**, then **Reload** in the window header | Out of combat | Header **Reload** shows pending before the click; after reload `/ptg` shows the gold dialog border, opaque dark stone, red header buttons, stock checkboxes and gold headings |
 | T2 Text fit | Blizzard active; open each sidebar entry | Read sidebar items, Dashboard module rows, dropdowns and search results | Out of combat | No clipped or overlapping labels in the game font |
-| T3 Selectors and inputs | Blizzard active; Dashboard → Appearance, a module's Positioning section, the search box | Click options; type in the search box | Out of combat | Selected option has a gold outline; input borders show no square corners |
-| T4 Return to Modern | `/ptg` → Dashboard → Appearance → Interface Theme | Click **Modern**, then **Reload** | Out of combat | Window shows the Modern graphite look: dark sidebar column, slightly lighter canvas, outlined header buttons |
+| T3 Selectors and inputs | Blizzard active; Global Settings → Appearance, a module's Positioning section, the search box | Click options; type in the search box | Out of combat | Selected option has a gold outline; input borders show no square corners |
+| T4 Return to Modern | `/ptg` → Global Settings → Appearance → Interface Theme | Click **Modern**, then **Reload** | Out of combat | Window shows the Modern graphite look: dark sidebar column, slightly lighter canvas, outlined header buttons |
 | T5 Fresh-launch labels | Quit WoW fully, relaunch | Type `/ptg` as soon as you are in the world | Out of combat | Sidebar labels and the window title are visible, at worst after about a second |
 | T6 Threat Meter | Quality of Life → Threat Meter enabled | Target an enemy; unlock the meter | Any | Header strip, class-coloured bars, accent edge on your row; "Drag to move" while unlocked |
-| T7 Modern edges and hover | Modern active; `/ptg` → Dashboard | Look at **Reload**, **Preview**, **Edit Mode**, **X**, the **Search settings...** box and Appearance → Interface Theme without hovering, then hover each | Out of combat | Every control shows a visible outline at rest; hovering lifts its fill; **Modern** has a solid mint outline and **Blizzard** a grey one |
+| T7 Modern edges and hover | Modern active; `/ptg` → Dashboard | Look at **Reload**, **Preview**, **Edit Mode**, **X**, the **Search settings...** box and Global Settings → Appearance → Interface Theme without hovering, then hover each | Out of combat | Every control shows a visible outline at rest; hovering lifts its fill; **Modern** has a solid mint outline and **Blizzard** a grey one |
 | T8 Modern navigation and sections | Modern active; click a sidebar entry, then a module with several sections | Compare the selected sidebar entry with the others; scroll the page | Out of combat | Selected entry has a mint bar on its left edge; sections are separated by clearly more space than rows; dividers are visible but quiet |
 | T9 Modern checkboxes and sliders | Modern active; sidebar **Quality of Life** → **Automation**, then **Timers** → **Combat Timer** → **Display** | On Automation tick and untick any box; on Combat Timer drag the **Font Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
 | T10 Solid Dungeon Loot text | `/ptg` → Questing & Leveling → Dungeon Loot (enabled) | On **Dungeons** read the card titles and Suggested Starting Levels headings; open a dungeon and view **Boss Loot** and **Quests** | Out of combat | Every heading, card title, list entry and NPC name is one solid colour; the selected tab underline is one solid accent; bracket headings sit over a plain hairline |

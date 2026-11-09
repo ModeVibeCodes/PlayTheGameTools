@@ -148,6 +148,7 @@ function addon:CreateProfileHub(page)
     local specControl=page:Row('Specialization Profiles',42)
     local specToggle=W.Button(specControl,'Enable Spec Profiles',190,28,'choice');specToggle:SetPoint('LEFT')
     specToggle:SetScript('OnClick',function() local c=P:Character();if c then Result(P:SetSpecEnabled(not c.specEnabled)) end end)
+    specControl.row.visibleWhen=function() return not addon.Edition or addon.Edition.name~="Forever" end
     local specRows={}
     local help=page:Row('',52)
     help.row.visibleWhen=function() local c=P:Character();return c and c.specEnabled end

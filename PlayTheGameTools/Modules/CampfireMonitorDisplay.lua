@@ -113,7 +113,7 @@ function C:CreateDisplay(separate)
     f:SetScale((separate and self.db.benefitsScale or self.db.scale)/100)
     f:SetPoint("CENTER",UIParent,"CENTER",self.db[f.xKey]/f:GetScale(),self.db[f.yKey]/f:GetScale())
     f:SetClampedToScreen(true);f:SetMovable(true);f:SetFrameStrata("MEDIUM")
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"lootSparkles")
     f:Hide()
     f.icon=f:CreateTexture(nil,"ARTWORK");f.icon:SetTexCoord(0.06,0.94,0.06,0.94)
     for _,name in ipairs({"text","caption","buffTitle","details","moveLabel"}) do
@@ -152,7 +152,7 @@ function C:PaintDisplay(f,separate)
     local size=separate and db.benefitsFontSize or db.fontSize
     local background=separate and db.benefitsBackgroundOpacity or db.backgroundOpacity
     local opacity=separate and db.benefitsOpacity or db.opacity
-    local font=addon.Media:GetInterfaceFont()
+    local font=addon.Media:GetInterfaceFont(nil,"lootSparkles")
     f:SetScale(scale);f:SetWidth(width)
     f:EnableMouse(P:OutsideCombat() and (self.editing or self.placing or self.previewing or not db[f.lockKey]))
     f:SetBackdropColor(0.035,0.045,0.06,background/100)

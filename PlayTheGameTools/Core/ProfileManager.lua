@@ -48,6 +48,17 @@ function P:Spec()
     if C.Number(id) and id>0 then return id end
 end
 function P:Character()
+    if not specProfilesAvailable then
+        if not self.root.accountSelection then
+            local previous=self.root.characters[self:CharacterKey() or ""]
+            self.root.accountSelection=previous and C.Copy(previous) or {
+                activeProfile=self.root.defaultProfile,manualProfile=self.root.defaultProfile,specEnabled=false,specProfiles={}}
+            self.root.accountSelection.specEnabled=false
+        end
+        local selection=self.root.accountSelection
+        assert(type(selection)=="table" and type(selection.activeProfile)=="string" and type(selection.specProfiles)=="table", "Invalid account profile selection; retained.")
+        return selection
+    end
     local key=self:CharacterKey()
     if not key then return end
     local character=self.root.characters[key]
@@ -174,6 +185,11 @@ function P:Rename(old,name)
         if type(character)~="table" or type(character.specProfiles)~="table" then return false,"Invalid character assignments; rename cancelled." end
     end
     self.root.profiles[name]=self.root.profiles[old];self.root.profiles[old]=nil
+    if self.root.accountSelection then
+        for _,key in ipairs({"activeProfile","manualProfile","pendingProfile","failedProfile"}) do
+            if self.root.accountSelection[key]==old then self.root.accountSelection[key]=name end
+        end
+    end
     for _,character in pairs(self.root.characters) do
         for _,key in ipairs({"activeProfile","manualProfile","pendingProfile","failedProfile"}) do if character[key]==old then character[key]=name end end
         for spec,assigned in pairs(character.specProfiles) do if assigned==old then character.specProfiles[spec]=name end end
@@ -251,7 +267,7 @@ end
 function P:Reload()
     return addon.ReloadManager:Reload()
 end
-local runtimeKeys={records=true,history=true,frames=true,events=true,handlers=true,contexts=true,listeners=true,
+local runtimeKeys={records=true,history=true,frames=true,events=true,handlers=true,contexts=true,listeners=true,mediaRegistry=true,sharedMediaActivation=true,
     diagnosticHistory=true,characters=true,characterGUID=true,guid=true,profiles=true,migrationBackup=true,profileRecovery=true}
 local function SettingsOnly(value,reject)
     for key,item in pairs(value) do
@@ -267,7 +283,7 @@ function P:Export(name)
     if not profile then return nil,reason end
     -- Export only owned module settings/positions/preferences; never the account
     -- root, assignments, migration backup, arbitrary legacy root keys or logs.
-    local owned={schemaVersion=1,modules={},positions=profile.positions or {},developer=profile.developer,window=profile.window}
+    local owned={schemaVersion=1,modules={},positions=profile.positions or {},developer=profile.developer,window=profile.window,globalMedia=profile.globalMedia,globalOptions=profile.globalOptions}
     for _,id in ipairs(addon.moduleOrder) do owned.modules[id]=profile.modules[id] end
     SettingsOnly(owned,false)
     local ok,text=pcall(C.Encode,{version=1,name=name,profile=owned})
@@ -292,7 +308,7 @@ function P:PrepareImport(text,name)
         if not name then return nil,nil,"Enter a valid profile name (1–48 bytes without control characters)." end
         if self.root.profiles[name] then return nil,nil,"Name already exists; choose another name. Nothing overwritten." end
     else name=self:UniqueImportName(self:Name(envelope.name) or "Imported Profile") end
-    local allowed={schemaVersion=true,modules=true,positions=true,developer=true,window=true}
+    local allowed={schemaVersion=true,modules=true,positions=true,developer=true,window=true,globalMedia=true,globalOptions=true}
     for key in pairs(envelope.profile) do if not allowed[key] then return nil,nil,"Unexpected account or runtime data." end end
     if not SettingsOnly(envelope.profile,true) then return nil,nil,"Unexpected account, identity or runtime history data." end
     if envelope.profile.modules~=nil and type(envelope.profile.modules)~="table" then return nil,nil,"Invalid modules table." end

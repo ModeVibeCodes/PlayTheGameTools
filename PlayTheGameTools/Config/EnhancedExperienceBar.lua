@@ -59,7 +59,7 @@ function M:CreateConfigPage(parent)
             for _, choice in ipairs(self:GetTextureChoices()) do
                 if choice.id == self.db.barTexture then return choice.id, choice.label end
             end
-            return self.db.barTexture, self.db.barTexture:sub(7) .. " (flat fallback)"
+            return self.db.barTexture, addon.Media:MediaLabel(self.db.barTexture:sub(7))
         end, function(v) self:SetOption("barTexture", v) end)
     page.textureDropdown = texture
     page.refreshers[#page.refreshers + 1] = function() texture:Refresh() end

@@ -1,7 +1,24 @@
 # Play The Game Tools changelog
 
+Global Settings now groups Appearance, account-wide Profiles, Optimizations and Class Colors. Bundled LibSharedMedia plus licensed PTG media populate the dropdowns. Standard game UI fonts inherit; module overrides stay in their own controls. Added account-wide profile selection/import/export, Auto Loot/Fast Loot, camera zoom, detected UI scale and red-error suppression. Prior page-only native feedback is retained; these additions await in-game confirmation. See docs/GLOBAL_SETTINGS.md.
+
 ## Unreleased
 
+- Owner accepted Global Settings and authorized PR #23's public main merge on
+  2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.
+
+- Move Interface Theme from Dashboard to Global Settings → Appearance below the
+  media options; remove the SharedMedia status text while keeping integration.
+
+- Activate installed SharedMedia/MyMedia on first adoption, respecting later
+  manual disables; consume its additional/custom media.
+  Media dropdown labels now show names without parenthetical annotations.
+- Remember shared font/texture/border registrations across reloads and discover
+  cataloged assets from installed disabled providers without loading their code.
+  Added a read-only local media indexer; current catalog contains 55 paths.
+- Global Settings: removed the Shared Media, Loot and Errors, and Camera Distance
+  descriptions; inset the Class Colors grid below its separator; discover optional
+  installed Expressway fonts through LibSharedMedia without bundling their files.
 - Added Guild Tools -> Roster: an opt-in page that lists every guild member under
   their class and totals each class in a Class Summary. Read-only; nothing about
   the roster is saved. Native validation is pending.

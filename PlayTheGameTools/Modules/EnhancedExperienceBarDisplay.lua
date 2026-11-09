@@ -25,14 +25,14 @@ function M:ApplyAppearance()
     addon.PositionManager:StopDragging(self.id)
     local db, f = self.db, self.frame
     f:SetSize(db.width, db.height); f:SetScale(db.scale / 100); f:SetAlpha(1)
-    f:SetBackdrop({edgeFile = FLAT, edgeSize = 1})
+    addon.Media:ApplyBackdrop(f,{edgeFile = FLAT, edgeSize = 1},"enhancedExperienceBar")
     f:SetBackdropBorderColor(db.borderColor[1], db.borderColor[2], db.borderColor[3], db.opacity / 100)
-    self.background:SetColorTexture(db.backgroundColor[1], db.backgroundColor[2], db.backgroundColor[3], db.opacity / 100)
+    addon.Media:PaintSurface(self.background,db.backgroundColor,db.opacity/100,self.id)
     for _, spec in ipairs({{self.text, db.fontSize, db.font, db.fontMedia, db.outline, db.textColor, db.align, db.width, db.textOpacity},
         {self.sessionText, db.sessionFontSize, db.sessionFont, db.sessionFontMedia, db.sessionOutline,
             db.sessionTextColor, db.sessionAlign, db.sessionWidth, db.sessionOpacity}}) do
         local text, size = spec[1], spec[2]
-        local font = addon.Media:GetDisplayFont({font = spec[3], fontMedia = spec[4]})
+        local font = addon.Media:GetDisplayFont({font = spec[3], fontMedia = spec[4]}, false, self.id)
         if not text:SetFont(font, size, spec[5] and "OUTLINE" or "") then
             text:SetFont(GameFontHighlight:GetFont(), size, spec[5] and "OUTLINE" or "")
         end
@@ -90,7 +90,7 @@ function M:Render()
     if sample then quests, known, restedKnown = 1800, true, true end
     local function Length(amount) return maxXP > 0 and math.max(0, math.min(width - current, amount / maxXP * width)) or 0 end
     local atlas = db.barTexture == "blizzardXP" and (state == 1 and "UI-HUD-ExperienceBar-Fill-Rested" or "UI-HUD-ExperienceBar-Fill-Experience")
-    local path = db.barTexture == "blizzardStatus" and "Interface\\TargetingFrame\\UI-StatusBar" or addon.Media:GetStatusBar(db.barTexture)
+    local path = db.barTexture == "blizzardStatus" and "Interface\\TargetingFrame\\UI-StatusBar" or addon.Media:GetStatusBar(db.barTexture,self.id)
     local predictionAtlas = db.barTexture == "blizzardXP" and "UI-HUD-ExperienceBar-Fill-Prediction"
     Segment(self.xpFill, self.frame, 1, current, 1, height, color, db.opacity / 100, atlas, not db.nativeColors, path)
     -- Priority: earned XP > rested forecast > quest forecast. Exclude the
