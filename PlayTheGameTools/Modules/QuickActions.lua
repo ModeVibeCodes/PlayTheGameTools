@@ -25,6 +25,7 @@ local function OutsideCombat()
     local valid,combat=pcall(UnitAffectingCombat,"player")
     return ok and valid and lock==false and combat==false
 end
+Q.OutsideCombat=OutsideCombat
 
 -- Native owned textures only: a masked icon inside a thin ring of dots.
 function Q.SizeIcon(b,size)

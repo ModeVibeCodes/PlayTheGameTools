@@ -394,24 +394,44 @@ function M:OnSystemMessage(message)
 end
 
 ---------------------------------------------------------------------------
+-- Quick Actions ring icon
+---------------------------------------------------------------------------
+local QUICK_ACTION="recruitment"
+-- The icon is built outside combat only; PLAYER_REGEN_ENABLED retries a deferred build.
+function M:SyncQuickAction()
+    local Q=addon.QuickActions
+    local active=self.active==true
+    if active and not self.shortcut and Q.OutsideCombat() then
+        self.shortcut=Q:AddAction(QUICK_ACTION,{order=30,texture="Interface\\Icons\\Ability_Warrior_BattleShout",
+            color={.96,.62,.28},title="Recruiter",hint="Click to open or close the Recruiter window.",
+            onClick=function() if self.active then self:ToggleWindow() end end})
+    end
+    Q:SetAvailable(QUICK_ACTION,active)
+    Q:SetActive(QUICK_ACTION,active and self.window~=nil and self.window:IsShown())
+end
+
+---------------------------------------------------------------------------
 -- Lifecycle
 ---------------------------------------------------------------------------
 function M:OnEnable()
     self.active=true
     if not self.events then self.events=CreateFrame("Frame") end
-    for _,event in ipairs({"WHO_LIST_UPDATE","CHAT_MSG_SYSTEM","ADDON_ACTION_BLOCKED","ADDON_ACTION_FORBIDDEN"}) do self.events:RegisterEvent(event) end
+    for _,event in ipairs({"WHO_LIST_UPDATE","CHAT_MSG_SYSTEM","ADDON_ACTION_BLOCKED","ADDON_ACTION_FORBIDDEN","PLAYER_REGEN_ENABLED"}) do self.events:RegisterEvent(event) end
     self.events:SetScript("OnEvent",function(_,event,arg1,arg2)
         if event=="WHO_LIST_UPDATE" then self:OnWhoListUpdate()
         elseif event=="CHAT_MSG_SYSTEM" then pcall(self.OnSystemMessage,self,arg1)
+        elseif event=="PLAYER_REGEN_ENABLED" then self:SyncQuickAction()
         elseif Public(arg1) and arg1==addonName then
             self:Print("|cffff5555Blocked by the game:|r "..tostring(arg2).." - please report this.")
         end
     end)
+    self:SyncQuickAction()
     self:SetStatus("Ready. Pick levels and classes, then click Scan.")
 end
 function M:OnDisable()
     self.active=false;self:ResetScan()
     if self.events then self.events:UnregisterAllEvents() end
     if self.copyFrame then self.copyFrame:Hide() end
+    self:SyncQuickAction()
     self:SetStatus("Recruitment disabled.")
 end

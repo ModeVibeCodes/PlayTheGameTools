@@ -14,7 +14,9 @@ moves, through the shared Edit Mode, where it is listed as **Quick Actions**.
   elsewhere on the screen does not close it.
 - Icons keep their own behavior, size and opacity. Dungeon Loot opens its index and
   Class Training opens its popout. The popout stays open after the ring closes,
-  anchors to the main button and lights the main button while open.
+  anchors to the main button and lights the main button while open. Recruiter
+  opens or closes the Recruiter window, which keeps its own placement and lights
+  the main button while open.
 - Icons are spaced evenly clockwise from the top. Larger icons or longer lists
   widen the ring, and the main button's screen clamp grows so no icon opens
   off-screen.
@@ -84,3 +86,14 @@ Adding `Modules/QuickActions.lua` requires one full client restart.
    ring, enter combat, click the button, leave combat, click it. **Required state:**
    safe ordinary combat. **Confirmation:** the ring closes on combat entry, stays
    closed in combat with no blocked-action errors, and opens afterward.
+7. **Navigation:** Quick Actions button -> shouting-warrior icon (tooltip
+   "Recruiter"). **Action:** click the icon, then open the ring and click it again.
+   **Required state:** out of combat, Guild Tools -> Recruitment switched on.
+   **Confirmation:** the ring closes each time; the first click opens the Recruiter
+   window and puts a green glow on the main button; the second closes the window and
+   the glow.
+8. **Navigation:** `/ptgr` -> Recruiter window's on/off switch beside Settings.
+   **Action:** click the switch off, open the ring, click the switch on, open the
+   ring. **Required state:** out of combat, Recruitment on. **Confirmation:** the
+   window stays open throughout; the Recruiter icon and glow leave while off and
+   return when on.

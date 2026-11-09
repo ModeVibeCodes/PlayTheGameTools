@@ -212,7 +212,8 @@ function M:CreateWindow()
         if cd>0 then scan.label:SetText(string.format("Scan (%.0f)",math.ceil(cd)));scan:SetEnabled(false)
         else scan.label:SetText("Scan");scan:SetEnabled(true) end
     end)
-    f:SetScript("OnShow",function() M:RefreshWindow() end)
+    f:SetScript("OnShow",function() M:RefreshWindow();M:SyncQuickAction() end)
+    f:SetScript("OnHide",function() M:SyncQuickAction() end)
     return f
 end
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a Recruiter icon to the Quick Actions ring. It appears while Recruitment
+  is enabled, opens or closes the Recruiter window, and lights the main button
+  while the window is open. Native validation is pending.
+
 - Rogue Icon Gap now sets actual Main Hand/Off Hand separation. Removed individual
   image-padding controls and the Reminder's hidden cell-width spacing. Hand labels
   wrap with measured heights. Quick Access and its expanded menu start borderless;
