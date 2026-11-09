@@ -21,6 +21,12 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Rogue icon follow-up: primary controls are now directly visible in Display,
+with reminder spacing/image padding and independent per-icon borders, color,
+opacity and background. The owner reports the prior layout looks good so far;
+new icon rendering awaits native review. Run `tests/rogue_icons.py` alongside
+`tests/rogue_layout.py` and smoke/build before updating PR #19.
+
 Current Rogue layout revision: `codex/rogue-tools-layout`, based on main after
 Quick Actions PR #18. Uses existing runtime files (107 Lua chunks); /reload applies
 the candidate. Display/Settings/Position, minimal reminder, per-hand right-click

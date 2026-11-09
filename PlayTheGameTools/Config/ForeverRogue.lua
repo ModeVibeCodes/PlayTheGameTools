@@ -3,7 +3,7 @@ if not addon.ForeverRogue then return end
 local M,D,W=addon.ForeverRogue,addon.ForeverRogueData,addon.ConfigWidgets
 function M:CreateConfigPage(parent)
     local page=W.Page(parent,400);self.page=page
-    page.poisonControls={};page.poisonStyles={};page.poisonSliders={};page.poisonGrid={};page.positionControls={}
+    page.poisonControls={};page.poisonStyles={};page.poisonSliders={};page.poisonGrid={};page.positionControls={};page.iconGroups={}
     local function FullRow(label,height)
         local c=page:Row(label,height);c.rowLabel:Hide();c:ClearAllPoints();c:SetAllPoints(c.row);return c,c.row
     end
@@ -57,12 +57,31 @@ function M:CreateConfigPage(parent)
     local function Visible(predicate,build)
         local start=#page.rows;build();for i=start+1,#page.rows do page.rows[i].visibleWhen=predicate end
     end
-    local function Style(group,launcher,reminder)
+    local function AppearanceOwner(group)
         local owner={db={appearance=self.db[group]}}
         function owner:CanConfigure() return M:CanConfigure() end
         function owner:SetAppearance(key,value) return M:SetStyle(group,key,value) end
         function owner:GetFonts() return addon.Media:GetFonts() end
-        Sliders({{"Icon Size","iconSize"},{"Scale","scale","%"},{"Opacity","opacity","%"},{"Padding","padding"}},group)
+        return owner
+    end
+    local function IconControls(group,reminder)
+        page:Group(reminder and "Poison Reminder Icons" or "Quick Access Poisons Icon")
+        page.iconGroups[group]=page.rows[#page.rows]
+        Sliders({{"Icon Size","iconSize"},{"Icon Padding","iconPadding"},
+            {reminder and "Icon Spacing" or "Icon Opacity",reminder and "spacing" or "iconOpacity",not reminder and "%" or nil},
+            {"Icon Border Size","iconBorderSize"}},group)
+        W.ColorRow(page,AppearanceOwner(group),"Icon Border Color","iconBorderColor")
+    end
+    local function Style(group,launcher,reminder)
+        local owner=AppearanceOwner(group)
+        if not launcher and not reminder then
+            Sliders({{"Icon Size","iconSize"},{"Icon Padding","iconPadding"},{"Icon Border Size","iconBorderSize"}},group)
+        end
+        Sliders({{"Scale","scale","%"},{"Window Opacity","opacity","%"},{"Window Padding","padding"},
+            {"Icon Border Opacity","iconBorderOpacity","%"},{"Icon Background Opacity","iconBackgroundOpacity","%"}},group)
+        if not launcher then Sliders({{"Icon Opacity","iconOpacity","%"}},group) end
+        W.ColorRow(page,owner,"Icon Background Color","iconBackgroundColor")
+        if not launcher and not reminder then W.ColorRow(page,owner,"Icon Border Color","iconBorderColor") end
         if launcher then
             Toggles({{"Show Label","showNames"},{"Show Inventory Count","showCounts"},{"Crop Icon","cropIcons"},{"Show Tooltip","tooltips"}},group)
             Sliders({{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
@@ -78,7 +97,8 @@ function M:CreateConfigPage(parent)
             end,function(v) self:SetStyle(group,"labelPosition",v) end)
         else
             Toggles({{"Show Icons","showIcons"},{"Show Hand Labels","showHands"},{"Show Poison Names","showNames"},{"Show Inventory Counts","showCounts"}},group)
-            Sliders({{"Cell Width","cellWidth"},{"Icon Spacing","spacing"},{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
+            Sliders({{"Cell Width","cellWidth"},{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
+            if not reminder then Sliders({{"Icon Spacing","spacing"}},group) end
             if reminder then
                 Toggles({{"Show Remaining Time","showTimers"},{"Vertical Layout","vertical"}},group);Sliders({{"Timer Text Size","timerSize"}},group)
                 Select("Timer Position",{{id="CENTER",label="On Icon"},{id="TOP",label="Above Icon"},{id="BOTTOM",label="Below Labels"}},function()
@@ -90,8 +110,8 @@ function M:CreateConfigPage(parent)
         Toggles({{"Text Outline","outline"}},group)
         local _,fontRefresh=W.FontDropdown(page:Row("Text Font",42),owner);page.refreshers[#page.refreshers+1]=fontRefresh
         W.ColorRow(page,owner,"Text Color","textColor");W.ColorRow(page,owner,"Icon Tint","iconColor")
-        Sliders({{"Background Opacity","backgroundOpacity","%"},{"Border Opacity","borderOpacity","%"},{"Border Size","borderSize"}},group)
-        W.ColorRow(page,owner,"Background Color","backgroundColor");W.ColorRow(page,owner,"Border Color","borderColor")
+        Sliders({{"Window Background Opacity","backgroundOpacity","%"},{"Window Border Opacity","borderOpacity","%"},{"Window Border Size","borderSize"}},group)
+        W.ColorRow(page,owner,"Window Background Color","backgroundColor");W.ColorRow(page,owner,"Window Border Color","borderColor")
     end
     page:Section("Display",nil,false)
     Toggles({{"Poison Reminder","watcher"},{"Quick Access Poisons","flyout"}})
@@ -101,6 +121,8 @@ function M:CreateConfigPage(parent)
         return self.db.alwaysShow and "always" or "needed",self.db.alwaysShow and "Always Outside Combat" or "When Needed"
     end,function(v) self:SetOption("alwaysShow",v=="always") end)
     Sliders({{"Reminder Threshold (min)","threshold"," min"}});Toggles({{"Right-click to Dismiss","dismissOnRightClick"}})
+    Visible(function() return self.db.watcher end,function() IconControls("watchStyle",true) end)
+    Visible(function() return self.db.flyout end,function() IconControls("launcherStyle",false) end)
     page.displayButtons=Buttons({{"Customize Reminder",function() page.customize=page.customize=="reminder" and nil or "reminder" end},{"Customize Quick Access",function() page.customize=page.customize=="quick" and nil or "quick" end}})
     Visible(function() return page.customize=="reminder" and self.db.watcher end,function()
         page:Group("Poison Reminder Appearance");Style("watchStyle",false,true);Buttons({{"Minimal",function() self:MinimalReminder() end}})

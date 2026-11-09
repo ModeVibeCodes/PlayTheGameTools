@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Rogue Display now exposes icon size, padding, reminder spacing and per-icon
+  borders directly. Both elements have independent icon border colors/opacity,
+  image opacity and optional icon backgrounds; window styling remains separate.
+  Minimal keeps the reminder bare. Icon geometry/settings mocks pass; native
+  visual review remains pending.
+
 - Merged the Class Training and Dungeon Loot icons into one Quick Actions button.
   Clicking it opens the icons on a gold ring around it, and the button lights up
   while open; clicking an icon closes the ring. Only the button moves, through Edit Mode. It starts where the Class

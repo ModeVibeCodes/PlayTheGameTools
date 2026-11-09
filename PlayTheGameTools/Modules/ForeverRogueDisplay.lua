@@ -11,6 +11,31 @@ local function Paint(f,s)
     f:SetBackdropBorderColor(s.borderColor[1],s.borderColor[2],s.borderColor[3],s.borderSize>0 and s.borderOpacity/100 or 0)
     f:SetScale(s.scale/100);f:SetAlpha(s.opacity/100)
 end
+local function CreateIcon(b)
+    b.iconBackground=b:CreateTexture(nil,"BACKGROUND")
+    b.icon=b:CreateTexture(nil,"ARTWORK")
+    b.iconEdges={}
+    for i=1,4 do b.iconEdges[i]=b:CreateTexture(nil,"OVERLAY",nil,1) end
+end
+local function PaintIcon(b,s,base)
+    base=base or 0
+    local edge=s.iconBorderSize
+    local pad=math.min(math.max(s.iconPadding,edge),math.floor((s.iconSize-1)/2))
+    b.icon:ClearAllPoints();b.icon:SetPoint("TOPLEFT",base+pad,-base-pad);b.icon:SetPoint("BOTTOMRIGHT",-base-pad,base+pad)
+    b.icon:SetTexCoord(s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1,s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1)
+    b.icon:SetVertexColor(s.iconColor[1],s.iconColor[2],s.iconColor[3],s.iconOpacity/100);b.icon:SetShown(s.showIcons)
+    b.iconBackground:ClearAllPoints();b.iconBackground:SetPoint("TOPLEFT",base,-base);b.iconBackground:SetPoint("BOTTOMRIGHT",-base,base)
+    b.iconBackground:SetColorTexture(s.iconBackgroundColor[1],s.iconBackgroundColor[2],s.iconBackgroundColor[3],s.iconBackgroundOpacity/100)
+    b.iconBackground:SetShown(s.showIcons and s.iconBackgroundOpacity>0)
+    for i,t in ipairs(b.iconEdges) do
+        t:ClearAllPoints();t:SetColorTexture(s.iconBorderColor[1],s.iconBorderColor[2],s.iconBorderColor[3],s.iconBorderOpacity/100)
+        if i==1 then t:SetPoint("TOPLEFT",base,-base);t:SetPoint("TOPRIGHT",-base,-base);t:SetHeight(edge)
+        elseif i==2 then t:SetPoint("BOTTOMLEFT",base,base);t:SetPoint("BOTTOMRIGHT",-base,base);t:SetHeight(edge)
+        elseif i==3 then t:SetPoint("TOPLEFT",base,-base-edge);t:SetPoint("BOTTOMLEFT",base,base+edge);t:SetWidth(edge)
+        else t:SetPoint("TOPRIGHT",-base,-base-edge);t:SetPoint("BOTTOMRIGHT",-base,base+edge);t:SetWidth(edge) end
+        t:SetShown(s.showIcons and edge>0 and s.iconBorderOpacity>0)
+    end
+end
 function M:StopDrag()
     local f=self.dragging;if not f then return end
     f:StopMovingOrSizing();self.dragging=nil
@@ -41,7 +66,7 @@ function M:Action(parent,hand,styleKey,dragOwner)
     -- action edge, independently of the player's action-bar key-down preference.
     b:SetAttribute("useOnKeyDown",false)
     b:RegisterForClicks("LeftButtonDown","LeftButtonUp","RightButtonUp");b.styleKey=styleKey;b.hand=hand
-    b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetAllPoints()
+    CreateIcon(b)
     b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
     b.caption=Label(b);b.timer=Label(b);b.name=Label(b);b.count=Label(b)
     b:SetScript("OnEnter",function()
@@ -92,7 +117,7 @@ function M:CreateDisplay()
     self.watchButtons={self:Action(self.watcher,1,"watchStyle",self.watcher),self:Action(self.watcher,2,"watchStyle",self.watcher)}
     self.launcher=Surface(UIParent);self:DragHandle(self.launcher,"menuX","menuY","flyoutLocked")
     local open=CreateFrame("Button",nil,self.launcher);self.openButton=open
-    open.icon=open:CreateTexture(nil,"ARTWORK");open:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+    CreateIcon(open);open:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
     open:SetScript("OnClick",function()
         if self.editing and D.OutsideCombat() then addon.PositionManager:SelectElement(self.launcher.elementId);return end
         if D.OutsideCombat() and self.active and self.db.flyout and self.db.flyoutLocked and not self.previewing and not self.editing then
@@ -122,12 +147,12 @@ function M:CreateDisplay()
     for i=1,D.limit do self.menuRows[i]={name=Label(self.menuContent),self:Action(self.menuContent,1,"flyoutStyle"),self:Action(self.menuContent,2,"flyoutStyle")} end
 end
 local function Cell(b,s,showName)
-    local size=s.iconSize;b:SetSize(size,size);b.icon:SetTexCoord(s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1,s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1)
-    b.icon:SetVertexColor(unpack(s.iconColor));b.icon:SetShown(s.showIcons)
+    local size=s.iconSize;b:SetSize(size,size);PaintIcon(b,s)
     for _,t in ipairs({b.caption,b.name,b.count}) do D.Font(t,s,false) end;D.Font(b.timer,s,true)
     b.caption:ClearAllPoints();b.caption:SetPoint("TOP",b,"BOTTOM",0,-s.labelGap);b.caption:SetText(b.hand==1 and "Main Hand" or "Off Hand");b.caption:SetShown(s.showHands)
     b.name:ClearAllPoints();b.name:SetPoint("TOP",b,"BOTTOM",0,-s.labelGap-(s.showHands and (s.fontSize+s.labelGap) or 0));b.name:SetWidth(s.cellWidth);b.name:SetWordWrap(false);b.name:SetShown(showName and s.showNames)
-    b.count:ClearAllPoints();b.count:SetPoint("BOTTOMRIGHT",-2,2)
+    local countInset=math.max(2,s.iconBorderSize+1)
+    b.count:ClearAllPoints();b.count:SetPoint("BOTTOMRIGHT",-countInset,countInset)
     b.timer:ClearAllPoints()
     if s.timerPosition=="TOP" then b.timer:SetPoint("BOTTOM",b,"TOP",0,s.labelGap)
     elseif s.timerPosition=="BOTTOM" then
@@ -155,16 +180,15 @@ function M:Layout()
     end
     s=db.launcherStyle;Paint(self.launcher,s);self.launcher:ClearAllPoints()
     self.launcher:SetPoint("CENTER",UIParent,"CENTER",db.menuX/(s.scale/100),db.menuY/(s.scale/100));self.launcher:SetSize(s.iconSize+s.padding*2,s.iconSize+s.padding*2)
-    self.openButton:SetAllPoints();self.openButton.icon:ClearAllPoints();self.openButton.icon:SetPoint("TOPLEFT",s.padding,-s.padding);self.openButton.icon:SetPoint("BOTTOMRIGHT",-s.padding,s.padding)
+    self.openButton:SetAllPoints();PaintIcon(self.openButton,s,s.padding)
     local profession=D.Spell(2842);self.openButton.icon:SetTexture(profession and profession.icon or "Interface\\Icons\\Trade_BrewPoison")
-    self.openButton.icon:SetTexCoord(s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1,s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1)
-    self.openButton.icon:SetVertexColor(unpack(s.iconColor))
     D.Font(self.openButton.label,s,false);D.Font(self.openButton.count,s,false)
     self.openButton.label:ClearAllPoints();self.openButton.label:SetWidth(math.max(100,s.cellWidth));self.openButton.label:SetWordWrap(false)
     if s.labelPosition=="CENTER" then self.openButton.label:SetPoint("CENTER")
     else self.openButton.label:SetPoint(s.labelPosition=="TOP" and "BOTTOM" or "TOP",self.launcher,s.labelPosition,0,s.labelPosition=="TOP" and s.labelGap or -s.labelGap) end
     self.openButton.label:SetText(s.labelText);self.openButton.label:SetShown(s.showNames)
-    self.openButton.count:ClearAllPoints();self.openButton.count:SetPoint("BOTTOMRIGHT",-s.padding,s.padding)
+    local countInset=s.padding+math.max(2,s.iconBorderSize+1)
+    self.openButton.count:ClearAllPoints();self.openButton.count:SetPoint("BOTTOMRIGHT",-countInset,countInset)
     s=db.flyoutStyle;Paint(self.menu,s)
     local width=math.max(s.cellWidth,s.iconSize*2+s.spacing);local nameHeight=s.showNames and s.fontSize+s.labelGap or 0
     local rowHeight=Height(s,false,false)+nameHeight+s.spacing

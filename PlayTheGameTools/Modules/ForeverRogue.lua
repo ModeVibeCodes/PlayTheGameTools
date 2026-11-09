@@ -225,6 +225,6 @@ function M:RestoreReminders() self.dismissed={};self:Refresh() end
 function M:MinimalReminder()
     if not D.OutsideCombat() then return false end
     local s=self.db.watchStyle
-    s.showIcons=true;s.showHands=true;s.showNames=false;s.showTimers=false;s.showCounts=false;s.backgroundOpacity=0;s.borderSize=0
+    s.showIcons=true;s.showHands=true;s.showNames=false;s.showTimers=false;s.showCounts=false;s.backgroundOpacity=0;s.borderSize=0;s.iconBorderSize=0;s.iconBackgroundOpacity=0
     self:Refresh();return true
 end

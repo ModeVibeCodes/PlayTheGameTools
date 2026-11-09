@@ -27,8 +27,11 @@ Needed** or **Always Outside Combat**; its menu/actions remain OOC only. The exi
 module master must be enabled for either display to run. Disabling an element hides
 its Position group and removes its shared Edit Mode highlight/selection eligibility.
 
-Appearance controls stay collapsed until a Customize button is clicked. A second
-click closes that editor. Quick Access's **Customize** selector offers **Icon and
+Primary icon controls are directly visible in Display under **Poison Reminder
+Icons** and **Quick Access Poisons Icon** whenever that element is enabled. Both
+provide **Icon Size**, **Icon Padding**, **Icon Border Size**, and **Icon Border
+Color**. Reminder icons also expose **Icon Spacing**; Quick Access exposes **Icon
+Opacity**. Text and window editors stay behind the Customize buttons. Quick Access's **Customize** selector offers **Icon and
 Label** or **Expanded Menu**. Numeric sliders pair where width permits, cap at
 260 UI units per cell, and wrap on smaller canvases. Control values remain precise
 through the standard numeric fields. There are no extra top-level appearance tabs.
@@ -41,6 +44,12 @@ migrates to that minimal presentation; customized styles and unknown keys remain
 The **Minimal** button inside Customize Reminder explicitly restores only that
 presentation without resetting size, font, color, positioning or poison history.
 
+Each icon now has its own image padding, border size/color/opacity, image opacity
+and optional background color/opacity. Image padding is inset inside its button
+and clamps before the texture can collapse. Reminder Icon Spacing adjusts the
+separation of its hand columns; each column also reserves Cell Width for labels.
+Window background/border controls are explicitly named **Window** in Customize;
+individual icon borders work while the reminder window remains transparent.
 The reminder retains icon size/tint/crop/visibility, scale, opacity, padding,
 spacing/cell width, vertical layout, font/size/outline/color, optional hand labels,
 names, inventory counts, countdown size/color/placement, background and border
@@ -114,6 +123,9 @@ retain their existing native acceptance boundary. Initial active icons identify
 families, not guaranteed exact ranks; ambiguous manual events do not prove an exact
 last-used item/hand. No reference-addon source/assets or Retail files are changed.
 
+`tests/rogue_icons.py` checks directly visible controls, actual numeric inputs,
+spacing changes, per-icon padding/border/color/opacity/background, extreme padding
+bounds, independent styles, the Minimal preset, Edit Mode and persistence.
 `tests/rogue_layout.py` adds dismissal/rearm/expiration/combat cases, minimal/default
 migration and custom retention, class-header restoration, six-tile availability/
 selection, independent labels, responsive widths and real Position Manager
@@ -157,3 +169,17 @@ establish native rendering, target acceptance, input routing or event-order safe
    shared coordinates and saved position agree; editing consumes no poison;
    normal locks do not block Edit Mode; disabled elements lose Position controls
    and Edit Mode eligibility. Reload retains positions; combat ends editing.
+
+6. **Navigation:** Rogue -> **Display** -> **Poison Reminder Icons** -> **Icon
+   Spacing**, **Icon Padding**, **Icon Size**, **Icon Border Size** / **Icon Border
+   Color**. **Action:** change each numeric field; choose a border color using
+   **Pick**. **Required state:** OOC, Poison Reminder enabled; use Enter Edit Mode
+   from Position if reminders are currently healthy/hidden. **Confirmation:** hand
+   columns separate, images inset inside their buttons, both reminder icons resize
+   and gain individually colored borders; the outer window stays at its saved style.
+7. **Navigation:** Rogue -> **Display** -> **Quick Access Poisons Icon** -> **Icon
+   Size**, **Icon Padding**, **Icon Border Size**, **Icon Opacity**. **Action:** change
+   values and border color, then /reload. **Required state:** OOC, Quick Access
+   enabled; choose Quick Access Visibility -> Always Outside Combat to view it.
+   **Confirmation:** only that icon changes, its size/padding/border/opacity persist,
+   and its saved Edit Mode position and poison applications still work.

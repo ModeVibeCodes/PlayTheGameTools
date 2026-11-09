@@ -31,12 +31,15 @@ end
 D.ranges={threshold={5,20,1},visibleRows={1,10,1},x={-10000,10000,1},y={-10000,10000,1},menuX={-10000,10000,1},menuY={-10000,10000,1}}
 D.styleRanges={iconSize={20,80,1},fontSize={8,24,1},timerSize={8,28,1},scale={50,200,5},opacity={10,100,5},
     padding={0,32,1},spacing={0,40,1},cellWidth={80,320,5},labelGap={0,16,1},columns={1,3,1},
-    backgroundOpacity={0,100,5},borderOpacity={0,100,5},borderSize={0,6,1}}
+    backgroundOpacity={0,100,5},borderOpacity={0,100,5},borderSize={0,6,1},iconPadding={0,16,1},
+    iconBorderSize={0,6,1},iconBorderOpacity={0,100,5},iconOpacity={0,100,5},iconBackgroundOpacity={0,100,5}}
 local styleDefaults={iconSize=40,fontSize=12,timerSize=14,scale=100,opacity=100,padding=10,spacing=12,cellWidth=110,
     labelGap=4,columns=1,backgroundOpacity=85,borderOpacity=100,borderSize=1,font="game",fontMedia="",
     outline=true,cropIcons=true,showIcons=true,showHands=true,showTimers=true,showNames=false,showCounts=true,tooltips=true,
     vertical=false,timerPosition="CENTER",backgroundColor={0.035,0.045,0.06},borderColor={0.32,0.4,0.48},
-    textColor={0.9,0.93,0.97},timerColor={1,0.85,0.4},iconColor={1,1,1},labelText="Poisons",labelPosition="BOTTOM"}
+    textColor={0.9,0.93,0.97},timerColor={1,0.85,0.4},iconColor={1,1,1},labelText="Poisons",labelPosition="BOTTOM",
+    iconPadding=0,iconBorderSize=0,iconBorderOpacity=100,iconOpacity=100,iconBackgroundOpacity=0,
+    iconBorderColor={0.32,0.4,0.48},iconBackgroundColor={0.035,0.045,0.06}}
 local function Style(db,kind,legacy)
     for k,v in pairs(styleDefaults) do
         if db[k]==nil then
@@ -46,6 +49,7 @@ local function Style(db,kind,legacy)
                 if kind=="flyoutStyle" then
                     if k=="iconSize" then db[k]=32 elseif k=="cellWidth" then db[k]=210 elseif k=="showNames" then db[k]=true end
                 elseif kind=="launcherStyle" and k=="borderColor" then db[k]={0.72,0.3,1}
+                elseif kind=="launcherStyle" and k=="iconBorderColor" then db[k]={0.72,0.3,1}
                 elseif kind=="launcherStyle" and k=="padding" then db[k]=3
                 elseif kind=="launcherStyle" and k=="borderSize" then db[k]=2 end
                 if kind=="watchStyle" and (k=="backgroundOpacity" or k=="borderSize") then db[k]=0 end

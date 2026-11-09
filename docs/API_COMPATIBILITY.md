@@ -53,3 +53,13 @@ appearance/history/unknown keys are retained; only the untouched original preset
 migrates to icons/hand text. Class icon metadata opts just this module into icon
 navigation/header presentation; other headers restore their normal title.
 See [current contract, primary sources and exact native tests](FOREVER_ROGUE_POISONS.md).
+
+## Rogue per-icon appearance — November 8, 2026
+
+Per-icon padding, borders, background and opacity use only owned Texture regions,
+public local style preferences and existing OOC layout. Four border edges avoid
+corner alpha overlap; image padding is clamped to preserve positive drawable area.
+No native action template, spell/item bindings, combat dispatch or data reader
+changes. Defaults add missing preferences and retain bare reminders/current window
+styles. Numeric-control, geometry, independence, Edit Mode and persistence mocks
+pass; native visual fit/input acceptance remains for the owner to confirm.
