@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+Experimental **mode** interface theme: opt-in under Global Settings → Appearance,
+using existing runtime files and the existing theme reload/profile flow. No module
+logic, TOC, media or default theme changes. Test with `/reload` OOC from the feature
+branch in the existing live-linked public checkout; preserve its junction and
+settings. Native fit remains pending. Run tests/mode_theme.py with smoke/global/
+Edit Mode and the builder. [Design and exact checks](MODE_INTERFACE_THEME.md).
+
 Owner accepted Global Settings and authorized public PR #23's merge to main on
 2026-11-09. Final UI refinement removes the SharedMedia status row and relocates
 Interface Theme to Global Settings → Appearance below the media controls. Focused

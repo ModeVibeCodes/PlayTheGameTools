@@ -350,6 +350,7 @@ local LIST = { tab = true, row = true }
 local function Color(key) return key and T[key] end
 -- Stock push-button label gold (NORMAL_FONT_COLOR); reads on the red art.
 local BUTTON_GOLD = { 1, 0.82, 0, 1 }
+local MODE_HEADING = { label = "heading", hoverLabel = "highlight" }
 
 function W.Button(parent, text, width, height, style)
     local button = CreateFrame("Button", nil, parent)
@@ -360,7 +361,8 @@ function W.Button(parent, text, width, height, style)
     button.skinStyle = style
     if style == "toggle" or style == "checkbox" then return W.Switch(button, text, height, style) end
     -- Resolved per button: the theme is applied after this file loads.
-    local recipe = (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
+    local recipe = (T.id == "mode" and style == "categoryHeading" and MODE_HEADING)
+        or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
     button.fill = W.Fill(button, T.surface, "BACKGROUND")
     button.outline = W.Outline(button, T.line, "BORDER")
     -- Kept for consumers that tint the selected state directly.
@@ -447,6 +449,14 @@ function W.Button(parent, text, width, height, style)
         if not available then color = T.unavailable end
         self.label:SetTextColor(color[1], color[2], color[3], color[4] or 1)
         self.activeGlow:SetShown(selected and style ~= "primary" and style ~= "underline")
+        if T.id == "mode" then
+            -- Static translucent wash and soft text light; no animation,
+            -- polling, extra mouse target or external texture required.
+            Paint(self.activeGlow, T.primary, selected and 0.075 or 0.04)
+            self.activeGlow:SetShown(available and (selected or hovered))
+            self.label:SetShadowColor(T.primary[1], T.primary[2], T.primary[3], available and (selected or hovered) and 0.35 or 0)
+            self.label:SetShadowOffset(0, -1)
+        end
         if self.selectionEdge then self.selectionEdge:SetShown(selected) end
         if self.blizzardHighlight then
             -- Stock list rows: the highlight bar shows on hover and holds while selected.
@@ -543,6 +553,11 @@ function W.Switch(button, text, height, style)
     -- Inert stand-in so shared consumers can still address the glow region.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0)
     button.activeGlow:Hide()
+    if T.id == "mode" then
+        button.activeGlow:ClearAllPoints()
+        button.activeGlow:SetPoint("CENTER", track, "CENTER", 0, 0)
+        button.activeGlow:SetSize(w + 6, h + 6)
+    end
     button.label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     button.label:SetPoint("CENTER")
     button.label:SetText(text)
@@ -557,6 +572,11 @@ function W.Switch(button, text, height, style)
         -- and unchecked differ in area as well as in the small mark.
         elseif on then Paint(track, T.primary, 0.16) else Paint(track, T.field) end
         outline:SetColor(on and T.primary or (hovered and T.secondary or T.lineStrong))
+        if T.id == "mode" then
+            Paint(self.activeGlow, T.primary, on and 0.075 or 0.04)
+            self.activeGlow:SetShown(available and (on or hovered))
+            if hovered then outline:SetColor(T.primary) end
+        end
         mark:ClearAllPoints()
         if toggle then
             mark:SetPoint(on and "RIGHT" or "LEFT", track, on and "RIGHT" or "LEFT", on and -3 or 3, 0)

@@ -4,6 +4,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Add opt-in **mode** interface theme under Global Settings → Appearance:
+  slate surfaces, blue headings, quiet hover/selection lighting and expanded,
+  collapsible text category headings with dot-prefixed children. Existing themes,
+  module controls and gameplay behavior are preserved. Apply with Reload OOC;
+  native review pending. See docs/MODE_INTERFACE_THEME.md.
+
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.
 

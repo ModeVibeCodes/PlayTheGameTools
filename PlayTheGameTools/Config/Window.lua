@@ -147,6 +147,7 @@ local function Dashboard(parent)
 end
 
 function addon:CreateConfig()
+    local mode = T.id == "mode"
     local window = CreateFrame("Frame", "PlayTheGameToolsConfigWindow", UIParent)
     window:Hide()
     self.configWindow = window
@@ -206,7 +207,7 @@ function addon:CreateConfig()
     window.headerArt:ClearAllPoints()
     window.headerArt:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
     window.headerArt:SetHeight(1)
-    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20 + edge, -21, SIDEBAR_WIDTH - 24 - edge, T.text)
+    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20 + edge, -21, SIDEBAR_WIDTH - 24 - edge, mode and T.heading or T.text)
     window.title:SetWordWrap(false)
     local controls = CreateFrame("Frame", nil, header)
     controls:SetPoint("TOPRIGHT", -16 - edge, -14 - edge / 2)
@@ -277,6 +278,9 @@ function addon:CreateConfig()
     window.categoryNavigation = categoryNavigation
     local selected = "dashboard"
     local RefreshSidebar
+    -- Session-local disclosure state: mode categories start expanded on reload.
+    local collapsed = {}
+    window.collapsedCategories = collapsed
 
     function self:RefreshConfig()
         moduleHeader:Refresh()
@@ -309,7 +313,7 @@ function addon:CreateConfig()
         end
         return pages[id]
     end
-    local function Select(id)
+    local function Select(id, preserveDisclosure)
         if addon.FrameAnchors and selected~=id then addon.FrameAnchors:Stop() end
         if selected~=id and addon.PreviewStates then addon.PreviewStates:Stop(selected) end
         local category = self.categories[id]
@@ -326,10 +330,11 @@ function addon:CreateConfig()
         self:UpdateConfigTitle(id)
         window.selectedPage = id
         window.selectedCategory = category and category.id or nil
-        categoryNavigation:SetCategory(category, id)
+        categoryNavigation:SetCategory(not mode and category or nil, id)
+        if mode and category and not preserveDisclosure then collapsed[category.id] = nil end
         if RefreshSidebar then RefreshSidebar(category, id) end
         -- Category tabs, when present, sit above the page header.
-        local top = category and 44 or 0
+        local top = not mode and category and 44 or 0
         moduleHeader:ClearAllPoints()
         moduleHeader:SetPoint("TOPLEFT", 0, -top)
         moduleHeader:SetPoint("TOPRIGHT", 0, -top)
@@ -355,14 +360,32 @@ function addon:CreateConfig()
         Select(id)
     end
     local function AddNavigation(id, label, developer)
-        local button = W.Button(developer and sidebar or navigation.content, label, developer and SIDEBAR_WIDTH - 22 - edge or 184, 34, "tab")
+        local isHeading = mode and self.categories[id] ~= nil
+        local button = W.Button(developer and sidebar or navigation.content, label, developer and SIDEBAR_WIDTH - 22 - edge or 184, 34, isHeading and "categoryHeading" or "tab")
+        button.categoryID = isHeading and id or nil
         if developer then button:SetPoint("BOTTOMLEFT", sidebar, "BOTTOMLEFT", 0, 0)
         else button:SetPoint("TOPLEFT", 0, -navigation.cursor) end
         button.label:ClearAllPoints()
         button.label:SetPoint("LEFT", 12, 0)
         button.label:SetPoint("RIGHT", -54, 0)
         button.label:SetJustifyH("LEFT")
-        button:SetScript("OnClick", function() Select(id) end)
+        if mode then
+            button.label:ClearAllPoints()
+            button.label:SetPoint("LEFT", 10, 0)
+            button.label:SetPoint("RIGHT", -10, 0)
+            button.label:SetWordWrap(false)
+            addon.Media:BindInterfaceFont(button.label, GameFontHighlight, isHeading and T.fontSize.group or T.fontSize.body)
+            if isHeading then
+                button:SetLabelColor(T.heading)
+                button.gapBefore = 10
+            end
+        end
+        button:SetScript("OnClick", function()
+            if isHeading then
+                collapsed[id] = not collapsed[id]
+                RefreshSidebar(self.categories[window.selectedCategory], selected)
+            else Select(id) end
+        end)
         if self.modules[id] and not self.modules[id].developer then
             button.status = W.Label(button, "", nil, 0, 0, 24, T.muted)
             button.status:ClearAllPoints()
@@ -398,7 +421,8 @@ function addon:CreateConfig()
     local function NestedButton(id)
         if nested[id] then return nested[id] end
         local module=addon.modules[id]
-        local button=W.Button(navigation.content,module.tabTitle or module.title,184,28,"tab")
+        local title = module.tabTitle or module.title
+        local button=W.Button(navigation.content,mode and ("· " .. title) or title,184,mode and 32 or 28,"tab")
         button.atelierNested=true
         button.label:ClearAllPoints()
         button.label:SetPoint("LEFT",24,0)
@@ -408,7 +432,14 @@ function addon:CreateConfig()
         end
         button.label:SetPoint("RIGHT",-10,0)
         button.label:SetJustifyH("LEFT")
-        addon.Media:BindInterfaceFont(button.label,GameFontHighlight,T.fontSize.small)
+        -- Two lines fit longer module names without reducing reading size.
+        if mode then button.label:SetWordWrap(true) end
+        addon.Media:BindInterfaceFont(button.label,GameFontHighlight,mode and T.fontSize.body or T.fontSize.small)
+        if mode and module.classIcon then
+            -- Keep class identity while giving every child the same dot prefix.
+            button.classIcon:ClearAllPoints();button.classIcon:SetPoint("RIGHT",-8,0)
+            button.label:ClearAllPoints();button.label:SetPoint("LEFT",24,0);button.label:SetPoint("RIGHT",-32,0)
+        end
         button:SetScript("OnClick",function() Select(id) end)
         nested[id]=button
         return button
@@ -418,8 +449,11 @@ function addon:CreateConfig()
         navigation.rows={}
         for _,root in ipairs(sidebarRoots) do
             navigation.rows[#navigation.rows+1]=root
-            if category and root==navigationButtons[category.id] then
-                for _,moduleID in ipairs(category.modules) do
+            local group = mode and root.categoryID and self.categories[root.categoryID] or nil
+            local expanded = mode and group and not collapsed[group.id]
+            if mode and group then root.expanded = expanded == true end
+            if expanded or (not mode and category and root==navigationButtons[category.id]) then
+                for _,moduleID in ipairs((group or category).modules) do
                     local button=NestedButton(moduleID)
                     button:SetSelected(moduleID==id)
                     navigation.rows[#navigation.rows+1]=button
@@ -429,7 +463,7 @@ function addon:CreateConfig()
         navigation:Layout()
         -- Reveal the clicked/search-routed module in the same existing scroll view.
         local button=nested[id]
-        if button and category then
+        if button and category and (not mode or not collapsed[category.id]) then
             local offset=button.offset or 0
             local value=navigation.scrollbar:GetValue()
             local visible=navigation.scroll:GetHeight()
@@ -450,7 +484,7 @@ function addon:CreateConfig()
     end)
     window:SetScript("OnShow", function()
         if self.ReloadManager.prompt then self.ReloadManager.prompt:Hide() end
-        self:UpdateWindowBounds(); Select(selected)
+        self:UpdateWindowBounds(); Select(selected, true)
         -- Fills in labels left blank by a font still loading on a fresh launch.
         addon.Media:ScheduleTextRedraw()
     end)
