@@ -18,9 +18,8 @@ with safe fallbacks. Use header **Reload** after appearance changes.
 **SharedMedia asset-pack integration:** SharedMedia is the additional-media addon;
 LibSharedMedia is the registry it uses. On first adoption, PTG enables/saves and
 loads installed **SharedMedia** and **SharedMedia_MyMedia** outside combat, as
-explicitly requested by the owner. The **SharedMedia** status row reports Ready,
-Disabled in AddOns, Not installed, or a load/reload issue. Other providers remain
-passive. Later manual disables of these two addons are respected; setup markers
+explicitly requested by the owner. The service runs without a descriptive/status row on this page. Other providers
+remain passive. Later manual disables of these two addons are respected; setup markers
 are account/machine state and excluded from profiles. No addon is downloaded,
 no MyMedia files are generated/overwritten, and no upstream pack files are copied.
 Registered MyMedia additions automatically join the same font/texture/border lists.
@@ -199,6 +198,10 @@ The current native loot UI also calls LootSlot, while its
 [loot declarations](https://github.com/Gethe/wow-ui-source/blob/9dc84f0d3bbae1768ac3405b3716000bd93eda06/Interface/AddOns/Blizzard_APIDocumentationGenerated/LootDocumentation.lua)
 define LOOT_READY's boolean. This does not establish native action acceptance.
 
+Interface Theme now appears below Global Border in Global Settings → Appearance,
+with the existing Modern/Blizzard choices and header Reload behavior. Dashboard
+no longer exposes its former Appearance section.
+
 ## Validation and native checklist
 
 All 31 standalone scripts pass, including the expanded global/discovery/SharedMedia suites. Focused
@@ -258,9 +261,8 @@ can require one full client restart. No Retail sync, release or merge is implied
    first let its provider register normally, then disable it and reload separately;
    the remembered choices should remain available while its files remain installed.
 
-9. **Navigation:** Play The Game Tools → Global Settings → Appearance → SharedMedia
-   / Global Font / Global Texture / Global Border. **Action:** Reload with the
-   SharedMedia pack installed, verify Ready, and choose Adventure / Aluminium /
+9. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global Font / Global Texture / Global Border. **Action:** Reload with the
+   SharedMedia pack installed and choose Adventure / Aluminium /
    RothSquare; inspect custom MyMedia entries if installed. **Required state:**
    OOC; restart once if SharedMedia was installed while the client was running.
    **Confirmation:** the actual pack is enabled/loaded, its registered choices

@@ -142,15 +142,6 @@ local function Dashboard(parent)
         page.cursor = page.cursor + 56
         end
     end
-    -- Frames keep the theme they were drawn with, so a change applies on reload.
-    page:Section("Appearance", "Theme changes apply after reloading the interface.", false)
-    local themes, choices = addon.InterfaceThemes, {}
-    for _, id in ipairs(themes.order) do choices[#choices + 1] = { label = themes[id].label, value = id, width = 108 } end
-    local themeButtons, refreshTheme = W.Exclusive(page:Row("Interface Theme", 48, { "theme", "appearance", "modern", "blizzard", "default" }),
-        choices, function() return addon:ResolveInterfaceTheme(addon.db.window.theme) end,
-        function(value) addon:SetInterfaceTheme(value) end)
-    page.themeButtons = themeButtons
-    page.refreshers[#page.refreshers + 1] = refreshTheme
     page:Finish()
     return page
 end

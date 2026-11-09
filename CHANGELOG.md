@@ -4,8 +4,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Move Interface Theme from Dashboard to Global Settings → Appearance below the
+  media options; remove the SharedMedia status text while keeping integration.
+
 - Activate installed SharedMedia/MyMedia on first adoption, respecting later
-  manual disables; show pack readiness and consume its additional/custom media.
+  manual disables; consume its additional/custom media.
   Media dropdown labels now show names without parenthetical annotations.
 - Remember shared font/texture/border registrations across reloads and discover
   cataloged assets from installed disabled providers without loading their code.

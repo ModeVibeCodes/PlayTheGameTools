@@ -83,7 +83,9 @@ restored.execute('''
     local T=addon.InterfaceTheme
     assert(addon.db.window.theme=='modern' and T.id=='modern' and not T.blizzardArt)
     SlashCmdList.PLAYTHEGAMETOOLS()
-    local themes=addon.configWindow.pages.dashboard.themeButtons
+    assert(not addon.configWindow.pages.dashboard.themeButtons,'theme moved out of Dashboard')
+    addon:SelectConfigPage('globalSettings')
+    local themes=addon.configWindow.pages.globalSettings.themeButtons
     assert(#themes==2 and themes[1].selected and not themes[2].selected,'theme choice')
     -- Modern contrast: findable control edges, readable muted copy, and
     -- surfaces that step up from the recessed sidebar to hover.
@@ -130,8 +132,9 @@ themed.execute('''
     assert(window.navigationButtons.dashboard.blizzardHighlight.shown)
     -- Stock game font, drop shadows, and segmented choices without push-button art.
     assert(window.title.font[1]==GameFontHighlight:GetFont() and window.title.shadowOffset[1]==1,'global font with theme shadow')
-    assert(window.pages.dashboard.themeButtons[1].blizzardArt==nil,'choices stay flat')
-    local themes=window.pages.dashboard.themeButtons
+    addon:SelectConfigPage('globalSettings')
+    assert(window.pages.globalSettings.themeButtons[1].blizzardArt==nil,'choices stay flat')
+    local themes=window.pages.globalSettings.themeButtons
     assert(themes[2].selected and not addon.ReloadManager.requests.interfaceTheme)
 ''')
 missing, _ = load(themed.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))

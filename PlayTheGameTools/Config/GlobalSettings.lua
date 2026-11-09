@@ -22,8 +22,14 @@ function addon:CreateGlobalSettingsPage(parent)
     end
     page:Section("Appearance",nil,false)
     Media("font","Global Font");Media("texture","Global Texture");Media("border","Global Border")
-    local shared=W.Label(page:Row("SharedMedia",40),"",nil,0,-4,360,T.muted)
-    page.refreshers[#page.refreshers+1]=function() shared:SetText(self.Media.sharedMediaStatus or "Not installed") end
+    -- Frames keep the theme they were drawn with, so a change applies on reload.
+    local themes, choices = addon.InterfaceThemes, {}
+    for _, id in ipairs(themes.order) do choices[#choices + 1] = { label = themes[id].label, value = id, width = 108 } end
+    local themeButtons, refreshTheme = W.Exclusive(page:Row("Interface Theme", 48, { "theme", "appearance", "modern", "blizzard", "default" }),
+        choices, function() return addon:ResolveInterfaceTheme(addon.db.window.theme) end,
+        function(value) addon:SetInterfaceTheme(value) end)
+    page.themeButtons = themeButtons
+    page.refreshers[#page.refreshers + 1] = refreshTheme
 
     page:Section("Profiles",nil,false)
     Note("Account-wide Profiles","Profiles and the selected profile are shared by every character on this account. Changes save automatically: module settings, enabled modules, Edit Mode positions, global appearance and optimizations. Create copies the current setup; select a profile and Reload to apply it.",100)
