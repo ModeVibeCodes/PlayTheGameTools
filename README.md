@@ -17,6 +17,11 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   Choose PTG or existing XP bars, with opt-in native/Ellesmere XP-only hiding.
   See [behavior, limits and testing](docs/ENHANCED_EXPERIENCE_BAR.md).
 
+- **Rogue Class Tools:** Poison Reminder and Quick Access Poisons under Class
+  Tools -> Rogue, with per-hand reminders, inventory-backed OOC applications,
+  Recent/poison selection, independent appearance and shared Edit Mode.
+  See [controls and validation](docs/FOREVER_ROGUE_POISONS.md).
+
 - **Combat Timer:** player combat elapsed time, configurable appearance and
   positioning, with preview and editing controls.
 - **Automation:** optional native Auto Loot setting, quest acceptance/turn-in and

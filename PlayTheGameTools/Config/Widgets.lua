@@ -622,6 +622,12 @@ function W.ModuleHeader(parent)
     function header:SetModule(module)
         self.module = module
         title:SetText(module and module.title or "Dashboard")
+        local icon=module and module.classIcon
+        -- Class identity already appears in the sidebar and category tab.
+        title:SetShown(icon==nil)
+        description:ClearAllPoints();description:SetPoint("TOPLEFT",0,icon and -2 or -30)
+        description:SetPoint("TOPRIGHT",-140,icon and -2 or -30)
+        description:SetWordWrap(icon~=nil)
         description:SetText(module and (module.configDescription or module.description or "")
             or "Turn modules on or off, or open one to change its settings.")
         self:Refresh()

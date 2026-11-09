@@ -2,11 +2,38 @@
 
 ## Unreleased
 
+- Rogue Icon Gap now sets actual Main Hand/Off Hand separation. Removed individual
+  image-padding controls and the Reminder's hidden cell-width spacing. Hand labels
+  wrap with measured heights. Quick Access and its expanded menu start borderless;
+  stock borders migrate once while custom border controls/settings remain.
+
+- Rogue reminders support independent time and charge triggers. Charge Threshold
+  ranges from 5 to 25 (default 10); either enabled threshold reveals the hand icon
+  and Quick Access. Optional poison-charge text is distinct from bag counts.
+  Unavailable charge data leaves timer reminders intact; native charge validation
+  is pending.
+
+- Removed the duplicate Rogue header icon. The left sidebar subcategory and
+  compact top tab carry the class icon; tab On/Off sits close to the Rogue label.
+
+- Rogue Display now exposes icon size, padding, reminder spacing and per-icon
+  borders directly. Both elements have independent icon border colors/opacity,
+  image opacity and optional icon backgrounds; window styling remains separate.
+  Minimal keeps the reminder bare. Icon geometry/settings mocks pass; native
+  visual review remains pending.
+
 - Merged the Class Training and Dungeon Loot icons into one Quick Actions button.
   Clicking it opens the icons on a gold ring around it, and the button lights up
   while open; clicking an icon closes the ring. Only the button moves, through Edit Mode. It starts where the Class
   Training icon was; older icon positions and the Dungeon Loot lock preference
   stay in saved settings unused. The Lock Shortcut Icon control is removed.
+
+- Refined Class Tools -> Rogue into Display, Settings and Position. Poison
+  Reminder defaults to bare icons/hand text and supports per-hand right-click
+  dismissal; Quick Access Poisons gains independent labels and shared Edit Mode.
+  Added a Recent/poison-family availability grid, compact appearance editors and
+  class-icon navigation/header. Existing customized styles/history are retained;
+  new layout and dismissal native checks are pending.
 
 - Added Class Tools -> Rogue: per-hand poison reminders and inventory-backed OOC
   item applications; Last Used Poison tracking and Poison Refresh Quick Apply

@@ -21,6 +21,43 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Owner confirmed the Rogue layout/icon-gap corrections look good and function
+as intended, and authorized PR #19 to merge into main on 2026-11-08. Focused
+layout, icon and charge regressions and the Forever package build passed at
+77adc86. This closes the current development pass; the detailed checklist still
+bounds broader poison-family/combat coverage. No release or settings reset.
+
+Rogue gap correction: Icon Gap (0–120, seeded from old spacing) is the real
+horizontal button-edge gap. Individual image inset controls/rendering and Reminder
+Cell Width are removed; wrapped hand text uses measured height. Stock Quick Access
+launcher/menu borders migrate to none with custom settings/controls retained.
+Run `tests/rogue_icons.py`, layout/charge suites and build; native fit is pending.
+
+Rogue charge follow-up adds Use Time Threshold / Use Charge Threshold,
+inclusive 5–25 charge setting (default 10), same-condition Quick Access visibility,
+and optional charge text without changing bare defaults. Only public native charge
+fields are used; zero semantics and combat behavior need owner validation. Run
+`tests/rogue_charges.py`, `tests/rogue_layout.py` and build/smoke.
+
+Rogue navigation correction: class icons belong beside the left sidebar Rogue
+subcategory and in its compact top tab. Removed the duplicate below the tab and
+anchored On/Off 8 UI units after its label. Description/header module switch remain.
+The exact screenshot correction awaits native visual confirmation after /reload.
+
+Rogue icon follow-up: primary controls are now directly visible in Display,
+with reminder spacing/image padding and independent per-icon borders, color,
+opacity and background. The owner reports the prior layout looks good so far;
+new icon rendering awaits native review. Run `tests/rogue_icons.py` alongside
+`tests/rogue_layout.py` and smoke/build before updating PR #19.
+
+Current Rogue layout revision: `codex/rogue-tools-layout`, based on main after
+Quick Actions PR #18. Uses existing runtime files (107 Lua chunks); /reload applies
+the candidate. Display/Settings/Position, minimal reminder, per-hand right-click
+dismissal, family selection grid and real shared Position Manager elements.
+Run `tests/rogue_layout.py` (includes poison/smoke regressions), `tests/edit_mode.py`,
+`tests/quick_actions.py`, and the builder. New native review is pending; the owner's
+earlier quick-test confirmation applies to the prior application version only.
+
 Rogue poison tools add Class Tools -> Rogue (eleventh module/fifth category),
 five Lua files, 106 chunks. The first buttons were owner-reported inert; revision 2
 adds inventory-backed item actions, confirmed last-use and independent styling.

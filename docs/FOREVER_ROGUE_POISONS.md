@@ -1,181 +1,247 @@
-# Rogue poison tools
+# Rogue class tools
 
-November 8, 2026. Revision 2, available for local Forever testing on
-`codex/rogue-poisons`. User confirms the first version's module/elements appear,
-but application buttons produce no action. After revision 2, the owner reports
-**"It is working upon quick testing!"** and authorizes merging to main on
-November 8, 2026. This confirms the reported quick-test scope; broader event-order,
-combat, rank/hand history, customization and persistence coverage remains bounded
-by the native packet below. No public release, SavedVariables reset, Retail
-change or installation-link change is part of this merge.
+November 8, 2026, layout revision on `codex/rogue-tools-layout`. The owner confirmed
+the previous inventory-backed application version working in quick testing; that
+confirmation does not cover this revision's layout, dismissal or shared Edit Mode
+changes. New native acceptance is pending. A new PR is requested; no main merge
+or release publication is authorized by this task.
 
-## Button correction
+## Current configuration
 
-The first version only searched learned application spells. Poison consumables
-in bags were never scanned or bound, leaving no usable action when the player had
-items but no known application spell. The first mock assumed learned spells and
-therefore did not cover that failure. Inventory-backed regression tests now start
-with **zero learned application spells** and real `item:<ID>` action identifiers.
+`/ptg` -> **Class Tools** -> **Rogue**. The category tab includes the native Rogue
+class icon, and the left sidebar Rogue subcategory has the same class icon. The
+top tab sizes to its icon, Rogue label and On/Off text, with an 8-unit label/status
+gap. Below the tab the header shows the two-sentence module description and
+standard Enabled/Disabled switch; there is no repeated class icon/title. Other
+module headers retain their titles.
 
-Carried poison items now use Blizzard's `InsecureActionButtonTemplate` with
-`type1=item`, `item1=item:<ID>` and `target-slot1=16/17`. Genuinely learned native
-application entries remain `type1=spell`. Blizzard owns OnClick and action/target
-dispatch; addon PreClick records intent or explains an unavailable action. Explicit
-`useOnKeyDown=false` dispatches on release independently of action-bar preferences.
-No addon direct Cast/Use/RunMacro calls, replacement OnClick, automatic applications
-or combat actions. Both press/release events are registered for native dispatch.
-
-Unavailable actions now explain the reason on hover/click: missing selection,
-out of stock/locked stacks, missing weapon, restricted snapshot, native template
-unavailable, or positioning/preview. A rejected attempt is not saved as success.
-
-## Controls
-
-`/ptg` -> **Class Tools** -> **Rogue**. Enable **Poison Watcher -> Enable Rogue
-Tools**, or the existing page-header switch. Default module disabled, Rogue only.
+The page has exactly three sections in this order:
 
 | Section | Controls |
 | --- | --- |
-| Poison Watcher | Enable Rogue Tools; Enable Poison Watcher; Show Watcher In Combat (on); Reminder Threshold (minutes), 5–20; Poison Status |
-| Poison Quick Apply | **Poison Refresh Quick Apply:**; Inventory and Learned Poisons row -> **Refresh Poisons** |
-| Poison Flyout | Enable Poison Flyout (off); **Always Show Poison Flyout** (off); Flyout Direction (Up/Down/Left/Right); Visible Flyout Rows (1–10, default 6) |
-| Watcher Appearance | Icon Size, Scale, Opacity, Padding, Crop Icons, Show Tooltips, Icon Tint, Show Icons, Show Hand Labels, Show Poison Names, Show Inventory Counts, Cell Width, Icon Spacing, Label Gap, Text Size, Text Outline, Text Font, Text Color, Vertical Watcher Layout, Show Remaining Time, Timer Text Size, Timer Text Color, Timer Position, Background Color/Opacity, Border Color/Opacity/Size |
-| Watcher Position | **Lock Poison Watcher**; Watcher Horizontal/Vertical Offset; Watcher Preview row -> **Toggle Poison Preview**; Watcher Screen Position row -> **Reset Watcher Position** |
-| Flyout Icon Appearance | Independent Icon Size, Scale, Opacity, Padding, Crop Icons, Show Tooltips, Icon Tint, Background Color/Opacity, Border Color/Opacity/Size |
-| Flyout Menu Appearance | Independent icon/text/font/color/background/border/layout controls, including Poison Columns (1–3), Show Hand Labels, Show Poison Names and Show Inventory Counts |
-| Flyout Position | **Lock Poison Flyout**; Flyout Horizontal/Vertical Offset; Flyout Screen Position row -> **Reset Flyout Position** |
+| **Display** | **Poison Reminder**, **Quick Access Poisons**, **Reminder Visibility**, **Quick Access Visibility**, **Use Time Threshold**, **Use Charge Threshold**, **Reminder Threshold (min)**, **Charge Threshold**, **Show Poison Charges**, **Right-click to Dismiss**, **Customize Reminder**, **Customize Quick Access** |
+| **Settings** | Six poison tiles: **Recent**, **Instant**, **Deadly**, **Crippling**, **Mind-numbing**, **Wound** (localized native first words); **Refresh Poisons**, **Restore Dismissed**; current status |
+| **Position** | Separate enabled-element groups for Poison Reminder and Quick Access Poisons, each with **Enter Edit Mode**, **Reset Position**, **Lock Position**, and paired **X** / **Y** sliders |
 
-Color rows use **Pick** for the color wheel or the existing hex field/**Apply**.
-Text Font includes game/chat and available shared-media fonts. Timer Position
-offers On Icon / Above Icon / Below Labels. Appearance groups are independent;
-changing the watcher does not resize/recolor the menu or launcher.
+Reminder Visibility offers **When Needed**, **When Needed (OOC)**, **Always Outside
+Combat**, and **Always, Including Combat**. Quick Access Visibility offers **When
+Needed** or **Always Outside Combat**; its menu/actions remain OOC only. The existing
+module master must be enabled for either display to run. Disabling an element hides
+its Position group and removes its shared Edit Mode highlight/selection eligibility.
 
-## Visibility and quick application
+Primary icon controls are directly visible in Display under **Poison Reminder
+Icons** and **Quick Access Poisons Icon** whenever that element is enabled. Both
+provide **Icon Size**, **Icon Border Size**, **Icon Border Opacity**, and **Icon
+Border Color**. Reminder icons expose **Icon Gap** (0–120), the real separation
+between Main Hand and Off Hand; Quick Access exposes **Icon Opacity**. Text and window editors stay behind the Customize buttons. Quick Access's **Customize** selector offers **Icon and
+Label** or **Expanded Menu**. Numeric sliders pair where width permits, cap at
+260 UI units per cell, and wrap on smaller canvases. Control values remain precise
+through the standard numeric fields. There are no extra top-level appearance tabs.
 
-Watcher cells show missing poisons or durations **at or below** the threshold.
-Healthy hands hide; absent/non-melee weapons have no reminder. Restricted/unknown
-snapshots display inert Unknown rather than claiming missing poison. Readable
-combat timers can show, with mouse/actions disabled; Show Watcher In Combat can
-turn that display off. Temporary oils/stones do not count as poison Imbue entries.
+### Appearance
 
-The flyout launcher is the native **Poisons profession icon** (spell 2842 metadata,
-native icon-path fallback), with a separate purple border by default. It appears
-OOC when either hand needs attention, including missing/unknown poison, regardless
-of the watcher toggle. **Always Show Poison Flyout** keeps it visible OOC while
-both hands are healthy. Clicking opens the menu; it closes when no longer needed
-or on combat entry and does not reopen automatically. Long menus scroll with the
-mouse wheel; columns, direction and visible rows are configurable. Each poison
-has Main Hand/Off Hand icons and carried counts; learned casts are labeled.
+Poison Reminder now defaults to **icons and hand labels only**, with background
+opacity 0, border size 0, timers/counts/names off. The unchanged original v2 preset
+migrates to that minimal presentation; customized styles and unknown keys remain.
+The **Minimal** button inside Customize Reminder explicitly restores only that
+presentation without resetting size, font, color, positioning or poison history.
 
-**Poison Refresh Quick Apply:** defaults to **Last Used Poison (per hand)**. Its
-list includes exact carried poison types/ranks and counts, plus learned native
-castable poisons. Choosing a specific entry overrides the default for both hands.
-Last-use history is saved per character and hand, with the character's latest
-poison as fallback for a hand with no observation. Successful public player casts
-are correlated with a changed/refreshed weapon enchant before remembering the
-exact item/spell. Manual bag use can also be observed. A last dose disappearing
-from inventory does not overwrite history with a different rank. Restock or choose
-another entry if the remembered one is unavailable; there is no silent stock swap.
+**Icon Gap** replaces the previous Reminder spacing/inset controls. In horizontal
+layout, button centers are exactly Icon Size + Icon Gap apart: gap 0 touches the
+icon buttons, and gap 12 leaves 12 UI units between them. Hand labels wrap within
+their assigned span and measured heights keep labels/timers from overlapping.
+Vertical layout applies the gap between complete icon/label rows. Existing spacing
+values seed the gap; the default is 12. Individual Icon Padding controls are removed
+from all three appearance groups and legacy saved inset values are retained but
+not rendered. Reminder Cell Width is also removed so it cannot add hidden spacing.
+Each icon keeps configurable border size/color/opacity, image opacity and optional
+background color/opacity.
+Window background/border controls are explicitly named **Window** in Customize;
+individual icon borders work while the reminder window remains transparent.
+The reminder retains icon size/tint/crop/visibility, scale, opacity, window padding,
+icon gap, vertical layout, font/size/outline/color, optional hand labels,
+names, inventory counts, countdown size/color/placement, background and border
+color/opacity/size. Quick Access has independent icon/scale/opacity/padding, tint,
+border/background, optional editable label text/font/size/color/outline/placement
+and inventory total. Quick Access and its expanded menu are borderless by default.
+A one-time migration removes only the stock purple launcher border and stock menu
+border, retaining custom sizes/colors. Border controls remain usable after migration;
+new optional border colors default to neutral blue-gray. Its expanded menu retains independent appearance, columns,
+direction and scrollable visible rows. Color rows use **Pick** or hex/**Apply**.
 
-For a poison already active before observation, native icons identify its family,
-not necessarily its rank. Initial family seeding uses the highest carried rank
-matching that icon until an unambiguous successful application is observed. Prior
-manual actions cannot be reconstructed when the family is unknown. Multiple
-ambiguous event/hand matches do not establish an exact last-used action. If neither
-history nor an active-family match is available, explicitly choose Quick Apply or
-apply through the flyout; the addon does not guess Instant Poison.
+### Time and charge thresholds
 
-Unlock watcher/flyout independently to drag backgrounds or icons. Positioning,
-Preview and shared Edit Mode signals are inert. Preview reveals the enabled
-elements/menu using actual available poisons. These elements are not registered
-in the shared Edit Mode picker; use the Rogue controls. Relock and stop preview
-before application. Native reagent, cast-time, level and target requirements still
-apply; an attempted click alone is not successful use.
+Display -> **Use Time Threshold** and **Use Charge Threshold** are independent,
+both on when no prior value exists. **Reminder Threshold (min)** retains its saved
+5–20 minute setting. **Charge Threshold** is 5–25 in single-charge steps, default
+10. Reaching either enabled threshold (inclusive) can show that hand's reminder
+and the When Needed Quick Access icon. Missing poison always requires attention;
+the existing visibility, combat, preview and dismissal rules still apply.
 
-## API evidence and limits
+**Show Poison Charges** is off by default to preserve bare icons/hand text. It
+adds a bottom-left `10c`-style applied-poison counter, separate from the optional
+bottom-right carried-item count. The tooltip includes public current charges and
+whether the threshold is reached. Minimal turns the extra counter off. No
+Instant-only list is hardcoded: every recognized weapon Imbue uses the same native
+charge field, so another poison can qualify if the client actually reports charges.
 
-Primary Blizzard Forever sources reviewed November 8, 2026:
+The native API documents a `charges` number but no hasCharges flag. Public positive
+integer counts establish charge support per weapon/enchant, in session memory.
+A later public zero on that same identity is treated as exhaustion. A cold zero,
+missing/secret/noninteger/negative value is not guessed to be exhausted and does
+not suppress a readable timer. Missing poison is already independently flagged.
+Restricted counts are never estimated from an earlier count. Actual zero/no-charge
+sentinels and combat readability still need native confirmation. Dismissed reminders
+stay dismissed as charges decline and rearm when public charges replenish.
 
-- [Container API](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ContainerDocumentation.lua):
-  carried bag sizes and item info; scans are OOC on enable, bag/metadata/spell
-  changes or explicit Refresh Poisons. Counts aggregate unlocked carried stacks.
-  Locked stacks remain listed with zero available count; bank contents are excluded.
-- [Item API](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua):
-  native item name/icon/effect identify carried poisons. Five localized application
-  family names and a bounded classic-item family fallback are used, never crafting
-  recipes. `C_Item.GetWeaponEnchantInfo` provides hasEnchant/enchantType/timeLeft/
-  enchantIconID/enchantID; missing/secret/malformed observations fail visibly inert.
-- [Native action template](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.xml)
-  guards combat, while its [dispatcher](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua)
-  supports item identifiers and target-slot dispatch. Attributes only change OOC.
-  Unprotected frames support presentation updates in combat. Native action acceptance
-  and the client's item-target cursor/cast behavior need owner validation.
-- [Unit event contract](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua):
-  UNIT_SPELLCAST_SUCCEEDED supplies unit/castGUID/spellID. Only OOC public player
-  spellID is used; castGUID/restricted spell data are never inspected. Exact manual
-  event ordering and rank/hand correlation still need native testing.
-- [SpellBook](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/SpellBookDocumentation.lua)
-  and [Flyout](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/FlyoutDocumentation.lua)
-  provide learned/override entries. Item availability is independent of them.
-- [Item constants](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemConstantsDocumentation.lua)
-  distinguish weapon enums from inventory slots and Imbue from Temporary. Poison
-  classification as Imbue and timeLeft milliseconds remain native validation items.
+### Poison selection and application
 
-No reference-addon code/assets copied or original addon modified. Five Rogue Lua
-files separate settings, lifecycle/history, inventory/readers, display and config.
-One enabled-Rogue 1s ticker reads two weapon snapshots, never scans bags; it reads
-nothing when both subfeatures are off and is cancelled on disable. Settings remain
-under modules.foreverRogue. Legacy appearance/position values and unknown keys are
-preserved; new nested styles fill missing fields. The old source/ZIP candidate is
-retained under `.cache/checkpoints/rogue-v1-before-item-fix-2026-11-08` and local
-build retention. No new junction/sync or live settings write is performed.
+The grid is a **single quick-apply selection**, not an application action. Recent
+follows the last successfully observed poison per character/hand. A poison-family
+tile chooses that type and resolves to the best currently available carried rank,
+or a genuinely known native application. The tile count aggregates carried stock
+for its family. Unknown/unstocked types remain visible, desaturated and disabled;
+they cannot create a pretend usable action. Each icon has the same contrasting
+first-word text strip. Recent uses the native Poisons icon and text **Recent**.
+The actual Quick Access menu continues to offer available exact items/known casts.
 
-## Validation and exact native test packet
+Old exact item/spell quick-apply preferences remain supported and highlight their
+family in the grid. Selecting a family opts into rank availability resolution;
+Recent retains exact last-use history and does not silently swap a depleted item.
+Carried poison items use the native InsecureActionButtonTemplate item identifier
+and inventory target slot 16/17. Blizzard owns OnClick. Left release dispatches;
+no automatic applications, direct Cast/Use/RunMacro, synthetic clicks or OnClick
+replacement/hooks are added. Reagent/cast/target requirements still belong to WoW.
 
-`tests/rogue_poisons.py`: zero-learned-spell inventory actions, exact native item
-identifiers/weapon slots, release dispatch under both CVar preferences, native
-success vs rejected attempt, manual observations, last dose, per-character history,
-bag changes/cache/locks, healthy/threshold/Always Show launcher, independent styles,
-combat crossing, preview, migration and persistence. The mock rejects combat
-attribute mutations, OnClick replacement and OnClick hooks. `tests/smoke.py` compiles
-106 chunks and checks startup, pages, profiles, wrong-client guard and deterministic
-package content. Static tests/builds do not establish native acceptance.
+### Dismissal
 
-1. **Navigation:** chat -> `/reload`, then `/ptg` -> **Class Tools** -> **Rogue** ->
-   **Poison Quick Apply** -> **Poison Refresh Quick Apply:**. **Action:** inspect
-   exact carried poison entries/counts; choose one. If new files fail to load, fully
-   restart WoW. **Required state:** Rogue OOC, Enable Rogue Tools on, carried poison.
-   **Confirmation:** items appear even without learned poison application spells;
-   Refresh Poisons updates counts and no Lua error occurs.
-2. **Navigation:** Rogue -> **Watcher Position** -> **Lock Poison Watcher**;
-   on-screen watcher -> **Main Hand** / **Off Hand**. **Action:** relock, turn off
-   Toggle Poison Preview if active, click each reminder separately and finish each
-   cast. **Required state:** OOC, valid equipped weapons, chosen carried poison.
-   **Confirmation:** correct one-hand native application, inventory decreases,
-   refreshed reminder hides; an unavailable click explains its reason.
-3. **Navigation:** Rogue -> **Poison Quick Apply** -> **Poison Refresh Quick
-   Apply:** -> **Last Used Poison (per hand)**; native bags and watcher.
-   **Action:** apply different poisons to each hand through the flyout or native
-   bags, allow success; later click each threshold reminder. **Required state:**
-   OOC applications, no Preview, both elements locked. **Confirmation:** correct
-   last-used poison and hand; rejected/interrupted attempts do not replace history.
-   Repeat after `/reload`; depleted poison requests restock/explicit selection.
-4. **Navigation:** Rogue -> **Poison Flyout** -> **Enable Poison Flyout** / **Always
-   Show Poison Flyout**; on-screen profession icon. **Action:** leave Always Show
-   off with healthy poisons, observe a real threshold/missing hand, then enable
-   Always Show while healthy. **Required state:** OOC, preview off, flyout locked.
-   **Confirmation:** default icon hides while healthy and appears when needed;
-   Always Show keeps it visible; clicking toggles the menu and hand buttons apply.
-5. **Navigation:** Rogue -> **Watcher Appearance**, **Flyout Icon Appearance**,
-   **Flyout Menu Appearance**, **Watcher Position**, **Flyout Position**.
-   **Action:** use Toggle Poison Preview, change size/font/color/border/layout,
-   unlock and drag, then relock/stop preview and `/reload`. **Required state:** OOC.
-   **Confirmation:** three independent styles and two positions persist; no poison
-   is consumed in preview/unlocked mode; menu direction/columns/scrolling work.
-6. **Navigation:** Rogue -> **Poison Watcher** -> **Show Watcher In Combat** /
-   **Reminder Threshold (minutes)**; watcher and flyout icon. **Action:** observe
-   a real timer cross its threshold in combat and attempt a click; leave combat.
-   **Required state:** real equipped poison near threshold; no synthetic preview.
-   **Confirmation:** readable combat timer shows statically (or inert Unknown if
-   restricted), no application/drag in combat, flyout hides and stays closed;
-   application works OOC. Repeat with watcher combat display disabled.
+With Right-click to Dismiss on, right-click either reminder icon to hide that hand
+only. This is session-only presentation state; it survives timer ticks, bag scans,
+combat transitions and poison expiration into Missing. It rearms after a poison
+refresh/replacement, equipped weapon change, restored data-state change, explicit
+Restore Dismissed or reload. The other hand and Quick Access visibility are not
+suppressed. Preview/Edit Mode reveals enabled elements and ignores dismissal.
+
+Right-click dismissal also works on the unprotected combat display. PreClick
+handles the ordinary presentation change; the native template retains its combat
+guard, no right-button action/weapon-target attributes are bound, and attribute
+mutation/reanchoring remain OOC. Left clicks and dragging cannot apply/move in
+combat. Tooltip text explains right-click dismissal. Native confirmation is pending.
+
+### Position ownership
+
+`roguePoisonReminder` and `rogueQuickPoisons` register with the actual shared
+Position Manager. Edit Mode shows **Rogue: Poison Reminder** and **Rogue: Quick
+Access Poisons** handles/highlights and the same element picker, coordinates,
+dragging, Exit and combat cleanup used by the rest of the addon. The Position
+hot button opens Edit Mode and selects its corresponding element. Applications
+and Quick Access menu opening stay inert during editing.
+
+Positions live in `positions.<elementID>`, seeded once from existing Rogue x/y
+preferences. Position Manager updates mirror to the legacy x/y keys for backwards
+compatibility, and numeric sliders/reset feed that same shared record. Profile
+changes re-register stale position references. Frames establish geometry before
+registration. Explicit unlocked dragging outside Edit Mode remains supported and
+stores through the shared position record; highlighted Edit Mode handles work
+independently of the normal position lock. Existing live installation link and
+SavedVariables are preserved; no new Lua file or TOC entry is needed for this change.
+
+## API and validation limits
+
+The existing [Blizzard native template](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.xml)
+and [dispatcher](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua)
+remain the application boundary. Only public inventory, player cast observations
+and weapon-enchant fields are used, with missing/restricted data inert. The
+[Item API](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua)
+and [Container API](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ContainerDocumentation.lua)
+support carried metadata. Poison Imbue classification and timeLeft milliseconds
+retain their existing native acceptance boundary. Initial active icons identify
+families, not guaranteed exact ranks; ambiguous manual events do not prove an exact
+last-used item/hand. No reference-addon source/assets or Retail files are changed.
+
+`tests/rogue_charges.py` checks all inclusive thresholds 5–25, both hands/five
+modeled poison families, independent time/charge toggles, same-condition launcher
+visibility, optional counters, charge absence/restriction/zero semantics, dismissal/
+replenishment, combat crossing, real numeric fields and settings persistence.
+`tests/rogue_icons.py` checks directly visible controls, actual numeric inputs,
+true edge gaps, removed inset controls, borderless stock migration/custom retention,
+icon border/color/opacity/background, gap bounds, independent styles, the Minimal
+preset, Edit Mode and persistence.
+`tests/rogue_layout.py` adds dismissal/rearm/expiration/combat cases, minimal/default
+migration and custom retention, class-header restoration, six-tile availability/
+selection, independent labels, responsive widths and real Position Manager
+selection/decoration/drag/coordinate/reset/persistence checks. Existing
+`tests/rogue_poisons.py` keeps inventory/native action/combat/history coverage and
+updates its UI assertion for the new selector. Smoke constructs all pages/profiles;
+Edit Mode and Quick Actions suites check the shared integration. Mocks do not
+establish native rendering, target acceptance, input routing or event-order safety.
+
+## Exact native test packet
+
+1. **Navigation:** `/reload` -> `/ptg` -> **Class Tools** -> **Rogue**.
+   **Action:** inspect the left sidebar/tab class icons, compact On/Off text and description-only header, then Display,
+   Settings and Position. **Required state:** Rogue, OOC, module enabled.
+   **Confirmation:** three sections in order; default reminder has icons and hand
+   text without background/border/countdown/counts; customized old styles persist.
+2. **Navigation:** Rogue -> **Display** -> **Poison Reminder**, **Reminder
+   Visibility**, **Right-click to Dismiss**; on-screen **Main Hand** / **Off Hand**.
+   **Action:** right-click one due reminder, wait/tick or change bags, then refresh
+   that poison or click Settings -> **Restore Dismissed**. **Required state:** real
+   equipped poison or missing poison, no Preview/Edit Mode. **Confirmation:** one
+   hand hides without consuming poison; other hand remains; refresh/restore rearms.
+   Repeat during combat: right-click can dismiss, left click cannot apply.
+3. **Navigation:** Rogue -> **Settings** -> **Recent** / a poison-family icon.
+   **Action:** select an available type; inspect the grey unstocked types; click a
+   reminder separately, then return to Recent. **Required state:** OOC, actual
+   carried poisons, positions locked, no Preview/Edit Mode. **Confirmation:** grid
+   selection consumes nothing; reminder applies chosen available family to the
+   correct hand; Recent restores last-use behavior; counts/availability refresh.
+4. **Navigation:** Rogue -> **Display** -> **Customize Reminder** / **Customize
+   Quick Access** -> **Customize** -> **Icon and Label** / **Expanded Menu**.
+   **Action:** adjust paired size/opacity fields, font/color/border, label text ->
+   **Apply**, label placement and optional counts; select **Minimal** for reminder.
+   **Required state:** OOC. **Confirmation:** elements style independently, controls
+   wrap at narrower sizes, Minimal removes reminder chrome/extras; reload persists.
+5. **Navigation:** Rogue -> **Position** -> **Poison Reminder** or **Quick Access
+   Poisons** -> **Enter Edit Mode**. **Action:** inspect both highlights, select and
+   drag each handle, change X/Y, then use shared **Exit**. Back in Position, test
+   **Lock Position**, X/Y and **Reset Position** independently. **Required state:**
+   OOC, corresponding displays enabled. **Confirmation:** selected Rogue handle,
+   shared coordinates and saved position agree; editing consumes no poison;
+   normal locks do not block Edit Mode; disabled elements lose Position controls
+   and Edit Mode eligibility. Reload retains positions; combat ends editing.
+
+6. **Navigation:** Rogue -> **Display** -> **Poison Reminder Icons** -> **Icon
+   Gap**, **Icon Size**, **Icon Border Size** / **Icon Border
+   Color**. **Action:** change each numeric field; choose a border color using
+   **Pick**. **Required state:** OOC, Poison Reminder enabled; use Enter Edit Mode
+   from Position if reminders are currently healthy/hidden. **Confirmation:**
+   the real space between icon buttons changes (0 touches, larger values separate); both reminder icons resize
+   and gain individually colored borders; the outer window stays at its saved style.
+7. **Navigation:** Rogue -> **Display** -> **Quick Access Poisons Icon** -> **Icon
+   Size**, **Icon Border Size**, **Icon Opacity**. **Action:** change
+   values and border color, then /reload. **Required state:** OOC, Quick Access
+   enabled; choose Quick Access Visibility -> Always Outside Combat to view it.
+   **Confirmation:** stock Quick Access/menu borders are absent, custom borders can be enabled, and size/border/opacity persist,
+   and its saved Edit Mode position and poison applications still work.
+
+8. **Navigation:** Rogue -> **Display** -> **Use Charge Threshold**, **Charge
+   Threshold**, **Show Poison Charges**, **Use Time Threshold**. **Action:** enable
+   charge detection, set 5-25 around the native remaining charge count, optionally
+   show charges; observe a real poison cross the value with ample time remaining.
+   Toggle time/charge rules independently, then reapply OOC. **Required state:**
+   Rogue with a real charged poison, module/Poison Reminder on, no Preview/Edit
+   Mode; OOC for configuration/application. **Confirmation:** correct hand appears
+   at or below the charge threshold, native count agrees with the optional Nc
+   label/tooltip, refreshed charges rearm/hide appropriately; Quick Access follows
+   When Needed outside combat. Combat can display the reminder but cannot apply.
+   A poison that reports no charges continues to use its enabled timer rule.
+
+## PR #19 closeout
+
+On 2026-11-08 the owner confirmed the final display corrections look good and
+function, accepted the work for now, and authorized merging PR #19 into main.
+The final correction uses true inter-icon gap and borderless Quick Access defaults
+with custom borders retained. Static layout/icon/charge regressions and the
+Forever package build passed. This confirmation does not establish exhaustive
+poison-family or combat coverage beyond the checklist above.

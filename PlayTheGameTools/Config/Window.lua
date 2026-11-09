@@ -402,6 +402,10 @@ function addon:CreateConfig()
         button.atelierNested=true
         button.label:ClearAllPoints()
         button.label:SetPoint("LEFT",24,0)
+        if module.classIcon then
+            button.classIcon=button:CreateTexture(nil,"ARTWORK");button.classIcon:SetPoint("LEFT",24,0);button.classIcon:SetSize(18,18);button.classIcon:SetTexture(module.classIcon)
+            button.label:ClearAllPoints();button.label:SetPoint("LEFT",48,0)
+        end
         button.label:SetPoint("RIGHT",-10,0)
         button.label:SetJustifyH("LEFT")
         addon.Media:BindInterfaceFont(button.label,GameFontHighlight,T.fontSize.small)

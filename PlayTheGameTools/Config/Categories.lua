@@ -29,10 +29,18 @@ function addon:CreateCategoryNavigation(parent, navigationButtons)
             button.label:SetWidth(0)
             local measured=button.label:GetStringWidth()
             if (issecretvalue and issecretvalue(measured)) or type(measured)~="number" or measured~=measured or measured<0 or measured==math.huge then measured=#(addon.modules[id].tabTitle or addon.modules[id].title)*9 end
-            local width=math.max(120,math.ceil(measured)+64)
+            local width
+            if addon.modules[id].classIcon then
+                button.status:SetWidth(0)
+                local statusWidth=button.status:GetStringWidth()
+                if (issecretvalue and issecretvalue(statusWidth)) or type(statusWidth)~="number" or statusWidth~=statusWidth or statusWidth<0 or statusWidth==math.huge then statusWidth=24 end
+                statusWidth=math.max(18,math.ceil(statusWidth))
+                button.label:SetWidth(math.ceil(measured))
+                button.status:SetWidth(statusWidth)
+                width=34+math.ceil(measured)+8+statusWidth+8
+            else width=math.max(120,math.ceil(measured)+64);button.label:SetWidth(width-64) end
             button:ClearAllPoints()
             button:SetPoint("TOPLEFT",x,0);button:SetSize(width,34)
-            button.label:SetWidth(width-64)
             button.tabX,button.tabWidth=x,width;x=x+width+4
         end
         strip:SetWidth(math.max(1,x-4));self.maximum=math.max(0,x-4-viewport:GetWidth());self:Scroll(offset)
@@ -56,12 +64,21 @@ function addon:CreateCategoryNavigation(parent, navigationButtons)
                 button = W.Button(strip, module.tabTitle or module.title, 200, 30, "underline")
                 button.label:ClearAllPoints()
                 button.label:SetPoint("LEFT", 12, 0)
-                button.label:SetPoint("RIGHT", -48, 0)
+                if module.classIcon then
+                    button.classIcon=button:CreateTexture(nil,"ARTWORK");button.classIcon:SetPoint("LEFT",8,0);button.classIcon:SetSize(20,20);button.classIcon:SetTexture(module.classIcon)
+                    button.label:ClearAllPoints();button.label:SetPoint("LEFT",34,0)
+                else
+                    button.label:SetPoint("RIGHT", -48, 0)
+                end
                 button.label:SetJustifyH("LEFT")
                 button.label:SetWordWrap(false)
                 button.status = W.Label(button, "", nil, 0, 0, 30, T.muted)
                 button.status:ClearAllPoints(); button.status:SetPoint("RIGHT", -12, 0)
                 button.status:SetJustifyH("RIGHT")
+                if module.classIcon then
+                    button.status:ClearAllPoints();button.status:SetPoint("LEFT",button.label,"RIGHT",8,0)
+                    button.status:SetJustifyH("LEFT");button.status:SetWordWrap(false)
+                end
                 addon.Media:BindInterfaceFont(button.status, GameFontHighlight, T.fontSize.small)
                 button.underline=W.Fill(button,T.primary,"OVERLAY")
                 button.underline:ClearAllPoints();button.underline:SetPoint("BOTTOMLEFT",10,0);button.underline:SetPoint("BOTTOMRIGHT",-10,0);button.underline:SetHeight(2)
@@ -70,6 +87,7 @@ function addon:CreateCategoryNavigation(parent, navigationButtons)
                     self.moduleEnabled=addon.modules[id].enabled
                     self:SetLabelColor(self.selected and T.text or (self.hovered and T.text or T.secondary))
                     self.underline:SetShown(self.selected==true)
+                    if module.classIcon then view:LayoutTabs() end
                 end
                 button:HookScript("OnEnter",function(self) self:RefreshModuleState() end)
                 button:HookScript("OnLeave",function(self) self:RefreshModuleState() end)
