@@ -33,7 +33,7 @@ local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.
 function UI.ClassText(token)
     if not token then return "All classes" end
     local name=LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token] or (token:sub(1,1)..token:sub(2):lower())
-    local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[token]
+    local c=addon.GlobalSettings:GetClassColor(token)
     return c and ("|cff"..Hex(c.r,c.g,c.b)..name.."|r") or name
 end
 function UI.ClassesText(q)

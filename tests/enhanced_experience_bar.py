@@ -103,7 +103,7 @@ assert(M:SetOption('barTexture','media:Fixture') and M.xpFill.texture=='FixtureT
 media.GetStatusBar,media.GetStatusBars=oldTexture,oldChoices
 assert(M:SetOption('barTexture','blizzardXP'))
 assert(M:SetOption('sessionFont','chat') and M.db.font=='game')
-assert(M.sessionText.font[1]==ChatFontNormal:GetFont() and M.text.font[1]==GameFontHighlight:GetFont())
+assert(M.sessionText.font[1]==addon.Media.chatFont and M.text.font[1]==addon.Media.gameFont)
 assert(M:SetOption('sessionOutline',false) and M.sessionText.font[3]=='' and M.text.font[3]=='OUTLINE')
 assert(M:SetOption('sessionTextColor',{0.2,0.4,0.6}) and M.db.textColor[1]~=0.2)
 assert(M:SetOption('sessionAlign','LEFT') and M.db.align=='CENTER')

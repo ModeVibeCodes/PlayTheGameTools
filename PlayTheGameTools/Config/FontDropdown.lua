@@ -115,37 +115,3 @@ end
 function W.FontDropdown(parent, timer) return MediaDropdown(parent, timer, false) end
 function W.BorderDropdown(parent, timer) return MediaDropdown(parent, timer, true) end
 function W.StatusBarDropdown(parent,timer) return MediaDropdown(parent,timer,"statusbar") end
-
-
-function addon:CreateGlobalSettingsPage(parent)
-    local page=W.Page(parent)
-    local function Choices(kind,scope)
-        local result={}
-        if scope then result[1]={id="inherit",label="Use Global Setting"} end
-        local source=kind=="font" and self.Media:GetFonts() or kind=="border" and self.Media:GetBorders() or self.Media:GetTextures()
-        for _,choice in ipairs(source) do result[#result+1]={id=choice.key,label=choice.label} end
-        return result
-    end
-    local function Select(kind,label,scope)
-        local button=W.Select(page:Row(label,48),280,function() return Choices(kind,scope) end,function()
-            local db=self.db.globalMedia
-            local value=scope and ((db.overrides[scope] or {})[kind] or "inherit") or db[kind]
-            for _,choice in ipairs(Choices(kind,scope)) do if choice.id==value then return value,choice.label end end
-            return value,value.." (unavailable; default fallback)"
-        end,function(value) self.Media:SetGlobalStyle(kind,value,scope);page:Refresh() end)
-        page.refreshers[#page.refreshers+1]=function() button:Refresh() end
-        page.mediaControls=page.mediaControls or {};page.mediaControls[(scope or "global")..":"..kind]=button
-    end
-    page:Section("Global Appearance","Changes apply after Reload. Icons, spell art and functional highlights keep their meaning.",false)
-    Select("font","Global Font");Select("texture","Global Texture");Select("border","Global Border")
-    local help=W.Label(page:Row("Shared Media",100),"Lists all registered LibSharedMedia fonts, status-bar textures, backgrounds and borders. Install SharedMedia or another media pack for more choices. Existing module custom fonts/textures win; game/flat defaults inherit. Borders start from Global Border. Use the overrides below to choose a module's media explicitly.",nil,0,-4,360,T.muted)
-    help:SetWordWrap(true)
-    for _,id in ipairs(self.moduleOrder) do
-        local module=self.modules[id]
-        if not module.developer then
-            page:Section(module.title.." Overrides",nil,true)
-            Select("font","Font",id);Select("texture","Texture",id);Select("border","Border",id)
-        end
-    end
-    page:Finish();return page
-end

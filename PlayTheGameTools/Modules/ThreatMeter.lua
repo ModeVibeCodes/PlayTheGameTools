@@ -233,7 +233,7 @@ function M:Entry(u)
         e.color=PET_COLOR
     else
         local _,classFile=Call(UnitClass,u.unit)
-        local c=Public(classFile) and type(classFile)=="string" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
+        local c=Public(classFile) and type(classFile)=="string" and addon.GlobalSettings:GetClassColor(classFile)
         e.color=c and {c.r,c.g,c.b} or DEFAULT_COLOR
     end
     e.unit,e.player=u.unit,u.player

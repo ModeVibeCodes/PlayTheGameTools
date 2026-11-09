@@ -127,8 +127,7 @@ function M:ClassName(classFile)
         (classFile:sub(1,1)..classFile:sub(2):lower())
 end
 function M:ClassColor(classFile)
-    local c=classFile and ((C_ClassColor and C_ClassColor.GetClassColor and C_ClassColor.GetClassColor(classFile))
-        or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]))
+    local c=classFile and addon.GlobalSettings:GetClassColor(classFile)
     if c then return c.r,c.g,c.b end
     return 1,1,1
 end

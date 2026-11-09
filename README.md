@@ -11,6 +11,10 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 
 ## Included features
 
+- **Global Settings:** shared addon/game UI fonts, bundled LibSharedMedia choices,
+  account-wide profiles with import/export, class-color pickers, Auto Loot/Fast
+  Loot, camera distance, detected/manual UI scale and red-error text controls.
+  Open `/ptg` → Global Settings; [details and native checks](docs/GLOBAL_SETTINGS.md).
 - **Enhanced Experience Bar:** opt-in under Questing & Leveling; flat or native
   Blizzard/SharedMedia fill, current/rested/total-quest-log XP, full-height tinted
   overlays, session time/XP per hour, separate bar/session text controls and shared Edit Mode movement.
@@ -24,7 +28,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 
 - **Combat Timer:** player combat elapsed time, configurable appearance and
   positioning, with preview and editing controls.
-- **Automation:** optional native Auto Loot setting, quest acceptance/turn-in and
+- **Automation:** optional quest acceptance/turn-in and
   merchant junk selling/personal-funds repair, with conservative eligibility
   checks and a selectable modifier to keep quest interactions manual.
 - **Class Training:** automatically selects your current class from all nine
@@ -79,8 +83,9 @@ Class Training defaults on for new preferences and preserves an existing explici
 off setting. Combat Timer and Automation default off; enable them individually
 in configuration. Automation can accept/complete quests, sell eligible junk and
 spend personal funds when enabled. Review its switches before use. Gray equipment
-selling requires a separate opt-in. Auto Loot changes Blizzard's setting; disabling
-the option does not restore the previous client setting.
+selling requires a separate opt-in. Auto Loot is now under Global Settings →
+Optimizations and works independently of Automation. First adoption retains the
+native preference; afterward profiles restore the selected on/off value.
 
 Training costs are catalog estimates before discounts, not guaranteed trainer
 offers. Eligibility can be uncertain; pet training, tomes, quest acquisition and

@@ -30,6 +30,7 @@ events:SetScript("OnEvent", function(self, _, loadedName)
     addon.initialized = true
     addon:InitializeDisplayModes()
     addon.Media:Initialize()
+    addon.GlobalSettings:Start()
     addon.ProfileManager:Start()
     if not addon.Edition or addon.Edition.name ~= "Forever" then
         addon.PartyCooldownSessions:Initialize(PTGToolsDB)

@@ -1,6 +1,6 @@
 # Forever API compatibility notes
 
-Global Settings uses the existing optional LibSharedMedia List/HashTable/Fetch APIs for font, border, statusbar and background assets. Addon-owned font regions, backdrop frames and textures only; no global LSM overrides, Blizzard FontObject writes, protected-action hooks or new gameplay API assumptions. Media selection is OOC; native rendering and action regressions await user confirmation. See [Global Settings](GLOBAL_SETTINGS.md).
+Global Settings now includes standard Blizzard FontObject face changes (OOC), bundled LSM, account-wide profile selection, native CVar writes with accepted-value readback, UIParent scaling, UIErrorsFrame event ownership and generation-cancelled OOC loot-slot requests. Current Forever UI source, Naowh behavior/licensing, client range uncertainties and native gates are recorded in [Global Settings](GLOBAL_SETTINGS.md). Earlier addon-only/optional-library/no-game-font statements were superseded by the requested expansion.
 
 ## Enhanced Experience Bar
 

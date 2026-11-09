@@ -1,6 +1,6 @@
 # Play The Game Tools changelog
 
-Global Settings adds suite-wide font, texture and border defaults, LibSharedMedia choices, module overrides, preserved local customizations and reload-based application. Native validation pending. See docs/GLOBAL_SETTINGS.md.
+Global Settings now groups Appearance, account-wide Profiles, Optimizations and Class Colors. Bundled LibSharedMedia plus licensed PTG media populate the dropdowns. Standard game UI fonts inherit; module overrides stay in their own controls. Added account-wide profile selection/import/export, Auto Loot/Fast Loot, camera zoom, detected UI scale and red-error suppression. Prior page-only native feedback is retained; these additions await in-game confirmation. See docs/GLOBAL_SETTINGS.md.
 
 ## Unreleased
 

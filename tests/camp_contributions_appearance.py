@@ -54,8 +54,8 @@ assert(f.title:GetText():find('|r|cff',1,true),'optional independent contributio
 page.contributionFont.scripts.OnClick()
 for _,row in ipairs(page.contributionFont.rows) do if row.choice.key=='chat' then row.scripts.OnClick();break end end
 assert(not C.db.contributionUseInterfaceFont and C.db.contributionFont=='chat')
-assert(sample.name.font[1]==ChatFontNormal:GetFont())
-addon.Media:RefreshFonts();assert(sample.name.font[1]==ChatFontNormal:GetFont())
+assert(sample.name.font[1]==addon.Media.chatFont)
+addon.Media:RefreshFonts();assert(sample.name.font[1]==addon.Media.chatFont)
 local before=C:HeaderText('Camp Buffs');Set('TitleColor',{0.7,0.2,0.1})
 assert(C:HeaderText('Camp Buffs')==before,'contribution colors independent of buffs')
 page.contributionPreview.scripts.OnClick()

@@ -74,6 +74,7 @@ function addon:PrepareDatabase(database)
     local version=database.schemaVersion
     assert(version==nil or version==SCHEMA_VERSION,"Play The Game Tools: unsupported database version; settings were not reset.")
     ApplyDefaults(database,defaults,"PTGToolsDB")
+    addon.GlobalSettings:Prepare(database)
     local function MediaKey(value, kind, inherit)
         assert(type(value)=="string" and #value<=256, "Invalid global media setting.")
         local builtins = kind=="font" and {game=true,chat=true} or kind=="border" and {thin=true,none=true} or {default=true}

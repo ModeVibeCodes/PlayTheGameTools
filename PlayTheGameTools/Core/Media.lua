@@ -1,7 +1,8 @@
 local _, addon = ...
 
--- Optional media service. Never alter Blizzard FontObjects or copy provider files.
+-- Shared media service. Game UI font changes are an explicit Global Settings feature.
 local M = {
+    gameFont = GameFontHighlight:GetFont(), chatFont = ChatFontNormal:GetFont(),
     regions = setmetatable({}, { __mode = "k" }),
     fontListeners = setmetatable({}, { __mode = "k" }),
     borderListeners = setmetatable({}, { __mode = "k" }),
@@ -178,6 +179,7 @@ function M:AttachLibrary()
         self.library.UnregisterCallback(self, "LibSharedMedia_SetGlobal")
     end
     self.library = library
+    self:RegisterBundledMedia()
     if library.RegisterCallback then
         library.RegisterCallback(self, "LibSharedMedia_Registered", "OnMediaRegistered")
         library.RegisterCallback(self, "LibSharedMedia_SetGlobal", "OnMediaRegistered")
@@ -186,8 +188,8 @@ function M:AttachLibrary()
 end
 
 function M:GetFont(name)
-    if name=="builtin:game" then return GameFontHighlight:GetFont() end
-    if name=="builtin:chat" then return ChatFontNormal:GetFont() end
+    if name=="builtin:game" then return self.gameFont end
+    if name=="builtin:chat" then return self.chatFont end
     if type(name) ~= "string" or name == "" or not self.library then return end
     -- Fetch may honor an LSM global override; prefer the exact registered entry.
     local media = self.library:HashTable("font")
@@ -198,8 +200,8 @@ end
 
 function M:GetFonts()
     local choices = {
-        { key = "game", label = "Game font", path = GameFontHighlight:GetFont() },
-        { key = "chat", label = "Chat font", path = ChatFontNormal:GetFont() },
+        { key = "game", label = "Game font", path = self.gameFont },
+        { key = "chat", label = "Chat font", path = self.chatFont },
     }
     local seen = {}
     if self.library then
@@ -224,7 +226,7 @@ function M:GetDisplayFont(appearance, respectGlobal, scope)
         if inherited then return inherited end
     end
     return (respectGlobal and self:GetGlobalFont()) or self:GetFont(appearance.fontMedia or "")
-        or (appearance.font == "chat" and ChatFontNormal:GetFont() or GameFontHighlight:GetFont())
+        or (appearance.font == "chat" and self.chatFont or self.gameFont)
 end
 
 function M:ApplyInterfaceFont(region, spec)
@@ -275,6 +277,7 @@ function M:RefreshFonts()
     self:AttachLibrary()
     if InCombat() then self.pending = true; return end
     self.pending = false
+    self:ApplyGameFonts()
     for region, spec in pairs(self.regions) do self:ApplyInterfaceFont(region, spec) end
     for owner, callback in pairs(self.fontListeners) do callback(owner) end
     if self.statusbarPending then self:RefreshStatusBars() end
@@ -327,7 +330,7 @@ function M:RefreshSounds()
 end
 
 
--- Addon-local defaults. Never use LSM:SetGlobal or mutate Blizzard FontObjects.
+-- Addon-local defaults. Never use LSM:SetGlobal to change other addons' media.
 -- Local custom media wins; old game/flat defaults inherit without rewriting them.
 function M:FrameScope(frame)
     while frame do
@@ -335,32 +338,14 @@ function M:FrameScope(frame)
         frame=frame.GetParent and frame:GetParent()
     end
 end
-function M:ModuleScope(settings)
-    if type(settings)=="string" then return settings end
-    if type(settings)~="table" or not addon.db then return end
-    self.scopeCache=self.scopeCache or setmetatable({}, {__mode="k"})
-    if self.scopeCache[settings]~=nil then return self.scopeCache[settings] or nil end
-    local function Contains(t, depth)
-        if t==settings then return true end
-        if depth==0 then return false end
-        for _,v in pairs(t) do if type(v)=="table" and Contains(v,depth-1) then return true end end
-    end
-    for id,db in pairs(addon.db.modules) do
-        if Contains(db,4) then self.scopeCache[settings]=id;return id end
-    end
-    self.scopeCache[settings]=false
-end
-function M:GlobalStyle(kind, settings)
+function M:GlobalStyle(kind)
     local db=addon.db and addon.db.globalMedia
-    if not db then return end
-    local scope=self:ModuleScope(settings)
-    local override=scope and db.overrides[scope]
-    local value=override and override[kind]
-    return value and value~="inherit" and value or db[kind]
+    return db and db[kind]
 end
+
 function M:ResolveFont(key)
-    if key=="game" then return GameFontHighlight:GetFont() end
-    if key=="chat" then return ChatFontNormal:GetFont() end
+    if key=="game" then return self.gameFont end
+    if key=="chat" then return self.chatFont end
     if type(key)=="string" and key:sub(1,6)=="media:" then return self:GetFont(key:sub(7)) end
 end
 function M:GetSurfaceTexture(scope, key)
@@ -409,16 +394,62 @@ end
 function M:SetGlobalStyle(kind,value,scope)
     if InCombatLockdown() or UnitAffectingCombat("player") then return false end
     if kind~="font" and kind~="texture" and kind~="border" then return false end
-    if scope and not addon.modules[scope] then return false end
+    if scope then return false end
     local choices=kind=="font" and self:GetFonts() or kind=="border" and self:GetBorders() or self:GetTextures()
-    local valid=scope and value=="inherit"
+    local valid=false
     for _,choice in ipairs(choices) do if choice.key==value then valid=true end end
     if not valid then return false end
     local db=addon.db.globalMedia
-    if scope then
-        db.overrides[scope]=db.overrides[scope] or {}
-        db.overrides[scope][kind]=value
-    else db[kind]=value end
+    db[kind]=value
     addon.ReloadManager:Request("globalMedia","Apply Global Settings media changes.")
     return true
+end
+
+function M:RegisterBundledMedia()
+    local library=self.library
+    if not library or type(library.Register)~="function" then return end
+    local fontPath="Interface\\AddOns\\PlayTheGameTools\\Media\\Fonts\\JetBrainsMono-Regular.ttf"
+    local ok,known=pcall(C_UIFileAsset.IsKnownFile,fontPath)
+    if ok and not (issecretvalue and issecretvalue(known)) and known==true then
+        library:Register("font","PTG JetBrains Mono",fontPath)
+    end
+    local base="Interface\\AddOns\\PlayTheGameTools\\Media\\SharedMedia\\"
+    library:Register("border","PTG Clean",base.."PTG_Clean.tga")
+    library:Register("statusbar","PTG Satin",base.."PTG_Satin.tga")
+    library:Register("background","PTG Matte",base.."PTG_Matte.tga")
+    for name,key in pairs({["PTG Graphite"]="Window",["PTG Raised"]="RaisedPanel",["PTG Inset"]="InsetPanel"}) do
+        local path=self:GetTexture(key)
+        library:Register("background",name,path)
+        library:Register("statusbar",name,path)
+    end
+end
+
+-- User-requested game-wide font choice. Preserve each standard object's size,
+-- flags and original face; addon-local explicit choices resolve immutable paths.
+-- No SetFont hooks or third-party addon FontObjects are installed/rewritten.
+function M:ApplyGameFonts()
+    if not (addon.db and addon.db.globalMedia) then return end
+    if InCombat() then self.pending=true;return end
+    local selected=self:ResolveFont(addon.db.globalMedia.font) or self.gameFont
+    self.nativeFonts=self.nativeFonts or setmetatable({}, {__mode="k"})
+    for name,font in pairs(_G) do
+        if type(name)=="string" and (name:match("^GameFont") or name:match("^SystemFont") or name:match("^NumberFont")
+            or name:match("^ChatFont") or name:match("^QuestFont") or name:match("^GameTooltipText")
+            or name:match("^Tooltip") or name:match("^Invoice") or name:match("^MailFont") or name:match("^FriendsFont")
+            or name:match("^ErrorFont") or name:match("^SpellFont") or name:match("^AchievementFont")
+            or name:match("^ZoneTextFont") or name:match("^SubZoneTextFont") or name:match("^CombatTextFont"))
+            and not (issecretvalue and issecretvalue(font)) and (type(font)=="table" or type(font)=="userdata") then
+            pcall(function()
+                if font.GetObjectType and font:GetObjectType()=="Font" and font.GetFont and font.SetFont then
+                    local path,size,flags=font:GetFont()
+                    if type(path)=="string" and type(size)=="number" and size>0 then
+                        self.nativeFonts[font]=self.nativeFonts[font] or {path,size,flags}
+                        if path~=selected and font:SetFont(selected,size,flags or "")==false then
+                            local original=self.nativeFonts[font];font:SetFont(original[1],original[2],original[3] or "")
+                        end
+                    end
+                end
+            end)
+        end
+    end
 end

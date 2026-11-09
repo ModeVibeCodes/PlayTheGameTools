@@ -1,6 +1,6 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
-Global Settings native checks: see [Global Settings](docs/GLOBAL_SETTINGS.md). Run tests/global_settings.py for inheritance, real dropdown clicks, profile persistence, absent media and combat guards.
+Global Settings: use the exact [four-tab native checklist](docs/GLOBAL_SETTINGS.md). Run tests/global_settings.py for bundled LSM/media, standard game font inheritance and local overrides, account-wide profile selection/import/export/positions, class picker, native loot-session cancellation, camera/scale readback and combat guards.
 
 Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)
 on its local feature branch. Enable under Questing & Leveling; native acceptance
@@ -109,12 +109,12 @@ Review each switch before enabling the Automation header switch. Test on ordinar
 interactions you intend to perform: quest actions, sales and repair spend/change
 game state. Leave a feature off if you are not ready to exercise it.
 
-1. **Navigation:** Play The Game Tools → Quality of Life → Automation → Convenience → Auto Loot.
-   **Action:** Enable Automation and Auto Loot OOC, inspect Availability and the
-   native loot setting. Disable the option afterward if desired.
+1. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Auto Loot.
+   **Action:** Enable Auto Loot OOC, inspect Applied Settings and the native loot
+   setting. Disable it afterward if desired; Automation may remain disabled.
    **Required state:** OOC, native setting available.
-   **Confirmation:** Native Auto Loot becomes enabled; disabling this option does
-   not claim to restore the previous Blizzard setting. Unavailability is explicit.
+   **Confirmation:** Native Auto Loot follows the selected on/off value after its
+   initial preference adoption; profile changes restore that choice. Unavailability is explicit.
 2. **Navigation:** Play The Game Tools → Quality of Life → Automation → Quests → Auto Accept
    Quests / Auto Turn-In Quests / Modifier Bypass.
    **Action:** Select Shift; test an ordinary eligible offer/turn-in, then hold

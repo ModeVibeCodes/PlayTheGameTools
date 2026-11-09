@@ -1,6 +1,6 @@
 # Standalone Forever development
 
-Global Settings uses existing runtime files for /reload. Run tests/global_settings.py with the regressions and release builder. See [contract and exact native checks](GLOBAL_SETTINGS.md). Native validation pending.
+Global Settings expands to four tabs and reuses the existing profile engine with an account-wide selection. Bundled LSM/dependencies and two new runtime files bring the addon to 114 Lua chunks. Run tests/global_settings.py and all standalone regressions, then the release builder. New source/media may require one full client restart for discovery; subsequent edits use /reload. See [contract and native checks](GLOBAL_SETTINGS.md).
 
 Guild Roster adds Guild Tools -> Roster (twelfth module, two Lua files, 109 chunks).
 Members come from `C_Club`, the documented path Blizzard's Forever member list uses;
