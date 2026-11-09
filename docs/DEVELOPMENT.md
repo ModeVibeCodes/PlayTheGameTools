@@ -21,6 +21,11 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Rogue navigation correction: class icons belong beside the left sidebar Rogue
+subcategory and in its compact top tab. Removed the duplicate below the tab and
+anchored On/Off 8 UI units after its label. Description/header module switch remain.
+The exact screenshot correction awaits native visual confirmation after /reload.
+
 Rogue icon follow-up: primary controls are now directly visible in Display,
 with reminder spacing/image padding and independent per-icon borders, color,
 opacity and background. The owner reports the prior layout looks good so far;

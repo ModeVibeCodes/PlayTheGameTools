@@ -40,8 +40,12 @@ testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED');M:SetOptio
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue');local p=M.page
 assert(#p.sections==3 and p.sections[1].title=='Display' and p.sections[2].title=='Settings' and p.sections[3].title=='Position')
 local h=addon.configWindow.moduleHeader
-assert(h.classIcon:IsShown() and not h.title:IsShown() and h.classIcon.texture==M.classIcon)
-assert(addon.configWindow.navigationButtons.foreverRogue.classIcon.texture==M.classIcon)
+assert(h.classIcon==nil and not h.title:IsShown(),'No duplicate class icon below the tab')
+local classTab=addon.configWindow.navigationButtons.foreverRogue
+assert(classTab.classIcon.texture==M.classIcon and classTab:GetWidth()<120)
+local point,relative,relativePoint,gap=classTab.status:GetPoint(1)
+assert(point=='LEFT' and relative==classTab.label and relativePoint=='RIGHT' and gap==8,'On status follows the Rogue label closely')
+assert(addon.configWindow.sidebarModuleButtons.foreverRogue.classIcon.texture==M.classIcon,'Class icon appears in the left subcategory')
 assert(p.poisonGrid[1].label:GetText()=='Recent' and p.poisonGrid[4].label:GetText()=='Crippling')
 assert(p.poisonGrid[2].available and p.poisonGrid[4].icon.desaturated and not p.poisonGrid[4]:IsEnabled())
 assert(not p.customize)
@@ -81,7 +85,7 @@ M:SetOption('flyoutLocked',false);M.launcher.centerX=580;M.launcher.centerY=430
 M.openButton.scripts.OnDragStart();assert(M.launcher.moving)
 M.openButton.scripts.OnDragStop();assert(M.db.menuX==80 and M.db.menuY==30)
 M:SetOption('flyoutLocked',true)
-addon:SelectConfigPage('combatTimer');assert(h.title:IsShown() and not h.classIcon:IsShown(),'Non-class header restored')
+addon:SelectConfigPage('combatTimer');assert(h.title:IsShown() and h.classIcon==nil,'Non-class header restored')
 M:SetStyle('watchStyle','backgroundOpacity',50);M:SetStyle('watchStyle','borderSize',3);M:MinimalReminder()
 assert(M.db.watchStyle.backgroundOpacity==0 and M.db.watchStyle.borderSize==0 and not M.db.watchStyle.showTimers)
 ''')

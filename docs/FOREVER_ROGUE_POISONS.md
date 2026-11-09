@@ -9,9 +9,11 @@ or release publication is authorized by this task.
 ## Current configuration
 
 `/ptg` -> **Class Tools** -> **Rogue**. The category tab includes the native Rogue
-class icon. The page header uses the icon in place of the Rogue title and keeps
-the standard Enabled/Disabled module switch. Its two-sentence description explains
-Poison Reminder and Quick Access Poisons. Other module headers retain their titles.
+class icon, and the left sidebar Rogue subcategory has the same class icon. The
+top tab sizes to its icon, Rogue label and On/Off text, with an 8-unit label/status
+gap. Below the tab the header shows the two-sentence module description and
+standard Enabled/Disabled switch; there is no repeated class icon/title. Other
+module headers retain their titles.
 
 The page has exactly three sections in this order:
 
@@ -138,7 +140,7 @@ establish native rendering, target acceptance, input routing or event-order safe
 ## Exact native test packet
 
 1. **Navigation:** `/reload` -> `/ptg` -> **Class Tools** -> **Rogue**.
-   **Action:** inspect the tab icon, icon-only header and description, then Display,
+   **Action:** inspect the left sidebar/tab class icons, compact On/Off text and description-only header, then Display,
    Settings and Position. **Required state:** Rogue, OOC, module enabled.
    **Confirmation:** three sections in order; default reminder has icons and hand
    text without background/border/countdown/counts; customized old styles persist.

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Removed the duplicate Rogue header icon. The left sidebar subcategory and
+  compact top tab carry the class icon; tab On/Off sits close to the Rogue label.
+
 - Rogue Display now exposes icon size, padding, reminder spacing and per-icon
   borders directly. Both elements have independent icon border colors/opacity,
   image opacity and optional icon backgrounds; window styling remains separate.

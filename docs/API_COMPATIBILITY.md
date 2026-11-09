@@ -63,3 +63,12 @@ No native action template, spell/item bindings, combat dispatch or data reader
 changes. Defaults add missing preferences and retain bare reminders/current window
 styles. Numeric-control, geometry, independence, Edit Mode and persistence mocks
 pass; native visual fit/input acceptance remains for the owner to confirm.
+
+## Rogue navigation spacing — November 8, 2026
+
+The class icon appears only in the left subcategory and top module tab, with no
+second header icon. Class-tab width uses measured local label/status text and
+anchors status 8 UI units after the label; description-only class headers retain
+the ordinary module switch. Other module tab/header layouts keep their existing
+behavior. Owned UI texture/anchor changes only; no gameplay, protected actions or
+SavedVariables changes. Smoke/layout checks pass; native screenshot fit is pending.
