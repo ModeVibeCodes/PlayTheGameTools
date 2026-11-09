@@ -67,18 +67,19 @@ function M:CreateConfigPage(parent)
     local function IconControls(group,reminder)
         page:Group(reminder and "Poison Reminder Icons" or "Quick Access Poisons Icon")
         page.iconGroups[group]=page.rows[#page.rows]
-        Sliders({{"Icon Size","iconSize"},{"Icon Padding","iconPadding"},
-            {reminder and "Icon Spacing" or "Icon Opacity",reminder and "spacing" or "iconOpacity",not reminder and "%" or nil},
-            {"Icon Border Size","iconBorderSize"}},group)
+        Sliders({{"Icon Size","iconSize"},
+            {reminder and "Icon Gap" or "Icon Opacity",reminder and "iconGap" or "iconOpacity",not reminder and "%" or nil},
+            {"Icon Border Size","iconBorderSize"},{"Icon Border Opacity","iconBorderOpacity","%"}},group)
         W.ColorRow(page,AppearanceOwner(group),"Icon Border Color","iconBorderColor")
     end
     local function Style(group,launcher,reminder)
         local owner=AppearanceOwner(group)
         if not launcher and not reminder then
-            Sliders({{"Icon Size","iconSize"},{"Icon Padding","iconPadding"},{"Icon Border Size","iconBorderSize"}},group)
+            Sliders({{"Icon Size","iconSize"},{"Icon Border Size","iconBorderSize"}},group)
         end
         Sliders({{"Scale","scale","%"},{"Window Opacity","opacity","%"},{"Window Padding","padding"},
-            {"Icon Border Opacity","iconBorderOpacity","%"},{"Icon Background Opacity","iconBackgroundOpacity","%"}},group)
+            {"Icon Background Opacity","iconBackgroundOpacity","%"}},group)
+        if not launcher and not reminder then Sliders({{"Icon Border Opacity","iconBorderOpacity","%"}},group) end
         if not launcher then Sliders({{"Icon Opacity","iconOpacity","%"}},group) end
         W.ColorRow(page,owner,"Icon Background Color","iconBackgroundColor")
         if not launcher and not reminder then W.ColorRow(page,owner,"Icon Border Color","iconBorderColor") end
@@ -97,8 +98,8 @@ function M:CreateConfigPage(parent)
             end,function(v) self:SetStyle(group,"labelPosition",v) end)
         else
             Toggles({{"Show Icons","showIcons"},{"Show Hand Labels","showHands"},{"Show Poison Names","showNames"},{"Show Inventory Counts","showCounts"}},group)
-            Sliders({{"Cell Width","cellWidth"},{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
-            if not reminder then Sliders({{"Icon Spacing","spacing"}},group) end
+            Sliders({{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
+            if not reminder then Sliders({{"Cell Width","cellWidth"},{"Icon Spacing","spacing"}},group) end
             if reminder then
                 Toggles({{"Show Remaining Time","showTimers"},{"Vertical Layout","vertical"}},group);Sliders({{"Timer Text Size","timerSize"}},group)
                 Select("Timer Position",{{id="CENTER",label="On Icon"},{id="TOP",label="Above Icon"},{id="BOTTOM",label="Below Labels"}},function()

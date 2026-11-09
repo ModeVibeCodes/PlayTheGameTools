@@ -31,9 +31,9 @@ its Position group and removes its shared Edit Mode highlight/selection eligibil
 
 Primary icon controls are directly visible in Display under **Poison Reminder
 Icons** and **Quick Access Poisons Icon** whenever that element is enabled. Both
-provide **Icon Size**, **Icon Padding**, **Icon Border Size**, and **Icon Border
-Color**. Reminder icons also expose **Icon Spacing**; Quick Access exposes **Icon
-Opacity**. Text and window editors stay behind the Customize buttons. Quick Access's **Customize** selector offers **Icon and
+provide **Icon Size**, **Icon Border Size**, **Icon Border Opacity**, and **Icon
+Border Color**. Reminder icons expose **Icon Gap** (0–120), the real separation
+between Main Hand and Off Hand; Quick Access exposes **Icon Opacity**. Text and window editors stay behind the Customize buttons. Quick Access's **Customize** selector offers **Icon and
 Label** or **Expanded Menu**. Numeric sliders pair where width permits, cap at
 260 UI units per cell, and wrap on smaller canvases. Control values remain precise
 through the standard numeric fields. There are no extra top-level appearance tabs.
@@ -46,18 +46,27 @@ migrates to that minimal presentation; customized styles and unknown keys remain
 The **Minimal** button inside Customize Reminder explicitly restores only that
 presentation without resetting size, font, color, positioning or poison history.
 
-Each icon now has its own image padding, border size/color/opacity, image opacity
-and optional background color/opacity. Image padding is inset inside its button
-and clamps before the texture can collapse. Reminder Icon Spacing adjusts the
-separation of its hand columns; each column also reserves Cell Width for labels.
+**Icon Gap** replaces the previous Reminder spacing/inset controls. In horizontal
+layout, button centers are exactly Icon Size + Icon Gap apart: gap 0 touches the
+icon buttons, and gap 12 leaves 12 UI units between them. Hand labels wrap within
+their assigned span and measured heights keep labels/timers from overlapping.
+Vertical layout applies the gap between complete icon/label rows. Existing spacing
+values seed the gap; the default is 12. Individual Icon Padding controls are removed
+from all three appearance groups and legacy saved inset values are retained but
+not rendered. Reminder Cell Width is also removed so it cannot add hidden spacing.
+Each icon keeps configurable border size/color/opacity, image opacity and optional
+background color/opacity.
 Window background/border controls are explicitly named **Window** in Customize;
 individual icon borders work while the reminder window remains transparent.
-The reminder retains icon size/tint/crop/visibility, scale, opacity, padding,
-spacing/cell width, vertical layout, font/size/outline/color, optional hand labels,
+The reminder retains icon size/tint/crop/visibility, scale, opacity, window padding,
+icon gap, vertical layout, font/size/outline/color, optional hand labels,
 names, inventory counts, countdown size/color/placement, background and border
 color/opacity/size. Quick Access has independent icon/scale/opacity/padding, tint,
 border/background, optional editable label text/font/size/color/outline/placement
-and inventory total. Its expanded menu retains independent appearance, columns,
+and inventory total. Quick Access and its expanded menu are borderless by default.
+A one-time migration removes only the stock purple launcher border and stock menu
+border, retaining custom sizes/colors. Border controls remain usable after migration;
+new optional border colors default to neutral blue-gray. Its expanded menu retains independent appearance, columns,
 direction and scrollable visible rows. Color rows use **Pick** or hex/**Apply**.
 
 ### Time and charge thresholds
@@ -155,8 +164,9 @@ modeled poison families, independent time/charge toggles, same-condition launche
 visibility, optional counters, charge absence/restriction/zero semantics, dismissal/
 replenishment, combat crossing, real numeric fields and settings persistence.
 `tests/rogue_icons.py` checks directly visible controls, actual numeric inputs,
-spacing changes, per-icon padding/border/color/opacity/background, extreme padding
-bounds, independent styles, the Minimal preset, Edit Mode and persistence.
+true edge gaps, removed inset controls, borderless stock migration/custom retention,
+icon border/color/opacity/background, gap bounds, independent styles, the Minimal
+preset, Edit Mode and persistence.
 `tests/rogue_layout.py` adds dismissal/rearm/expiration/combat cases, minimal/default
 migration and custom retention, class-header restoration, six-tile availability/
 selection, independent labels, responsive widths and real Position Manager
@@ -202,17 +212,17 @@ establish native rendering, target acceptance, input routing or event-order safe
    and Edit Mode eligibility. Reload retains positions; combat ends editing.
 
 6. **Navigation:** Rogue -> **Display** -> **Poison Reminder Icons** -> **Icon
-   Spacing**, **Icon Padding**, **Icon Size**, **Icon Border Size** / **Icon Border
+   Gap**, **Icon Size**, **Icon Border Size** / **Icon Border
    Color**. **Action:** change each numeric field; choose a border color using
    **Pick**. **Required state:** OOC, Poison Reminder enabled; use Enter Edit Mode
    from Position if reminders are currently healthy/hidden. **Confirmation:** hand
-   columns separate, images inset inside their buttons, both reminder icons resize
+   the real space between icon buttons changes (0 touches, larger values separate); both reminder icons resize
    and gain individually colored borders; the outer window stays at its saved style.
 7. **Navigation:** Rogue -> **Display** -> **Quick Access Poisons Icon** -> **Icon
-   Size**, **Icon Padding**, **Icon Border Size**, **Icon Opacity**. **Action:** change
+   Size**, **Icon Border Size**, **Icon Opacity**. **Action:** change
    values and border color, then /reload. **Required state:** OOC, Quick Access
    enabled; choose Quick Access Visibility -> Always Outside Combat to view it.
-   **Confirmation:** only that icon changes, its size/padding/border/opacity persist,
+   **Confirmation:** stock Quick Access/menu borders are absent, custom borders can be enabled, and size/border/opacity persist,
    and its saved Edit Mode position and poison applications still work.
 
 8. **Navigation:** Rogue -> **Display** -> **Use Charge Threshold**, **Charge

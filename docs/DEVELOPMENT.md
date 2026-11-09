@@ -21,6 +21,12 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Rogue gap correction: Icon Gap (0–120, seeded from old spacing) is the real
+horizontal button-edge gap. Individual image inset controls/rendering and Reminder
+Cell Width are removed; wrapped hand text uses measured height. Stock Quick Access
+launcher/menu borders migrate to none with custom settings/controls retained.
+Run `tests/rogue_icons.py`, layout/charge suites and build; native fit is pending.
+
 Rogue charge follow-up adds Use Time Threshold / Use Charge Threshold,
 inclusive 5–25 charge setting (default 10), same-condition Quick Access visibility,
 and optional charge text without changing bare defaults. Only public native charge

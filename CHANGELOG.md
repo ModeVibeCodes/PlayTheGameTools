@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Rogue Icon Gap now sets actual Main Hand/Off Hand separation. Removed individual
+  image-padding controls and the Reminder's hidden cell-width spacing. Hand labels
+  wrap with measured heights. Quick Access and its expanded menu start borderless;
+  stock borders migrate once while custom border controls/settings remain.
+
 - Rogue reminders support independent time and charge triggers. Charge Threshold
   ranges from 5 to 25 (default 10); either enabled threshold reveals the hand icon
   and Quick Access. Optional poison-charge text is distinct from bag counts.

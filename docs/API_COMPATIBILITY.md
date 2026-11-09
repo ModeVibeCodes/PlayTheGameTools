@@ -88,3 +88,14 @@ the same field; actual charged families, zero semantics and combat readability
 remain native validation items. Inclusive 5–25 threshold, toggle independence,
 counter/tooltip, zero/restricted cases, charge-only rearm and combat mocks pass.
 Application templates/guards are unchanged. [Exact controls and native packet](FOREVER_ROGUE_POISONS.md).
+
+## Rogue gap/default-border correction — November 8, 2026
+
+Horizontal Reminder button-center spacing is iconSize + iconGap, independent of
+legacy cell width/image inset. Owned hand-label GetStringHeight measurements OOC
+reserve wrapping space; vertical rows include their labels before the gap. No
+new runtime API, combat layout or action dispatch path is added. Default Quick
+Access/menu borders are removed; one-time stock-only migration retains custom
+sizes/colors and all border controls. Legacy inset keys remain stored but unused.
+True-gap numeric fields, bounds, migration/custom retention, Edit Mode, poison
+actions and charge tests pass; native visual layout still needs owner review.

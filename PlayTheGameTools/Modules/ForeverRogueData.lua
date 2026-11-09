@@ -30,7 +30,7 @@ function D.ItemInfo(id)
 end
 D.ranges={threshold={5,20,1},chargeThreshold={5,25,1},visibleRows={1,10,1},x={-10000,10000,1},y={-10000,10000,1},menuX={-10000,10000,1},menuY={-10000,10000,1}}
 D.styleRanges={iconSize={20,80,1},fontSize={8,24,1},timerSize={8,28,1},scale={50,200,5},opacity={10,100,5},
-    padding={0,32,1},spacing={0,40,1},cellWidth={80,320,5},labelGap={0,16,1},columns={1,3,1},
+    padding={0,32,1},spacing={0,40,1},iconGap={0,120,1},cellWidth={80,320,5},labelGap={0,16,1},columns={1,3,1},
     backgroundOpacity={0,100,5},borderOpacity={0,100,5},borderSize={0,6,1},iconPadding={0,16,1},
     iconBorderSize={0,6,1},iconBorderOpacity={0,100,5},iconOpacity={0,100,5},iconBackgroundOpacity={0,100,5}}
 local styleDefaults={iconSize=40,fontSize=12,timerSize=14,scale=100,opacity=100,padding=10,spacing=12,cellWidth=110,
@@ -38,7 +38,7 @@ local styleDefaults={iconSize=40,fontSize=12,timerSize=14,scale=100,opacity=100,
     outline=true,cropIcons=true,showIcons=true,showHands=true,showTimers=true,showNames=false,showCounts=true,tooltips=true,
     vertical=false,timerPosition="CENTER",backgroundColor={0.035,0.045,0.06},borderColor={0.32,0.4,0.48},
     textColor={0.9,0.93,0.97},timerColor={1,0.85,0.4},iconColor={1,1,1},labelText="Poisons",labelPosition="BOTTOM",
-    iconPadding=0,iconBorderSize=0,iconBorderOpacity=100,iconOpacity=100,iconBackgroundOpacity=0,
+    iconPadding=0,iconGap=12,iconBorderSize=0,iconBorderOpacity=100,iconOpacity=100,iconBackgroundOpacity=0,
     iconBorderColor={0.32,0.4,0.48},iconBackgroundColor={0.035,0.045,0.06}}
 local function Style(db,kind,legacy)
     for k,v in pairs(styleDefaults) do
@@ -46,12 +46,11 @@ local function Style(db,kind,legacy)
             if legacy and (k=="iconSize" or k=="fontSize" or k=="scale" or k=="opacity") then db[k]=legacy[k] end
             if db[k]==nil then
                 if type(v)=="table" then db[k]={unpack(v)} else db[k]=v end
+                if k=="iconGap" and db.spacing~=nil then db[k]=db.spacing end
                 if kind=="flyoutStyle" then
-                    if k=="iconSize" then db[k]=32 elseif k=="cellWidth" then db[k]=210 elseif k=="showNames" then db[k]=true end
-                elseif kind=="launcherStyle" and k=="borderColor" then db[k]={0.72,0.3,1}
-                elseif kind=="launcherStyle" and k=="iconBorderColor" then db[k]={0.72,0.3,1}
+                    if k=="iconSize" then db[k]=32 elseif k=="cellWidth" then db[k]=210 elseif k=="showNames" then db[k]=true elseif k=="borderSize" then db[k]=0 end
                 elseif kind=="launcherStyle" and k=="padding" then db[k]=3
-                elseif kind=="launcherStyle" and k=="borderSize" then db[k]=2 end
+                elseif kind=="launcherStyle" and k=="borderSize" then db[k]=0 end
                 if kind=="watchStyle" and (k=="backgroundOpacity" or k=="borderSize") then db[k]=0 end
                 if kind=="watchStyle" and (k=="showTimers" or k=="showCounts") then db[k]=false end
                 if kind=="launcherStyle" and k=="showCounts" then db[k]=false end
@@ -101,6 +100,16 @@ function D.Initialize(db)
         Style(db[k],k,k=="watchStyle" and db or nil)
     end
     db.reminderDefaultsVersion=1
+    if db.quickBorderDefaultsVersion==nil then
+        local launch,menu=db.launcherStyle,db.flyoutStyle
+        local function Same(a,r,g,b) return a[1]==r and a[2]==g and a[3]==b end
+        -- Retire the stock border once; retain deliberate custom sizes/colors
+        -- and allow the existing border controls to enable any style later.
+        if launch.borderSize==2 and Same(launch.borderColor,0.72,0.3,1) then launch.borderSize=0;launch.borderColor={0.32,0.4,0.48} end
+        if launch.iconBorderSize==0 and Same(launch.iconBorderColor,0.72,0.3,1) then launch.iconBorderColor={0.32,0.4,0.48} end
+        if menu.borderSize==1 and Same(menu.borderColor,0.32,0.4,0.48) then menu.borderSize=0 end
+        db.quickBorderDefaultsVersion=1
+    end
     if db.history==nil then db.history={} end
     assert(type(db.history)=="table","Invalid poison history")
     local count=0
