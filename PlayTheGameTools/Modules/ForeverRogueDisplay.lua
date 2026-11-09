@@ -69,6 +69,7 @@ function M:Action(parent,hand,styleKey,dragOwner)
     CreateIcon(b)
     b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
     b.caption=Label(b);b.timer=Label(b);b.name=Label(b);b.count=Label(b)
+    if styleKey=="watchStyle" then b.poisonCharges=Label(b) end
     b:SetScript("OnEnter",function()
         if GameTooltip and self.db[styleKey].tooltips and b.description then GameTooltip:SetOwner(b,"ANCHOR_TOP");GameTooltip:SetText(b.description);GameTooltip:Show() end
     end)
@@ -110,6 +111,7 @@ function M:Bind(b,p,allow,reason,locked)
         (not locked or self.previewing or self.editing) and "Positioning / preview: application is disabled. Relock and finish preview to apply." or
         (p and not self:Available(p)) and "This poison is out of stock or its carried stacks are locked." or reason or "No poison available. Choose a poison in Settings or use Quick Access Poisons.")
     if b.styleKey=="watchStyle" and self.db.dismissOnRightClick then b.description=b.description.." Right-click to dismiss this reminder." end
+    b.baseDescription=b.description
 end
 function M:CreateDisplay()
     if self.watcher or not D.OutsideCombat() then return end
@@ -153,6 +155,7 @@ local function Cell(b,s,showName)
     b.name:ClearAllPoints();b.name:SetPoint("TOP",b,"BOTTOM",0,-s.labelGap-(s.showHands and (s.fontSize+s.labelGap) or 0));b.name:SetWidth(s.cellWidth);b.name:SetWordWrap(false);b.name:SetShown(showName and s.showNames)
     local countInset=math.max(2,s.iconBorderSize+1)
     b.count:ClearAllPoints();b.count:SetPoint("BOTTOMRIGHT",-countInset,countInset)
+    if b.poisonCharges then D.Font(b.poisonCharges,s,false);b.poisonCharges:ClearAllPoints();b.poisonCharges:SetPoint("BOTTOMLEFT",countInset,countInset) end
     b.timer:ClearAllPoints()
     if s.timerPosition=="TOP" then b.timer:SetPoint("BOTTOM",b,"TOP",0,s.labelGap)
     elseif s.timerPosition=="BOTTOM" then
@@ -218,7 +221,7 @@ function M:Render()
     local preview=ooc and (self.previewing or self.editing);local any,due=false,false
     for hand,b in ipairs(self.watchButtons) do
         local state=states[hand];local p,reason=self:QuickPoison(hand,state);local s=db.watchStyle
-        local needs=not state.empty and (state.unknown or state.seconds<=db.threshold*60);due=due or needs
+        local needs,chargeDue=self:ReminderNeeds(state);due=due or needs
         local placement=ooc and (preview or not db.locked)
         local dismissed=self:IsDismissed(hand,state)
         local visibility=db.reminderVisibility
@@ -231,9 +234,13 @@ function M:Render()
             b.timer:SetText(placement and "Preview" or text);b.timer:SetShown(s.showTimers)
             b.name:SetText(p and p.name or "Select Poison");b.name:SetShown(s.showNames)
             b.count:SetText(p and p.count and tostring(p.count) or "");b.count:SetShown(s.showCounts and p~=nil and p.count~=nil)
+            b.poisonCharges:SetText(state.hasCharges and (tostring(state.charges).."c") or "")
         end
+        b.poisonCharges:SetShown(show and db.showPoisonCharges and state.hasCharges or false)
         self:Bind(b,p,show and not state.empty and not state.unknown,
             state.unknown and "Weapon poison information is unavailable or restricted." or reason,db.locked)
+        b.description=b.baseDescription or b.description
+        if state.hasCharges then b.description=(b.description or "Poison Reminder").."\nPoison charges: "..state.charges..(chargeDue and (" (at/below "..db.chargeThreshold.." reminder threshold).") or ".") end
         b:SetShown(show and true or false)
     end
     self.watcher:SetShown(any)

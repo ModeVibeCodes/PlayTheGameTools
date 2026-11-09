@@ -21,6 +21,12 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Rogue charge follow-up adds Use Time Threshold / Use Charge Threshold,
+inclusive 5–25 charge setting (default 10), same-condition Quick Access visibility,
+and optional charge text without changing bare defaults. Only public native charge
+fields are used; zero semantics and combat behavior need owner validation. Run
+`tests/rogue_charges.py`, `tests/rogue_layout.py` and build/smoke.
+
 Rogue navigation correction: class icons belong beside the left sidebar Rogue
 subcategory and in its compact top tab. Removed the duplicate below the tab and
 anchored On/Off 8 UI units after its label. Description/header module switch remain.

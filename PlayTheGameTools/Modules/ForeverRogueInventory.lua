@@ -123,15 +123,29 @@ function M:MatchIcon(icon)
     end
     return first
 end
+function M:ReadCharges(hand,weapon,enchant,info)
+    local previous=self.chargeSources[hand]
+    if previous and (previous.weapon~=weapon or previous.enchant~=enchant) then self.chargeSources[hand]=nil;previous=nil end
+    local charges=D.Field(info,"charges")
+    if not D.Number(charges,0,2147483647) or charges%1~=0 then return nil,false end
+    if charges>0 then
+        self.chargeSources[hand]={weapon=weapon,enchant=enchant};return charges,true
+    end
+    -- The API supplies no hasCharges flag. A fresh zero can also mean no charge
+    -- mechanic. Only treat zero as exhaustion after observing positive charges
+    -- on this same weapon/enchant in this session. Never infer a secret count.
+    if previous then return 0,true end
+    return nil,false
+end
 function M:ReadHand(hand)
     local slot=hand==1 and 16 or 17
     local readable,item=D.Try(GetInventoryItemID,"player",slot)
     if not readable then return {unknown=true} end
-    if item==nil then return {empty=true} end
+    if item==nil then self.chargeSources[hand]=nil;return {empty=true} end
     if not D.Number(item,1,2147483647) then return {unknown=true} end
     local _,_,_,equip,_,class=D.ItemInfo(item)
     if not D.Number(class,0,30) or type(equip)~="string" then return {unknown=true} end
-    if class~=2 or equip=="INVTYPE_RANGED" or equip=="INVTYPE_RANGEDRIGHT" or equip=="INVTYPE_THROWN" then return {empty=true} end
+    if class~=2 or equip=="INVTYPE_RANGED" or equip=="INVTYPE_RANGEDRIGHT" or equip=="INVTYPE_THROWN" then self.chargeSources[hand]=nil;return {empty=true} end
     local enums=Enum and Enum.WeaponSlot
     local weapon=enums and (hand==1 and enums.MainHand or enums.OffHand)
     local imbue=Enum and Enum.ItemEnchantType and Enum.ItemEnchantType.Imbue
@@ -151,9 +165,11 @@ function M:ReadHand(hand)
             if active then
                 local left,icon,id=D.Field(e,"timeLeft"),D.Field(e,"enchantIconID"),D.Field(e,"enchantID")
                 if not D.Number(left,0,2147483647) or not D.Number(icon,1,2147483647) or not D.Number(id,1,2147483647) then return {unknown=true,weapon=item} end
-                return {seconds=left/1000,icon=icon,enchant=id,weapon=item,poison=self:MatchIcon(icon)}
+                local charges,hasCharges=self:ReadCharges(hand,item,id,e)
+                return {seconds=left/1000,icon=icon,enchant=id,weapon=item,poison=self:MatchIcon(icon),charges=charges,hasCharges=hasCharges}
             end
         end
     end
+    self.chargeSources[hand]=nil
     return {seconds=0,missing=true,weapon=item}
 end

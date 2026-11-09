@@ -72,3 +72,19 @@ anchors status 8 UI units after the label; description-only class headers retain
 the ordinary module switch. Other module tab/header layouts keep their existing
 behavior. Owned UI texture/anchor changes only; no gameplay, protected actions or
 SavedVariables changes. Smoke/layout checks pass; native screenshot fit is pending.
+
+## Rogue poison charges — November 8, 2026
+
+Blizzard's Forever [Item API](https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua)
+documents C_Item.GetWeaponEnchantInfo(weaponSlot) -> WeaponEnchantInfo[], including
+charges alongside timeLeft, hasEnchant, enchantType, enchantID and enchantIconID.
+Positive public integer counts establish charge capability for that weapon/enchant;
+a subsequent public zero on the same identity can represent exhaustion. No native
+hasCharges flag/zero sentinel is documented, so cold zero is not treated as low
+charges; missing/secret/malformed counts leave the public timer path intact. No
+secret count is inferred from history. Session-only capability records reset on
+reload and do not populate SavedVariables. Any recognized poison Imbue can use
+the same field; actual charged families, zero semantics and combat readability
+remain native validation items. Inclusive 5–25 threshold, toggle independence,
+counter/tooltip, zero/restricted cases, charge-only rearm and combat mocks pass.
+Application templates/guards are unchanged. [Exact controls and native packet](FOREVER_ROGUE_POISONS.md).

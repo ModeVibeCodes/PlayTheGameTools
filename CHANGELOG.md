@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Rogue reminders support independent time and charge triggers. Charge Threshold
+  ranges from 5 to 25 (default 10); either enabled threshold reveals the hand icon
+  and Quick Access. Optional poison-charge text is distinct from bag counts.
+  Unavailable charge data leaves timer reminders intact; native charge validation
+  is pending.
+
 - Removed the duplicate Rogue header icon. The left sidebar subcategory and
   compact top tab carry the class icon; tab On/Off sits close to the Rogue label.
 

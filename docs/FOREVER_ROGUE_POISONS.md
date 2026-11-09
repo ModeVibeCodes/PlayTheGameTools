@@ -19,7 +19,7 @@ The page has exactly three sections in this order:
 
 | Section | Controls |
 | --- | --- |
-| **Display** | **Poison Reminder**, **Quick Access Poisons**, **Reminder Visibility**, **Quick Access Visibility**, **Reminder Threshold (min)**, **Right-click to Dismiss**, **Customize Reminder**, **Customize Quick Access** |
+| **Display** | **Poison Reminder**, **Quick Access Poisons**, **Reminder Visibility**, **Quick Access Visibility**, **Use Time Threshold**, **Use Charge Threshold**, **Reminder Threshold (min)**, **Charge Threshold**, **Show Poison Charges**, **Right-click to Dismiss**, **Customize Reminder**, **Customize Quick Access** |
 | **Settings** | Six poison tiles: **Recent**, **Instant**, **Deadly**, **Crippling**, **Mind-numbing**, **Wound** (localized native first words); **Refresh Poisons**, **Restore Dismissed**; current status |
 | **Position** | Separate enabled-element groups for Poison Reminder and Quick Access Poisons, each with **Enter Edit Mode**, **Reset Position**, **Lock Position**, and paired **X** / **Y** sliders |
 
@@ -59,6 +59,31 @@ color/opacity/size. Quick Access has independent icon/scale/opacity/padding, tin
 border/background, optional editable label text/font/size/color/outline/placement
 and inventory total. Its expanded menu retains independent appearance, columns,
 direction and scrollable visible rows. Color rows use **Pick** or hex/**Apply**.
+
+### Time and charge thresholds
+
+Display -> **Use Time Threshold** and **Use Charge Threshold** are independent,
+both on when no prior value exists. **Reminder Threshold (min)** retains its saved
+5–20 minute setting. **Charge Threshold** is 5–25 in single-charge steps, default
+10. Reaching either enabled threshold (inclusive) can show that hand's reminder
+and the When Needed Quick Access icon. Missing poison always requires attention;
+the existing visibility, combat, preview and dismissal rules still apply.
+
+**Show Poison Charges** is off by default to preserve bare icons/hand text. It
+adds a bottom-left `10c`-style applied-poison counter, separate from the optional
+bottom-right carried-item count. The tooltip includes public current charges and
+whether the threshold is reached. Minimal turns the extra counter off. No
+Instant-only list is hardcoded: every recognized weapon Imbue uses the same native
+charge field, so another poison can qualify if the client actually reports charges.
+
+The native API documents a `charges` number but no hasCharges flag. Public positive
+integer counts establish charge support per weapon/enchant, in session memory.
+A later public zero on that same identity is treated as exhaustion. A cold zero,
+missing/secret/noninteger/negative value is not guessed to be exhausted and does
+not suppress a readable timer. Missing poison is already independently flagged.
+Restricted counts are never estimated from an earlier count. Actual zero/no-charge
+sentinels and combat readability still need native confirmation. Dismissed reminders
+stay dismissed as charges decline and rearm when public charges replenish.
 
 ### Poison selection and application
 
@@ -125,6 +150,10 @@ retain their existing native acceptance boundary. Initial active icons identify
 families, not guaranteed exact ranks; ambiguous manual events do not prove an exact
 last-used item/hand. No reference-addon source/assets or Retail files are changed.
 
+`tests/rogue_charges.py` checks all inclusive thresholds 5–25, both hands/five
+modeled poison families, independent time/charge toggles, same-condition launcher
+visibility, optional counters, charge absence/restriction/zero semantics, dismissal/
+replenishment, combat crossing, real numeric fields and settings persistence.
 `tests/rogue_icons.py` checks directly visible controls, actual numeric inputs,
 spacing changes, per-icon padding/border/color/opacity/background, extreme padding
 bounds, independent styles, the Minimal preset, Edit Mode and persistence.
@@ -185,3 +214,15 @@ establish native rendering, target acceptance, input routing or event-order safe
    enabled; choose Quick Access Visibility -> Always Outside Combat to view it.
    **Confirmation:** only that icon changes, its size/padding/border/opacity persist,
    and its saved Edit Mode position and poison applications still work.
+
+8. **Navigation:** Rogue -> **Display** -> **Use Charge Threshold**, **Charge
+   Threshold**, **Show Poison Charges**, **Use Time Threshold**. **Action:** enable
+   charge detection, set 5-25 around the native remaining charge count, optionally
+   show charges; observe a real poison cross the value with ample time remaining.
+   Toggle time/charge rules independently, then reapply OOC. **Required state:**
+   Rogue with a real charged poison, module/Poison Reminder on, no Preview/Edit
+   Mode; OOC for configuration/application. **Confirmation:** correct hand appears
+   at or below the charge threshold, native count agrees with the optional Nc
+   label/tooltip, refreshed charges rearm/hide appropriately; Quick Access follows
+   When Needed outside combat. Combat can display the reminder but cannot apply.
+   A poison that reports no charges continues to use its enabled timer rule.

@@ -28,7 +28,7 @@ function D.ItemInfo(id)
     local ok,a,b,c,d,e,f=pcall(C_Item.GetItemInfoInstant,id)
     if ok and D.Public(d) and D.Public(e) and D.Public(f) then return a,b,c,d,e,f end
 end
-D.ranges={threshold={5,20,1},visibleRows={1,10,1},x={-10000,10000,1},y={-10000,10000,1},menuX={-10000,10000,1},menuY={-10000,10000,1}}
+D.ranges={threshold={5,20,1},chargeThreshold={5,25,1},visibleRows={1,10,1},x={-10000,10000,1},y={-10000,10000,1},menuX={-10000,10000,1},menuY={-10000,10000,1}}
 D.styleRanges={iconSize={20,80,1},fontSize={8,24,1},timerSize={8,28,1},scale={50,200,5},opacity={10,100,5},
     padding={0,32,1},spacing={0,40,1},cellWidth={80,320,5},labelGap={0,16,1},columns={1,3,1},
     backgroundOpacity={0,100,5},borderOpacity={0,100,5},borderSize={0,6,1},iconPadding={0,16,1},
@@ -71,7 +71,7 @@ local function Style(db,kind,legacy)
     assert(db.labelPosition=="CENTER" or db.labelPosition=="TOP" or db.labelPosition=="BOTTOM","Invalid label position")
 end
 function D.Initialize(db)
-    local defaults={watcher=true,flyout=false,threshold=5,locked=true,flyoutLocked=true,alwaysShow=false,
+    local defaults={watcher=true,flyout=false,threshold=5,timeReminder=true,chargeReminder=true,chargeThreshold=10,showPoisonCharges=false,locked=true,flyoutLocked=true,alwaysShow=false,
         showInCombat=true,dismissOnRightClick=true,quickApply="last",visibleRows=6,direction="UP",x=0,y=-140,menuX=200,menuY=-140}
     for k,v in pairs(defaults) do
         if db[k]==nil then db[k]=v end

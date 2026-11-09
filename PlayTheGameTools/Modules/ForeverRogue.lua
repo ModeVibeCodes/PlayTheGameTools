@@ -6,7 +6,7 @@ local M={title="Rogue",category="classTools",classIcon="Interface\\Icons\\ClassI
     configDescription="Poison Reminder highlights weapons that need poison. Quick Access Poisons offers one-click applications outside combat."}
 addon.ForeverRogue=M;addon:RegisterModule("foreverRogue",M)
 function M:OnInitialize()
-    self.Initialize(self.db);self.known={};self.choices={};self.byKey={};self.requested={};self.previous={};self.recentChanges={};self.dismissed={}
+    self.Initialize(self.db);self.known={};self.choices={};self.byKey={};self.requested={};self.previous={};self.recentChanges={};self.dismissed={};self.chargeSources={}
     local _,class=UnitClass("player");self.isRogue=D.Public(class) and class=="ROGUE"
 end
 function M:CanConfigure() return D.OutsideCombat() end
@@ -53,7 +53,8 @@ function M:Observe(states)
         local old=self.previous[hand]
         if not s.unknown and not s.empty then
             changed[hand]=not s.missing and old and not old.unknown and
-                old.weapon==s.weapon and (old.missing or old.enchant~=s.enchant or s.seconds>(old.seconds or 0)+2)
+                old.weapon==s.weapon and (old.missing or old.enchant~=s.enchant or s.seconds>(old.seconds or 0)+2 or
+                    (s.hasCharges and old.hasCharges and s.charges>old.charges))
             if changed[hand] then self.recentChanges[hand]=now end
         end
     end
@@ -211,20 +212,28 @@ function M:IsDismissed(hand,state)
         d.enchant=nil;d.missing=true;d.seconds=0;return true
     end
     if d.weapon~=state.weapon or d.enchant~=state.enchant or d.missing~=state.missing or d.unknown~=state.unknown or state.empty or
-        (state.seconds and d.seconds and state.seconds>d.seconds+2) then self.dismissed[hand]=nil;return false end
-    d.seconds=state.seconds;return true
+        (state.seconds and d.seconds and state.seconds>d.seconds+2) or
+        (state.hasCharges and d.charges~=nil and state.charges>d.charges) then self.dismissed[hand]=nil;return false end
+    d.seconds=state.seconds;d.charges=state.hasCharges and state.charges or nil;return true
 end
 function M:DismissReminder(hand)
     if not self.active or self.previewing or self.editing or not self.db.dismissOnRightClick then return false end
     local state=self.reminderStates and self.reminderStates[hand]
     if not state or state.empty then return false end
-    self.dismissed[hand]={weapon=state.weapon,enchant=state.enchant,missing=state.missing,unknown=state.unknown,seconds=state.seconds}
+    self.dismissed[hand]={weapon=state.weapon,enchant=state.enchant,missing=state.missing,unknown=state.unknown,seconds=state.seconds,charges=state.hasCharges and state.charges or nil}
     self:Render();if D.OutsideCombat() and self.page then self.page:Refresh() end;return true
 end
 function M:RestoreReminders() self.dismissed={};self:Refresh() end
 function M:MinimalReminder()
     if not D.OutsideCombat() then return false end
     local s=self.db.watchStyle
-    s.showIcons=true;s.showHands=true;s.showNames=false;s.showTimers=false;s.showCounts=false;s.backgroundOpacity=0;s.borderSize=0;s.iconBorderSize=0;s.iconBackgroundOpacity=0
+    s.showIcons=true;s.showHands=true;s.showNames=false;s.showTimers=false;s.showCounts=false;s.backgroundOpacity=0;s.borderSize=0;s.iconBorderSize=0;s.iconBackgroundOpacity=0;self.db.showPoisonCharges=false
     self:Refresh();return true
+end
+function M:ReminderNeeds(state)
+    if state.empty then return false,false end
+    if state.unknown or state.missing then return true,false end
+    local timeDue=self.db.timeReminder and state.seconds<=self.db.threshold*60
+    local chargeDue=self.db.chargeReminder and state.hasCharges and state.charges<=self.db.chargeThreshold
+    return timeDue or chargeDue,chargeDue
 end
