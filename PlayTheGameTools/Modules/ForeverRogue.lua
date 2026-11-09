@@ -2,11 +2,11 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 addon:RegisterCategory("classTools",{title="Class Tools"})
 local D=addon.ForeverRogueData
-local M={title="Rogue",category="classTools",defaultEnabled=false,Data=D,Initialize=D.Initialize,
-    configDescription="Per-weapon poison reminders, inventory-backed quick apply and an optional poison flyout."}
+local M={title="Rogue",category="classTools",classIcon="Interface\\Icons\\ClassIcon_Rogue",defaultEnabled=false,Data=D,Initialize=D.Initialize,
+    configDescription="Poison Reminder highlights weapons that need poison. Quick Access Poisons offers one-click applications outside combat."}
 addon.ForeverRogue=M;addon:RegisterModule("foreverRogue",M)
 function M:OnInitialize()
-    self.Initialize(self.db);self.known={};self.choices={};self.byKey={};self.requested={};self.previous={};self.recentChanges={}
+    self.Initialize(self.db);self.known={};self.choices={};self.byKey={};self.requested={};self.previous={};self.recentChanges={};self.dismissed={}
     local _,class=UnitClass("player");self.isRogue=D.Public(class) and class=="ROGUE"
 end
 function M:CanConfigure() return D.OutsideCombat() end
@@ -14,7 +14,10 @@ function M:SetOption(key,value)
     if not self:CanConfigure() then return false end
     local copy=addon.ProfileCodec.Copy(self.db);copy[key]=value
     if not pcall(self.Initialize,copy) then return false end
-    self.db[key]=value;self:Refresh();return true
+    self.db[key]=value
+    if key=="quickApply" then self.lastMessage=nil end
+    if key=="x" or key=="y" or key=="menuX" or key=="menuY" then self:SyncPosition(key) end
+    self:Refresh();return true
 end
 function M:SetStyle(group,key,value)
     if not self:CanConfigure() or (group~="watchStyle" and group~="flyoutStyle" and group~="launcherStyle") then return false end
@@ -39,7 +42,7 @@ end
 function M:Remember(hand,p)
     if not D.OutsideCombat() or not p then return end
     local row=self:History(true)
-    if row then row[hand==1 and "main" or "off"]=p.key;row.last=p.key end
+    if row then row[hand==1 and "main" or "off"]=p.key;row.last=p.key;self.lastMessage=nil end
 end
 function M:Observe(states)
     if not D.OutsideCombat() then return end
@@ -94,15 +97,18 @@ function M:SpellSucceeded(unit,spell)
     if found then self.confirmedCast={key=found.key,poison=found,time=GetTime()} end
 end
 function M:QuickPoison(hand,state)
-    if self.db.quickApply~="last" then return self.byKey[self.db.quickApply],"Selected poison is unavailable. Restock it or choose another Poison Refresh Quick Apply entry." end
+    local family=tonumber(self.db.quickApply:match("^family:(%d+)$"))
+    if family then return self.known[family],"This poison is unavailable. Carry it or choose Recent in Settings." end
+    if self.db.quickApply~="last" then return self.byKey[self.db.quickApply],"Selected poison is unavailable. Restock it or choose a poison in Settings." end
     local history=self:History();local key=history and (history[hand==1 and "main" or "off"] or history.last)
-    if key then return self.byKey[key],"Last-used poison is unavailable. Restock it or choose another Poison Refresh Quick Apply entry." end
-    return state.poison,"No last-used poison recorded. Choose Poison Refresh Quick Apply or apply a carried poison through the flyout."
+    if key then return self.byKey[key],"Last-used poison is unavailable. Restock it or choose a poison in Settings." end
+    return state.poison,"No last-used poison recorded. Choose a poison in Settings or apply one through Quick Access Poisons."
 end
 function M:Refresh()
     if not self.active or not self.isRogue then return end
     if D.OutsideCombat() then self:Discover();self:CreateDisplay();self:Layout() end
     self:Render()
+    if D.OutsideCombat() then self:SyncEditElements();if self.page and self.page:IsShown() then self.page:Refresh() end end
 end
 function M:OnEnable()
     self.active=true
@@ -128,4 +134,97 @@ function M:OnDisable()
     for _,f in ipairs({self.watcher,self.launcher,self.menu}) do if f then f:Hide() end end
 end
 function M:SetPreviewMode(v) self.previewing=v;self:Refresh() end
-function M:SetEditMode(v) self.editing=v;self:Refresh() end
+function M:SetEditMode(v) self:StopDrag();self.editing=v;if v then self.menuOpen=false end;self:Refresh() end
+
+-- Position Manager owns saved coordinates and Edit Mode decorations. Explicit
+-- unlocked dragging outside Edit Mode forwards to the same position storage.
+function M:RegisterPositions()
+    local PM=addon.PositionManager
+    for _,f in ipairs({self.watcher,self.launcher}) do
+        local e=PM.elements[f.elementId]
+        if e and e.position~=(addon.db.positions and addon.db.positions[f.elementId]) then PM:UnregisterElement(f.elementId);e=nil end
+        if not e then
+            -- Match the other registered displays: native geometry must exist
+            -- before the manager asks for the owned frame's rectangle.
+            local shown=f:IsShown();f:Show()
+            local ok,registered=PM:RegisterElement(f.elementId,f,{moduleId=self.id,anchoring=false,allowedTargets={"screen"},
+                defaultPosition={target="screen",placement="center",x=self.db[f.xKey],y=self.db[f.yKey]},
+                canDrag=function() return self.active and self.db[f.enableKey] end,
+                onPositionChanged=function(element,position)
+                    self.db[f.xKey],self.db[f.yKey]=math.floor(position.x+0.5),math.floor(position.y+0.5)
+                    if self.page then self.page:Refresh() end
+                    if not element.dragging and not self.layingOut then self:Layout() end
+                end,
+                onHighlight=function()
+                    if not addon.editMode then f:EnableMouse(D.OutsideCombat() and not self.db[f.lockKey]) end
+                end})
+            assert(ok,"Play The Game Tools: Rogue position registration failed: "..tostring(registered))
+            e=registered;e.label=f.enableKey=="watcher" and "Rogue: Poison Reminder" or "Rogue: Quick Access Poisons"
+            e.defaults={target="screen",placement="center",x=f.enableKey=="watcher" and 0 or 200,y=-140}
+            if not shown then f:Hide() end
+        end
+        if not f.rogueDragHooks then
+            f.rogueDragHooks=true
+            f:HookScript("OnDragStart",function() if not addon.editMode then self:StartElementDrag(f) end end)
+            f:HookScript("OnDragStop",function() self:StopDrag() end)
+            f:HookScript("OnHide",function() self:StopDrag() end)
+        end
+        e.editMode=self.active and self.db[f.enableKey] or false
+        self.db[f.xKey],self.db[f.yKey]=math.floor(e.position.x+0.5),math.floor(e.position.y+0.5)
+        PM:ApplyPosition(f.elementId)
+    end
+end
+function M:SyncEditElements()
+    local PM=addon.PositionManager
+    for _,f in ipairs({self.watcher,self.launcher}) do
+        local e=PM.elements[f.elementId]
+        if e then e.editMode=self.active and self.db[f.enableKey] or false;if not e.editMode then PM:StopDragging(f.elementId) end end
+    end
+    PM:RefreshSelection()
+end
+function M:SyncPosition(key)
+    local quick=key=="menuX" or key=="menuY"
+    local id=quick and "rogueQuickPoisons" or "roguePoisonReminder"
+    local x,y=self.db[quick and "menuX" or "x"],self.db[quick and "menuY" or "y"]
+    local PM=addon.PositionManager
+    if PM.elements[id] then PM:SetOffsets(id,x,y)
+    elseif addon.db.positions and addon.db.positions[id] and PM:ValidatePosition(addon.db.positions[id],true) then
+        addon.db.positions[id].x=x;addon.db.positions[id].y=y
+    end
+end
+function M:EnterElementEdit(quick)
+    if not self.active or not D.OutsideCombat() or not self.db[quick and "flyout" or "watcher"] then return false end
+    self:Refresh();addon:SetEditMode(true)
+    return addon.PositionManager:SelectElement(quick and "rogueQuickPoisons" or "roguePoisonReminder")
+end
+function M:ResetElementPosition(quick)
+    if not D.OutsideCombat() then return false end
+    local id=quick and "rogueQuickPoisons" or "roguePoisonReminder"
+    if addon.PositionManager.elements[id] then addon.PositionManager:ResetPosition(id)
+    else self.db[quick and "menuX" or "x"]=quick and 200 or 0;self.db[quick and "menuY" or "y"]=-140;self:SyncPosition(quick and "menuX" or "x") end
+    self:Refresh();return true
+end
+function M:IsDismissed(hand,state)
+    local d=self.dismissed[hand]
+    if not d then return false end
+    if d.enchant and state.missing and d.weapon==state.weapon then
+        d.enchant=nil;d.missing=true;d.seconds=0;return true
+    end
+    if d.weapon~=state.weapon or d.enchant~=state.enchant or d.missing~=state.missing or d.unknown~=state.unknown or state.empty or
+        (state.seconds and d.seconds and state.seconds>d.seconds+2) then self.dismissed[hand]=nil;return false end
+    d.seconds=state.seconds;return true
+end
+function M:DismissReminder(hand)
+    if not self.active or self.previewing or self.editing or not self.db.dismissOnRightClick then return false end
+    local state=self.reminderStates and self.reminderStates[hand]
+    if not state or state.empty then return false end
+    self.dismissed[hand]={weapon=state.weapon,enchant=state.enchant,missing=state.missing,unknown=state.unknown,seconds=state.seconds}
+    self:Render();if D.OutsideCombat() and self.page then self.page:Refresh() end;return true
+end
+function M:RestoreReminders() self.dismissed={};self:Refresh() end
+function M:MinimalReminder()
+    if not D.OutsideCombat() then return false end
+    local s=self.db.watchStyle
+    s.showIcons=true;s.showHands=true;s.showNames=false;s.showTimers=false;s.showCounts=false;s.backgroundOpacity=0;s.borderSize=0
+    self:Refresh();return true
+end

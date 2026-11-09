@@ -38,3 +38,18 @@ native event order and visual fit need broader owner testing. The owner confirms
 revision 2 working in quick testing on November 8, 2026. Inventory-backed mocks
 correct the prior learned-spell-only fixture; static passing is not acceptance.
 See [primary Blizzard sources, exact boundaries and native checks](FOREVER_ROGUE_POISONS.md).
+
+## Rogue layout and dismissal — November 8, 2026
+
+The previous application version is owner-confirmed in quick testing; the new
+Display/Settings/Position UI, dismissal and shared Edit Mode changes are pending
+native review. Right-click PreClick updates session-only unprotected reminder
+visibility, including in combat. Blizzard retains OnClick and its combat guard;
+no right-button action/target attributes or direct Cast/Use/RunMacro paths exist.
+Both Rogue elements now register with Position Manager after geometry is ready;
+legacy x/y values seed central positions and stay mirrored. Shared highlights,
+selection, drag, coordinate limits and combat cleanup are reused. Customized
+appearance/history/unknown keys are retained; only the untouched original preset
+migrates to icons/hand text. Class icon metadata opts just this module into icon
+navigation/header presentation; other headers restore their normal title.
+See [current contract, primary sources and exact native tests](FOREVER_ROGUE_POISONS.md).

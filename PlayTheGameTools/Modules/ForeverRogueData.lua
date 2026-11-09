@@ -36,7 +36,7 @@ local styleDefaults={iconSize=40,fontSize=12,timerSize=14,scale=100,opacity=100,
     labelGap=4,columns=1,backgroundOpacity=85,borderOpacity=100,borderSize=1,font="game",fontMedia="",
     outline=true,cropIcons=true,showIcons=true,showHands=true,showTimers=true,showNames=false,showCounts=true,tooltips=true,
     vertical=false,timerPosition="CENTER",backgroundColor={0.035,0.045,0.06},borderColor={0.32,0.4,0.48},
-    textColor={0.9,0.93,0.97},timerColor={1,0.85,0.4},iconColor={1,1,1}}
+    textColor={0.9,0.93,0.97},timerColor={1,0.85,0.4},iconColor={1,1,1},labelText="Poisons",labelPosition="BOTTOM"}
 local function Style(db,kind,legacy)
     for k,v in pairs(styleDefaults) do
         if db[k]==nil then
@@ -48,6 +48,9 @@ local function Style(db,kind,legacy)
                 elseif kind=="launcherStyle" and k=="borderColor" then db[k]={0.72,0.3,1}
                 elseif kind=="launcherStyle" and k=="padding" then db[k]=3
                 elseif kind=="launcherStyle" and k=="borderSize" then db[k]=2 end
+                if kind=="watchStyle" and (k=="backgroundOpacity" or k=="borderSize") then db[k]=0 end
+                if kind=="watchStyle" and (k=="showTimers" or k=="showCounts") then db[k]=false end
+                if kind=="launcherStyle" and k=="showCounts" then db[k]=false end
             end
         end
         if D.styleRanges[k] then
@@ -60,22 +63,40 @@ local function Style(db,kind,legacy)
     assert(db.font=="game" or db.font=="chat","Invalid poison font")
     assert(#db.fontMedia<=128,"Invalid poison media font")
     assert(db.timerPosition=="CENTER" or db.timerPosition=="TOP" or db.timerPosition=="BOTTOM","Invalid timer position")
+    assert(#db.labelText<=40 and not db.labelText:find("[%c|]"),"Invalid poison label")
+    assert(db.labelPosition=="CENTER" or db.labelPosition=="TOP" or db.labelPosition=="BOTTOM","Invalid label position")
 end
 function D.Initialize(db)
     local defaults={watcher=true,flyout=false,threshold=5,locked=true,flyoutLocked=true,alwaysShow=false,
-        showInCombat=true,quickApply="last",visibleRows=6,direction="UP",x=0,y=-140,menuX=200,menuY=-140}
+        showInCombat=true,dismissOnRightClick=true,quickApply="last",visibleRows=6,direction="UP",x=0,y=-140,menuX=200,menuY=-140}
     for k,v in pairs(defaults) do
         if db[k]==nil then db[k]=v end
         if D.ranges[k] then local r=D.ranges[k];assert(D.Number(db[k],r[1],r[2]) and db[k]%1==0,"Invalid Rogue setting: "..k)
         else assert(type(db[k])==type(v),"Invalid Rogue setting: "..k) end
     end
-    assert(db.quickApply=="last" or D.Key(db.quickApply),"Invalid poison quick apply")
+    local family=type(db.quickApply)=="string" and tonumber(db.quickApply:match("^family:(%d+)$"))
+    local validFamily=false;for _,id in ipairs(D.families) do if family==id then validFamily=true end end
+    assert(db.quickApply=="last" or D.Key(db.quickApply) or validFamily,"Invalid poison quick apply")
+    if db.reminderVisibility==nil then db.reminderVisibility=db.showInCombat and "needed" or "neededOOC" end
+    assert(db.reminderVisibility=="needed" or db.reminderVisibility=="neededOOC" or db.reminderVisibility=="alwaysOOC" or db.reminderVisibility=="always","Invalid reminder visibility")
     assert(db.direction=="UP" or db.direction=="DOWN" or db.direction=="LEFT" or db.direction=="RIGHT","Invalid poison flyout direction")
     for _,k in ipairs({"watchStyle","flyoutStyle","launcherStyle"}) do
         if db[k]==nil then db[k]={} end
         assert(type(db[k])=="table","Invalid poison appearance group")
+        -- Migrate only the untouched original preset; preserve customized styles.
+        if k=="watchStyle" and db.reminderDefaultsVersion==nil and next(db[k]) then
+            local unchanged=true
+            for key,value in pairs(db[k]) do
+                local old=styleDefaults[key]
+                if type(old)=="table" then
+                    if type(value)~="table" then unchanged=false else for i=1,3 do if value[i]~=old[i] then unchanged=false end end end
+                elseif value~=old then unchanged=false end
+            end
+            if unchanged then db[k].backgroundOpacity=0;db[k].borderSize=0;db[k].showTimers=false;db[k].showCounts=false end
+        end
         Style(db[k],k,k=="watchStyle" and db or nil)
     end
+    db.reminderDefaultsVersion=1
     if db.history==nil then db.history={} end
     assert(type(db.history)=="table","Invalid poison history")
     local count=0

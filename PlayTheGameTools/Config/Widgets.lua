@@ -594,6 +594,7 @@ function W.ModuleHeader(parent)
     header:SetHeight(W.PAGE_HEADER_HEIGHT)
     header:EnableMouse(false)
     local title = W.Heading(header, "", T.fontSize.page, 0, -2, 520, T.text)
+    local classIcon=header:CreateTexture(nil,"ARTWORK");classIcon:SetPoint("TOPLEFT",0,0);classIcon:SetSize(28,28);classIcon:Hide()
     title:SetWordWrap(false)
     local description = W.Label(header, "", nil, 0, -30, 520, T.muted)
     description:SetWordWrap(false)
@@ -622,11 +623,16 @@ function W.ModuleHeader(parent)
     function header:SetModule(module)
         self.module = module
         title:SetText(module and module.title or "Dashboard")
+        local icon=module and module.classIcon
+        title:SetShown(icon==nil);classIcon:SetShown(icon~=nil)
+        if icon then classIcon:SetTexture(icon) end
+        description:SetWordWrap(icon~=nil)
         description:SetText(module and (module.configDescription or module.description or "")
             or "Turn modules on or off, or open one to change its settings.")
         self:Refresh()
     end
     header.title, header.description, header.toggle, header.state, header.divider = title, description, toggle, state, divider
+    header.classIcon=classIcon
     return header
 end
 

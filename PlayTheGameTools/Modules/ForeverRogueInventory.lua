@@ -104,6 +104,14 @@ function M:Discover()
     end
 end
 function M:Available(p) return p and (p.kind=="spell" or p.count>0) end
+function D.FamilyForKey(key)
+    if type(key)~="string" then return end
+    local family=tonumber(key:match("^family:(%d+)$"));if family then return family end
+    local id=tonumber(key:match("^item:(%d+)$"))
+    if id and itemFamilies[id] then return itemFamilies[id].family end
+    id=tonumber(key:match("^spell:(%d+)$"));local p=id and D.Spell(id)
+    if p then for _,base in ipairs(D.families) do local known=D.Spell(base);if known and p.name==known.name then return base end end end
+end
 function M:MatchIcon(icon)
     local family,first
     for _,p in ipairs(self.choices) do

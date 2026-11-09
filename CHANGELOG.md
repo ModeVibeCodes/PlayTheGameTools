@@ -8,6 +8,13 @@
   Training icon was; older icon positions and the Dungeon Loot lock preference
   stay in saved settings unused. The Lock Shortcut Icon control is removed.
 
+- Refined Class Tools -> Rogue into Display, Settings and Position. Poison
+  Reminder defaults to bare icons/hand text and supports per-hand right-click
+  dismissal; Quick Access Poisons gains independent labels and shared Edit Mode.
+  Added a Recent/poison-family availability grid, compact appearance editors and
+  class-icon navigation/header. Existing customized styles/history are retained;
+  new layout and dismissal native checks are pending.
+
 - Added Class Tools -> Rogue: per-hand poison reminders and inventory-backed OOC
   item applications; Last Used Poison tracking and Poison Refresh Quick Apply
   selection; threshold-only Poisons profession icon with Always Show option;

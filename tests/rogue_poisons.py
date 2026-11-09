@@ -153,7 +153,7 @@ assert(M:SetStyle('launcherStyle','borderColor',{0.1,0.2,0.3}))
 assert(not M:SetStyle('watchStyle','iconSize',999) and not M:SetOption('direction','BAD'))
 assert(not M:SetStyle('watchStyle','textColor',{2,0,0}) and not M:SetOption('quickApply','arbitrary'))
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue')
-assert(M.page.quickApply and M.page.poisonStyles.flyoutStyle.showNames and M.page.poisonControls.alwaysShow)
+assert(#M.page.poisonGrid==6 and M.page.poisonStyles.flyoutStyle.showNames and M.page.quickVisibility)
 -- No idle bag scan; ticker only reads each weapon once.
 local reads=bagReads;local ench=enchantReads;M.ticker.callback();assert(bagReads==reads and enchantReads==ench+2)
 local ticker=M.ticker;addon:SetModuleEnabled('foreverRogue',false)

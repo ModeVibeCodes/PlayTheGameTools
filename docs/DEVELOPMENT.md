@@ -21,6 +21,14 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Current Rogue layout revision: `codex/rogue-tools-layout`, based on main after
+Quick Actions PR #18. Uses existing runtime files (107 Lua chunks); /reload applies
+the candidate. Display/Settings/Position, minimal reminder, per-hand right-click
+dismissal, family selection grid and real shared Position Manager elements.
+Run `tests/rogue_layout.py` (includes poison/smoke regressions), `tests/edit_mode.py`,
+`tests/quick_actions.py`, and the builder. New native review is pending; the owner's
+earlier quick-test confirmation applies to the prior application version only.
+
 Rogue poison tools add Class Tools -> Rogue (eleventh module/fifth category),
 five Lua files, 106 chunks. The first buttons were owner-reported inert; revision 2
 adds inventory-backed item actions, confirmed last-use and independent styling.
