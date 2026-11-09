@@ -30,6 +30,49 @@ the installed copy was not established; the current
 desktop use from software embedding. The bundled JetBrains Mono remains available
 independently of other addons.
 
+### Media from disabled addons
+
+The owner accepted the description/class-grid cleanup. The subsequent media
+discovery work has static/mock validation; disabled-provider rendering still
+needs native confirmation.
+
+All live LibSharedMedia fonts, status bars, backgrounds and borders remain listed.
+Their addon-file name/path registrations are now remembered in the account-wide
+`mediaRegistry` cache, outside profiles and profile exports. On a later reload,
+cached entries are registered again when the provider is still installed and its
+asset is client-known, regardless of its enabled state. Current live registrations
+win name collisions; disabled providers are never enabled or loaded. Missing
+providers are ignored while selections/cache data remain available for recovery.
+The cache is bounded to 4,096 entries, with validated primitive name/path values.
+Media refreshes defer rendering during combat and complete after combat ends.
+
+A bundled path-only catalog also exposes media without requiring a previous run
+of its provider. It currently describes 55 installed assets: font files, literal
+LSM media declarations and Ellesmere's declared bar textures. Names are qualified
+by provider. No font/texture bytes, provider implementation or saved settings are
+copied, evaluated or modified. Refresh this metadata from an explicitly selected
+Forever AddOns directory with:
+
+```powershell
+python tools/index_installed_media.py --addons '<Forever client>/Interface/AddOns'
+```
+
+Metadata references inspected include AyijeUI/Media/SharedMedia.lua and
+EllesmereUI/EllesmereUI.lua's BAR_TEXTURE_FILES, plus installed font filenames.
+These files and their original assets remain untouched.
+
+This is an external, read-only indexing step whose only output is this checkout's
+Core/MediaCatalog.lua. WoW cannot perform arbitrary directory enumeration or read
+disabled addons' Lua registrations. A never-loaded, uncataloged provider therefore
+needs a catalog refresh or a prior ordinary run that registers its media. Arbitrary
+icons/masks/custom border renderers are not assumed compatible backdrop media.
+The [native asset API](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UIFileAssetAPIDocumentation.lua)
+recognizes supplied paths but explicitly does not verify loose-file openability;
+the [addon API](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/AddOnsDocumentation.lua)
+can verify installation without checking/enabling/loading the provider. Actual
+font and texture rendering still requires native validation. This is not universal
+runtime discovery of every file in every disabled addon.
+
 There are no module override sections on this page. Earlier experimental
 `globalMedia.overrides` data is retained but inert. Existing module custom fonts
 and XP texture settings remain more specific; their **Use Global Setting**
@@ -135,9 +178,9 @@ define LOOT_READY's boolean. This does not establish native action acceptance.
 
 ## Validation and native checklist
 
-All 29 standalone scripts pass, including the expanded global suite. Focused
+All 30 standalone scripts pass, including the expanded global/discovery suites. Focused
 rechecks cover the final media, scaling and layout changes. Smoke compiles/loads
-114 Lua chunks. Deterministic packaging has 197 files, including upstream licenses
+116 Lua chunks. Deterministic packaging has 199 files, including upstream licenses
 and runtime media. No new native acceptance or release is claimed.
 
 1. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global
@@ -182,3 +225,12 @@ and runtime media. No new native acceptance or release is claimed.
 The existing desktop Forever junction remains unchanged. The requested local
 checkout update reads the feature branch on reload; new TOC/library/font discovery
 can require one full client restart. No Retail sync, release or merge is implied.
+
+8. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global
+   Font / Global Texture / Global Border. **Action:** with AyijeUI already installed
+   and disabled, choose AyijeUI: Expressway, AyijeUI: focus (statusbar), and
+   AyijeUI: Ayije_Thin; Reload. **Required state:** OOC; restart once for new catalog
+   files if necessary. **Confirmation:** the provider stays disabled, the choices
+   render and persist, and no provider functionality starts. For uncataloged media,
+   first let its provider register normally, then disable it and reload separately;
+   the remembered choices should remain available while its files remain installed.

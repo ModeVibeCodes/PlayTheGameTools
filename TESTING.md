@@ -1,5 +1,9 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Disabled-provider media: run tests/media_discovery.py and use the
+[known-path/cache native check](docs/GLOBAL_SETTINGS.md#validation-and-native-checklist).
+Test providers already disabled; PTG must not change their enabled state.
+
 Global Settings: use the exact [four-tab native checklist](docs/GLOBAL_SETTINGS.md). Run tests/global_settings.py for bundled LSM/media, standard game font inheritance and local overrides, account-wide profile selection/import/export/positions, class picker, native loot-session cancellation, camera/scale readback and combat guards.
 
 Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)

@@ -267,7 +267,7 @@ end
 function P:Reload()
     return addon.ReloadManager:Reload()
 end
-local runtimeKeys={records=true,history=true,frames=true,events=true,handlers=true,contexts=true,listeners=true,
+local runtimeKeys={records=true,history=true,frames=true,events=true,handlers=true,contexts=true,listeners=true,mediaRegistry=true,
     diagnosticHistory=true,characters=true,characterGUID=true,guid=true,profiles=true,migrationBackup=true,profileRecovery=true}
 local function SettingsOnly(value,reject)
     for key,item in pairs(value) do

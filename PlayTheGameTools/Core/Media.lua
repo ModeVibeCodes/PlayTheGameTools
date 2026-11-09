@@ -147,7 +147,7 @@ function M:GetBorders()
 end
 
 function M:RefreshBorders()
-    if InCombatLockdown() or UnitAffectingCombat("player") then self.borderPending = true; return end
+    if InCombatLockdown() or UnitAffectingCombat("player") then self.borderPending = true; self.pending = true; return end
     self.borderPending = false
     self.borderRevision = self.borderRevision + 1
     for owner, callback in pairs(self.borderListeners) do callback(owner) end
@@ -281,11 +281,13 @@ function M:RefreshFonts()
     self:ApplyGameFonts()
     for region, spec in pairs(self.regions) do self:ApplyInterfaceFont(region, spec) end
     for owner, callback in pairs(self.fontListeners) do callback(owner) end
+    if self.borderPending then self:RefreshBorders() end
     if self.statusbarPending then self:RefreshStatusBars() end
     if self.soundPending then self:RefreshSounds() end
 end
 
-function M:OnMediaRegistered(_, mediaType)
+function M:OnMediaRegistered(_, mediaType, name)
+    self:RememberMedia(mediaType,name)
     if mediaType == "font" then self:RefreshFonts() end
     if mediaType == "border" then self:RefreshBorders() end
     if mediaType == "statusbar" then self:RefreshStatusBars() end
@@ -299,6 +301,7 @@ function M:Initialize()
     events:SetScript("OnEvent", function()
         if self:AttachLibrary() then self:RefreshFonts(); self:RefreshBorders(); self:RefreshStatusBars(); self:RefreshSounds() end
         self:RegisterProviderFonts()
+        self:DiscoverMedia()
         if addon.Positioning then addon.Positioning:Discover() end
     end)
     self.events = events

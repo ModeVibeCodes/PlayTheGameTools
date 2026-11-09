@@ -23,6 +23,8 @@ Core\Positioning.lua
 Core\PositionManager.lua
 Core\FrameAnchors.lua
 Core\Media.lua
+Core\MediaCatalog.lua
+Core\MediaDiscovery.lua
 Core\GlobalSettings.lua
 Core\Feedback.lua
 Core\AlertEffects.lua

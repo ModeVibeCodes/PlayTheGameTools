@@ -4,6 +4,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Remember shared font/texture/border registrations across reloads and discover
+  cataloged assets from installed disabled providers without loading their code.
+  Added a read-only local media indexer; current catalog contains 55 paths.
 - Global Settings: removed the Shared Media, Loot and Errors, and Camera Distance
   descriptions; inset the Class Colors grid below its separator; discover optional
   installed Expressway fonts through LibSharedMedia without bundling their files.

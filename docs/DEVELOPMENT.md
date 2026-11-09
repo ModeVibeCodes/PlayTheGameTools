@@ -1,5 +1,11 @@
 # Standalone Forever development
 
+Media discovery adds a path-only 55-entry installed-provider catalog plus an
+account LSM registration cache. Disabled providers are never loaded/enabled.
+Run tests/media_discovery.py with the regression scripts; current packaging is
+116 Lua / 199 files. The external read-only indexer and runtime discovery limits
+are documented in [Global Settings](GLOBAL_SETTINGS.md).
+
 Global Settings expands to four tabs and reuses the existing profile engine with an account-wide selection. Bundled LSM/dependencies and two new runtime files bring the addon to 114 Lua chunks. Run tests/global_settings.py and all standalone regressions, then the release builder. New source/media may require one full client restart for discovery; subsequent edits use /reload. See [contract and native checks](GLOBAL_SETTINGS.md).
 
 Guild Roster adds Guild Tools -> Roster (twelfth module, two Lua files, 109 chunks).

@@ -1,5 +1,11 @@
 # Forever API compatibility notes
 
+Disabled-provider media discovery uses C_AddOns.DoesAddOnExist plus supplied
+C_UIFileAsset.IsKnownFile paths; it never loads/enables providers. The latter API
+does not guarantee loose-file openability. WoW exposes no arbitrary addon-file
+listing here: known-path metadata plus an account LSM registration cache provide
+bounded discovery, with native rendering still pending. See [Global Settings](GLOBAL_SETTINGS.md).
+
 Global Settings now includes standard Blizzard FontObject face changes (OOC), bundled LSM, account-wide profile selection, native CVar writes with accepted-value readback, UIParent scaling, UIErrorsFrame event ownership and generation-cancelled OOC loot-slot requests. Current Forever UI source, Naowh behavior/licensing, client range uncertainties and native gates are recorded in [Global Settings](GLOBAL_SETTINGS.md). Earlier addon-only/optional-library/no-game-font statements were superseded by the requested expansion.
 
 ## Enhanced Experience Bar

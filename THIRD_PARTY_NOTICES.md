@@ -2,6 +2,11 @@
 
 ## Global Settings media dependencies
 
+Core/MediaCatalog.lua contains generated media name/path facts from installed
+providers. It distributes no provider font/texture files or implementation code.
+Native references remain subject to their original owners' terms. The account
+media cache likewise stores paths only and is excluded from profile exports.
+
 Expressway is an optional reference to a verified font asset in an installed
 EllesmereUI/AyijeUI or an existing LibSharedMedia registration. Its file is not
 copied or redistributed by Play The Game Tools. The installed copy's embedding
