@@ -21,6 +21,12 @@ changes or conflicts. Merge closeout updates only owning docs; the clean existin
 live-linked checkout returns to merged main, preserving its junction and settings.
 Broad native/API/provider-version coverage remains bounded by the owning checklist.
 
+Owner confirmed the Rogue layout/icon-gap corrections look good and function
+as intended, and authorized PR #19 to merge into main on 2026-11-08. Focused
+layout, icon and charge regressions and the Forever package build passed at
+77adc86. This closes the current development pass; the detailed checklist still
+bounds broader poison-family/combat coverage. No release or settings reset.
+
 Rogue gap correction: Icon Gap (0–120, seeded from old spacing) is the real
 horizontal button-edge gap. Individual image inset controls/rendering and Reminder
 Cell Width are removed; wrapped hand text uses measured height. Stock Quick Access

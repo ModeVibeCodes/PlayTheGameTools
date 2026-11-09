@@ -215,7 +215,7 @@ establish native rendering, target acceptance, input routing or event-order safe
    Gap**, **Icon Size**, **Icon Border Size** / **Icon Border
    Color**. **Action:** change each numeric field; choose a border color using
    **Pick**. **Required state:** OOC, Poison Reminder enabled; use Enter Edit Mode
-   from Position if reminders are currently healthy/hidden. **Confirmation:** hand
+   from Position if reminders are currently healthy/hidden. **Confirmation:**
    the real space between icon buttons changes (0 touches, larger values separate); both reminder icons resize
    and gain individually colored borders; the outer window stays at its saved style.
 7. **Navigation:** Rogue -> **Display** -> **Quick Access Poisons Icon** -> **Icon
@@ -236,3 +236,12 @@ establish native rendering, target acceptance, input routing or event-order safe
    label/tooltip, refreshed charges rearm/hide appropriately; Quick Access follows
    When Needed outside combat. Combat can display the reminder but cannot apply.
    A poison that reports no charges continues to use its enabled timer rule.
+
+## PR #19 closeout
+
+On 2026-11-08 the owner confirmed the final display corrections look good and
+function, accepted the work for now, and authorized merging PR #19 into main.
+The final correction uses true inter-icon gap and borderless Quick Access defaults
+with custom borders retained. Static layout/icon/charge regressions and the
+Forever package build passed. This confirmation does not establish exhaustive
+poison-family or combat coverage beyond the checklist above.
