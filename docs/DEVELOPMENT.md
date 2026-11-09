@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+Owner accepted Global Settings and authorized public PR #23's merge to main on
+2026-11-09. Final UI refinement removes the SharedMedia status row and relocates
+Interface Theme to Global Settings → Appearance below the media controls. Focused
+smoke/global/SharedMedia regressions and deterministic 116-Lua / 199-file builds
+pass. Broader native checks remain in GLOBAL_SETTINGS.md. Preserve the existing
+Forever test junction and SavedVariables; no release publication is authorized.
+
 Media discovery adds a path-only 55-entry installed-provider catalog plus an
 account LSM registration cache. Ordinary disabled providers are never loaded/enabled;
 the owner's subsequent explicit SharedMedia/MyMedia activation is the exception.

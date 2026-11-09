@@ -4,6 +4,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Owner accepted Global Settings and authorized PR #23's public main merge on
+  2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.
+
 - Move Interface Theme from Dashboard to Global Settings → Appearance below the
   media options; remove the SharedMedia status text while keeping integration.
 

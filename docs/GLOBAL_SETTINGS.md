@@ -204,6 +204,12 @@ no longer exposes its former Appearance section.
 
 ## Validation and native checklist
 
+Owner accepted the completed Global Settings page and authorized PR #23 to merge
+into public main on 2026-11-09. This closes the requested appearance, SharedMedia,
+profiles and optimization development pass. The checklist below remains the
+boundary for broader provider/client/combat coverage; acceptance does not imply
+every listed scenario was separately confirmed. No release publication is included.
+
 All 31 standalone scripts pass, including the expanded global/discovery/SharedMedia suites. Focused
 rechecks cover the final media, scaling and layout changes. Smoke compiles/loads
 116 Lua chunks. Deterministic packaging has 199 files, including upstream licenses
