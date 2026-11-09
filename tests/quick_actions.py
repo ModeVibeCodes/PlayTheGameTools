@@ -170,4 +170,47 @@ deferred.execute(r'''
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
     assert(Q.launcher and Q.launcher:IsShown() and DL.shortcut:IsShown() and Q.element)
 ''')
-print('PASS Quick Actions ring layout, closing rules, popout anchoring/glow, availability, combat, Edit Mode, position seeding/retention and failure recovery')
+# The Recruiter icon follows its module and toggles the Recruiter window.
+recruiter, _ = load()
+recruiter.execute(SETUP)
+recruiter.execute(r'''
+    local R=addon.ForeverRecruitment
+    assert(not Q.actions.recruitment,'Recruitment starts off, so no icon')
+    ForceTraining();addon:SetModuleEnabled('dungeonLoot',true)
+    local b,ring=Q.launcher,Q.ring
+    addon:SetModuleEnabled('foreverRecruitment',true)
+    assert(Q.count==3 and R.shortcut:GetParent()==ring and R.shortcut:IsShown())
+    assert(R.shortcut.icon.texture=='Interface\\Icons\\Ability_Warrior_BattleShout')
+    -- Clockwise from the top: Class Training, Dungeon Loot, Recruiter.
+    local x1=Offset(CT.shortcut);local x2=Offset(DL.shortcut);local x3=Offset(R.shortcut)
+    assert(math.abs(x1)<0.001 and x2>0 and x3<0,'third in ring order')
+
+    Click(b);Click(R.shortcut)
+    assert(not ring:IsShown() and R.window:IsShown() and b.openGlow:IsShown(),'opens the window and lights the button')
+    Click(b);Click(R.shortcut)
+    assert(not ring:IsShown() and not R.window:IsShown() and not b.openGlow:IsShown(),'second click closes it')
+    Click(b);Click(R.shortcut);R.window:Hide();assert(not b.openGlow:IsShown(),'every way of closing clears the glow')
+
+    -- Disabled from inside the window: the icon leaves but the window stays usable.
+    R:ToggleWindow();assert(b.openGlow:IsShown())
+    R.window.power.scripts.OnClick()
+    assert(not R.enabled and R.window:IsShown() and not R.shortcut:IsShown() and Q.count==2 and not b.openGlow:IsShown())
+    R.window.power.scripts.OnClick()
+    assert(R.enabled and R.shortcut:IsShown() and Q.count==3 and b.openGlow:IsShown())
+    R.window:Hide()
+''')
+deferred_recruiter, _ = load()
+deferred_recruiter.execute(SETUP)
+deferred_recruiter.execute(r'''
+    local R=addon.ForeverRecruitment
+    ForceTraining()
+    testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
+    addon:SetModuleEnabled('foreverRecruitment',true)
+    assert(R.active and not R.shortcut and not Q.actions.recruitment,'no icon built in combat')
+    testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
+    assert(R.shortcut and R.shortcut:IsShown() and Q.count==2,'built after combat')
+    local before=#frames
+    for _=1,3 do FireEvent('PLAYER_REGEN_ENABLED') end
+    assert(#frames==before,'no rebuilt frames')
+''')
+print('PASS Quick Actions ring layout, closing rules, popout anchoring/glow, availability, combat, Edit Mode, position seeding/retention, failure recovery and the Recruiter icon')
