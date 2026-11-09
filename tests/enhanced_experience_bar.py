@@ -98,7 +98,7 @@ local oldTexture,oldChoices=media.GetStatusBar,media.GetStatusBars
 function media:GetStatusBar(key) if key=='media:Fixture' then return 'FixtureTexture' end;return oldTexture(self,key) end
 function media:GetStatusBars() return {{key='default',label='Flat'},{key='media:Fixture',label='Fixture'}} end
 rested=100
-assert(#M:GetTextureChoices()==4)
+assert(#M:GetTextureChoices()==5)
 assert(M:SetOption('barTexture','media:Fixture') and M.xpFill.texture=='FixtureTexture' and M.restedFill.texture=='FixtureTexture')
 media.GetStatusBar,media.GetStatusBars=oldTexture,oldChoices
 assert(M:SetOption('barTexture','blizzardXP'))

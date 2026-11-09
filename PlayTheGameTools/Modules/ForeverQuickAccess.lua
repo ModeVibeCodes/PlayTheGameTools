@@ -70,7 +70,7 @@ function M:CreateBar()
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.bar=f
     f:SetMovable(true);f:SetClampedToScreen(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
     f:SetFrameStrata("MEDIUM");f.buttons={}
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverQuickAccess")
     local function start()
         if self.active and D.OutsideCombat() and (not self.db.locked or self.editing) then
             f:StartMoving();f.dragging=true

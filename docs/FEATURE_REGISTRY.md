@@ -1,5 +1,7 @@
 # Feature registry
 
+Global Settings: suite media defaults and independent module overrides; implemented, native validation pending. See [Global Settings](GLOBAL_SETTINGS.md).
+
 | Feature | Configuration | Scope | Native status |
 | --- | --- | --- | --- |
 | Guild Roster | Guild Tools -> Roster | Opt-in, read-only: every guild member listed by class from native `C_Club` data, Class Summary totals, session-only with no saved roster | Static fixtures only; native validation pending |

@@ -14,8 +14,9 @@ addon.Media = M
 M.defaultStatusBar = "Interface\\Buttons\\WHITE8X8"
 function M:RegisterStatusBarListener(owner,callback) self.statusbarListeners[owner]=callback end
 function M:UnregisterStatusBarListener(owner) self.statusbarListeners[owner]=nil end
-function M:GetStatusBar(style)
-    if style=="default" then return self.defaultStatusBar end
+function M:GetStatusBar(style, scope)
+    if style==nil or style=="default" then return self:GetSurfaceTexture(scope) end
+    if style=="flat" then return self.defaultStatusBar end
     if type(style)~="string" or style:sub(1,6)~="media:" or not self.library then return end
     local name=style:sub(7)
     local entries=self.library:HashTable("statusbar")
@@ -151,7 +152,9 @@ function M:RefreshBorders()
     for owner, callback in pairs(self.borderListeners) do callback(owner) end
 end
 
-function M:GetInterfaceFont(fallbackPath)
+function M:GetInterfaceFont(fallbackPath, scope)
+    local inherited=self:ResolveFont(self:GlobalStyle("font",scope))
+    if inherited then return inherited end
     -- The Blizzard theme keeps the stock game fonts its artwork is drawn for.
     local theme = addon.InterfaceTheme
     if theme and theme.blizzardArt then return fallbackPath or GameFontHighlight:GetFont() end
@@ -183,6 +186,8 @@ function M:AttachLibrary()
 end
 
 function M:GetFont(name)
+    if name=="builtin:game" then return GameFontHighlight:GetFont() end
+    if name=="builtin:chat" then return ChatFontNormal:GetFont() end
     if type(name) ~= "string" or name == "" or not self.library then return end
     -- Fetch may honor an LSM global override; prefer the exact registered entry.
     local media = self.library:HashTable("font")
@@ -213,21 +218,25 @@ function M:GetGlobalFont()
     local name=self.library and self.library:GetGlobal("font")
     if type(name)=="string" then return self:GetFont(name) end
 end
-function M:GetDisplayFont(appearance, respectGlobal)
+function M:GetDisplayFont(appearance, respectGlobal, scope)
+    if (appearance.fontMedia or "")=="" and appearance.font~="chat" then
+        local inherited=self:ResolveFont(self:GlobalStyle("font", scope or appearance))
+        if inherited then return inherited end
+    end
     return (respectGlobal and self:GetGlobalFont()) or self:GetFont(appearance.fontMedia or "")
         or (appearance.font == "chat" and ChatFontNormal:GetFont() or GameFontHighlight:GetFont())
 end
 
 function M:ApplyInterfaceFont(region, spec)
-    local preferred = self:GetInterfaceFont(spec.path)
+    local preferred = self:GetInterfaceFont(spec.path,spec.scope)
     if not region:SetFont(preferred, spec.size, spec.flags) then
         region:SetFont(spec.path, spec.size, spec.flags)
     end
 end
 
-function M:BindInterfaceFont(region, fontObject, fontSize)
+function M:BindInterfaceFont(region, fontObject, fontSize, scope)
     local path, size, flags = fontObject:GetFont()
-    local spec = { path = path, size = fontSize or size, flags = flags or "" }
+    local spec = { path = path, size = fontSize or size, flags = flags or "", scope = scope or self:FrameScope(region) }
     self.regions[region] = spec
     self:ApplyInterfaceFont(region, spec)
 end
@@ -315,4 +324,101 @@ function M:RefreshSounds()
     if InCombat() then self.soundPending=true;self.pending=true;return end
     self.soundPending=false
     for owner,callback in pairs(self.soundListeners) do callback(owner) end
+end
+
+
+-- Addon-local defaults. Never use LSM:SetGlobal or mutate Blizzard FontObjects.
+-- Local custom media wins; old game/flat defaults inherit without rewriting them.
+function M:FrameScope(frame)
+    while frame do
+        if frame.ptgMediaScope then return frame.ptgMediaScope end
+        frame=frame.GetParent and frame:GetParent()
+    end
+end
+function M:ModuleScope(settings)
+    if type(settings)=="string" then return settings end
+    if type(settings)~="table" or not addon.db then return end
+    self.scopeCache=self.scopeCache or setmetatable({}, {__mode="k"})
+    if self.scopeCache[settings]~=nil then return self.scopeCache[settings] or nil end
+    local function Contains(t, depth)
+        if t==settings then return true end
+        if depth==0 then return false end
+        for _,v in pairs(t) do if type(v)=="table" and Contains(v,depth-1) then return true end end
+    end
+    for id,db in pairs(addon.db.modules) do
+        if Contains(db,4) then self.scopeCache[settings]=id;return id end
+    end
+    self.scopeCache[settings]=false
+end
+function M:GlobalStyle(kind, settings)
+    local db=addon.db and addon.db.globalMedia
+    if not db then return end
+    local scope=self:ModuleScope(settings)
+    local override=scope and db.overrides[scope]
+    local value=override and override[kind]
+    return value and value~="inherit" and value or db[kind]
+end
+function M:ResolveFont(key)
+    if key=="game" then return GameFontHighlight:GetFont() end
+    if key=="chat" then return ChatFontNormal:GetFont() end
+    if type(key)=="string" and key:sub(1,6)=="media:" then return self:GetFont(key:sub(7)) end
+end
+function M:GetSurfaceTexture(scope, key)
+    key=key or self:GlobalStyle("texture",scope) or "default"
+    local kind,name=key:match("^([^:]+):(.+)$")
+    kind=kind=="background" and "background" or "statusbar"
+    if name and self.library then
+        local entries=self.library:HashTable(kind)
+        local path=entries and entries[name]
+        if type(path)=="string" and path~="" then return path end
+    end
+    return self.defaultStatusBar
+end
+function M:GetTextures()
+    local choices={{key="default",label="Flat"}}
+    if self.library then
+        for _,kind in ipairs({"statusbar","background"}) do
+            local entries=self.library:HashTable(kind) or {}
+            for _,name in ipairs(self.library:List(kind) or {}) do
+                if type(entries[name])=="string" and entries[name]~="" then
+                    choices[#choices+1]={key=(kind=="statusbar" and "media:" or "background:")..name,label=name.." ("..kind..")"}
+                end
+            end
+        end
+    end
+    return choices
+end
+function M:PaintSurface(texture,color,alpha,scope)
+    scope=scope or self:FrameScope(texture)
+    if texture:SetTexture(self:GetSurfaceTexture(scope))==false then texture:SetTexture(self.defaultStatusBar) end
+    texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
+end
+function M:ApplyBackdrop(frame, backdrop, scope)
+    scope=scope or self:FrameScope(frame)
+    local copy={};for k,v in pairs(backdrop) do copy[k]=v end
+    local border=self:GetBorder(self:GlobalStyle("border",scope) or "thin") or {kind="thin",edgeSize=1}
+    copy.edgeFile=border.path or self.defaultStatusBar
+    if border.kind=="none" then copy.edgeFile=nil end
+    local thickness=backdrop.edgeSize
+    if thickness==nil or thickness==1 then thickness=border.edgeSize or 1 end
+    copy.edgeSize=math.max(1,math.min(thickness,12))
+    if copy.insets then copy.insets={left=1,right=1,top=1,bottom=1} end
+    if copy.bgFile then copy.bgFile=self:GetSurfaceTexture(scope) end
+    frame:SetBackdrop(copy)
+end
+function M:SetGlobalStyle(kind,value,scope)
+    if InCombatLockdown() or UnitAffectingCombat("player") then return false end
+    if kind~="font" and kind~="texture" and kind~="border" then return false end
+    if scope and not addon.modules[scope] then return false end
+    local choices=kind=="font" and self:GetFonts() or kind=="border" and self:GetBorders() or self:GetTextures()
+    local valid=scope and value=="inherit"
+    for _,choice in ipairs(choices) do if choice.key==value then valid=true end end
+    if not valid then return false end
+    local db=addon.db.globalMedia
+    if scope then
+        db.overrides[scope]=db.overrides[scope] or {}
+        db.overrides[scope][kind]=value
+    else db[kind]=value end
+    addon.ReloadManager:Request("globalMedia","Apply Global Settings media changes.")
+    return true
 end

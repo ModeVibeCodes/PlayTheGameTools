@@ -115,7 +115,7 @@ function UI.New(page, module)
             for index,offset in ipairs(offsets) do
                 local glow=slot.headerGlow[index] or button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
                 slot.headerGlow[index]=glow
-                glow:SetFont(face,size,"OUTLINE");glow:SetAlpha(.12);glow:SetJustifyH("LEFT");glow:SetJustifyV("TOP");glow:SetWordWrap(true)
+                glow:SetFont(addon.Media:GetInterfaceFont(face),size,"OUTLINE");glow:SetAlpha(.12);glow:SetJustifyH("LEFT");glow:SetJustifyV("TOP");glow:SetWordWrap(true)
                 glow:ClearAllPoints();glow:SetPoint("TOPLEFT",button.label,"TOPLEFT",offset[1],offset[2]);glow:SetPoint("TOPRIGHT",button.label,"TOPRIGHT",offset[1],offset[2])
                 glow:SetText(button.label:GetText());glow:Show()
             end

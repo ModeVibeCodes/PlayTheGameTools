@@ -114,7 +114,8 @@ themed.execute('''
     assert(T.text[1]<1 and T.text[2]<1 and T.panel[4]==1,'soft body text, opaque popups')
     SlashCmdList.PLAYTHEGAMETOOLS()
     local window=addon.configWindow
-    assert(window.blizzardBackdrop=='dialog' and window.backdrop.edgeFile==ART.dialogBorder and window.backdrop.bgFile==nil)
+    assert(window.blizzardBackdrop=='dialog' and window.backdrop.edgeFile==addon.Media.defaultStatusBar and window.backdrop.bgFile==nil)
+    assert(window.backdrop.edgeSize==1,'global Thin replaces the native wide dialog edge')
     assert(window.canvas.shown~=false and window.canvas.color[4]==1,'opaque canvas under the dialog border')
     for _,id in ipairs(addon.moduleOrder) do addon:SelectConfigPage(id); assert(window.pages[id],id) end
     addon:SelectConfigPage('dashboard')
@@ -128,7 +129,7 @@ themed.execute('''
     assert(toggle.fill.texture==ART.checkbox and toggle.knob.texture==ART.check)
     assert(window.navigationButtons.dashboard.blizzardHighlight.shown)
     -- Stock game font, drop shadows, and segmented choices without push-button art.
-    assert(window.title.font[1]==GameFontNormalLarge.font[1] and window.title.shadowOffset[1]==1,'stock font with shadow')
+    assert(window.title.font[1]==GameFontHighlight:GetFont() and window.title.shadowOffset[1]==1,'global font with theme shadow')
     assert(window.pages.dashboard.themeButtons[1].blizzardArt==nil,'choices stay flat')
     local themes=window.pages.dashboard.themeButtons
     assert(themes[2].selected and not addon.ReloadManager.requests.interfaceTheme)
@@ -141,7 +142,7 @@ missing.execute('''
     SlashCmdList.PLAYTHEGAMETOOLS()
     for _,id in ipairs(addon.moduleOrder) do addon:SelectConfigPage(id) end
     local window=addon.configWindow
-    assert(window.closeButton.blizzardArt==nil and window.closeButton.outline.edges[1].shown~=false)
+    assert(window.closeButton.blizzardArt==nil and window.closeButton.outline.edges[1]:IsShown())
     assert(window.moduleHeader.toggle.switchOutline.edges and window.moduleHeader.toggle.knob.texture==nil)
     testMissingTextures=nil
     -- An unknown saved id renders Modern and is never rewritten.

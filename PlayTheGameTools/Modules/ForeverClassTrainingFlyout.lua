@@ -140,12 +140,13 @@ function M:CreateTrainingFlyout()
     if self.trainingFlyout then return end
     local W,T=addon.ConfigWidgets,addon.Theme
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");f:SetSize(320,440)
+    f.ptgMediaScope="foreverClassTraining"
     f:SetFrameStrata("DIALOG");f:SetClampedToScreen(true);f:EnableMouse(true)
     f:SetResizable(true)
     local background=f:CreateTexture(nil,"BACKGROUND");background:SetPoint("TOPLEFT",1,-1);background:SetPoint("BOTTOMRIGHT",-1,1)
-    background:SetColorTexture(0.03,0.04,0.05,self:FlyoutOpacity()/100);f.background=background
+    addon.Media:PaintSurface(background,{0.03,0.04,0.05},self:FlyoutOpacity()/100,"foreverClassTraining");f.background=background
     -- A native edge fits the actual frame; stretching the square artwork inset its visible border.
-    f:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    addon.Media:ApplyBackdrop(f,{edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverClassTraining")
     f:SetBackdropBorderColor(0.45,0.52,0.58,0.85)
     f.title=W.Heading(f,"Class Training",16,12,-12,220,T.primary)
     local minimize=W.Button(f,"Minimize",72,24,"secondary");minimize:SetPoint("TOPRIGHT",-10,-8)
@@ -208,7 +209,7 @@ function M:RenderTrainingFlyout()
     local f=self.trainingFlyout;local W,T=addon.ConfigWidgets,addon.Theme
     f.content:SetWidth(f:GetWidth()-28)
     f.title:SetWidth(f:GetWidth()-110);f.subtitle:SetWidth(f:GetWidth()-24);f.wallet:SetWidth(f:GetWidth()-24)
-    f.background:SetColorTexture(0.03,0.04,0.05,self:FlyoutOpacity()/100)
+    addon.Media:PaintSurface(f.background,{0.03,0.04,0.05},self:FlyoutOpacity()/100,"foreverClassTraining")
     f.subtitle:SetText(self.message or "No class data")
     f.trainingTotal:SetText("Training total  "..self:MoneyText(P.TrainingTotal(self.rows or {})))
     for _,item in ipairs(f.entries) do item.frame:Hide() end

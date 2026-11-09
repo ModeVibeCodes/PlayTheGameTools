@@ -1,5 +1,7 @@
 # Standalone Forever development
 
+Global Settings uses existing runtime files for /reload. Run tests/global_settings.py with the regressions and release builder. See [contract and exact native checks](GLOBAL_SETTINGS.md). Native validation pending.
+
 Guild Roster adds Guild Tools -> Roster (twelfth module, two Lua files, 109 chunks).
 Members come from `C_Club`, the documented path Blizzard's Forever member list uses;
 `GetGuildRosterInfo` does not appear in the published Forever source and is not

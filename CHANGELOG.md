@@ -1,5 +1,7 @@
 # Play The Game Tools changelog
 
+Global Settings adds suite-wide font, texture and border defaults, LibSharedMedia choices, module overrides, preserved local customizations and reload-based application. Native validation pending. See docs/GLOBAL_SETTINGS.md.
+
 ## Unreleased
 
 - Added Guild Tools -> Roster: an opt-in page that lists every guild member under

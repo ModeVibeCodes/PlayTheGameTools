@@ -1,5 +1,7 @@
 # Forever API compatibility notes
 
+Global Settings uses the existing optional LibSharedMedia List/HashTable/Fetch APIs for font, border, statusbar and background assets. Addon-owned font regions, backdrop frames and textures only; no global LSM overrides, Blizzard FontObject writes, protected-action hooks or new gameplay API assumptions. Media selection is OOC; native rendering and action regressions await user confirmation. See [Global Settings](GLOBAL_SETTINGS.md).
+
 ## Enhanced Experience Bar
 
 Uses public player XP/rest state, quest log metadata and reward XP APIs behind

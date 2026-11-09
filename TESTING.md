@@ -1,5 +1,7 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Global Settings native checks: see [Global Settings](docs/GLOBAL_SETTINGS.md). Run tests/global_settings.py for inheritance, real dropdown clicks, profile persistence, absent media and combat guards.
+
 Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)
 on its local feature branch. Enable under Questing & Leveling; native acceptance
 is pending.

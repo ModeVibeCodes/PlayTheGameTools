@@ -51,7 +51,8 @@ Set('ShowIcons',true);Set('ShowNames',true);Set('ShowProfession',true);Set('Show
 Set('ShowTitle',true);Set('HeaderGradient',true)
 assert(f.title:GetText():find('|r|cff',1,true),'optional independent contribution gradient')
 -- Actual existing font dropdown switches off interface-font inheritance.
-page.contributionFont.scripts.OnClick();page.contributionFont.rows[2].scripts.OnClick()
+page.contributionFont.scripts.OnClick()
+for _,row in ipairs(page.contributionFont.rows) do if row.choice.key=='chat' then row.scripts.OnClick();break end end
 assert(not C.db.contributionUseInterfaceFont and C.db.contributionFont=='chat')
 assert(sample.name.font[1]==ChatFontNormal:GetFont())
 addon.Media:RefreshFonts();assert(sample.name.font[1]==ChatFontNormal:GetFont())
