@@ -12,6 +12,10 @@ local M = {
     soundListeners = setmetatable({}, { __mode = "k" }),
 }
 addon.Media = M
+function M:MediaLabel(name)
+    local label=(name or ""):gsub("%s*%b()",""):gsub("%s+$","")
+    return label~="" and label or (name or ""):gsub("[()]","")
+end
 M.defaultStatusBar = "Interface\\Buttons\\WHITE8X8"
 function M:RegisterStatusBarListener(owner,callback) self.statusbarListeners[owner]=callback end
 function M:UnregisterStatusBarListener(owner) self.statusbarListeners[owner]=nil end
@@ -30,7 +34,7 @@ function M:GetStatusBars()
     if self.library then
         for _,name in ipairs(self.library:List("statusbar") or {}) do
             if type(name)=="string" and not seen[name] and self:GetStatusBar("media:"..name) then
-                seen[name]=true; choices[#choices+1]={key="media:"..name,label=name}
+                seen[name]=true; choices[#choices+1]={key="media:"..name,label=self:MediaLabel(name)}
             end
         end
     end
@@ -139,7 +143,7 @@ function M:GetBorders()
         for _, name in ipairs(self.library:List("border") or {}) do
             if type(name) == "string" and not seen[name] and self:GetBorder("media:" .. name) then
                 seen[name] = true
-                choices[#choices + 1] = { key = "media:" .. name, label = name }
+                choices[#choices + 1] = { key = "media:" .. name, label = self:MediaLabel(name) }
             end
         end
     end
@@ -210,7 +214,7 @@ function M:GetFonts()
             local path = self:GetFont(name)
             if path and not seen[name] then
                 seen[name] = true
-                choices[#choices + 1] = { key = "media:" .. name, label = name, path = path, media = name }
+                choices[#choices + 1] = { key = "media:" .. name, label = self:MediaLabel(name), path = path, media = name }
             end
         end
     end
@@ -371,7 +375,7 @@ function M:GetTextures()
             local entries=self.library:HashTable(kind) or {}
             for _,name in ipairs(self.library:List(kind) or {}) do
                 if type(entries[name])=="string" and entries[name]~="" then
-                    choices[#choices+1]={key=(kind=="statusbar" and "media:" or "background:")..name,label=name.." ("..kind..")"}
+                    choices[#choices+1]={key=(kind=="statusbar" and "media:" or "background:")..name,label=self:MediaLabel(name)}
                 end
             end
         end

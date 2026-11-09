@@ -15,6 +15,28 @@ and **PTG Clean**, alongside LSM's native choices and PTG panel textures.
 Installed media packs extend the same lists. Missing selections remain stored
 with safe fallbacks. Use header **Reload** after appearance changes.
 
+**SharedMedia asset-pack integration:** SharedMedia is the additional-media addon;
+LibSharedMedia is the registry it uses. On first adoption, PTG enables/saves and
+loads installed **SharedMedia** and **SharedMedia_MyMedia** outside combat, as
+explicitly requested by the owner. The **SharedMedia** status row reports Ready,
+Disabled in AddOns, Not installed, or a load/reload issue. Other providers remain
+passive. Later manual disables of these two addons are respected; setup markers
+are account/machine state and excluded from profiles. No addon is downloaded,
+no MyMedia files are generated/overwritten, and no upstream pack files are copied.
+Registered MyMedia additions automatically join the same font/texture/border lists.
+Use SharedMedia's own MyMedia instructions for custom files/registration.
+
+Inspected installed SharedMedia 3.1.3-202: SharedMedia.toc, SharedMedia.lua and
+INSTRUCTIONS for MyMedia.txt. Its pack declares fonts such as Adventure, status
+bars such as Aluminium, backgrounds such as Bricks, and borders such as RothSquare.
+The [official pack description](https://www.wowace.com/projects/sharedmedia)
+confirms that its assets are registered into LibSharedMedia. SharedMedia remains
+an installed external addon, distinct from PTG's bundled registry library.
+
+Media dropdown labels now contain names only. Texture-kind, override and fallback
+parenthetical annotations are removed from lists/selected labels; stored media
+keys and fallback behavior are unchanged.
+
 The Shared Media, Loot and Errors, and Camera Distance description rows were
 removed at the owner's request. The class grid now has body insets and vertical
 padding, so its controls clear the separator. Native alignment confirmation is
@@ -41,7 +63,8 @@ Their addon-file name/path registrations are now remembered in the account-wide
 `mediaRegistry` cache, outside profiles and profile exports. On a later reload,
 cached entries are registered again when the provider is still installed and its
 asset is client-known, regardless of its enabled state. Current live registrations
-win name collisions; disabled providers are never enabled or loaded. Missing
+win name collisions; ordinary disabled providers are never enabled or loaded.
+SharedMedia/MyMedia are the explicit owner-requested activation exception above. Missing
 providers are ignored while selections/cache data remain available for recovery.
 The cache is bounded to 4,096 entries, with validated primitive name/path values.
 Media refreshes defer rendering during combat and complete after combat ends.
@@ -178,7 +201,7 @@ define LOOT_READY's boolean. This does not establish native action acceptance.
 
 ## Validation and native checklist
 
-All 30 standalone scripts pass, including the expanded global/discovery suites. Focused
+All 31 standalone scripts pass, including the expanded global/discovery/SharedMedia suites. Focused
 rechecks cover the final media, scaling and layout changes. Smoke compiles/loads
 116 Lua chunks. Deterministic packaging has 199 files, including upstream licenses
 and runtime media. No new native acceptance or release is claimed.
@@ -228,9 +251,19 @@ can require one full client restart. No Retail sync, release or merge is implied
 
 8. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global
    Font / Global Texture / Global Border. **Action:** with AyijeUI already installed
-   and disabled, choose AyijeUI: Expressway, AyijeUI: focus (statusbar), and
+   and disabled, choose AyijeUI: Expressway, AyijeUI: focus, and
    AyijeUI: Ayije_Thin; Reload. **Required state:** OOC; restart once for new catalog
    files if necessary. **Confirmation:** the provider stays disabled, the choices
    render and persist, and no provider functionality starts. For uncataloged media,
    first let its provider register normally, then disable it and reload separately;
    the remembered choices should remain available while its files remain installed.
+
+9. **Navigation:** Play The Game Tools → Global Settings → Appearance → SharedMedia
+   / Global Font / Global Texture / Global Border. **Action:** Reload with the
+   SharedMedia pack installed, verify Ready, and choose Adventure / Aluminium /
+   RothSquare; inspect custom MyMedia entries if installed. **Required state:**
+   OOC; restart once if SharedMedia was installed while the client was running.
+   **Confirmation:** the actual pack is enabled/loaded, its registered choices
+   render, menu labels have no parenthetical annotations, and unrelated addon
+   enabled states are unchanged. A later deliberate SharedMedia disable must
+   remain respected on the next reload.

@@ -12,7 +12,7 @@ function addon:CreateGlobalSettingsPage(parent)
         local button=W.Select(page:Row(label,48),280,function() return Choices(kind) end,function()
             local value=self.db.globalMedia[kind]
             for _,choice in ipairs(Choices(kind)) do if choice.id==value then return value,choice.label end end
-            return value,value.." (unavailable; default fallback)"
+            return value,self.Media:MediaLabel(value:gsub("^media:",""):gsub("^background:",""))
         end,function(value) self.Media:SetGlobalStyle(kind,value);page:Refresh() end)
         page.refreshers[#page.refreshers+1]=function() button:Refresh() end
         page.mediaControls=page.mediaControls or {};page.mediaControls["global:"..kind]=button
@@ -22,6 +22,8 @@ function addon:CreateGlobalSettingsPage(parent)
     end
     page:Section("Appearance",nil,false)
     Media("font","Global Font");Media("texture","Global Texture");Media("border","Global Border")
+    local shared=W.Label(page:Row("SharedMedia",40),"",nil,0,-4,360,T.muted)
+    page.refreshers[#page.refreshers+1]=function() shared:SetText(self.Media.sharedMediaStatus or "Not installed") end
 
     page:Section("Profiles",nil,false)
     Note("Account-wide Profiles","Profiles and the selected profile are shared by every character on this account. Changes save automatically: module settings, enabled modules, Edit Mode positions, global appearance and optimizations. Create copies the current setup; select a profile and Reload to apply it.",100)

@@ -1,7 +1,8 @@
 # Standalone Forever development
 
 Media discovery adds a path-only 55-entry installed-provider catalog plus an
-account LSM registration cache. Disabled providers are never loaded/enabled.
+account LSM registration cache. Ordinary disabled providers are never loaded/enabled;
+the owner's subsequent explicit SharedMedia/MyMedia activation is the exception.
 Run tests/media_discovery.py with the regression scripts; current packaging is
 116 Lua / 199 files. The external read-only indexer and runtime discovery limits
 are documented in [Global Settings](GLOBAL_SETTINGS.md).

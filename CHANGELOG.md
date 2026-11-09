@@ -4,6 +4,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Activate installed SharedMedia/MyMedia on first adoption, respecting later
+  manual disables; show pack readiness and consume its additional/custom media.
+  Media dropdown labels now show names without parenthetical annotations.
 - Remember shared font/texture/border registrations across reloads and discover
   cataloged assets from installed disabled providers without loading their code.
   Added a read-only local media indexer; current catalog contains 55 paths.

@@ -13,6 +13,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 
 - **Global Settings:** shared addon/game UI fonts, bundled LibSharedMedia choices,
   remembered shared media and cataloged assets from installed disabled providers,
+  installed SharedMedia/MyMedia activation and custom media registrations,
   account-wide profiles with import/export, class-color pickers, Auto Loot/Fast
   Loot, camera distance, detected/manual UI scale and red-error text controls.
   Open `/ptg` → Global Settings; [details and native checks](docs/GLOBAL_SETTINGS.md).

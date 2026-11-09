@@ -1,5 +1,9 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+SharedMedia pack integration: run tests/shared_media.py. After OOC reload, Global
+Settings → Appearance → SharedMedia should report Ready for the installed pack;
+its fonts/textures/borders and optional MyMedia choices should have plain names.
+
 Disabled-provider media: run tests/media_discovery.py and use the
 [known-path/cache native check](docs/GLOBAL_SETTINGS.md#validation-and-native-checklist).
 Test providers already disabled; PTG must not change their enabled state.

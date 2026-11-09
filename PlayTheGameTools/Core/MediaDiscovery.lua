@@ -3,6 +3,49 @@ local M=addon.Media
 local kinds={font=true,statusbar=true,background=true,border=true}
 local limit=4096
 local function Public(value) return not (issecretvalue and issecretvalue(value)) end
+-- Explicit SharedMedia activation requested by the owner. Other media providers
+-- remain passive. Adopt each installed service once; later manual disables win.
+function M:EnsureSharedMedia()
+    if self.startingSharedMedia then return end
+    if InCombatLockdown() or UnitAffectingCombat("player") then self.sharedMediaPending=true;return end
+    self.sharedMediaPending=false
+    local api=C_AddOns
+    local root=addon.ProfileManager and addon.ProfileManager.root
+    if not root or not (api and api.DoesAddOnExist and api.IsAddOnLoaded and api.GetAddOnEnableState) then return end
+    if root.sharedMediaActivation==nil then root.sharedMediaActivation={} end
+    if type(root.sharedMediaActivation)~="table" then return end
+    self.startingSharedMedia=true
+    self.sharedMediaAttempted=self.sharedMediaAttempted or {}
+    self.sharedMediaStatus="Not installed"
+    for _,name in ipairs({"SharedMedia","SharedMedia_MyMedia"}) do
+        local ok,exists=pcall(api.DoesAddOnExist,name)
+        if ok and Public(exists) and exists==true then
+            local loadedOk,loaded=pcall(api.IsAddOnLoaded,name)
+            if loadedOk and Public(loaded) and loaded==true then
+                root.sharedMediaActivation[name]=true
+                if name=="SharedMedia" then self.sharedMediaStatus="Ready" end
+            elseif not self.sharedMediaAttempted[name] then
+                self.sharedMediaAttempted[name]=true
+                local stateOk,state=pcall(api.GetAddOnEnableState,name)
+                if stateOk and Public(state) and type(state)=="number" then
+                    if state==0 and not root.sharedMediaActivation[name] and api.EnableAddOn then
+                        pcall(api.EnableAddOn,name)
+                        stateOk,state=pcall(api.GetAddOnEnableState,name)
+                        if stateOk and Public(state) and type(state)=="number" and state>0 and api.SaveAddOns then pcall(api.SaveAddOns) end
+                    end
+                    if stateOk and Public(state) and type(state)=="number" and state>0 then
+                        root.sharedMediaActivation[name]=true
+                        if api.LoadAddOn then pcall(api.LoadAddOn,name) end
+                        loadedOk,loaded=pcall(api.IsAddOnLoaded,name)
+                        if name=="SharedMedia" then self.sharedMediaStatus=loadedOk and Public(loaded) and loaded==true and "Ready" or "Reload or check AddOns" end
+                    elseif name=="SharedMedia" then self.sharedMediaStatus="Disabled in AddOns" end
+                end
+            elseif name=="SharedMedia" then self.sharedMediaStatus=self.sharedMediaLastStatus or "Reload needed" end
+        end
+    end
+    self.sharedMediaLastStatus=self.sharedMediaStatus
+    self.startingSharedMedia=false
+end
 local function Valid(kind,name,path)
     return Public(kind) and Public(name) and Public(path) and kinds[kind]
         and type(name)=="string" and #name>0 and #name<=160 and not name:find("[%z\1-\31]")

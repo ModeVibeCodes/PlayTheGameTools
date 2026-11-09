@@ -92,7 +92,7 @@ function M:SetOption(key, value)
 end
 function M:SetAppearance(key, value) return self:SetOption(key, value) end
 function M:GetTextureChoices()
-    local choices = {{id = "default", label = "Use Global Setting"}, {id = "flat", label = "Flat (override)"}, {id = "blizzardXP", label = "Blizzard XP"},
+    local choices = {{id = "default", label = "Use Global Setting"}, {id = "flat", label = "Flat"}, {id = "blizzardXP", label = "Blizzard XP"},
         {id = "blizzardStatus", label = "Blizzard Status Bar"}}
     for _, item in ipairs(addon.Media:GetStatusBars()) do
         if item.key ~= "default" then choices[#choices + 1] = {id = item.key, label = item.label} end

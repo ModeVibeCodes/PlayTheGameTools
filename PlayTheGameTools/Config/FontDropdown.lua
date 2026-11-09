@@ -34,19 +34,17 @@ local function MediaDropdown(parent, timer, border)
         local media = a.fontMedia or ""
         if statusbar then
             local style=a.barTexture
-            button.label:SetText((style=="default" and "Play The Game Tools Default" or style:sub(7))
-                ..(addon.Media:GetStatusBar(style) and "" or " (default fallback)"))
+            button.label:SetText(addon.Media:MediaLabel(style=="default" and "Play The Game Tools Default" or style:sub(7)))
         elseif border then
             local style = timer.db.display.icon.borderStyle
             local label = style == "none" and "None" or style == "thin" and "Play The Game Tools Thin" or style:sub(7)
-            button.label:SetText(label .. (addon.Media:GetBorder(style) and "" or " (unavailable; Thin fallback)"))
+            button.label:SetText(addon.Media:MediaLabel(label))
         elseif media=="builtin:game" or media=="builtin:chat" then
-            button.label:SetText(media=="builtin:chat" and "Chat font (override)" or "Game font (override)")
+            button.label:SetText(media=="builtin:chat" and "Chat font" or "Game font")
         elseif media=="" and a.font=="game" then
             button.label:SetText("Use Global Setting")
         else
-            button.label:SetText((media ~= "" and (media .. (addon.Media:GetFont(media) and "" or " (unavailable)"))
-                or (a.font == "chat" and "Chat font" or "Game font")))
+            button.label:SetText(addon.Media:MediaLabel(media~="" and media or (a.font=="chat" and "Chat font" or "Game font")))
         end
         if not menu:IsShown() then return end
         W.PlacePopup(menu,button)
@@ -73,7 +71,7 @@ local function MediaDropdown(parent, timer, border)
                 end)
             end
             row.choice = choice
-            row.label:SetText(choice.label)
+            row.label:SetText(addon.Media:MediaLabel(choice.label))
             local fontSelected=choice.media and media==choice.media
                 or choice.key=="global" and media=="" and a.font=="game"
                 or choice.key=="game" and media=="builtin:game"
