@@ -2,6 +2,7 @@
 
 | Feature | Configuration | Scope | Native status |
 | --- | --- | --- | --- |
+| Guild Roster | Guild Tools -> Roster | Opt-in, read-only: every guild member listed by class from native `C_Club` data, Class Summary totals, session-only with no saved roster | Static fixtures only; native validation pending |
 | Rogue Poisons | Class Tools -> Rogue -> Display / Settings / Position | Poison Reminder: independent time/5–25 charge thresholds, minimal defaults, right-click dismissal, Recent/family grid, true Main Hand/Off Hand Icon Gap and custom borders; customizable Quick Access Poisons; shared Edit Mode/coordinates and class branding | Prior application version quick-tested by owner; current layout/dismissal/Edit Mode native review pending; [details](FOREVER_ROGUE_POISONS.md) |
 | Enhanced Experience Bar | Questing & Leveling -> Enhanced Experience Bar | Opt-in XP/rested/full-log XP, priority tints, texture choices, independent text, shared Edit Mode and native/Ellesmere provider choice | Owner accepted current feature and authorized PR #13 merge; broader native coverage remains bounded; [details](ENHANCED_EXPERIENCE_BAR.md) |
 | Campfire Monitor | Questing & Leveling -> Gameplay Enhancements -> Campfire Monitor | Independent opt-in under parent master; native proximity, colored joined/detached Camp Buffs with native tooltip duration only, centered status icon, guide and shared Edit Mode | Owner accepted latest UI/customization and requested merge; broader native coverage remains pending; [details](CAMPFIRE_MONITOR.md) |

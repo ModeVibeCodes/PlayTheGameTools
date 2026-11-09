@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+Guild Roster adds Guild Tools -> Roster (twelfth module, two Lua files, 109 chunks).
+Members come from `C_Club`, the documented path Blizzard's Forever member list uses;
+`GetGuildRosterInfo` does not appear in the published Forever source and is not
+used. Restricted/secret data keeps the last list, and nothing is saved. Run
+`python tests/guild_roster.py` with smoke/build. New TOC files need a client
+restart. Native validation is pending; no release or SavedVariables change.
+
 Enhanced Experience Bar adds the tenth module and four Lua files (100 chunks).
 Run `python tests/enhanced_experience_bar.py` for forecasts/session/Edit Mode and
 profile coverage, plus regression/build checks. The contract and exact `/reload`

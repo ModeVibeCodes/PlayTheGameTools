@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Guild Tools -> Roster: an opt-in page that lists every guild member under
+  their class and totals each class in a Class Summary. Read-only; nothing about
+  the roster is saved. Native validation is pending.
+
 - Edit Mode's Exit / Save button is now Exit, since positions are written as they
   change. Exit keeps a typed coordinate that was not applied yet and can no longer
   be stranded by a module error. Combat ends Edit Mode without reopening settings.

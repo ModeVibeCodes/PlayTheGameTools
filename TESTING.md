@@ -165,6 +165,19 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Confirmation:** The X'd player no longer appears until the list is cleared;
    invited players stay hidden for the saved re-invite window (7 days by default).
 
+## Guild Roster
+
+Run `python tests/guild_roster.py`. Mocks do not establish native member data, so
+these checks need the game client. New Lua files need one full client restart.
+
+| Check | Navigation | Action | Required state | Confirmation |
+| --- | --- | --- | --- | --- |
+| R1 Turn on | `/ptg` → Guild Tools → Roster | Click the switch at the top right of the page | Logged in on a character in a guild | Switch reads **Enabled**; **Class Summary** shows **Total Members** and all nine classes with a count, including 0 |
+| R2 Members by class | `/ptg` → Guild Tools → Roster | Scroll to the bottom of **Members by Class**, then compare with the native guild window | R1 done | Each class with members has a colored heading such as **Mage (12)** and its names alphabetically; **Total Members** matches the native member count; offline members are included |
+| R3 Totals agree | `/ptg` → Guild Tools → Roster | Compare each **Class Summary** count with the number in that class's heading | R1 done | Every count matches its heading |
+| R4 No guild | `/ptg` → Guild Tools → Roster | Open the page | Roster enabled on a character not in a guild | Page reads **You are not in a guild.** and **Total Members: 0**, with no Lua error |
+| R5 Turn off | `/ptg` → Guild Tools → Roster | Click the switch at the top right of the page | Roster enabled | Switch reads **Disabled**; names are cleared and the page asks you to turn on the switch |
+
 ## F. Reporting and release gate
 
 Return the results by chunk, e.g. `A1 PASS, A2 FAIL: preference reset after reload`.
