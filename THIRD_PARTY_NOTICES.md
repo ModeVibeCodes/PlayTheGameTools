@@ -2,6 +2,12 @@
 
 ## Global Settings media dependencies
 
+Expressway is an optional reference to a verified font asset in an installed
+EllesmereUI/AyijeUI or an existing LibSharedMedia registration. Its file is not
+copied or redistributed by Play The Game Tools. The installed copy's embedding
+license was not established; current author terms are at
+https://typodermicfonts.com/license/.
+
 Bundled unmodified upstream sources in PlayTheGameTools/Core/Libs:
 
 - LibSharedMedia-3.0, Elkano, LGPL v2.1. Source: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0/LibSharedMedia-3.0.lua. SHA-256: 147ec190e8aeb46dc4989b4ac890c08dd9f0c293f3e1ff9ea2fbcb607df44fce. Full terms: LICENSES/LGPL-2.1.txt. Lua source is distributed and the standalone library files remain replaceable.

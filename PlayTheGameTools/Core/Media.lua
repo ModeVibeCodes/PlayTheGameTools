@@ -180,6 +180,7 @@ function M:AttachLibrary()
     end
     self.library = library
     self:RegisterBundledMedia()
+    self:RegisterProviderFonts()
     if library.RegisterCallback then
         library.RegisterCallback(self, "LibSharedMedia_Registered", "OnMediaRegistered")
         library.RegisterCallback(self, "LibSharedMedia_SetGlobal", "OnMediaRegistered")
@@ -297,6 +298,7 @@ function M:Initialize()
     events:RegisterEvent("ADDON_LOADED")
     events:SetScript("OnEvent", function()
         if self:AttachLibrary() then self:RefreshFonts(); self:RefreshBorders(); self:RefreshStatusBars(); self:RefreshSounds() end
+        self:RegisterProviderFonts()
         if addon.Positioning then addon.Positioning:Discover() end
     end)
     self.events = events
@@ -421,6 +423,25 @@ function M:RegisterBundledMedia()
         local path=self:GetTexture(key)
         library:Register("background",name,path)
         library:Register("statusbar",name,path)
+    end
+end
+
+-- Reference only verified installed assets; never copy a provider's font file.
+-- Respect an existing LSM registration, including one supplied by a media pack.
+function M:RegisterProviderFonts()
+    local library=self.library
+    if not library or type(library.Register)~="function" or not (C_UIFileAsset and C_UIFileAsset.IsKnownFile) then return end
+    local fonts=library:HashTable("font")
+    if fonts and fonts.Expressway then return end
+    for _,path in ipairs({
+        "Interface\\AddOns\\EllesmereUI\\media\\fonts\\Expressway.TTF",
+        "Interface\\AddOns\\AyijeUI\\Media\\Fonts\\Expressway.ttf",
+    }) do
+        local ok,known=pcall(C_UIFileAsset.IsKnownFile,path)
+        if ok and not (issecretvalue and issecretvalue(known)) and known==true then
+            library:Register("font","Expressway",path)
+            return
+        end
     end
 end
 

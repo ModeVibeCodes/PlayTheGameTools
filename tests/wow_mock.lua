@@ -16,7 +16,13 @@ bit={band=function(a,b)
     end
     return value
 end}
-C_UIFileAsset={IsKnownFile=function(path) return type(path)=="string" and not (testMissingTextures and testMissingTextures[path]) end}
+C_UIFileAsset={IsKnownFile=function(path)
+    if type(path)~="string" then return false end
+    if path:find("AddOns\\EllesmereUI\\",1,true) or path:find("AddOns\\AyijeUI\\",1,true) then
+        return testProviderFonts and testProviderFonts[path]==true or false
+    end
+    return not (testMissingTextures and testMissingTextures[path])
+end}
 function securecallfunction(fn,...) return fn(...) end
 function geterrorhandler() return function(message) error(message) end end
 function GetTime() clockReads = clockReads + 1; return testClock end

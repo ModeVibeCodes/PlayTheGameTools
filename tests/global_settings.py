@@ -41,6 +41,12 @@ assert(page.sectionTabs:GetNumPoints()==2 and page.scroll.points[1][5]==-40,'tab
 for key in pairs(page.mediaControls) do assert(key:sub(1,7)=='global:','no per-module overrides on page') end
 assert(page.profileHub and not page.profileHub.specToggle:GetParent():GetParent():IsShown(),'Forever spec controls omitted')
 assert(#G.classes==9 and page.classColorButtons.DRUID)
+local grid=page.classColorGrid
+assert(grid.points[1][4]==12 and grid.points[1][5]==-14 and grid.points[2][5]==14,'class controls clear the separator and retain body padding')
+assert(not M:GetFont('Expressway'),'no missing provider advertised')
+local expressway=[[Interface\AddOns\EllesmereUI\media\fonts\Expressway.TTF]]
+testProviderFonts={[expressway]=true};FireEvent('ADDON_LOADED','EllesmereUI')
+assert(M:GetFont('Expressway')==expressway,'late installed provider appears without copying assets')
 local function Choose(kind,id)
  local b=page.mediaControls['global:'..kind];b.scripts.OnClick();assert(b.menu:IsShown())
  for _,row in ipairs(b.rows) do if row.choice.id==id then row.scripts.OnClick();return end end

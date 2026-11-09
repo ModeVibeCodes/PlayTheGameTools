@@ -4,6 +4,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Global Settings: removed the Shared Media, Loot and Errors, and Camera Distance
+  descriptions; inset the Class Colors grid below its separator; discover optional
+  installed Expressway fonts through LibSharedMedia without bundling their files.
 - Added Guild Tools -> Roster: an opt-in page that lists every guild member under
   their class and totals each class in a Class Summary. Read-only; nothing about
   the roster is saved. Native validation is pending.

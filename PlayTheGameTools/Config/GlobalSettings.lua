@@ -22,7 +22,6 @@ function addon:CreateGlobalSettingsPage(parent)
     end
     page:Section("Appearance",nil,false)
     Media("font","Global Font");Media("texture","Global Texture");Media("border","Global Border")
-    Note("Shared Media","Includes bundled LibSharedMedia choices, PTG JetBrains Mono, PTG Satin / Matte textures and the PTG Clean border. Installed media packs add their registered choices here. Fonts also apply to standard game UI font objects. Existing module font/texture controls remain the place for local overrides. Use Reload to apply appearance changes.",110)
 
     page:Section("Profiles",nil,false)
     Note("Account-wide Profiles","Profiles and the selected profile are shared by every character on this account. Changes save automatically: module settings, enabled modules, Edit Mode positions, global appearance and optimizations. Create copies the current setup; select a profile and Reload to apply it.",100)
@@ -35,11 +34,9 @@ function addon:CreateGlobalSettingsPage(parent)
         {label="Hide Error Text",get=function() return G.db.hideErrors end,set=function(v) G:SetOption("hideErrors",v) end},
     },{maxColumns=3})
     page.optimizationControls={autoLoot=controls[1],fastLoot=controls[2],hideErrors=controls[3]}
-    Note("Loot and Errors","Fast Loot accelerates a native auto-loot session outside combat. Your auto-loot modifier still keeps looting manual; bind confirmations and the normal loot window stay available. Hide Error Text suppresses red errors such as Not Enough Mana, while other information and error sounds remain unchanged.",110)
     local zoom=page:Row("Camera Max Zoom",48)
     page.refreshers[#page.refreshers+1]=W.Slider(zoom,1,4,.1,function() return G.db.cameraZoom end,function(v) G:SetOption("cameraZoom",v) end,"x",{decimals=1})
     page.zoomSlider=zoom.slider
-    Note("Camera Distance","Always applies your selected maximum-distance factor. Range 1–4; the game remains authoritative and a clamped value is shown below. This changes the zoom limit; your mouse wheel still controls the current view.",80)
     local scale=page:Row("Global UI Scale (%)",48)
     page.refreshers[#page.refreshers+1]=W.Slider(scale,40,115,1,function() return G.db.autoScale and G:RecommendedScale() or G.db.uiScale end,
         function(v) G:SetOption("uiScale",v) end,"%",true)
@@ -58,7 +55,10 @@ function addon:CreateGlobalSettingsPage(parent)
 
     page:Section("Class Colors",nil,false)
     Note("Custom Class Colors","Click a class to choose its color. Reset restores that class's native color. Changes apply to class-colored elements across the addon after Reload.",70)
-    local host=page:Row("",180);host.rowLabel:Hide();host:ClearAllPoints();host:SetAllPoints(host.row)
+    local host=page:Row("",180);host.rowLabel:Hide();host:ClearAllPoints()
+    host:SetPoint("TOPLEFT",host.row,"TOPLEFT",12,-14)
+    host:SetPoint("BOTTOMRIGHT",host.row,"BOTTOMRIGHT",-12,14)
+    page.classColorGrid=host
     local cells={};page.classColorButtons={}
     for i,class in ipairs(G.classes) do
         local cell=CreateFrame("Frame",nil,host);cells[i]=cell
@@ -87,12 +87,13 @@ function addon:CreateGlobalSettingsPage(parent)
         page.classColorButtons[class]={pick=pick,reset=reset}
     end
     function host.row:layoutChildren(width)
-        local columns=math.max(1,math.min(3,math.floor(width/210)))
-        local size=width/columns
+        local available=width-24
+        local columns=math.max(1,math.min(3,math.floor(available/210)))
+        local size=available/columns
         for i,cell in ipairs(cells) do
             cell:SetSize(size,50);cell:ClearAllPoints();cell:SetPoint("TOPLEFT",((i-1)%columns)*size,-math.floor((i-1)/columns)*50)
         end
-        self:SetHeight(math.ceil(#cells/columns)*50)
+        self:SetHeight(math.ceil(#cells/columns)*50+28)
     end
     W.SectionTabs(page)
     page.sectionTabs:SetPoint("TOPLEFT",0,0);page.sectionTabs:SetPoint("TOPRIGHT",-24,0)

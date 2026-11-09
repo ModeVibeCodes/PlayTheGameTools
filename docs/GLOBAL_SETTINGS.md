@@ -15,6 +15,21 @@ and **PTG Clean**, alongside LSM's native choices and PTG panel textures.
 Installed media packs extend the same lists. Missing selections remain stored
 with safe fallbacks. Use header **Reload** after appearance changes.
 
+The Shared Media, Loot and Errors, and Camera Distance description rows were
+removed at the owner's request. The class grid now has body insets and vertical
+padding, so its controls clear the separator. Native alignment confirmation is
+pending after `/reload`.
+
+**Expressway** is also offered when an installed EllesmereUI or AyijeUI font asset
+is verified by the client, or any media pack already registers that LSM name.
+Late provider loading is detected without replacing existing registrations. No
+provider font file is copied or bundled; without a provider the option is absent
+(an existing saved selection retains its fallback). Redistribution permission for
+the installed copy was not established; the current
+[author licensing guide](https://typodermicfonts.com/license/) distinguishes
+desktop use from software embedding. The bundled JetBrains Mono remains available
+independently of other addons.
+
 There are no module override sections on this page. Earlier experimental
 `globalMedia.overrides` data is retained but inert. Existing module custom fonts
 and XP texture settings remain more specific; their **Use Global Setting**
