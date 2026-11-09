@@ -125,6 +125,9 @@ screenWidth,screenHeight=2560,1440;FireEvent('DISPLAY_SIZE_CHANGED');FireEvent('
 assert(math.abs(UIParent:GetScale()-768/1440)<.00001 and tonumber(cvars.uiScale)==.65)
 assert(G:SetOption('uiScale',80) and not G.db.autoScale and UIParent:GetScale()==.8)
 assert(G:SetOption('autoScale',true) and math.abs(UIParent:GetScale()-768/1440)<.00001)
+local priorScale=UIParent:GetScale();cvarLocked.useUiScale=true;G:ApplyScale()
+assert(G.status.uiScale:find('Unavailable') and UIParent:GetScale()==priorScale,'UI reports a rejected scale prerequisite')
+cvarLocked.useUiScale=false
 zoomMaximum=3.5;cvars.cameraDistanceMaxZoomFactor='1.9';assert(G:SetOption('cameraZoom',4) and G.db.cameraZoom==3.5)
 assert(G.status.cameraDistanceMaxZoomFactor:find('clamped'))
 local writes=#cvarWrites;testCombat=true

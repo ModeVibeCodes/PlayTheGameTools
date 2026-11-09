@@ -90,7 +90,9 @@ function G:ApplyScale()
     local desired=self.db.autoScale and self:RecommendedScale() or self.db.uiScale
     if self.db.autoScale and not self:Resolution() then self.status.uiScale="Resolution is not available yet.";return end
     self.applyingScale=true
-    if not self:WriteCVar("useUiScale",1) then self.applyingScale=false;return end
+    if not self:WriteCVar("useUiScale",1) then
+        self.status.uiScale=self.status.useUiScale;self.applyingScale=false;return
+    end
     -- The native graphics slider starts at .65. UIParent's supported scale API
     -- also allows the pixel-based 768/1440 scale below that graphics-slider floor.
     if not self:WriteCVar("uiScale",math.max(.65,desired/100)) then self.applyingScale=false;return end
