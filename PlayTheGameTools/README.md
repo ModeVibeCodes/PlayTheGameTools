@@ -25,6 +25,8 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   selection and optional bandages with existing native click/combat guards.
 - **Threat Meter:** opt-in threat list for your current target with class-colored
   bars and percentages; pets are optional and off by default.
+- **Guild Roster:** opt-in page under Guild Tools listing every guild member by
+  class, with a Class Summary totaling each class.
 - **Guild Recruitment:** opt-in Who sweeps by level range and class (capped
   ranges are split and searched again), a Recruiter window (`/ptgr`) with a
   copy-name box for Guild > Add Member, per-player recruitment whisper button,

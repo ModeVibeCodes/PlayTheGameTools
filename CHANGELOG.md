@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Guild Tools -> Roster: an opt-in page that lists every guild member under
+  their class and totals each class in a Class Summary. Read-only; nothing about
+  the roster is saved. Native validation is pending.
+
 - Added a Recruiter icon to the Quick Actions ring. It appears while Recruitment
   is enabled, opens or closes the Recruiter window, and lights the main button
   while the window is open. Native validation is pending.
