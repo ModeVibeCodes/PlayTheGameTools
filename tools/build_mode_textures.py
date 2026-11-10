@@ -50,6 +50,14 @@ def build():
     pill.putalpha(mask.resize((256,64),Image.Resampling.LANCZOS))
     pill.save(DEST/'PillSurface.tga',compression=None)
     print('PASS supersampled SVG capsule: PillSurface.tga')
+    # Identical alpha rows give a consistent thin rule with a symmetric fade.
+    rule=Image.new('RGBA',(256,4),(255,255,255,0))
+    for x in range(256):
+        t=min(1,x/48,(255-x)/48)
+        alpha=round(255*t*t*(3-2*t))
+        for y in range(4): rule.putpixel((x,y),(255,255,255,alpha))
+    rule.save(DEST/'HeaderLine.tga',compression=None)
+    print('PASS symmetric fading header rule: HeaderLine.tga')
 
 if __name__ == '__main__':
     build()

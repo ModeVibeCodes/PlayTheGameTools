@@ -41,6 +41,12 @@ pixels=[tuple(detail[i:i+4]) for i in range(18,18+512*512*4,4)]
 assert all(a==255 and max(b,g,r)-min(b,g,r)<=3 for b,g,r,a in pixels),'opaque near-neutral source is blended at low runtime opacity'
 values=[r for b,g,r,a in pixels]
 assert 32<=min(values)<max(values)<=70 and max(values)-min(values)>=8,'restrained but non-flat abstract detail'
+rule=files['Media/Textures/Mode/HeaderLine.tga']
+assert struct.unpack_from('<HH',rule,12)==(256,4)
+rows=[rule[18+y*256*4:18+(y+1)*256*4] for y in range(4)]
+assert all(row==rows[0] for row in rows),'no vertical alpha variation can change apparent rule thickness'
+alpha=list(rows[0][3::4])
+assert alpha==alpha[::-1] and alpha[0]==0 and alpha[127]==255 and alpha[16]<alpha[32]<alpha[48],'header rule fades equally at both ends'
 for name in ('Lato-Regular.ttf', 'Lato-Bold.ttf'):
     assert files['Media/Fonts/' + name][:4] == b'\x00\x01\x00\x00'
 assert b'SIL OPEN FONT LICENSE' in files['LICENSES/Lato-OFL.txt']

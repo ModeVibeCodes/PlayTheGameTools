@@ -43,8 +43,10 @@ for _,element in ipairs({'general','monitor','buffs','contributions'}) do
    for _,tab in pairs(pilot.panels) do assert(not tab:IsShown(),'General has no subpage tabs') end
   else
    for id,tab in pairs(pilot.panels) do
-    assert(tab.skinStyle=='subTab' and tab:GetHeight()==(id==panel and 30 or 22),'selected subtab untucks while others stay tucked')
-    assert(tab.points[1][5]-tab:GetHeight()==-72,'every subtab meets the separator baseline')
+    local top=-tab.points[1][5]
+    assert(tab.skinStyle=='subTab' and tab:GetHeight()==30 and top==(id==panel and 4 or 12),'full subtab moves upward when selected')
+    assert(tab:GetParent()==pilot.panelContent and pilot.panelContent:GetParent()==pilot.panelViewport and pilot.panelViewport:GetHeight()==34,'subtabs render inside a clipping ScrollFrame ending at the separator')
+    assert(math.min(top+30,34)-top==(id==panel and 30 or 22),'inactive lower eight units are clipped below the separator')
    end
   end
   for key,cell in pairs(page.campfireControls) do if cell.frame:GetParent().row:IsShown() then foundControls[key]=true end end
@@ -59,6 +61,13 @@ assert(pilot.panel=='options' and page.campfireColors.textColor.host.row:IsShown
 assert(pilot.textHeader.points[1][4]==page.contentInset and page.layoutInsetLeft==0,'General Text heading aligns with the left page edge')
 assert(pilot.textHeader.subsectionHeading.font[2]==20 and pilot.textHeader.campfireUnderline:GetHeight()==1,'prominent content header has a subtle underline')
 assert(pilot.summaryTitle.font[2]==20 and pilot.summaryText.color[1]==addon.InterfaceTheme.muted[1],'larger heading and muted description')
+assert(pilot.inlineSeparator.font[2]==14 and pilot.inlineText.points[1][4]==8,'larger separator and tighter description gap')
+for _,entry in ipairs(pilot.headerLines) do
+ local line,heading=entry.line,entry.heading
+ local measured=math.min(heading:GetStringWidth(),math.max(8,heading:GetWidth()))
+ assert(line:GetHeight()==1 and line.modeAsset=='ModeHeaderLine','all content headings share the same thin fading rule')
+ assert(math.abs(line.points[1][4]+line:GetWidth()/2-measured/2)<.001,'underline center matches the visible left-aligned heading text')
+end
 for _,color in pairs(page.campfireColors) do assert(not color.hex:IsShown() and not color.apply:IsShown() and color.pick:GetWidth()==80,'pilot color editing uses the picker without redundant hex/Apply controls') end
 testMissingTextures={[addon.Media:GetTexture('ModePillSurface')]=true}
 local fallback=addon.ConfigWidgets.Button(UIParent,'Pill',156,30,'roundedTab')
@@ -77,7 +86,7 @@ for _,role in ipairs({'Background','Border','Row','Hover'}) do
  assert(page.campfireColors['contribution'..role..'Color'].host:GetParent()==opacity.row,'color and opacity stay paired')
 end
 for _,width in ipairs({1000,840,480}) do
- page.scroll:SetWidth(width);page:Layout()
+ page.scroll:SetWidth(width);pilot.bar:SetWidth(width);page:Layout()
  assert(size.row:GetHeight()==46,'picker-only paired row fits even at the narrow supported width')
  assert(size:GetWidth()>100 and color.host:GetWidth()==80,'removed hex/Apply space goes to the slider')
  assert(pilot.summary:IsShown()==(width~=480) and page.layoutInsetLeft==(width~=480 and 188 or 0),'reference-style left column collapses on narrow pages')
@@ -86,6 +95,10 @@ for _,width in ipairs({1000,840,480}) do
  assert((cell.frame:GetParent()~=page.campfireControls.enabled.frame:GetParent()) and cell.frame:GetWidth()>0)
  if width~=480 then assert(cell.frame:GetWidth()==172 and size.row.points[1][4]==page.contentInset+188,'toggles sit under the left header while sliders stay in the right column') end
  assert(not size.row.divider:IsShown(),'pilot uses group separators instead of per-field lines')
+ local first,last=pilot.buttons.general,pilot.buttons.contributions
+ local left=first.points[1][4];local right=last.points[1][4]+last:GetWidth()
+ assert(left>=0 and right<=width and math.abs((left+right)/2-width/2)<.001,'pill row stays centered within the page at each width')
+ assert(first:GetWidth()==last:GetWidth() and first.points[1][5]==last.points[1][5] and not last.label.wordWrap,'pills resize equally on one row')
 end
 -- Existing setters and native picker/cancel still operate from the moved controls.
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)

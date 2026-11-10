@@ -16,6 +16,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   align General headers left, use underlined 20-unit headings and picker-only
   color rows. On wide mixed panels put toggles below the left header, keep sliders
   right and move the muted description inline. Search and all settings remain.
+  Alignment pass: consistent text-centered thin header rules fading at both ends,
+  a slightly larger separator with tighter spacing, truly clipped tucked tabs,
+  and one centered row of equally resized main pills constrained to page width.
 
 - Start the next Mode page-refinement experiment: darken only the page area from
   #303030 to #2A2A2A and overlay faint Figma-generated abstract planes/grain at

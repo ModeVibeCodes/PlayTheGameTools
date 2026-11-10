@@ -20,11 +20,15 @@ the correct element/panel and scrolls to the existing control.
 The main pills use a dedicated 256×64 capsule, supersampled from the repository's
 SVG, instead of stretching the 32×16 toggle art. A matching gray outer silhouette
 contains the fill with a 1.5-unit inset. Other windows use compact
-rectangular sub-tabs, not a second pill strip: all meet the same separator line;
-the selected tab rises to 30 units while inactive tabs tuck to 22 units. Cyan
+rectangular sub-tabs, not a second pill strip. A ScrollFrame viewport ends at
+the separator line: 30-unit tabs rise fully above it when selected; inactive
+tabs move eight units down and their lower portion is clipped, leaving 22 units
+visible. Labels stay inside that visible area. Cyan
 label/outline and the selection line identify the active page. Descriptions use
 plain language and muted gray. Content headings are now **20 units**, with a
-subtle one-unit underline. General's Options and Text headings both align to
+subtle one-unit underline, centered on measured text with a symmetric fade at
+both ends. Every underline uses the same alpha rows and alignment helper.
+General's Options and Text headings both align to
 the left content edge; it no longer reserves the wide summary column.
 
 | Element | Options | Text | Appearance | Position |
@@ -47,6 +51,9 @@ left heading while sliders stay in the right-hand form. The title and smaller
 muted description share a line, separated by **·**. This applies to Buffs/Contributions
 Text and window Position panels; other panels retain their existing arrangement.
 Narrow panels restore ordinary toggle rows, and search targets follow both forms.
+The separator dot is 14 units, with eight-unit gaps on either side to keep the
+description closer to its heading. Main pills resize evenly to occupy one centered
+row within the available page width, without wrapping or overflowing its edges.
 Only group separators remain. Fonts, alignments and callbacks remain. Actions resize to fit. The old
 Jump To strip is replaced by the element tabs; internal jump routing is retained.
 No setting was removed: similar controls target distinct windows/text roles.
@@ -69,7 +76,8 @@ Icon → Appearance, followed by Text.
 **Confirmation:** General has one combined form with Options and Text aligned
 left, no sub-tabs, enlarged underlined headings and picker-only color controls. The other
 window's selected rectangular tab rises from the separator; inactive tabs tuck
-down but remain clickable. Main pills have smooth, thin gray borders and the
+down with all below-line pixels hidden, but remain clickable. Main pills form
+one centered, evenly resized row and have smooth, thin gray borders. The
 larger left-side heading and muted explanations remain readable. Camp Buffs → Text
 puts its checkboxes below the left heading on a wide page, with the description
 inline after the separator icon and slider/color controls still on the right.

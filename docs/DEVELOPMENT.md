@@ -21,6 +21,11 @@ after a dot separator; search follows moved/restored rows. A dedicated SVG-deriv
 256×64 capsule replaces low-resolution pill art, with a matching 1.5-unit rim.
 Package now has 116 Lua / 217 files. Try `/reload` first; an undiscovered capsule
 uses existing rounded art as a fallback. No gameplay/default changes.
+Latest alignment pass: uniform one-unit, text-centered header rules fade at both
+ends; a 14-unit separator uses tighter eight-unit spacing. Sub-tabs now live in a
+clipping ScrollFrame above the separator, with inactive lower pixels hidden.
+Main pills expand/shrink evenly in one centered row inside the actual bar width.
+Package now has 116 Lua / 218 files, including a small symmetric header-rule TGA.
 Do not scale to another page/theme before the owner confirms this candidate.
 
 November 10: new Mode-only page-material experiment on

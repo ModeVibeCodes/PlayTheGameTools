@@ -240,9 +240,23 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
     local state={element="general",panel="options",last={},buttons={},panels={},section=section,searchEntries={},sideRows={}}
     page.campfirePilot=state
     local headingSize=T.fontSize.section+5
+    state.headerLines={}
+    local function AlignUnderline(line,heading)
+        local measured=heading:GetStringWidth()
+        if (issecretvalue and issecretvalue(measured)) or type(measured)~="number" or measured~=measured or measured<=0 or measured==math.huge then measured=8 end
+        measured=math.min(measured,math.max(8,heading:GetWidth()))
+        local width=math.max(8,math.ceil(measured))
+        line:ClearAllPoints();line:SetSize(width,1)
+        local justify=heading.GetJustifyH and heading:GetJustifyH() or "LEFT"
+        if justify=="CENTER" then line:SetPoint("TOP",heading,"BOTTOM",0,-4)
+        elseif justify=="RIGHT" then line:SetPoint("TOPRIGHT",heading,"BOTTOMRIGHT",(width-measured)/2,-4)
+        else line:SetPoint("TOPLEFT",heading,"BOTTOMLEFT",(measured-width)/2,-4) end
+    end
     local function Underline(parent,heading)
-        local line=W.Fill(parent,T.line,"BORDER",0,0.7)
-        line:ClearAllPoints();line:SetPoint("TOPLEFT",heading,"BOTTOMLEFT",0,-4);line:SetSize(96,1)
+        local line=parent:CreateTexture(nil,"BORDER")
+        line.modeAsset="ModeHeaderLine";W.Paint(line,T.line,0.7)
+        state.headerLines[#state.headerLines+1]={line=line,heading=heading}
+        AlignUnderline(line,heading)
         return line
     end
     local elements={{"general","General"},{"monitor","Campfire Icon"},{"buffs","Camp Buffs"},{"contributions","Contributions"}}
@@ -401,15 +415,16 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
     state.summaryTitle:SetWordWrap(true)
     state.summaryUnderline=Underline(state.summary,state.summaryTitle)
     state.summaryText=W.Label(state.summary,"",nil,0,0,172,T.muted)
-    state.summaryText:ClearAllPoints();state.summaryText:SetPoint("TOPLEFT",state.summaryTitle,"BOTTOMLEFT",0,-10)
+    state.summaryText:ClearAllPoints();state.summaryText:SetPoint("TOPLEFT",state.summaryTitle,"BOTTOMLEFT",0,-8)
     state.summaryText:SetWordWrap(true)
     state.inlineHeader=CreateFrame("Frame",nil,page.content)
     state.inlineHeader:SetPoint("TOPLEFT",page.contentInset,-4);state.inlineHeader:SetHeight(36)
     state.inlineTitle=W.Heading(state.inlineHeader,"",headingSize,0,0,100,T.text)
-    state.inlineSeparator=W.Label(state.inlineHeader,"·",nil,0,0,12,T.muted)
-    state.inlineSeparator:ClearAllPoints();state.inlineSeparator:SetPoint("LEFT",state.inlineTitle,"RIGHT",10,0)
+    state.inlineSeparator=W.Label(state.inlineHeader,"·",nil,0,0,8,T.muted)
+    addon.Media:BindInterfaceFont(state.inlineSeparator,GameFontHighlight,14)
+    state.inlineSeparator:ClearAllPoints();state.inlineSeparator:SetPoint("LEFT",state.inlineTitle,"RIGHT",8,0)
     state.inlineText=W.Label(state.inlineHeader,"",nil,0,0,440,T.muted)
-    state.inlineText:ClearAllPoints();state.inlineText:SetPoint("LEFT",state.inlineSeparator,"RIGHT",10,0)
+    state.inlineText:ClearAllPoints();state.inlineText:SetPoint("LEFT",state.inlineSeparator,"RIGHT",8,0)
     state.inlineText:SetPoint("RIGHT",-8,0);state.inlineText:SetWordWrap(false)
     state.inlineUnderline=Underline(state.inlineHeader,state.inlineTitle)
     state.toggleGroups={}
@@ -439,9 +454,13 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         local button=W.Button(bar,entry[2],120,30,"roundedTab")
         button:SetScript("OnClick",function() page:SelectCampfirePanel(id) end);state.buttons[id]=button
     end
+    state.panelViewport=CreateFrame("ScrollFrame",nil,bar)
+    state.panelViewport:SetPoint("TOPLEFT",12,-38);state.panelViewport:SetPoint("TOPRIGHT",-12,-38);state.panelViewport:SetHeight(34)
+    state.panelContent=CreateFrame("Frame",nil,state.panelViewport);state.panelContent:SetSize(456,42)
+    state.panelViewport:SetScrollChild(state.panelContent)
     for _,entry in ipairs(panels) do
         local id=entry[1]
-        local button=W.Button(bar,entry[2],104,22,"subTab")
+        local button=W.Button(state.panelContent,entry[2],104,30,"subTab")
         button:SetScript("OnClick",function() page:SelectCampfirePanel(state.element,id) end);state.panels[id]=button
     end
     local captions={
@@ -515,18 +534,30 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         if active then
             local width=math.max(456,self.content:GetWidth()-self.contentInset*2)
             page.contributionFont:SetWidth(math.max(160,math.min(260,width-198)))
-            local cell=math.min(156,(width-24)/4)
+            local available=bar:GetWidth()
+            if available<=0 then available=self.scroll:GetWidth() end
+            if available<=0 then available=width end
+            local padding=math.min(12,available/8)
+            local usable=available-padding*2
+            local gap=math.min(8,usable/12)
+            local cell=(usable-gap*3)/4
+            local groupWidth=cell*4+gap*3
+            local start=(available-groupWidth)/2
+            state.panelContent:SetWidth(usable)
+            state.panelViewport:SetVerticalScroll(0)
+            state.panelViewport:SetShown(not general)
             for i,entry in ipairs(elements) do
                 local button=state.buttons[entry[1]]
-                button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(cell+8),0);button:SetWidth(cell)
-                button.label:SetWidth(cell-20);button.label:SetWordWrap(false);button:SetSelected(state.element==entry[1])
+                button:ClearAllPoints();button:SetPoint("TOPLEFT",start+(i-1)*(cell+gap),0);button:SetWidth(cell)
+                button.label:SetWidth(math.max(1,cell-20));button.label:SetWordWrap(false);button:SetSelected(state.element==entry[1])
             end
             for i,entry in ipairs(panels) do
                 local button=state.panels[entry[1]]
                 local selected=state.panel==entry[1]
                 local tabWidth=math.min(112,cell)
-                local tabHeight=selected and 30 or 22
-                button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(tabWidth+6),-72+tabHeight);button:SetSize(tabWidth,tabHeight)
+                -- The viewport clips eight units below the separator on tucked tabs.
+                button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(tabWidth+6),selected and -4 or -12);button:SetSize(tabWidth,30)
+                button.label:ClearAllPoints();button.label:SetPoint("CENTER",0,selected and 0 or 4)
                 button.label:SetWidth(tabWidth-16);button.label:SetWordWrap(false);button:SetSelected(selected)
                 button:SetShown(not general)
             end
@@ -540,8 +571,9 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             state.inlineTitle:SetText(title)
             local measured=state.inlineTitle:GetStringWidth()
             if (issecretvalue and issecretvalue(measured)) or type(measured)~="number" or measured~=measured or measured<=0 or measured==math.huge then measured=#title*11 end
-            state.inlineTitle:SetWidth(math.ceil(measured));state.inlineUnderline:SetWidth(math.min(96,math.ceil(measured)))
+            state.inlineTitle:SetWidth(math.ceil(measured))
             state.inlineText:SetText(captions[state.element][state.panel])
+            for _,entry in ipairs(state.headerLines) do AlignUnderline(entry.line,entry.heading) end
         end
         state.layingOut=false
     end
