@@ -39,7 +39,7 @@ function W.Page(parent, minimumWidth)
         content:SetWidth(width)
         local leftInset=self.contentInset+(self.layoutInsetLeft or 0)
         width=math.max(1,width-leftInset-self.contentInset)
-        local cursor = 0
+        local cursor = self.layoutTopInset or 0
         for _, row in ipairs(self.rows) do
             row:SetWidth(width)
             if row.layoutChildren then row:layoutChildren(width) end
@@ -56,7 +56,7 @@ function W.Page(parent, minimumWidth)
             end
         end
         self.cursor = cursor
-        content:SetHeight(cursor + 12)
+        content:SetHeight(math.max(cursor + 12,self.layoutMinHeight or 0))
         local maximum = math.max(0, content:GetHeight() - scroll:GetHeight())
         bar:SetMinMaxValues(0, maximum)
         bar:SetValue(math.min(bar:GetValue(), maximum))

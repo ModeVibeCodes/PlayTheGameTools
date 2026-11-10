@@ -67,6 +67,12 @@ local function Paint(texture, color, alpha)
             texture:SetVertexColor(color[1], color[2], color[3], alpha or color[4] or 1)
             return
         end
+        if texture.modeAsset=="ModePillSurface" then
+            if addon.Media:ApplyTexture(texture,"ModeToggleSurface",color) then
+                texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
+            else texture:SetColorTexture(0,0,0,0) end
+            return
+        end
         if texture.modeAsset=="ModeCheckSurface" or texture.modeAsset=="ModeCheckMark" or texture.modeAsset=="ModeToggleSurface" then
             -- The already bundled circular thumb remains a rounded fallback
             -- while a new small-control file is unavailable to this client.
@@ -447,11 +453,12 @@ function W.Button(parent, text, width, height, style)
         or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
     button.fill = W.Fill(button, T.surface, T.id=="mode" and style=="roundedTab" and "ARTWORK" or "BACKGROUND")
     if T.id=="mode" then
-        button.modeBorderAsset=style=="roundedTab" and "ModeToggleSurface" or "ModeControlBorder"
+        button.modeBorderAsset=style=="roundedTab" and "ModePillSurface" or "ModeControlBorder"
         if style=="roundedTab" or style=="subTab" then button.modeFixedSprite=true end
         button.fill:ClearAllPoints()
-        button.fill:SetPoint("TOPLEFT",1,-1);button.fill:SetPoint("BOTTOMRIGHT",-1,1)
-        button.fill.modeAsset=style=="roundedTab" and "ModeToggleSurface" or "ModeControlSurface";Paint(button.fill,T.surface)
+        local inset=style=="roundedTab" and 1.5 or 1
+        button.fill:SetPoint("TOPLEFT",inset,-inset);button.fill:SetPoint("BOTTOMRIGHT",-inset,inset)
+        button.fill.modeAsset=style=="roundedTab" and "ModePillSurface" or "ModeControlSurface";Paint(button.fill,T.surface)
     end
     button.outline = W.Outline(button, T.line, T.id=="mode" and style=="roundedTab" and "BACKGROUND" or "BORDER")
     -- Kept for consumers that tint the selected state directly.

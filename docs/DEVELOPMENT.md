@@ -5,14 +5,22 @@ Options / Text / Appearance / Position panels. Text/color and opacity/color pair
 share responsive rows. Refinement combines General's Options/Text into one form,
 adds thin gray borders to main pills, and uses compact separator-attached sub-tabs
 for other windows (30-unit active / 22-unit tucked inactive). Descriptions are
-plain muted-gray text and left headings are 17 units. All controls, callbacks, search routing, preview cleanup
-and settings are retained; no gameplay/module source or manifest changes. Other
+plain muted-gray text and left headings are now 20 units with subtle underlines.
+Mode color rows use Pick without redundant in-page hex/Apply fields. All settings,
+picker callbacks, search routing and preview cleanup are retained; no gameplay/module source or manifest changes. Other
 themes keep the original layout. All 34 regression scripts pass, including the
 new `campfire_mode_layout.py`; final focused checks cover native resize reentrancy
-and Blizzard parity. Package remains 116 Lua / 216 files. Start with `/reload`
+and Blizzard parity. Package has 116 Lua / 217 files. Start with `/reload`
 OOC. The supplied reference informs pill tabs and wide-page section descriptions
 beside aligned forms; narrow pages fold that description above the fields.
 Native visual review is pending.
+Latest refinement: General's Text heading aligns left; headings are 20 units
+with subtle underlines. Pick-only color rows free space for sliders. Wide mixed
+panels place checkbox rows under the left heading, with an inline muted description
+after a dot separator; search follows moved/restored rows. A dedicated SVG-derived
+256×64 capsule replaces low-resolution pill art, with a matching 1.5-unit rim.
+Package now has 116 Lua / 217 files. Try `/reload` first; an undiscovered capsule
+uses existing rounded art as a fallback. No gameplay/default changes.
 Do not scale to another page/theme before the owner confirms this candidate.
 
 November 10: new Mode-only page-material experiment on

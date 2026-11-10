@@ -1,6 +1,7 @@
 """Convert Figma PNGs to RGBA TGA, with documented checkbox/logo/detail sizing."""
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'PlayTheGameTools/Media/Textures/Mode'
@@ -37,6 +38,18 @@ def build():
     assert detail.size==(1024,1024)
     detail.resize((512,512),Image.Resampling.LANCZOS).save(DEST/'PageAbstract.tga',compression=None)
     print('PASS Figma page detail: PageAbstract.tga')
+    # Dedicated native UI capsule: supersample the repository's simple SVG
+    # geometry instead of enlarging the 32x16 toggle sprite across wide tabs.
+    svg=ET.parse(ROOT/'design/mode/PillSurface.svg').getroot()
+    rect=svg.find('{http://www.w3.org/2000/svg}rect')
+    assert svg.attrib['viewBox']=='0 0 256 64' and rect is not None
+    assert rect.attrib=={'x':'0','y':'0','width':'256','height':'64','rx':'32','fill':'white'}
+    mask=Image.new('L',(2048,512),0)
+    ImageDraw.Draw(mask).rounded_rectangle((0,0,2047,511),radius=256,fill=255)
+    pill=Image.new('RGBA',(256,64),'white')
+    pill.putalpha(mask.resize((256,64),Image.Resampling.LANCZOS))
+    pill.save(DEST/'PillSurface.tga',compression=None)
+    print('PASS supersampled SVG capsule: PillSurface.tga')
 
 if __name__ == '__main__':
     build()

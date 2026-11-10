@@ -17,12 +17,15 @@ The existing Loot Sparkles / Campfire Monitor feature tabs remain above them.
 Selection is session-only; each element remembers its last panel. Search opens
 the correct element/panel and scrolls to the existing control.
 
-The main pills have a thin gray outer silhouette containing the inset fill,
-using the same construction as the mode switches. Other windows use compact
+The main pills use a dedicated 256×64 capsule, supersampled from the repository's
+SVG, instead of stretching the 32×16 toggle art. A matching gray outer silhouette
+contains the fill with a 1.5-unit inset. Other windows use compact
 rectangular sub-tabs, not a second pill strip: all meet the same separator line;
 the selected tab rises to 30 units while inactive tabs tuck to 22 units. Cyan
 label/outline and the selection line identify the active page. Descriptions use
-plain language and muted gray; left headings increase from 15 to 17 units.
+plain language and muted gray. Content headings are now **20 units**, with a
+subtle one-unit underline. General's Options and Text headings both align to
+the left content edge; it no longer reserves the wide summary column.
 
 | Element | Options | Text | Appearance | Position |
 | --- | --- | --- | --- | --- |
@@ -33,11 +36,18 @@ plain language and muted gray; left headings increase from 15 to 17 units.
 
 General's Options and Text columns above are successive sections on the same page.
 
-Seven text size/color pairs and four appearance color/opacity pairs share rows
-on wide pages and stack on narrower pages. A left section-summary column folds
-into the tab caption on narrow pages. Only group separators remain, avoiding a
-line between every field. Sliders, numeric fields, Pick/hex/
-Apply, fonts, alignments and callbacks remain. Actions resize to fit. The old
+Seven text size/color pairs and four appearance color/opacity pairs share compact
+rows. This pilot hides the redundant in-page hex field and Apply button; **Pick**
+opens the original color picker, which still edits the same value. Other themes
+and pages retain their color controls. The saved setting and picker/cancel
+callbacks are unchanged. Freed space goes to the existing slider/numeric control.
+
+On wide panels containing both sliders and toggles, checkbox rows move under the
+left heading while sliders stay in the right-hand form. The title and smaller
+muted description share a line, separated by **·**. This applies to Buffs/Contributions
+Text and window Position panels; other panels retain their existing arrangement.
+Narrow panels restore ordinary toggle rows, and search targets follow both forms.
+Only group separators remain. Fonts, alignments and callbacks remain. Actions resize to fit. The old
 Jump To strip is replaced by the element tabs; internal jump routing is retained.
 No setting was removed: similar controls target distinct windows/text roles.
 Style-panel navigation retains preview; leaving Campfire/hiding the page retains
@@ -50,19 +60,23 @@ Campfire Monitor → Campfire Icon / Camp Buffs / Contributions → Text.
 **Action:** `/reload`, inspect Text, Appearance and Position for each window.
 **Required state:** OOC, Interface Theme set to mode; no setting changes needed.
 **Confirmation:** consistent control locations, all original options reachable,
-and paired controls fit or stack without clipping. Lua-only; no client close needed.
+and compact picker/slider rows fit without clipping. Start with `/reload`.
 
 **Navigation:** same feature → General.
 **Action:** inspect Options and the Text section below it; then select Campfire
 Icon → Appearance, followed by Text.
 **Required state:** OOC, mode selected; no setting changes needed.
-**Confirmation:** General has one combined form and no sub-tabs. The other
+**Confirmation:** General has one combined form with Options and Text aligned
+left, no sub-tabs, enlarged underlined headings and picker-only color controls. The other
 window's selected rectangular tab rises from the separator; inactive tabs tuck
 down but remain clickable. Main pills have smooth, thin gray borders and the
-larger left-side heading and muted explanations remain readable.
+larger left-side heading and muted explanations remain readable. Camp Buffs → Text
+puts its checkboxes below the left heading on a wide page, with the description
+inline after the separator icon and slider/color controls still on the right.
 
 **Navigation:** same feature → Contributions → Text → Title Text Size → Pick.
-**Action:** open and cancel the color picker; inspect numeric/hex fields. Then
+**Action:** open and cancel the color picker; inspect the numeric field and
+confirm the in-page hex field/Apply button are absent. Then
 search **Title Color** in the header and choose the Campfire Monitor result.
 **Required state:** OOC; keep original values.
 **Confirmation:** picker/cancel still works and search reveals Contributions →

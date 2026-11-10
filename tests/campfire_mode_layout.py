@@ -8,6 +8,7 @@ baseline.execute('''
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
 function Keys(t) local out={} for k in pairs(t) do out[#out+1]=k end table.sort(out);return table.concat(out,'|') end
 assert(not M.page.campfirePilot,'Modern retains existing grouped page')
+assert(M.page.campfireColors.textColor.hex:IsShown() and M.page.campfireColors.textColor.apply:IsShown(),'other themes retain their color editors')
 addon.db.window.theme='mode'
 addon.db.globalMedia.border='media:PTG Clean'
 ''')
@@ -35,8 +36,8 @@ for _,element in ipairs({'general','monitor','buffs','contributions'}) do
   assert(pilot.buttons[element].outline.rounded and not pilot.buttons[element].activeGlow:IsShown(),'rounded tabs keep text-only hover/selection')
   assert(pilot.buttons[element].modeFixedSprite,'a custom global border cannot square the pilot tabs')
   local rim=pilot.buttons[element].outline.edges[1]
-  assert(rim.modeAsset=='ModeToggleSurface' and rim.layer=='BACKGROUND' and pilot.buttons[element].fill.layer=='ARTWORK','pill border is a larger solid backing behind the fill')
-  assert(pilot.buttons[element].outline.shown and pilot.buttons[element].fill.points[1][4]==1,'main pills retain a visible thin inset border')
+  assert(rim.modeAsset=='ModePillSurface' and rim.layer=='BACKGROUND' and pilot.buttons[element].fill.layer=='ARTWORK','high-resolution pill border backs the same smooth fill shape')
+  assert(pilot.buttons[element].outline.shown and pilot.buttons[element].fill.points[1][4]==1.5,'main pill fill stays inside the outer border')
   if element=='general' then
    assert(page.campfireColors.textColor.host.row:IsShown() and page.campfireControls.enabled.frame:GetParent().row:IsShown(),'General combines Options and Text')
    for _,tab in pairs(pilot.panels) do assert(not tab:IsShown(),'General has no subpage tabs') end
@@ -55,7 +56,14 @@ assert(Keys(foundControls)==controlKeys and Keys(foundSliders)==sliderKeys and K
 assert(addon.ProfileCodec.Encode(PTGToolsDB)==saved,'tab changes never write saved options')
 page:SelectCampfirePanel('general','text')
 assert(pilot.panel=='options' and page.campfireColors.textColor.host.row:IsShown(),'legacy General Text links reveal the combined page')
-assert(pilot.summaryTitle.font[2]==addon.InterfaceTheme.fontSize.section+2 and pilot.summaryText.color[1]==addon.InterfaceTheme.muted[1],'larger heading and muted description')
+assert(pilot.textHeader.points[1][4]==page.contentInset and page.layoutInsetLeft==0,'General Text heading aligns with the left page edge')
+assert(pilot.textHeader.subsectionHeading.font[2]==20 and pilot.textHeader.campfireUnderline:GetHeight()==1,'prominent content header has a subtle underline')
+assert(pilot.summaryTitle.font[2]==20 and pilot.summaryText.color[1]==addon.InterfaceTheme.muted[1],'larger heading and muted description')
+for _,color in pairs(page.campfireColors) do assert(not color.hex:IsShown() and not color.apply:IsShown() and color.pick:GetWidth()==80,'pilot color editing uses the picker without redundant hex/Apply controls') end
+testMissingTextures={[addon.Media:GetTexture('ModePillSurface')]=true}
+local fallback=addon.ConfigWidgets.Button(UIParent,'Pill',156,30,'roundedTab')
+assert(fallback.fill.texture==addon.Media:GetTexture('ModeToggleSurface') and fallback.outline.edges[1].texture==addon.Media:GetTexture('ModeToggleSurface'),'an undiscovered capsule uses matching rounded fallback art for border and fill')
+testMissingTextures=nil
 page:SelectCampfirePanel('monitor','text')
 assert(page.campfireSliders.fontSize.row:IsShown() and not page.campfireSliders.x.row:IsShown())
 page:SelectCampfirePanel('buffs','text')
@@ -70,9 +78,13 @@ for _,role in ipairs({'Background','Border','Row','Hover'}) do
 end
 for _,width in ipairs({1000,840,480}) do
  page.scroll:SetWidth(width);page:Layout()
- assert(size.row:GetHeight()==(width~=480 and 46 or 82),'paired row stacks at narrow widths')
- assert(size:GetWidth()>100 and color.host:GetWidth()==248,'all original slider, numeric, color and hex controls fit')
- assert(pilot.summary:IsShown()==(width~=480) and page.layoutInsetLeft==(width~=480 and 188 or 0),'reference-style section summary sits left of wide forms and collapses on narrow pages')
+ assert(size.row:GetHeight()==46,'picker-only paired row fits even at the narrow supported width')
+ assert(size:GetWidth()>100 and color.host:GetWidth()==80,'removed hex/Apply space goes to the slider')
+ assert(pilot.summary:IsShown()==(width~=480) and page.layoutInsetLeft==(width~=480 and 188 or 0),'reference-style left column collapses on narrow pages')
+ assert(pilot.togglesLeft==(width~=480) and pilot.inlineHeader:IsShown() and pilot.inlineText:IsShown()==(width~=480),'mixed panels use left toggles and an inline description when space allows, with a visible header at every width')
+ local cell=page.campfireControls.contributionUseInterfaceFont
+ assert((cell.frame:GetParent()~=page.campfireControls.enabled.frame:GetParent()) and cell.frame:GetWidth()>0)
+ if width~=480 then assert(cell.frame:GetWidth()==172 and size.row.points[1][4]==page.contentInset+188,'toggles sit under the left header while sliders stay in the right column') end
  assert(not size.row.divider:IsShown(),'pilot uses group separators instead of per-field lines')
 end
 -- Existing setters and native picker/cancel still operate from the moved controls.
@@ -91,6 +103,14 @@ function page.scroll:ClearAllPoints() anchorChanges=anchorChanges+1;page:Layout(
 page:SelectCampfirePanel('general','options')
 assert(anchorChanges==1 and not pilot.layingOut,'native size callbacks cannot recurse through viewport layout')
 page.scroll.ClearAllPoints=clear
+page.scroll:SetWidth(1000);page:SelectCampfirePanel('buffs','text')
+local toggleEntry
+for _,entry in ipairs(page.searchEntries) do if entry.label=='Compact Buff Text' then toggleEntry=entry;break end end
+assert(toggleEntry and toggleEntry.row~=toggleEntry.campfireBaseRow and toggleEntry.row:IsShown(),'left-column toggle search targets its actual visible host')
+page:SelectCampfirePanel('monitor','appearance');page:Reveal(toggleEntry)
+assert(pilot.element=='buffs' and pilot.panel=='text' and toggleEntry.row:IsShown(),'search retains routing after toggle reparenting')
+page.scroll:SetWidth(480);page:Layout()
+assert(toggleEntry.row==toggleEntry.campfireBaseRow and toggleEntry.row:IsShown(),'narrow layout restores normal toggle rows and search targets')
 page:SelectSectionTab(1)
 local target
 for _,entry in ipairs(page.searchEntries) do if entry.label=='Title Color' then target=entry;break end end

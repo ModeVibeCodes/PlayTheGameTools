@@ -237,8 +237,14 @@ end
 -- Campfire-only Mode pilot. Other themes keep the existing long-form groups.
 -- Selection is session presentation state, never a saved module option.
 function C:ApplyModeConfigLayout(page,firstRow,section)
-    local state={element="general",panel="options",last={},buttons={},panels={},section=section}
+    local state={element="general",panel="options",last={},buttons={},panels={},section=section,searchEntries={},sideRows={}}
     page.campfirePilot=state
+    local headingSize=T.fontSize.section+5
+    local function Underline(parent,heading)
+        local line=W.Fill(parent,T.line,"BORDER",0,0.7)
+        line:ClearAllPoints();line:SetPoint("TOPLEFT",heading,"BOTTOMLEFT",0,-4);line:SetSize(96,1)
+        return line
+    end
     local elements={{"general","General"},{"monitor","Campfire Icon"},{"buffs","Camp Buffs"},{"contributions","Contributions"}}
     local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"},{"position","Position"}}
     local labels={
@@ -259,23 +265,29 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             if route then entry.row.campfireElement,entry.row.campfirePanel=route[1],route[2] end
         end
     end
+    for _,color in pairs(page.campfireColors) do
+        color.hex:Hide();color.apply:Hide();color.pick:SetWidth(80)
+    end
     -- General is one form: Options first, then shared Text settings.
     for index,row in ipairs(page.rows) do
         if index>=firstRow and row.subsectionHeading and row.subsectionHeading:GetText()=="General" then
             row.campfireSectionHeader=true;row.campfireElement="general";row.campfirePanel="options"
             row.subsectionHeading:SetText("Options");row:SetHeight(40)
-            addon.Media:BindInterfaceFont(row.subsectionHeading,GameFontNormalLarge,T.fontSize.section+2,nil,"heading")
+            addon.Media:BindInterfaceFont(row.subsectionHeading,GameFontNormalLarge,headingSize,nil,"heading")
+            row.campfireUnderline=Underline(row,row.subsectionHeading)
         end
     end
     local textHeader=CreateFrame("Frame",nil,page.content)
     textHeader:SetHeight(40);textHeader.section=section
     textHeader.campfireSectionHeader=true;textHeader.campfireElement="general";textHeader.campfirePanel="text"
-    textHeader.subsectionHeading=W.Heading(textHeader,"Text",T.fontSize.section+2,0,-10,360,T.text)
+    textHeader.subsectionHeading=W.Heading(textHeader,"Text",headingSize,0,-10,360,T.text)
+    textHeader.campfireUnderline=Underline(textHeader,textHeader.subsectionHeading)
+    state.textHeader=textHeader
     for index,row in ipairs(page.rows) do
         if row==page.campfireColors.textColor.host.row then table.insert(page.rows,index,textHeader);break end
     end
-    -- Pair existing size and color controls without replacing their callbacks,
-    -- hex Apply buttons, picker/cancel behavior or search labels.
+    -- Pair existing size and color controls. The native picker retains color
+    -- editing; redundant in-page hex/Apply controls stay hidden in this pilot.
     local pairedControls={}
     for _,role in ipairs({"Title","Name","Info","Action","Hint","Footer","Dismiss"}) do
         pairedControls[#pairedControls+1]={"contribution"..role.."Size","contribution"..role.."Color"}
@@ -292,15 +304,15 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         sizeRow.campfirePairedColor=color
         for _,entry in ipairs(page.searchEntries) do if entry.row==colorRow then entry.row=sizeRow end end
         function sizeRow:layoutChildren(width)
-            local wide=width>=580
+            local wide=width>=420
             self:SetHeight(wide and 46 or 82)
             size.rowLabel:SetWidth(152)
             size:ClearAllPoints();size:SetPoint("TOPLEFT",self,"TOPLEFT",164,-10)
-            size:SetSize(wide and width-432 or width-176,26)
+            size:SetSize(wide and width-264 or width-176,26)
             color.host:ClearAllPoints()
             if wide then color.host:SetPoint("TOPRIGHT",self,"TOPRIGHT",-12,-8)
             else color.host:SetPoint("TOPLEFT",self,"TOPLEFT",164,-46) end
-            color.host:SetSize(248,30)
+            color.host:SetSize(80,30)
         end
     end
     for index=firstRow,#page.rows do
@@ -310,7 +322,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         row.campfireElement=row.campfireElement or "general";row.campfirePanel=row.campfirePanel or "options"
         local previous=row.visibleWhen
         row.visibleWhen=function()
-            return not row.campfireHidden and row.campfireElement==state.element and (state.element=="general" or row.campfirePanel==state.panel) and (not previous or previous())
+            return not row.campfireHidden and not row.campfireSide and row.campfireElement==state.element and (state.element=="general" or row.campfirePanel==state.panel) and (not previous or previous())
         end
         -- Shorter form rhythm; preserve the underlying row/setting labels.
         row.gapBefore=0;row.gapAfter=2
@@ -385,11 +397,32 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
     state.rule=rule;rule:SetHeight(1)
     state.summary=CreateFrame("Frame",nil,page.content)
     state.summary:SetPoint("TOPLEFT",page.contentInset,-8);state.summary:SetSize(172,160)
-    state.summaryTitle=W.Heading(state.summary,"",T.fontSize.section+2,0,0,172,T.text)
+    state.summaryTitle=W.Heading(state.summary,"",headingSize,0,0,172,T.text)
     state.summaryTitle:SetWordWrap(true)
+    state.summaryUnderline=Underline(state.summary,state.summaryTitle)
     state.summaryText=W.Label(state.summary,"",nil,0,0,172,T.muted)
     state.summaryText:ClearAllPoints();state.summaryText:SetPoint("TOPLEFT",state.summaryTitle,"BOTTOMLEFT",0,-10)
     state.summaryText:SetWordWrap(true)
+    state.inlineHeader=CreateFrame("Frame",nil,page.content)
+    state.inlineHeader:SetPoint("TOPLEFT",page.contentInset,-4);state.inlineHeader:SetHeight(36)
+    state.inlineTitle=W.Heading(state.inlineHeader,"",headingSize,0,0,100,T.text)
+    state.inlineSeparator=W.Label(state.inlineHeader,"·",nil,0,0,12,T.muted)
+    state.inlineSeparator:ClearAllPoints();state.inlineSeparator:SetPoint("LEFT",state.inlineTitle,"RIGHT",10,0)
+    state.inlineText=W.Label(state.inlineHeader,"",nil,0,0,440,T.muted)
+    state.inlineText:ClearAllPoints();state.inlineText:SetPoint("LEFT",state.inlineSeparator,"RIGHT",10,0)
+    state.inlineText:SetPoint("RIGHT",-8,0);state.inlineText:SetWordWrap(false)
+    state.inlineUnderline=Underline(state.inlineHeader,state.inlineTitle)
+    state.toggleGroups={}
+    for _,cells in ipairs(page.toggleGrids or {}) do
+        local host=cells[1].frame:GetParent()
+        if host.row.section==section then
+            local left=CreateFrame("Frame",nil,state.summary)
+            left.row=left;left.section=section
+            left.campfireElement,left.campfirePanel=host.row.campfireElement,host.row.campfirePanel
+            state.sideRows[host.row]=left
+            state.toggleGroups[#state.toggleGroups+1]={cells=cells,host=host,row=host.row,left=left}
+        end
+    end
     function page:SelectCampfirePanel(element,panel)
         if element~="general" and element~="monitor" and element~="buffs" and element~="contributions" then return end
         panel=panel or state.last[element] or "options"
@@ -424,8 +457,33 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         local active=self.sectionTabs and self.selectedSection==section
         local wide=self.scroll:GetWidth()>=800
         local general=state.element=="general"
-        self.layoutInsetLeft=active and wide and 188 or 0
-        state.summary:SetShown(active and wide)
+        local sliderCount,toggleCount=0,0
+        for _,host in pairs(self.campfireSliders) do
+            if host.row.campfireElement==state.element and host.row.campfirePanel==state.panel then sliderCount=sliderCount+1 end
+        end
+        for _,group in ipairs(state.toggleGroups) do
+            if group.row.campfireElement==state.element and group.row.campfirePanel==state.panel then toggleCount=toggleCount+#group.cells end
+        end
+        local mixed=active and wide and not general and sliderCount>0 and toggleCount>0
+        local compactHeader=active and not wide and not general
+        state.togglesLeft=mixed
+        self.layoutInsetLeft=active and wide and not general and 188 or 0
+        self.layoutTopInset=(mixed or compactHeader) and 44 or 0
+        self.layoutMinHeight=mixed and 60+toggleCount*42 or 0
+        state.summary:SetShown(active and wide and not general)
+        state.summaryTitle:SetShown(not mixed);state.summaryText:SetShown(not mixed);state.summaryUnderline:SetShown(not mixed)
+        state.inlineHeader:SetShown(mixed or compactHeader)
+        state.inlineSeparator:SetShown(mixed);state.inlineText:SetShown(mixed)
+        state.inlineHeader:SetWidth(math.max(456,self.scroll:GetWidth()-4-self.contentInset*2))
+        for _,group in ipairs(state.toggleGroups) do
+            local move=mixed and group.row.campfireElement==state.element and group.row.campfirePanel==state.panel
+            group.row.campfireSide=move;group.left:SetShown(move)
+            for _,cell in ipairs(group.cells) do
+                local target=move and group.left or group.host
+                if cell.frame:GetParent()~=target then cell.frame:SetParent(target) end
+                cell.button:ClearAllPoints();cell.button:SetPoint("TOPLEFT",move and -6 or -7,-6)
+            end
+        end
         state.caption:SetShown(not wide)
         bar:SetShown(active)
         local height=general and (wide and 56 or 80) or (wide and 84 or 100)
@@ -437,6 +495,23 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             self.scrollbar:ClearAllPoints();self.scrollbar:SetPoint("TOPRIGHT",-4,-top-4);self.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
         end
         layout(self)
+        local leftY=40
+        for _,group in ipairs(state.toggleGroups) do
+            if group.row.campfireSide then
+                group.left:ClearAllPoints();group.left:SetPoint("TOPLEFT",0,-leftY);group.left:SetSize(172,#group.cells*42)
+                group.left.offset=leftY+8
+                for i,cell in ipairs(group.cells) do
+                    cell.frame:ClearAllPoints();cell.frame:SetPoint("TOPLEFT",0,-(i-1)*42);cell.frame:SetSize(172,42)
+                    cell.label:SetWidth(136)
+                end
+                leftY=leftY+#group.cells*42
+            end
+        end
+        state.summary:SetHeight(math.max(160,leftY+12))
+        for _,entry in ipairs(state.searchEntries) do
+            local side=state.sideRows[entry.campfireBaseRow]
+            entry.row=side and side:IsShown() and side or entry.campfireBaseRow
+        end
         if active then
             local width=math.max(456,self.content:GetWidth()-self.contentInset*2)
             page.contributionFont:SetWidth(math.max(160,math.min(260,width-198)))
@@ -462,15 +537,22 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             for _,entry in ipairs(panels) do if entry[1]==state.panel then title=entry[2] end end
             state.summaryTitle:SetText(general and "General Settings" or title)
             state.summaryText:SetText(captions[state.element][state.panel])
+            state.inlineTitle:SetText(title)
+            local measured=state.inlineTitle:GetStringWidth()
+            if (issecretvalue and issecretvalue(measured)) or type(measured)~="number" or measured~=measured or measured<=0 or measured==math.huge then measured=#title*11 end
+            state.inlineTitle:SetWidth(math.ceil(measured));state.inlineUnderline:SetWidth(math.min(96,math.ceil(measured)))
+            state.inlineText:SetText(captions[state.element][state.panel])
         end
         state.layingOut=false
     end
     for _,entry in ipairs(page.searchEntries) do
         if entry.section==section and not entry.row.sectionHeader then
             local previous=entry.onReveal
+            entry.campfireBaseRow=entry.row;state.searchEntries[#state.searchEntries+1]=entry
+            local element,panel=entry.row.campfireElement,entry.row.campfirePanel
             entry.onReveal=function()
                 if previous then previous() end
-                page:SelectCampfirePanel(entry.row.campfireElement,entry.row.campfirePanel)
+                page:SelectCampfirePanel(element,panel)
             end
         end
     end

@@ -10,7 +10,7 @@ files, _, _ = payload()
 sizes={'Surface':(128,128),'Border':(128,128),'Selection':(128,4),
        'ControlSurface':(64,32),'ControlBorder':(64,32),'CheckSurfaceRound':(32,32),
        'CheckBorderRound':(32,32),'ToggleSurfacePill':(32,16),'ToggleBorderPill':(32,16),
-       'Thumb':(32,32),'ScrollThumb':(4,64),'Divider':(256,4),'Logo':(128,128)}
+       'Thumb':(32,32),'ScrollThumb':(4,64),'Divider':(256,4),'Logo':(128,128),'PillSurface':(256,64)}
 for name, size in sizes.items():
     data = files['Media/Textures/Mode/' + name + '.tga']
     h = struct.unpack('<BBBHHBHHHHBB', data[:18])
@@ -56,13 +56,13 @@ def alpha_at(data, x, y):
         return data[18+(min(py,h-1)*w+min(px,w-1))*4+3]/255
     return (a(ix,iy)*(1-fx)+a(ix+1,iy)*fx)*(1-fy)+(a(ix,iy+1)*(1-fx)+a(ix+1,iy+1)*fx)*fy
 
-for name,w,h in [('CheckSurfaceRound',18,18),('ToggleSurfacePill',34,18)]:
+for name,w,h,inset in [('CheckSurfaceRound',18,18,1),('ToggleSurfacePill',34,18,1),('PillSurface',156,30,1.5)]:
     data=files['Media/Textures/Mode/'+name+'.tga']
-    for iy in range((h-2)*8):
-        for ix in range((w-2)*8):
+    for iy in range(int((h-2*inset)*8)):
+        for ix in range(int((w-2*inset)*8)):
             x=(ix+.5)/8;y=(iy+.5)/8
-            fill=alpha_at(data,x/(w-2),y/(h-2))
-            outer=alpha_at(data,(x+1)/w,(y+1)/h)
+            fill=alpha_at(data,x/(w-2*inset),y/(h-2*inset))
+            outer=alpha_at(data,(x+inset)/w,(y+inset)/h)
             # Allow one 8-bit alpha level for independent bilinear resampling.
             assert outer+1/255>=fill,'colored interior must stay within the solid outer silhouette'
 print('PASS rounded Figma controls, circular thumb, neutral sheen, fading/beveled lines, transparent logo and font license')

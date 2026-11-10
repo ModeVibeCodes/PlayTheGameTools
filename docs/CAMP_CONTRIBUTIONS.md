@@ -2,8 +2,10 @@
 
 Mode-only layout pilot: contribution settings now sit under **Campfire Monitor →
 Contributions → Options / Text / Appearance / Position**. All settings and runtime
-behavior remain; text size/color and appearance color/opacity pairs share rows
-on wide pages and stack when narrow. Modern/Blizzard keep the previous groups.
+behavior remain; text size/color and appearance color/opacity pairs share rows.
+Mode uses Pick without the redundant in-page hex/Apply controls. Wide mixed
+panels place toggles under the left header, with sliders in the right form;
+narrow pages restore ordinary rows. Modern/Blizzard keep the previous groups.
 See [pilot paths and validation](CAMPFIRE_MONITOR.md#mode-layout-pilot--november-10).
 
 Campfire Monitor now offers a movable **Camp Contributions** popup at a native

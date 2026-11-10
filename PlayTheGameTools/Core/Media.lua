@@ -51,6 +51,7 @@ M.textureBase = "Interface\\AddOns\\PlayTheGameTools\\Media\\Textures\\"
 M.Textures = {
     ModeSurface = { file = "Mode/Surface.tga", slice = 12, rounded = true },
     ModePageDetail = { file = "Mode/PageAbstract.tga", transparent = true },
+    ModePillSurface = { file = "Mode/PillSurface.tga", rounded = true },
     ModeBorder = { file = "Mode/Border.tga", slice = 12, transparent = true },
     ModeSelection = { file = "Mode/Selection.tga", transparent = true },
     ModeControlSurface = { file = "Mode/ControlSurface.tga", slice = 10, rounded = true },

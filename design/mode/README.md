@@ -32,6 +32,19 @@ new Figma token/component library or updated composed screen is claimed.
 
 ## Original interface assets
 
+### Native capsule correction
+
+`PillSurface.svg` is original repository-native UI geometry: a white 256×64
+capsule with radius 32, distributed under the repository license. It is not a
+Figma export or reference screenshot asset. `tools/build_mode_textures.py`
+validates this simple SVG geometry, rasterizes at 8× resolution and downsamples
+the alpha mask with Lanczos to `Mode/PillSurface.tga` (256×64 RGBA). The main
+Campfire pilot pills use it without slicing for both the outer gray backing
+and the 1.5-unit-inset fill. This replaces stretching the 32×16 toggle sprite.
+Switches and other themes retain their existing files. Missing new art falls
+back to the existing rounded sprite; source SVG stays out of the runtime package.
+Runtime SHA256: `5c904d8257022843a24908fc98a0f5b87d8daa1d5abea86242ef45c35ee3eedb`.
+
 | PNG / runtime TGA | Figma source node | Size | Treatment |
 | --- | --- | --- | --- |
 | Surface | 6:32 | 128 × 128 | Neutral white-to-96.5%-gray satin gradient, 10px transparent corners; tinted by neutral runtime surface palette |

@@ -12,6 +12,10 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   Refinement: border the main pills, combine General's Options/Text, replace
   secondary pills with raised/tucked separator tabs, simplify muted descriptions,
   and slightly enlarge left headings. All settings/callbacks remain.
+  Follow-up: replace low-resolution pill art with a dedicated smooth capsule,
+  align General headers left, use underlined 20-unit headings and picker-only
+  color rows. On wide mixed panels put toggles below the left header, keep sliders
+  right and move the muted description inline. Search and all settings remain.
 
 - Start the next Mode page-refinement experiment: darken only the page area from
   #303030 to #2A2A2A and overlay faint Figma-generated abstract planes/grain at
