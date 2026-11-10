@@ -210,13 +210,13 @@ No release publication or automatic theme activation is included.
     and sheen remain in both cases, including dropdown/popup surfaces. Module
     displays continue to use the selected texture where they inherit Global Texture.
 
-Native validation remains pending owner feedback. Record Forever build,
-resolution, UI scale, font/media selections and screenshots when reporting fit.
-
-The owner reports the previous revision looks sharp; this is scoped visual
-feedback, not module/gameplay acceptance. Current native refinement review remains
-pending. Texture conversion retains exact Figma RGBA pixels; the owner logo is
-downsampled separately for its 38-unit header presentation.
+On November 9 the owner accepted the current appearance and Global Texture
+isolation and authorized PR #24's merge into main. This supersedes the pending
+visual-review notes above; it is scoped cosmetic acceptance, not new module or
+gameplay validation. Future refinements belong in a new PR. Record Forever build,
+resolution, UI scale, font/media selections and screenshots for future fit reports.
+Texture conversion retains exact Figma RGBA pixels; the owner logo is downsampled
+separately for its 38-unit header presentation.
 
 November 9 verification: all 33 regression scripts pass on the final revision,
 including text alignment/resizing, inner padding, rounded control geometry,

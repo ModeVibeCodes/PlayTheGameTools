@@ -4,6 +4,10 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Owner accepted the current mode cosmetic refresh and Global Texture isolation,
+  and authorized PR #24's merge into main on 2026-11-09. Future interface changes
+  will use a new PR; this acceptance does not expand module/gameplay validation.
+
 - Fix Global Texture leaking into configuration backgrounds: restore mode's
   original graphite/sheen and keep Modern/Blizzard configuration materials
   independent of the global display-texture selection. Modules still inherit

@@ -1,5 +1,11 @@
 # Standalone Forever development
 
+November 9 closeout: the owner accepted the current mode interface and global
+texture isolation, and authorized PR #24's merge into main. This is scoped visual
+acceptance; it does not establish new gameplay/module validation. Future design
+experiments should use a new branch and PR. Final runtime checks passed all 33
+regression scripts and the deterministic 116-Lua / 215-file package build.
+
 Global Texture is now limited to module/feature displays. Configuration fills use
 their own theme materials, and Blizzard popup backdrops preserve their native
 background. This restores mode graphite/sheen with a custom global texture still
