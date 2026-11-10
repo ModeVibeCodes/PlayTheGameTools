@@ -1,5 +1,11 @@
 # Standalone Forever development
 
+Latest mode layout correction removes page/window perimeter outlines, contains
+checked fills inside their borders, centers and sizes the profile caption/name,
+left-aligns search with page titles, and centers numeric values. The slider thumb
+keeps its 10×20 size with rounded corners. Lua-only; `/reload` OOC, no new media.
+Static checks include these geometry and callback contracts; native review pending.
+
 Experimental **mode** interface theme: opt-in under Global Settings → Appearance,
 using existing Lua files and the existing theme reload/profile flow. Revised Figma
 graphite/soft-corner/selection/control textures, the owner logo and licensed Lato

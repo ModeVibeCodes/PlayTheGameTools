@@ -162,6 +162,7 @@ function addon:CreateConfig()
     window.canvas = W.Fill(window, T.background, "BACKGROUND")
     if mode then window.canvasSheen=W.ModeSheen(window) end
     window.border = W.Outline(window, T.lineStrong, "OVERLAY")
+    if mode then window.border:SetShown(false) end
     -- Sublevel 1 keeps the column above the canvas within the same draw layer.
     local column = window:CreateTexture(nil, "BACKGROUND", nil, 1)
     W.Paint(column, T.sidebar)
@@ -285,6 +286,25 @@ function addon:CreateConfig()
         profile.profileName=W.Label(profile,self.ProfileManager.activeName,nil,0,0,68,T.primary)
         profile.profileName:ClearAllPoints();profile.profileName:SetPoint("LEFT",56,0);profile.profileName:SetPoint("RIGHT",-8,0)
         profile.profileName:SetWordWrap(false)
+        function profile:LayoutProfileText()
+            local function Measure(label)
+                local value=label:GetStringWidth()
+                if (issecretvalue and issecretvalue(value)) or type(value)~="number" or value~=value or value<=0 or value==math.huge then
+                    return #(label:GetText() or "")*7
+                end
+                return math.ceil(value)
+            end
+            local prefix=Measure(self.label)
+            local name=math.min(Measure(self.profileName),math.max(32,196-28-prefix-8))
+            local group=prefix+8+name
+            local width=math.max(132,math.min(196,group+28))
+            self:SetWidth(width)
+            self.label:ClearAllPoints();self.label:SetPoint("LEFT",(width-group)/2,0);self.label:SetWidth(prefix)
+            self.profileName:ClearAllPoints();self.profileName:SetPoint("LEFT",self.label,"RIGHT",8,0);self.profileName:SetWidth(name)
+            controls:SetWidth(width+312)
+            window.headerReserved=math.max(window.headerReserved or 720,controls:GetWidth()+232)
+        end
+        self.Media:RegisterFontListener(profile,function(owner) owner:LayoutProfileText() end)
         local refresh=profile.RefreshAppearance
         function profile:RefreshAppearance()
             refresh(self)
@@ -294,6 +314,7 @@ function addon:CreateConfig()
             self.profileName:SetShadowOffset(0,-1)
         end
         profile:RefreshAppearance()
+        profile:LayoutProfileText()
         profile:SetScript("OnClick",function()
             self:SelectConfigPage("globalSettings")
             window.pages.globalSettings:SelectSectionTab(2)
@@ -311,12 +332,13 @@ function addon:CreateConfig()
     navigation:SetPoint("BOTTOMRIGHT")
 
     local body = CreateFrame("Frame", nil, window)
-    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", mode and 24 or 30, -16)
+    local contentGap=mode and 24 or 30
+    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", contentGap, -16)
+    window.contentLeft=sidebarWidth-10+contentGap
     body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
     if mode then
         window.bodySurface=W.Fill(body,T.panel,"BACKGROUND",-12)
         window.bodySheen=W.ModeSheen(body,-12)
-        window.bodyBorder=W.Outline(body,T.line,"BORDER",-12,0.7)
     end
     local moduleHeader = W.ModuleHeader(body)
     window.moduleHeader = moduleHeader
@@ -333,7 +355,10 @@ function addon:CreateConfig()
     window.collapsedCategories = collapsed
 
     function self:RefreshConfig()
-        if window.profileButton then window.profileButton.profileName:SetText(self.ProfileManager.activeName) end
+        if window.profileButton then
+            window.profileButton.profileName:SetText(self.ProfileManager.activeName)
+            window.profileButton:LayoutProfileText()
+        end
         moduleHeader:Refresh()
         preview:SetSelected(self.previewMode)
         edit:SetSelected(self.editMode)

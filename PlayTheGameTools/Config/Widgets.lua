@@ -433,6 +433,8 @@ function W.Button(parent, text, width, height, style)
     button.fill = W.Fill(button, T.surface, "BACKGROUND")
     if T.id=="mode" then
         button.modeBorderAsset="ModeControlBorder"
+        button.fill:ClearAllPoints()
+        button.fill:SetPoint("TOPLEFT",1,-1);button.fill:SetPoint("BOTTOMRIGHT",-1,1)
         button.fill.modeAsset="ModeControlSurface";Paint(button.fill,T.surface)
     end
     button.outline = W.Outline(button, T.line, "BORDER")
@@ -635,6 +637,7 @@ function W.Switch(button, text, height, style)
     local w = toggle and 34 or 18
     local track = button:CreateTexture(nil, "BACKGROUND")
     track:SetPoint("CENTER"); track:SetSize(w, h)
+    if T.id=="mode" then track:SetSize(w-4,h-4) end
     local frame = CreateFrame("Frame", nil, button)
     frame:SetPoint("CENTER"); frame:SetSize(w, h)
     frame.ptgSquareOutline=T.id~="mode"
@@ -777,7 +780,8 @@ function W.NumericInput(parent, getter, setter, minimum, maximum, width, decimal
     input:SetAutoFocus(false)
     input:SetMaxLetters(9)
     input:SetFontObject(GameFontHighlight)
-    input:SetTextInsets(8, 8, 0, 0)
+    input:SetTextInsets(T.id=="mode" and 4 or 8,T.id=="mode" and 4 or 8,0,0)
+    if T.id=="mode" then input:SetJustifyH("CENTER") end
     addon.Media:BindInterfaceFont(input, GameFontHighlight)
     W.CrispText(input)
     W.Texture(input, "InputField")
@@ -834,7 +838,7 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     local label = W.Label(parent, "", nil, 0, -8, 52, T.secondary)
     label:ClearAllPoints()
     label:SetPoint("RIGHT", 0, 0)
-    label:SetJustifyH("RIGHT")
+    label:SetJustifyH(T.id=="mode" and "CENTER" or "RIGHT")
     local slider = CreateFrame("Slider", nil, parent)
     slider:SetPoint("LEFT", 0, 0)
     slider:SetPoint("RIGHT", -62, 0)
@@ -857,6 +861,7 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     local thumb = W.Texture(slider, "SliderThumb", "OVERLAY")
     thumb:ClearAllPoints()
     thumb:SetSize(modern and 10 or 8, modern and 20 or 16)
+    if T.id=="mode" then thumb.modeAsset="ModeSliderThumb";Paint(thumb,T.text) end
     thumb:SetVertexColor(unpack(T.text))
     -- Blizzard: the stock slider knob, untinted.
     local stockThumb = T.blizzardArt and thumb:SetTexture(ART.sliderThumb) ~= false

@@ -13,6 +13,11 @@ there is no blue tint in body material. Original Figma satin gradients and soft
 10px corner silhouettes replace flat default surfaces. Cyan etched lines denote
 selection. Only text lights on hover; whole-row/button glow washes are removed.
 Disabled controls remain inactive and unlit.
+The outer window and module-page perimeter outlines are removed; control outlines
+and row separators remain. Button backgrounds are inset one unit, and checkbox/
+toggle tracks are inset two units inside their outer border geometry. Checked
+fills and circular thumbs therefore have room inside the outline rather than
+sharing its edge pixels.
 Checkboxes now use dedicated rounded silhouettes. On/off switches have capsule
 tracks and circular thumbs; their click handlers, hit targets and state remain
 unchanged. Buttons, including header controls, Collapse and Refresh, use dedicated
@@ -62,6 +67,16 @@ Settings → Profiles** through the existing page/tab engine without mutating a
 profile. The cyan mode window title is **PTG Tools**, preceded by the owner's supplied
 logo with its navy background removed. Addon metadata and other themes keep the
 existing Play The Game Tools name.
+Search's left edge is anchored to the same content-left coordinate as the module
+page title. The clear header drag region and off-screen recovery reserve account
+for that position. The profile caption and cyan name are measured and centered
+as one group, with a 132–196-unit button width and matching header-control space.
+Close remains far right.
+
+Numeric value inputs and plain slider value labels are centered. Slider thumbs
+retain their 10×20-unit size and use an existing rounded full sprite; parsing,
+limits, callbacks and native slider interaction are unchanged. This correction
+changes Lua/layout only and adds no new runtime assets.
 
 ## Design reference
 
@@ -160,6 +175,20 @@ No release publication or automatic theme activation is included.
     **Action:** inspect both sidebar entries, then click each;
     **Required state:** OOC; **Confirmation:** each name stays on one line and
     opens the same page. Long names may use a slightly smaller selected font.
+12. **Navigation:** PTG Tools → Questing & Leveling → · Class Training → General;
+    **Action:** inspect the page title, header switch, **Level Up Window** and
+    **Shortcut Icon & Menu** checkboxes without changing their values;
+    **Required state:** OOC after `/reload`; **Confirmation:** no page perimeter
+    line crosses the title/controls, checked fills stay inside their outlines,
+    and the search bar's left edge lines up with **Class Training**.
+13. **Navigation:** PTG Tools → header → Profile: <active name>;
+    **Action:** inspect the caption/name group, then click it;
+    **Required state:** OOC; **Confirmation:** centered, proportionate text with
+    only the name cyan, Close far right, and the existing Profiles page opens.
+14. **Navigation:** PTG Tools → Global Settings → Optimizations → Camera Max Zoom;
+    **Action:** inspect the numeric field and slider thumb;
+    **Required state:** OOC; **Confirmation:** centered value text and rounded
+    thumb corners with the same thumb size; the current value is unchanged.
 
 Native validation remains pending owner feedback. Record Forever build,
 resolution, UI scale, font/media selections and screenshots when reporting fit.

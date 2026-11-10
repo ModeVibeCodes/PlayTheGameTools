@@ -23,6 +23,10 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   Fit subcategories on one line using a wider navigation area and measured text.
   Restore Close far right with Profile next to it; make PTG Tools cyan. Native
   verification of this correction remains pending.
+  Follow-up: remove mode window/page perimeter outlines, inset checked fills,
+  align search with page titles, and center/size the profile text group. Center
+  numeric values and round the existing-size slider thumb. Existing editing,
+  navigation, module logic and other themes remain unchanged; native review pending.
 
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.

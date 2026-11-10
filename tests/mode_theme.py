@@ -34,7 +34,19 @@ mode.execute(r'''
     assert(w.profileButton.points[1][2]==w.closeButton and w.editButton.points[1][2]==w.profileButton,'profile is immediately left of close')
     assert(T.muted[1]<T.secondary[1] and T.secondary[1]<T.text[1],'descriptor hierarchy')
     assert(w.searchInput:GetParent()==w.headerBar and w.searchInput:GetWidth()==200,'header search')
-    assert(w.canvas.modeAsset=='ModeSurface' and w.bodyBorder.rounded,'Figma material and soft border')
+    assert(w.searchInput.points[1][1]=='TOPLEFT' and w.searchInput.points[1][2]==w and w.searchInput.points[1][4]==w.contentLeft,'search aligns with module title')
+    assert(w.headerReserved>=w:GetWidth()-w.contentLeft+16,'left search preserves off-screen drag recovery')
+    assert(w.canvas.modeAsset=='ModeSurface' and not w.bodyBorder and not w.border.shown,'page perimeter borders removed')
+    local profile=w.profileButton
+    local group=profile.label:GetWidth()+8+profile.profileName:GetWidth()
+    assert(math.abs(profile.label.points[1][4]-(profile:GetWidth()-group)/2)<.001,'profile label and name centered together')
+    assert(profile:GetWidth()>=132 and profile:GetWidth()<=196,'profile button proportions bounded')
+    for _,name in ipairs({'Mode',string.rep('LongProfile',8)}) do
+        profile.profileName:SetText(name);profile:LayoutProfileText()
+        local span=profile.label:GetWidth()+8+profile.profileName:GetWidth()
+        assert(math.abs(profile.label.points[1][4]-(profile:GetWidth()-span)/2)<.001 and profile:GetWidth()<=196,'short/long profile text balances within header')
+    end
+    profile.profileName:SetText(addon.ProfileManager.activeName);profile:LayoutProfileText()
     assert(w.title.font[1]:find('Lato%-Bold.ttf') and w.navigationButtons.dashboard.label.font[1]:find('Lato%-Regular.ttf'))
     w.profileButton.scripts.OnClick()
     assert(w.selectedPage=='globalSettings' and w.pages.globalSettings.selectedSection.title=='Profiles','existing profile page shortcut')
@@ -106,9 +118,19 @@ mode.execute(r'''
     assert(check.fill.modeAsset=='ModeCheckSurface' and check.switchOutline.rounded)
     local button=addon.ConfigWidgets.Button(UIParent,'Refresh',100,28)
     assert(button.fill.modeAsset=='ModeControlSurface' and button.outline.rounded)
+    assert(button.fill.points[1][4]==1 and button.fill.points[1][5]==-1,'button background stays within border')
     local toggle=w.moduleHeader.toggle
     assert(toggle.switchOutline.rounded and toggle.fill.modeAsset=='ModeToggleSurface' and toggle.knob.modeAsset=='ModeThumb','rounded track and circular thumb')
     assert(not toggle.fill.slice and not toggle.switchOutline.edges[1].slice,'small controls use full oval sprites')
+    assert(toggle.fill:GetWidth()==30 and toggle.fill:GetHeight()==14,'enabled toggle fill stays two units inside its border')
+    assert(check.fill:GetWidth()==14 and check.fill:GetHeight()==14,'checkbox fill stays inside its border')
+    local value=27
+    local row=CreateFrame('Frame',nil,UIParent)
+    addon.ConfigWidgets.Slider(row,0,100,1,function() return value end,function(v) value=v end,'',true)
+    assert(row.slider.thumbTexture.modeAsset=='ModeSliderThumb' and row.slider.thumbTexture:GetWidth()==10 and row.slider.thumbTexture:GetHeight()==20,'rounded slider thumb retains size')
+    assert(row.numericInput.justifyH=='CENTER','numeric value centered')
+    row.numericInput:SetText('42');row.numericInput.scripts.OnEnterPressed()
+    assert(value==42,'numeric editing callback retained')
     assert(not check.fill.slice and not check.knob.slice,'checkbox full-sprite round corners')
     testMissingTextures={[addon.Media:GetTexture('ModeCheckSurface')]=true}
     local pendingCheck=addon.ConfigWidgets.Button(UIParent,'',18,18,'checkbox')

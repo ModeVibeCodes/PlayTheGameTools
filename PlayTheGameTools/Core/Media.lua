@@ -62,6 +62,7 @@ M.Textures = {
     ModeToggleSurface = { file = "Mode/ToggleSurfacePill.tga", rounded = true },
     ModeToggleBorder = { file = "Mode/ToggleBorderPill.tga", transparent = true },
     ModeThumb = { file = "Mode/Thumb.tga", rounded = true },
+    ModeSliderThumb = { file = "Mode/CheckSurfaceRound.tga", rounded = true },
     ModeScrollThumb = { file = "Mode/ScrollThumb.tga", rounded = true },
     ModeDivider = { file = "Mode/Divider.tga", transparent = true },
     ModeLogo = { file = "Mode/Logo.tga", transparent = true },
