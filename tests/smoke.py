@@ -86,7 +86,7 @@ restored.execute('''
     assert(not addon.configWindow.pages.dashboard.themeButtons,'theme moved out of Dashboard')
     addon:SelectConfigPage('globalSettings')
     local themes=addon.configWindow.pages.globalSettings.themeButtons
-    assert(#themes==2 and themes[1].selected and not themes[2].selected,'theme choice')
+    assert(#themes==3 and themes[1].selected and not themes[2].selected and themes[3].label:GetText()=='mode','theme choice')
     -- Modern contrast: findable control edges, readable muted copy, and
     -- surfaces that step up from the recessed sidebar to hover.
     local function lum(c)

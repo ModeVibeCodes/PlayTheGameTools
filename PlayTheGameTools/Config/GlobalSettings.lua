@@ -25,7 +25,7 @@ function addon:CreateGlobalSettingsPage(parent)
     -- Frames keep the theme they were drawn with, so a change applies on reload.
     local themes, choices = addon.InterfaceThemes, {}
     for _, id in ipairs(themes.order) do choices[#choices + 1] = { label = themes[id].label, value = id, width = 108 } end
-    local themeButtons, refreshTheme = W.Exclusive(page:Row("Interface Theme", 48, { "theme", "appearance", "modern", "blizzard", "default" }),
+    local themeButtons, refreshTheme = W.Exclusive(page:Row("Interface Theme", 48, { "theme", "appearance", "modern", "blizzard", "mode", "default" }),
         choices, function() return addon:ResolveInterfaceTheme(addon.db.window.theme) end,
         function(value) addon:SetInterfaceTheme(value) end)
     page.themeButtons = themeButtons

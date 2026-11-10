@@ -4,6 +4,45 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Owner accepted the current mode cosmetic refresh and Global Texture isolation,
+  and authorized PR #24's merge into main on 2026-11-09. Future interface changes
+  will use a new PR; this acceptance does not expand module/gameplay validation.
+
+- Fix Global Texture leaking into configuration backgrounds: restore mode's
+  original graphite/sheen and keep Modern/Blizzard configuration materials
+  independent of the global display-texture selection. Modules still inherit
+  Global Texture; the saved selection is preserved. Apply with Reload OOC.
+
+- Add opt-in **mode** interface theme under Global Settings → Appearance:
+  neutral graphite Figma satin/soft-corner textures, licensed Lato typography,
+  gray headings, cyan text-only hover and etched selection lines. Expanded,
+  collapsible text categories have less-indented dot-prefixed children. Header
+  search and active-profile shortcut reuse existing controls/pages. Existing themes,
+  module controls and gameplay behavior are preserved. Apply with Reload OOC;
+  new asset discovery may need a restart only if reload falls back. Native review
+  pending. See docs/MODE_INTERFACE_THEME.md.
+  Refinement: PTG logo/short title, 208-unit sidebar, padded module rows, darker
+  descriptors, text-aligned right-fading underlines, rounded checkboxes/buttons,
+  capsule on/off tracks with circular thumbs, thin scroll indicator and beveled
+  separators. Remove header/navigation divider lines; place Profile far right
+  and accent only its name. Prior appearance received positive owner feedback;
+  these final native refinements still need review.
+  Screenshot correction: replace 24px checkbox runtime files with 32px images;
+  draw small controls without slices so their rounded silhouettes remain intact.
+  Fit subcategories on one line using a wider navigation area and measured text.
+  Restore Close far right with Profile next to it; make PTG Tools cyan. Native
+  verification of this correction remains pending.
+  Follow-up: remove mode window/page perimeter outlines, inset checked fills,
+  align search with page titles, and center/size the profile text group. Center
+  numeric values and round the existing-size slider thumb. Existing editing,
+  navigation, module logic and other themes remain unchanged; native review pending.
+  Fill-containment correction: use a solid rounded outer backing for mode toggles
+  and checkboxes, with the same inset interior in both states and a distinct gray
+  rim when checked. All regions share one frame; no new assets or state changes.
+  Native confirmation is pending after reload.
+  Owner reports improved containment; reduce mode switch/checkbox rims from two
+  units to one and use charcoal #2B2B2B in both states. Native fit review pending.
+
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.
 

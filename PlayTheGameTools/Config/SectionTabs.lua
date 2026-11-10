@@ -41,6 +41,7 @@ function W.SectionTabs(page, order)
             local width = math.max(64, math.ceil(measured) + 28)
             button:ClearAllPoints(); button:SetPoint("TOPLEFT", x, 0); button:SetSize(width, 30)
             button.label:SetWidth(width-24);button.label:SetWordWrap(false)
+            if T.id=="mode" and button.underline then W.AlignTextLine(button,button.underline) end
             button.tabX, button.tabWidth = x, width
             x = x + width + 4
         end
@@ -78,9 +79,13 @@ function W.SectionTabs(page, order)
     end
     for i, section in ipairs(sections) do
         local button = W.Button(content, section.title, 100, 30, "underline")
-        button.underline = W.Fill(button, T.primary, "OVERLAY")
-        button.underline:ClearAllPoints(); button.underline:SetPoint("BOTTOMLEFT", 10, 0)
-        button.underline:SetPoint("BOTTOMRIGHT", -10, 0); button.underline:SetHeight(2)
+        if T.id=="mode" then
+            button.underline=button.selectionEdge;W.AlignTextLine(button,button.underline)
+        else
+            button.underline = W.Fill(button, T.primary, "OVERLAY")
+            button.underline:ClearAllPoints(); button.underline:SetPoint("BOTTOMLEFT", 10, 0)
+            button.underline:SetPoint("BOTTOMRIGHT", -10, 0); button.underline:SetHeight(2)
+        end
         button.underline:Hide()
         button:SetScript("OnClick", function() page:SelectSectionTab(section) end)
         strip.buttons[i] = button
