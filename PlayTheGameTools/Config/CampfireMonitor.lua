@@ -1,21 +1,63 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local C,W,T=addon.CampfireMonitor,addon.ConfigWidgets,addon.InterfaceTheme
+-- Presentation routes only: every control keeps its original getter/setter.
+local routes={
+    enabled={"general","options"},showInCombat={"general","options"},textColor={"general","text"},
+    headerGradient={"buffs","text"},headerColor={"buffs","text"},headerEndColor={"buffs","text"},
+    showIcon={"monitor","options"},showText={"monitor","options"},showNearbyDetails={"monitor","options"},
+    showProfessionGuide={"monitor","options"},alwaysShow={"monitor","options"},locked={"monitor","position"},
+    fontSize={"monitor","text"},x={"monitor","position"},y={"monitor","position"},
+    showBenefits={"buffs","options"},separateBenefits={"buffs","options"},compactBenefits={"buffs","text"},
+    colorStats={"buffs","text"},benefitsLocked={"buffs","position"},benefitsX={"buffs","position"},
+    benefitsY={"buffs","position"},benefitsFontSize={"buffs","text"},
+    showContributionPopup={"contributions","options"},contributionLocked={"contributions","position"},
+    contributionX={"contributions","position"},contributionY={"contributions","position"},
+    contributionUseInterfaceFont={"contributions","text"},contributionOutline={"contributions","text"},
+    contributionHeaderGradient={"contributions","text"},
+}
+local function Route(key)
+    local route=routes[key]
+    if route then return route[1],route[2] end
+    if key:find("^contribution") then
+        if key:find("^contributionShow") or key=="contributionTooltips" then return "contributions","options" end
+        if key:find("^contributionFont") or key:find("Align$") then return "contributions","text" end
+        for _,role in ipairs({"Title","Name","Info","Action","Hint","Footer","Dismiss"}) do
+            if key:find("^contribution"..role) then return "contributions","text" end
+        end
+        return "contributions","appearance"
+    end
+    return key:find("^benefits") and "buffs" or "monitor","appearance"
+end
 function C:AddConfig(page)
+    local pilot=T.id=="mode"
+    local firstRow,section=#page.rows+1,page.activeSection
+    local function Tag(row,key)
+        if pilot then row.campfireElement,row.campfirePanel=Route(key) end
+    end
     page.campfireControls={};page.campfireColors={};page.campfireSliders={}
     local A=addon.CampContributions
     local function Toggles(entries)
-        local items={}
+        local groups,order={},{}
         for _,entry in ipairs(entries) do
             local key=entry[2]
-            items[#items+1]={label=entry[1],get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
+            local element,panel=Route(key)
+            local id=pilot and element..":"..panel or "all"
+            if not groups[id] then groups[id]={};order[#order+1]=id end
+            local items=groups[id]
+            items[#items+1]={label=entry[1],key=key,get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
         end
-        local cells=page:ToggleGrid(items,{maxColumns=2,minimumCellWidth=210})
-        for i,entry in ipairs(entries) do page.campfireControls[entry[2]]=cells[i] end
+        for _,id in ipairs(order) do
+            local items=groups[id]
+            local cells=page:ToggleGrid(items,{maxColumns=2,minimumCellWidth=210})
+            for i,item in ipairs(items) do page.campfireControls[item.key]=cells[i] end
+            Tag(cells[1].frame:GetParent().row,items[1].key)
+        end
     end
     local function Slider(label,key,suffix)
         local r=self.ranges[key]
         local row=page:Row(label,42);page.campfireSliders[key]=row
+        Tag(row.row,key)
         page.refreshers[#page.refreshers+1]=W.Slider(row,r[1],r[2],r[3],
             function() return self.db[key] end,function(v)
                 if addon.LootSparkles.Public(v) and type(v)=="number" and v==v and v>=r[1] and v<=r[2] then
@@ -28,15 +70,24 @@ function C:AddConfig(page)
     function owner:CanConfigure() return addon.LootSparkles:OutsideCombat() end
     function owner:SetAppearance(key,value) return C:SetOption(key,value) end
     local function Color(label,key)
-        local pick,hex,apply=W.ColorRow(page,owner,label,key)
-        page.campfireColors[key]={pick=pick,hex=hex,apply=apply}
+        local host=pilot and page:Row(label,42) or nil
+        if host then Tag(host.row,key) end
+        local pick,hex,apply=W.ColorRow(page,owner,label,key,nil,host)
+        page.campfireColors[key]={pick=pick,hex=hex,apply=apply,host=host}
     end
     local function Button(row,label,x,callback,width)
         local b=W.Button(row,label,width or 180,28);b:SetPoint("LEFT",x or 0,0)
+        if pilot then
+            row.pilotButtons=row.pilotButtons or {};row.pilotButtons[#row.pilotButtons+1]=b
+            row.row.campfireButtonHost=row
+        end
         b:SetScript("OnClick",function() callback();page:Refresh() end);return b
     end
     local function Note(label,text,height)
-        local text=W.Label(page:Row(label,height or 52),text,nil,0,-4,440,T.muted);text:SetWordWrap(true);return text
+        local host=page:Row(label,height or 52)
+        local text=W.Label(host,text,nil,0,-4,440,T.muted);text:SetWordWrap(true)
+        if pilot then host.row.campfireNote=text;host.row.campfireNoteHost=host end
+        return text
     end
     local targets={};page.campfireJumpTargets=targets;page.campfireJumps={}
     local jump=page:Row("Jump To",36)
@@ -180,4 +231,229 @@ function C:AddConfig(page)
         page.contributionPreview.label:SetText(A.previewing and "Stop Preview" or "Preview Contributions")
     end
     Note("Contributions TLDR","Ready bag kits appear at a fire. Click Place, then finish native targeting. Preview works anywhere. Drag the header or use Edit Contributions; Reset Position brings it back.",64)
+    if pilot then self:ApplyModeConfigLayout(page,firstRow,section) end
+end
+
+-- Campfire-only Mode pilot. Other themes keep the existing long-form groups.
+-- Selection is session presentation state, never a saved module option.
+function C:ApplyModeConfigLayout(page,firstRow,section)
+    local state={element="general",panel="options",last={},buttons={},panels={},section=section}
+    page.campfirePilot=state
+    local elements={{"general","General"},{"monitor","Campfire Icon"},{"buffs","Camp Buffs"},{"contributions","Contributions"}}
+    local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"},{"position","Position"}}
+    local labels={
+        ["Module Elements"]={"general","options"},["Campfire Status"]={"general","options"},
+        ["Tools"]={"general","options"},["Preview & Placement"]={"general","options"},
+        ["Shared Style"]={"general","text"},["Icon Position"]={"monitor","position"},
+        ["Buff Position"]={"buffs","position"},["Buffs TLDR"]={"buffs","options"},
+        ["Detected Kits"]={"contributions","options"},["Contribution Window"]={"contributions","options"},
+        ["Contribution Position"]={"contributions","position"},["Contribution Font"]={"contributions","text"},
+        ["Title Alignment"]={"contributions","text"},["Row Text Alignment"]={"contributions","text"},
+        ["Contributions TLDR"]={"contributions","options"},
+    }
+    local entries={}
+    for _,entry in ipairs(page.searchEntries) do
+        if entry.section==section then
+            entries[entry.row]=entry
+            local route=labels[entry.label]
+            if route then entry.row.campfireElement,entry.row.campfirePanel=route[1],route[2] end
+        end
+    end
+    -- Pair existing size and color controls without replacing their callbacks,
+    -- hex Apply buttons, picker/cancel behavior or search labels.
+    local pairedControls={}
+    for _,role in ipairs({"Title","Name","Info","Action","Hint","Footer","Dismiss"}) do
+        pairedControls[#pairedControls+1]={"contribution"..role.."Size","contribution"..role.."Color"}
+    end
+    for _,role in ipairs({"Background","Border","Row","Hover"}) do
+        pairedControls[#pairedControls+1]={"contribution"..role.."Opacity","contribution"..role.."Color"}
+    end
+    for _,keys in ipairs(pairedControls) do
+        local size=page.campfireSliders[keys[1]]
+        local color=page.campfireColors[keys[2]]
+        local sizeRow,colorRow=size.row,color.host.row
+        colorRow.campfireHidden=true
+        color.host:SetParent(sizeRow);color.host.row=sizeRow;color.host.rowLabel=size.rowLabel
+        sizeRow.campfirePairedColor=color
+        for _,entry in ipairs(page.searchEntries) do if entry.row==colorRow then entry.row=sizeRow end end
+        function sizeRow:layoutChildren(width)
+            local wide=width>=580
+            self:SetHeight(wide and 46 or 82)
+            size.rowLabel:SetWidth(152)
+            size:ClearAllPoints();size:SetPoint("TOPLEFT",self,"TOPLEFT",164,-10)
+            size:SetSize(wide and width-432 or width-176,26)
+            color.host:ClearAllPoints()
+            if wide then color.host:SetPoint("TOPRIGHT",self,"TOPRIGHT",-12,-8)
+            else color.host:SetPoint("TOPLEFT",self,"TOPLEFT",164,-46) end
+            color.host:SetSize(248,30)
+        end
+    end
+    for index=firstRow,#page.rows do
+        local row=page.rows[index]
+        local entry=entries[row]
+        if row.subsectionHeading or (entry and entry.label=="Jump To") then row.campfireHidden=true end
+        row.campfireElement=row.campfireElement or "general";row.campfirePanel=row.campfirePanel or "options"
+        local previous=row.visibleWhen
+        row.visibleWhen=function()
+            return not row.campfireHidden and row.campfireElement==state.element and row.campfirePanel==state.panel and (not previous or previous())
+        end
+        -- Shorter form rhythm; preserve the underlying row/setting labels.
+        row.gapBefore=0;row.gapAfter=2
+        if row.divider then row.divider:Hide() end
+    end
+    for index=#page.searchEntries,1,-1 do
+        local entry=page.searchEntries[index]
+        if entry.section==section and entry.label=="Jump To" then table.remove(page.searchEntries,index) end
+    end
+    -- Action strips use the full row, avoiding side-by-side button clipping.
+    for index=firstRow,#page.rows do
+        local row=page.rows[index]
+        local entry=entries[row]
+        if entry and entry.label~="Jump To" then
+            local host=row.campfireButtonHost
+            if entry.label=="Detected Kits" or entry.label=="Title Alignment" or entry.label=="Row Text Alignment" then host=nil end
+            if host then
+                host.rowLabel:Hide();host:ClearAllPoints();host:SetAllPoints(row)
+                function row:layoutChildren(width)
+                    local gap=8;local count=#host.pilotButtons
+                    local cell=math.min(190,(width-(count-1)*gap)/count)
+                    for i,button in ipairs(host.pilotButtons) do
+                        button:ClearAllPoints();button:SetPoint("LEFT",(i-1)*(cell+gap),0);button:SetWidth(cell)
+                        button.label:SetWidth(cell-20);button.label:SetWordWrap(false)
+                    end
+                end
+            end
+            if row.campfireNote then
+                local note=row.campfireNote
+                local host=row.campfireNoteHost
+                host.rowLabel:Hide();host:ClearAllPoints();host:SetAllPoints(row)
+                note:ClearAllPoints();note:SetPoint("TOPLEFT",0,-4);note:SetPoint("TOPRIGHT",-4,-4)
+            end
+        end
+    end
+    -- Responsive detected-kit summary and its original Refresh action.
+    local detected=page.contributionRefresh:GetParent()
+    function detected.row:layoutChildren(width)
+        detected.rowLabel:SetWidth(144)
+        detected:ClearAllPoints();detected:SetPoint("TOPLEFT",self,"TOPLEFT",156,-8);detected:SetPoint("BOTTOMRIGHT",-8,8)
+        page.contributionStatus:SetWidth(math.max(140,width-284))
+        page.contributionRefresh:ClearAllPoints();page.contributionRefresh:SetPoint("RIGHT",0,0)
+    end
+    -- Alignment choices stay labeled, and narrow settings windows retain all 3.
+    for _,label in ipairs({"Title Alignment","Row Text Alignment"}) do
+        for row,entry in pairs(entries) do if entry.label==label then
+            local host=row.campfireButtonHost
+            if host then
+                function row:layoutChildren(width)
+                    host.rowLabel:SetWidth(144)
+                    host:ClearAllPoints();host:SetPoint("TOPLEFT",self,"TOPLEFT",156,-4);host:SetPoint("BOTTOMRIGHT",-8,4)
+                    local cell=(width-180)/3
+                    for i,button in ipairs(host.pilotButtons) do
+                        button:ClearAllPoints();button:SetPoint("LEFT",(i-1)*(cell+8),0);button:SetWidth(cell)
+                    end
+                end
+            end
+        end end
+    end
+    local bar=CreateFrame("Frame",nil,page);state.bar=bar
+    bar:SetPoint("TOPLEFT",0,-40);bar:SetPoint("TOPRIGHT",-24,-40);bar:SetHeight(100)
+    state.caption=W.Label(bar,"",nil,4,-78,440,T.muted)
+    state.caption:SetPoint("TOPRIGHT",-8,-78);state.caption:SetWordWrap(false)
+    local rule=W.Fill(bar,T.line,"BACKGROUND")
+    rule:ClearAllPoints();rule:SetPoint("BOTTOMLEFT",0,0);rule:SetPoint("BOTTOMRIGHT",0,0);rule:SetHeight(1)
+    state.summary=CreateFrame("Frame",nil,page.content)
+    state.summary:SetPoint("TOPLEFT",page.contentInset,-8);state.summary:SetSize(172,160)
+    state.summaryTitle=W.Heading(state.summary,"",T.fontSize.section,0,0,172,T.text)
+    state.summaryTitle:SetWordWrap(true)
+    state.summaryText=W.Label(state.summary,"",nil,0,0,172,T.muted)
+    state.summaryText:ClearAllPoints();state.summaryText:SetPoint("TOPLEFT",state.summaryTitle,"BOTTOMLEFT",0,-10)
+    state.summaryText:SetWordWrap(true)
+    function page:SelectCampfirePanel(element,panel)
+        if element~="general" and element~="monitor" and element~="buffs" and element~="contributions" then return end
+        panel=panel or state.last[element] or "options"
+        if panel~="options" and panel~="text" and panel~="appearance" and panel~="position" then return end
+        if element=="general" and panel~="options" and panel~="text" then panel="options" end
+        state.element,state.panel,state.last[element]=element,panel,panel
+        self.scrollbar:SetValue(0)
+        if self.sectionTabs and self.selectedSection~=section then self:SelectSectionTab(section) else self:Layout() end
+        if addon.CloseTimerColorPicker then addon:CloseTimerColorPicker() end
+        if addon.CloseFontDropdown then addon:CloseFontDropdown() end
+    end
+    for _,entry in ipairs(elements) do
+        local id=entry[1]
+        local button=W.Button(bar,entry[2],120,30,"roundedTab")
+        button:SetScript("OnClick",function() page:SelectCampfirePanel(id) end);state.buttons[id]=button
+    end
+    for _,entry in ipairs(panels) do
+        local id=entry[1]
+        local button=W.Button(bar,entry[2],120,28,"roundedTab")
+        button:SetScript("OnClick",function() page:SelectCampfirePanel(state.element,id) end);state.panels[id]=button
+    end
+    local captions={
+        general={options="Enable, inspect or preview the module's windows.",text="Shared color for monitor status and untyped buff stats."},
+        monitor={options="Choose what the campfire monitor shows.",text="Status text size. Shared color: General > Text.",appearance="Icon and window sizing, scale and opacity.",position="Lock or position the monitor window."},
+        buffs={options="Choose joined or separate Camp Buffs.",text="Buff text and header styling. Shared color: General > Text.",appearance="Separate-window dimensions, scale and opacity.",position="Lock or position the separate buff window."},
+        contributions={options="Choose content, inspect kits or preview contributions.",text="Font, text sizes, colors and alignment.",appearance="Window, border, icons and row appearance.",position="Lock or position the contributions window."},
+    }
+    local layout=page.Layout
+    function page:Layout()
+        if state.layingOut then return end
+        state.layingOut=true
+        local active=self.sectionTabs and self.selectedSection==section
+        local wide=self.scroll:GetWidth()>=800
+        self.layoutInsetLeft=active and wide and 188 or 0
+        state.summary:SetShown(active and wide)
+        state.caption:SetShown(not wide)
+        bar:SetShown(active)
+        bar:SetHeight(wide and 84 or 100)
+        local top=active and (wide and 132 or 148) or 40
+        if state.viewportTop~=top then
+            state.viewportTop=top
+            self.scroll:ClearAllPoints();self.scroll:SetPoint("TOPLEFT",0,-top);self.scroll:SetPoint("BOTTOMRIGHT",-24,0)
+            self.scrollbar:ClearAllPoints();self.scrollbar:SetPoint("TOPRIGHT",-4,-top-4);self.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
+        end
+        layout(self)
+        if active then
+            local width=math.max(456,self.content:GetWidth()-self.contentInset*2)
+            page.contributionFont:SetWidth(math.max(160,math.min(260,width-198)))
+            local cell=math.min(156,(width-24)/4)
+            for i,entry in ipairs(elements) do
+                local button=state.buttons[entry[1]]
+                button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(cell+8),0);button:SetWidth(cell)
+                button.label:SetWidth(cell-20);button.label:SetWordWrap(false);button:SetSelected(state.element==entry[1])
+            end
+            for i,entry in ipairs(panels) do
+                local button=state.panels[entry[1]]
+                button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(cell+8),-38);button:SetWidth(cell)
+                button.label:SetWidth(cell-20);button.label:SetWordWrap(false);button:SetSelected(state.panel==entry[1])
+                button:SetShown(state.element~="general" or i<=2)
+            end
+            state.caption:SetText(captions[state.element][state.panel])
+            local title
+            for _,entry in ipairs(panels) do if entry[1]==state.panel then title=entry[2] end end
+            state.summaryTitle:SetText(title)
+            state.summaryText:SetText(captions[state.element][state.panel])
+        end
+        state.layingOut=false
+    end
+    for _,entry in ipairs(page.searchEntries) do
+        if entry.section==section and not entry.row.sectionHeader then
+            local previous=entry.onReveal
+            entry.onReveal=function()
+                if previous then previous() end
+                page:SelectCampfirePanel(entry.row.campfireElement,entry.row.campfirePanel)
+            end
+        end
+    end
+    -- Retain internal jump routing for callers, though the old jump strip is
+    -- replaced by the visible element tabs in this pilot.
+    for _,id in ipairs({"monitor","buffs","contributions"}) do
+        local target=page.campfireJumpTargets[id]
+        target.onReveal=function() page:SelectCampfirePanel(id,"options") end
+        for index=firstRow,#page.rows do
+            local row=page.rows[index]
+            if not row.campfireHidden and row.campfireElement==id and row.campfirePanel=="options" then target.row=row;break end
+        end
+    end
+    addon.Media:RegisterFontListener(bar,function() page:Layout() end)
 end

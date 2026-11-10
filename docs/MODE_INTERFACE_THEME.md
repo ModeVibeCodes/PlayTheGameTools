@@ -37,6 +37,13 @@ are unchanged. This is a native visual check; static tests do not establish fit.
 
 ## Existing interface baseline
 
+PR #26's next step pilots consistent rounded element/settings tabs on Campfire
+Monitor. Text always occupies the same second-level tab, with compact paired
+controls and search-aware routing. No settings are removed and other pages/themes
+keep their layouts. [Exact pilot paths and limits](CAMPFIRE_MONITOR.md#mode-layout-pilot--november-10).
+The preceding material pass received positive owner feedback; this layout still
+requires native review before it is adapted elsewhere.
+
 The revised mode palette uses neutral graphite **#2B2B2B**, labels **#B3B3B3**,
 headings/body text **#D4D4D4**, and cyan **#00F0FF** for selected/hovered text and
 selection lines. Related surfaces use neutral gray steps with equal RGB channels;

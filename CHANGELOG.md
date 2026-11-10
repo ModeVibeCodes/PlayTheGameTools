@@ -4,6 +4,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Pilot a unified Campfire Monitor settings layout in Mode: rounded element tabs,
+  consistent Options/Text/Appearance/Position panels, paired size/color and
+  opacity/color rows, responsive actions and search-aware navigation. Retain all
+  settings and callbacks; Modern/Blizzard and gameplay behavior are unchanged.
+  The background pass received positive owner feedback; this pilot awaits native review.
+
 - Start the next Mode page-refinement experiment: darken only the page area from
   #303030 to #2A2A2A and overlay faint Figma-generated abstract planes/grain at
   18% opacity over the existing Figma material. Other themes, sidebar/control

@@ -448,9 +448,10 @@ function W.Button(parent, text, width, height, style)
     button.fill = W.Fill(button, T.surface, "BACKGROUND")
     if T.id=="mode" then
         button.modeBorderAsset="ModeControlBorder"
+        if style=="roundedTab" then button.modeFixedSprite=true end
         button.fill:ClearAllPoints()
         button.fill:SetPoint("TOPLEFT",1,-1);button.fill:SetPoint("BOTTOMRIGHT",-1,1)
-        button.fill.modeAsset="ModeControlSurface";Paint(button.fill,T.surface)
+        button.fill.modeAsset=style=="roundedTab" and "ModeToggleSurface" or "ModeControlSurface";Paint(button.fill,T.surface)
     end
     button.outline = W.Outline(button, T.line, "BORDER")
     -- Kept for consumers that tint the selected state directly.
@@ -550,6 +551,10 @@ function W.Button(parent, text, width, height, style)
             Paint(self.fill, plain and T.background or T.surface, plain and 0 or 1)
             self.outline:SetShown(not plain)
             if not plain then self.outline:SetColor(T.line,0.8) end
+            if style=="roundedTab" then
+                Paint(self.fill,selected and T.line or T.surface)
+                self.outline:SetShown(false)
+            end
             self.activeGlow:Hide()
             local modeColor=self.labelColor or (style=="categoryHeading" and T.heading or T.secondary)
             if not available then modeColor=T.unavailable

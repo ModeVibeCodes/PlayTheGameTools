@@ -1,5 +1,17 @@
 # Standalone Forever development
 
+November 10 Campfire layout pilot (PR #26): Mode-only element tabs with consistent
+Options / Text / Appearance / Position panels. Text/color and opacity/color pairs
+share responsive rows. All controls, callbacks, search routing, preview cleanup
+and settings are retained; no gameplay/module source or manifest changes. Other
+themes keep the original layout. All 34 regression scripts pass, including the
+new `campfire_mode_layout.py`; final focused checks cover native resize reentrancy
+and Blizzard parity. Package remains 116 Lua / 216 files. Start with `/reload`
+OOC. The supplied reference informs pill tabs and wide-page section descriptions
+beside aligned forms; narrow pages fold that description above the fields.
+Native visual review is pending.
+Do not scale to another page/theme before the owner confirms this candidate.
+
 November 10: new Mode-only page-material experiment on
 `codex/mode-page-material-refinement`, based on public main after PR #22's Class
 Training popout fix. Dedicated #2A2A2A page tint, existing Figma base/sheens and a

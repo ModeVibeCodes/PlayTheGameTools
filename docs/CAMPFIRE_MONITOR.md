@@ -1,5 +1,61 @@
 # Gameplay Enhancements — Campfire Monitor
 
+## Mode layout pilot — November 10
+
+PR #26 pilots compact rounded tabs for Campfire Monitor only in **mode**.
+The owner accepted the preceding page-material pass and requested this candidate
+before adapting other pages. The supplied PeakPlanner reference informs the
+pill tabs, left-side section descriptions and aligned right-side fields.
+Modern and Blizzard retain the long-form groups below. Gameplay, defaults,
+saved settings and live window layouts are unchanged.
+
+The element tabs are **General**, **Campfire Icon**, **Camp Buffs** and
+**Contributions**. Each window has the same **Options → Text → Appearance →
+Position** order. General shows only Options and Text, avoiding empty panels.
+The existing Loot Sparkles / Campfire Monitor feature tabs remain above them.
+Selection is session-only; each element remembers its last panel. Search opens
+the correct element/panel and scrolls to the existing control.
+
+| Element | Options | Text | Appearance | Position |
+| --- | --- | --- | --- | --- |
+| General | Enable/combat/status, Edit Mode/Refresh, Preview/Move Windows | Shared text color | — | — |
+| Campfire Icon | Visibility, native details, guide, always-show | Status text size | Icon/window size, scale/opacity/background | Lock, X/Y, Reset Position |
+| Camp Buffs | Show benefits, joined/separate window | Compact/stat colors, size, header colors/gradient | Separate-window width/scale/opacity/background | Lock, X/Y, Reset Buff Position |
+| Contributions | Popup/content visibility, tooltips, detected kits/Refresh, Open/Preview | Font, outline/gradient, all sizes/colors/alignments | Width/padding/scale/opacity, background/border, icons/rows | Lock, X/Y, Edit Contributions/Reset Position |
+
+Seven text size/color pairs and four appearance color/opacity pairs share rows
+on wide pages and stack on narrower pages. A left section-summary column folds
+into the tab caption on narrow pages. Only group separators remain, avoiding a
+line between every field. Sliders, numeric fields, Pick/hex/
+Apply, fonts, alignments and callbacks remain. Actions resize to fit. The old
+Jump To strip is replaced by the element tabs; internal jump routing is retained.
+No setting was removed: similar controls target distinct windows/text roles.
+Style-panel navigation retains preview; leaving Campfire/hiding the page retains
+the original cleanup. All 34 regression scripts pass; final focused checks cover
+inventory/reachability, native-size-callback reentrancy, search, callbacks,
+preview cleanup and other-theme parity. Mocks do not establish native appearance.
+
+**Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements →
+Campfire Monitor → Campfire Icon / Camp Buffs / Contributions → Text.
+**Action:** `/reload`, inspect Text, Appearance and Position for each window.
+**Required state:** OOC, Interface Theme set to mode; no setting changes needed.
+**Confirmation:** consistent control locations, all original options reachable,
+and paired controls fit or stack without clipping. Lua-only; no client close needed.
+
+**Navigation:** same feature → Contributions → Text → Title Text Size → Pick.
+**Action:** open and cancel the color picker; inspect numeric/hex fields. Then
+search **Title Color** in the header and choose the Campfire Monitor result.
+**Required state:** OOC; keep original values.
+**Confirmation:** picker/cancel still works and search reveals Contributions →
+Text with the paired Title Text Size row, including its color controls.
+
+**Navigation:** same feature → Contributions → Options → Preview Contributions.
+**Action:** preview, switch to Text/Appearance, then select Loot Sparkles.
+**Required state:** OOC; Gameplay Enhancements master, Enable Campfire Monitor
+and Show Contribution Popup enabled.
+**Confirmation:** style navigation retains preview; leaving Campfire stops it.
+User-confirmed native review is required before expanding this pilot.
+
 ## Scope and interface
 
 November 7, 2026. Questing & Leveling → Gameplay Enhancements now contains two

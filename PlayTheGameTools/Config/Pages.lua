@@ -37,7 +37,8 @@ function W.Page(parent, minimumWidth)
     function page:Layout()
         local width = math.max(minimumWidth or 320, scroll:GetWidth() - 4)
         content:SetWidth(width)
-        width=math.max(1,width-self.contentInset*2)
+        local leftInset=self.contentInset+(self.layoutInsetLeft or 0)
+        width=math.max(1,width-leftInset-self.contentInset)
         local cursor = 0
         for _, row in ipairs(self.rows) do
             row:SetWidth(width)
@@ -49,7 +50,7 @@ function W.Page(parent, minimumWidth)
             if show then
                 cursor = cursor + (row.gapBefore or 0)
                 row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", self.contentInset, -cursor)
+                row:SetPoint("TOPLEFT", leftInset, -cursor)
                 row.offset = cursor
                 cursor = cursor + row:GetHeight() + (row.gapAfter or 4)
             end
