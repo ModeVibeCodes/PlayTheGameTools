@@ -29,11 +29,23 @@ assert(Keys(page.campfireControls)==controlKeys and Keys(page.campfireSliders)==
 local saved=addon.ProfileCodec.Encode(PTGToolsDB)
 local foundControls,foundSliders,foundColors={},{},{}
 for _,element in ipairs({'general','monitor','buffs','contributions'}) do
- for _,panel in ipairs(element=='general' and {'options','text'} or {'options','text','appearance','position'}) do
+ for _,panel in ipairs(element=='general' and {'options'} or {'options','text','appearance','position'}) do
   page:SelectCampfirePanel(element,panel)
   assert(pilot.element==element and pilot.panel==panel and pilot.buttons[element].selected and pilot.panels[panel].selected)
   assert(pilot.buttons[element].outline.rounded and not pilot.buttons[element].activeGlow:IsShown(),'rounded tabs keep text-only hover/selection')
   assert(pilot.buttons[element].modeFixedSprite,'a custom global border cannot square the pilot tabs')
+  local rim=pilot.buttons[element].outline.edges[1]
+  assert(rim.modeAsset=='ModeToggleSurface' and rim.layer=='BACKGROUND' and pilot.buttons[element].fill.layer=='ARTWORK','pill border is a larger solid backing behind the fill')
+  assert(pilot.buttons[element].outline.shown and pilot.buttons[element].fill.points[1][4]==1,'main pills retain a visible thin inset border')
+  if element=='general' then
+   assert(page.campfireColors.textColor.host.row:IsShown() and page.campfireControls.enabled.frame:GetParent().row:IsShown(),'General combines Options and Text')
+   for _,tab in pairs(pilot.panels) do assert(not tab:IsShown(),'General has no subpage tabs') end
+  else
+   for id,tab in pairs(pilot.panels) do
+    assert(tab.skinStyle=='subTab' and tab:GetHeight()==(id==panel and 30 or 22),'selected subtab untucks while others stay tucked')
+    assert(tab.points[1][5]-tab:GetHeight()==-72,'every subtab meets the separator baseline')
+   end
+  end
   for key,cell in pairs(page.campfireControls) do if cell.frame:GetParent().row:IsShown() then foundControls[key]=true end end
   for key,host in pairs(page.campfireSliders) do if host.row:IsShown() then foundSliders[key]=true end end
   for key,color in pairs(page.campfireColors) do if color.host.row:IsShown() then foundColors[key]=true end end
@@ -41,6 +53,9 @@ for _,element in ipairs({'general','monitor','buffs','contributions'}) do
 end
 assert(Keys(foundControls)==controlKeys and Keys(foundSliders)==sliderKeys and Keys(foundColors)==colorKeys,'every control is reachable through visible pilot panels')
 assert(addon.ProfileCodec.Encode(PTGToolsDB)==saved,'tab changes never write saved options')
+page:SelectCampfirePanel('general','text')
+assert(pilot.panel=='options' and page.campfireColors.textColor.host.row:IsShown(),'legacy General Text links reveal the combined page')
+assert(pilot.summaryTitle.font[2]==addon.InterfaceTheme.fontSize.section+2 and pilot.summaryText.color[1]==addon.InterfaceTheme.muted[1],'larger heading and muted description')
 page:SelectCampfirePanel('monitor','text')
 assert(page.campfireSliders.fontSize.row:IsShown() and not page.campfireSliders.x.row:IsShown())
 page:SelectCampfirePanel('buffs','text')

@@ -445,15 +445,15 @@ function W.Button(parent, text, width, height, style)
     -- Resolved per button: the theme is applied after this file loads.
     local recipe = (T.id == "mode" and style == "categoryHeading" and MODE_HEADING)
         or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
-    button.fill = W.Fill(button, T.surface, "BACKGROUND")
+    button.fill = W.Fill(button, T.surface, T.id=="mode" and style=="roundedTab" and "ARTWORK" or "BACKGROUND")
     if T.id=="mode" then
-        button.modeBorderAsset="ModeControlBorder"
-        if style=="roundedTab" then button.modeFixedSprite=true end
+        button.modeBorderAsset=style=="roundedTab" and "ModeToggleSurface" or "ModeControlBorder"
+        if style=="roundedTab" or style=="subTab" then button.modeFixedSprite=true end
         button.fill:ClearAllPoints()
         button.fill:SetPoint("TOPLEFT",1,-1);button.fill:SetPoint("BOTTOMRIGHT",-1,1)
         button.fill.modeAsset=style=="roundedTab" and "ModeToggleSurface" or "ModeControlSurface";Paint(button.fill,T.surface)
     end
-    button.outline = W.Outline(button, T.line, "BORDER")
+    button.outline = W.Outline(button, T.line, T.id=="mode" and style=="roundedTab" and "BACKGROUND" or "BORDER")
     -- Kept for consumers that tint the selected state directly.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0.08)
     button.activeGlow:Hide()
@@ -552,8 +552,13 @@ function W.Button(parent, text, width, height, style)
             self.outline:SetShown(not plain)
             if not plain then self.outline:SetColor(T.line,0.8) end
             if style=="roundedTab" then
-                Paint(self.fill,selected and T.line or T.surface)
-                self.outline:SetShown(false)
+                -- Same solid backing / inset interior construction as switches.
+                Paint(self.fill,T.surface)
+                self.outline:SetColor(T.line,1);self.outline:SetShown(true)
+            elseif style=="subTab" then
+                Paint(self.fill,selected and T.panel or T.background)
+                self.outline:SetColor(selected and T.primary or T.line,selected and 0.55 or 1)
+                self.outline:SetShown(true)
             end
             self.activeGlow:Hide()
             local modeColor=self.labelColor or (style=="categoryHeading" and T.heading or T.secondary)

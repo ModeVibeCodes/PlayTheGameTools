@@ -2,7 +2,10 @@
 
 November 10 Campfire layout pilot (PR #26): Mode-only element tabs with consistent
 Options / Text / Appearance / Position panels. Text/color and opacity/color pairs
-share responsive rows. All controls, callbacks, search routing, preview cleanup
+share responsive rows. Refinement combines General's Options/Text into one form,
+adds thin gray borders to main pills, and uses compact separator-attached sub-tabs
+for other windows (30-unit active / 22-unit tucked inactive). Descriptions are
+plain muted-gray text and left headings are 17 units. All controls, callbacks, search routing, preview cleanup
 and settings are retained; no gameplay/module source or manifest changes. Other
 themes keep the original layout. All 34 regression scripts pass, including the
 new `campfire_mode_layout.py`; final focused checks cover native resize reentrancy

@@ -11,10 +11,18 @@ saved settings and live window layouts are unchanged.
 
 The element tabs are **General**, **Campfire Icon**, **Camp Buffs** and
 **Contributions**. Each window has the same **Options → Text → Appearance →
-Position** order. General shows only Options and Text, avoiding empty panels.
+Position** order. General combines Options followed by Text on one page, with
+larger section headings and no secondary navigation.
 The existing Loot Sparkles / Campfire Monitor feature tabs remain above them.
 Selection is session-only; each element remembers its last panel. Search opens
 the correct element/panel and scrolls to the existing control.
+
+The main pills have a thin gray outer silhouette containing the inset fill,
+using the same construction as the mode switches. Other windows use compact
+rectangular sub-tabs, not a second pill strip: all meet the same separator line;
+the selected tab rises to 30 units while inactive tabs tuck to 22 units. Cyan
+label/outline and the selection line identify the active page. Descriptions use
+plain language and muted gray; left headings increase from 15 to 17 units.
 
 | Element | Options | Text | Appearance | Position |
 | --- | --- | --- | --- | --- |
@@ -22,6 +30,8 @@ the correct element/panel and scrolls to the existing control.
 | Campfire Icon | Visibility, native details, guide, always-show | Status text size | Icon/window size, scale/opacity/background | Lock, X/Y, Reset Position |
 | Camp Buffs | Show benefits, joined/separate window | Compact/stat colors, size, header colors/gradient | Separate-window width/scale/opacity/background | Lock, X/Y, Reset Buff Position |
 | Contributions | Popup/content visibility, tooltips, detected kits/Refresh, Open/Preview | Font, outline/gradient, all sizes/colors/alignments | Width/padding/scale/opacity, background/border, icons/rows | Lock, X/Y, Edit Contributions/Reset Position |
+
+General's Options and Text columns above are successive sections on the same page.
 
 Seven text size/color pairs and four appearance color/opacity pairs share rows
 on wide pages and stack on narrower pages. A left section-summary column folds
@@ -41,6 +51,15 @@ Campfire Monitor → Campfire Icon / Camp Buffs / Contributions → Text.
 **Required state:** OOC, Interface Theme set to mode; no setting changes needed.
 **Confirmation:** consistent control locations, all original options reachable,
 and paired controls fit or stack without clipping. Lua-only; no client close needed.
+
+**Navigation:** same feature → General.
+**Action:** inspect Options and the Text section below it; then select Campfire
+Icon → Appearance, followed by Text.
+**Required state:** OOC, mode selected; no setting changes needed.
+**Confirmation:** General has one combined form and no sub-tabs. The other
+window's selected rectangular tab rises from the separator; inactive tabs tuck
+down but remain clickable. Main pills have smooth, thin gray borders and the
+larger left-side heading and muted explanations remain readable.
 
 **Navigation:** same feature → Contributions → Text → Title Text Size → Pick.
 **Action:** open and cancel the color picker; inspect numeric/hex fields. Then

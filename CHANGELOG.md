@@ -9,6 +9,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   opacity/color rows, responsive actions and search-aware navigation. Retain all
   settings and callbacks; Modern/Blizzard and gameplay behavior are unchanged.
   The background pass received positive owner feedback; this pilot awaits native review.
+  Refinement: border the main pills, combine General's Options/Text, replace
+  secondary pills with raised/tucked separator tabs, simplify muted descriptions,
+  and slightly enlarge left headings. All settings/callbacks remain.
 
 - Start the next Mode page-refinement experiment: darken only the page area from
   #303030 to #2A2A2A and overlay faint Figma-generated abstract planes/grain at
