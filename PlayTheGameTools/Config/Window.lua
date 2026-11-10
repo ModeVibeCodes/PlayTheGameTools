@@ -16,7 +16,7 @@ function addon:RecoverWindowPosition()
     local w,h=window:GetWidth()*ratio,window:GetHeight()*ratio
     local keep=math.min(40,width/4,height/4)
     -- Retain a draggable header fragment, not the full window rectangle.
-    local minX=-width/2-w/2+HEADER_RESERVED*ratio+keep
+    local minX=-width/2-w/2+(window.headerReserved or HEADER_RESERVED)*ratio+keep
     local maxX=width/2+w/2-keep
     local minY=-height/2-h/2+keep
     local maxY=height/2-h/2+HEADER_HEIGHT*ratio-keep
@@ -147,9 +147,12 @@ local function Dashboard(parent)
 end
 
 function addon:CreateConfig()
+    local mode = T.id == "mode"
+    local sidebarWidth=SIDEBAR_WIDTH
     local window = CreateFrame("Frame", "PlayTheGameToolsConfigWindow", UIParent)
     window:Hide()
     self.configWindow = window
+    window.sidebarWidth=sidebarWidth
     window:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
     window:SetFrameStrata("DIALOG")
     window:SetMovable(true)
@@ -157,15 +160,24 @@ function addon:CreateConfig()
     window:EnableMouse(true)
     -- Flat app shell: a canvas, a full-height sidebar column and one hairline frame.
     window.canvas = W.Fill(window, T.background, "BACKGROUND")
+    if mode then window.canvasSheen=W.ModeSheen(window) end
     window.border = W.Outline(window, T.lineStrong, "OVERLAY")
+    if mode then window.border:SetShown(false) end
     -- Sublevel 1 keeps the column above the canvas within the same draw layer.
     local column = window:CreateTexture(nil, "BACKGROUND", nil, 1)
     W.Paint(column, T.sidebar)
     column:SetPoint("TOPLEFT", 1, -1); column:SetPoint("BOTTOMLEFT", 1, 1)
-    column:SetWidth(SIDEBAR_WIDTH)
+    column:SetWidth(sidebarWidth)
+    if mode then
+        column.modeAsset="ModeSurface";W.Paint(column,T.sidebar)
+        column:ClearAllPoints();column:SetPoint("TOPLEFT",8,-8);column:SetPoint("BOTTOMLEFT",8,8)
+        column:SetWidth(sidebarWidth-8)
+    end
     local columnEdge = W.Fill(window, T.line, "BORDER")
-    columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 1, -1)
-    columnEdge:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 1, 1); columnEdge:SetWidth(1)
+    columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", sidebarWidth + 1, -1)
+    columnEdge:SetPoint("BOTTOMLEFT", sidebarWidth + 1, 1); columnEdge:SetWidth(1)
+    if mode then columnEdge:Hide() end
+    window.columnEdge=columnEdge
     window.sidebarColumn = column
     -- Blizzard theme: the stock dialog box replaces the canvas and hairline
     -- frame; the sidebar column and its edge sit inside the dialog border.
@@ -204,18 +216,29 @@ function addon:CreateConfig()
     header:EnableMouse(false)
     window.headerArt = W.Fill(header, T.line, "BORDER")
     window.headerArt:ClearAllPoints()
-    window.headerArt:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
+    window.headerArt:SetPoint("BOTTOMLEFT", sidebarWidth + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
     window.headerArt:SetHeight(1)
-    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20 + edge, -21, SIDEBAR_WIDTH - 24 - edge, T.text)
+    if mode then window.headerArt:Hide() end
+    window.title = W.Heading(header, mode and "PTG Tools" or "Play The Game Tools", T.fontSize.section, 20 + edge, -21, sidebarWidth - 24 - edge, mode and T.heading or T.text)
+    if mode then
+        window.title:SetTextColor(unpack(T.primary))
+        local logo=header:CreateTexture(nil,"ARTWORK")
+        logo:SetPoint("LEFT",14,0);logo:SetSize(38,38)
+        addon.Media:ApplyTexture(logo,"ModeLogo")
+        window.brandLogo=logo
+        window.title:ClearAllPoints();window.title:SetPoint("LEFT",logo,"RIGHT",8,0)
+        window.title:SetWidth(sidebarWidth-72)
+    end
     window.title:SetWordWrap(false)
     local controls = CreateFrame("Frame", nil, header)
     controls:SetPoint("TOPRIGHT", -16 - edge, -14 - edge / 2)
-    controls:SetSize(360, 28)
+    controls:SetSize(mode and 464 or 360, 28)
+    window.headerReserved=mode and 720 or HEADER_RESERVED
     controls:SetFrameLevel(header:GetFrameLevel() + 1)
     controls:EnableMouse(false)
     function self:UpdateConfigTitle(id)
         -- The brand stays fixed; the page header below names the current page.
-        window.title:SetText("Play The Game Tools")
+        window.title:SetText(mode and "PTG Tools" or "Play The Game Tools")
     end
     local drag = CreateFrame("Frame", nil, header)
     drag:SetPoint("TOPLEFT")
@@ -254,19 +277,69 @@ function addon:CreateConfig()
     end)
     window.reloadButton=reload
     window.previewButton, window.editButton, window.closeButton = preview, edit, close
+    if mode then
+        local profile=HeaderButton("Profile:",132)
+        profile:SetPoint("RIGHT",close,"LEFT",-8,0)
+        edit:ClearAllPoints();edit:SetPoint("RIGHT",profile,"LEFT",-8,0)
+        profile.label:ClearAllPoints();profile.label:SetPoint("LEFT",10,0)
+        profile.label:SetWidth(42);profile.label:SetJustifyH("LEFT");profile.label:SetWordWrap(false)
+        profile.profileName=W.Label(profile,self.ProfileManager.activeName,nil,0,0,68,T.primary)
+        profile.profileName:ClearAllPoints();profile.profileName:SetPoint("LEFT",56,0);profile.profileName:SetPoint("RIGHT",-8,0)
+        profile.profileName:SetWordWrap(false)
+        function profile:LayoutProfileText()
+            local function Measure(label)
+                local value=label:GetStringWidth()
+                if (issecretvalue and issecretvalue(value)) or type(value)~="number" or value~=value or value<=0 or value==math.huge then
+                    return #(label:GetText() or "")*7
+                end
+                return math.ceil(value)
+            end
+            local prefix=Measure(self.label)
+            local name=math.min(Measure(self.profileName),math.max(32,196-28-prefix-8))
+            local group=prefix+8+name
+            local width=math.max(132,math.min(196,group+28))
+            self:SetWidth(width)
+            self.label:ClearAllPoints();self.label:SetPoint("LEFT",(width-group)/2,0);self.label:SetWidth(prefix)
+            self.profileName:ClearAllPoints();self.profileName:SetPoint("LEFT",self.label,"RIGHT",8,0);self.profileName:SetWidth(name)
+            controls:SetWidth(width+312)
+            window.headerReserved=math.max(window.headerReserved or 720,controls:GetWidth()+232)
+        end
+        self.Media:RegisterFontListener(profile,function(owner) owner:LayoutProfileText() end)
+        local refresh=profile.RefreshAppearance
+        function profile:RefreshAppearance()
+            refresh(self)
+            self.label:SetTextColor(unpack(T.secondary));self.label:SetShadowColor(0,0,0,0);self.label:SetShadowOffset(0,0)
+            self.profileName:SetTextColor(unpack(self:IsEnabled() and T.primary or T.unavailable))
+            self.profileName:SetShadowColor(T.primary[1],T.primary[2],T.primary[3],self:IsEnabled() and self.hovered and 0.55 or 0)
+            self.profileName:SetShadowOffset(0,-1)
+        end
+        profile:RefreshAppearance()
+        profile:LayoutProfileText()
+        profile:SetScript("OnClick",function()
+            self:SelectConfigPage("globalSettings")
+            window.pages.globalSettings:SelectSectionTab(2)
+        end)
+        window.profileButton=profile
+    end
 
     local sidebar = CreateFrame("Frame", nil, window)
     sidebar:SetPoint("TOPLEFT", 12 + edge, -HEADER_HEIGHT - 4)
     sidebar:SetPoint("BOTTOMLEFT", 12 + edge, 12 + edge)
-    sidebar:SetWidth(SIDEBAR_WIDTH - 22 - edge)
+    sidebar:SetWidth(sidebarWidth - 22 - edge)
     local navigation = W.Page(sidebar, 0)
     navigation:ClearAllPoints()
-    navigation:SetPoint("TOPLEFT", 0, -44)
+    navigation:SetPoint("TOPLEFT", 0, mode and 0 or -44)
     navigation:SetPoint("BOTTOMRIGHT")
 
     local body = CreateFrame("Frame", nil, window)
-    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 30, -16)
+    local contentGap=mode and 24 or 30
+    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", contentGap, -16)
+    window.contentLeft=sidebarWidth-10+contentGap
     body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
+    if mode then
+        window.bodySurface=W.Fill(body,T.panel,"BACKGROUND",-12)
+        window.bodySheen=W.ModeSheen(body,-12)
+    end
     local moduleHeader = W.ModuleHeader(body)
     window.moduleHeader = moduleHeader
     local pageHost = CreateFrame("Frame", nil, body)
@@ -277,8 +350,15 @@ function addon:CreateConfig()
     window.categoryNavigation = categoryNavigation
     local selected = "dashboard"
     local RefreshSidebar
+    -- Session-local disclosure state: mode categories start expanded on reload.
+    local collapsed = {}
+    window.collapsedCategories = collapsed
 
     function self:RefreshConfig()
+        if window.profileButton then
+            window.profileButton.profileName:SetText(self.ProfileManager.activeName)
+            window.profileButton:LayoutProfileText()
+        end
         moduleHeader:Refresh()
         preview:SetSelected(self.previewMode)
         edit:SetSelected(self.editMode)
@@ -309,7 +389,7 @@ function addon:CreateConfig()
         end
         return pages[id]
     end
-    local function Select(id)
+    local function Select(id, preserveDisclosure)
         if addon.FrameAnchors and selected~=id then addon.FrameAnchors:Stop() end
         if selected~=id and addon.PreviewStates then addon.PreviewStates:Stop(selected) end
         local category = self.categories[id]
@@ -326,10 +406,11 @@ function addon:CreateConfig()
         self:UpdateConfigTitle(id)
         window.selectedPage = id
         window.selectedCategory = category and category.id or nil
-        categoryNavigation:SetCategory(category, id)
+        categoryNavigation:SetCategory(not mode and category or nil, id)
+        if mode and category and not preserveDisclosure then collapsed[category.id] = nil end
         if RefreshSidebar then RefreshSidebar(category, id) end
         -- Category tabs, when present, sit above the page header.
-        local top = category and 44 or 0
+        local top = not mode and category and 44 or 0
         moduleHeader:ClearAllPoints()
         moduleHeader:SetPoint("TOPLEFT", 0, -top)
         moduleHeader:SetPoint("TOPRIGHT", 0, -top)
@@ -355,14 +436,33 @@ function addon:CreateConfig()
         Select(id)
     end
     local function AddNavigation(id, label, developer)
-        local button = W.Button(developer and sidebar or navigation.content, label, developer and SIDEBAR_WIDTH - 22 - edge or 184, 34, "tab")
+        local isHeading = mode and self.categories[id] ~= nil
+        local button = W.Button(developer and sidebar or navigation.content, label, developer and sidebarWidth - 22 - edge or 184, 34, isHeading and "categoryHeading" or "tab")
+        button.categoryID = isHeading and id or nil
         if developer then button:SetPoint("BOTTOMLEFT", sidebar, "BOTTOMLEFT", 0, 0)
         else button:SetPoint("TOPLEFT", 0, -navigation.cursor) end
         button.label:ClearAllPoints()
         button.label:SetPoint("LEFT", 12, 0)
         button.label:SetPoint("RIGHT", -54, 0)
         button.label:SetJustifyH("LEFT")
-        button:SetScript("OnClick", function() Select(id) end)
+        if mode then
+            button.modeLeftAligned=true
+            button.label:ClearAllPoints()
+            button.label:SetPoint("LEFT", 10, 0)
+            button.label:SetPoint("RIGHT", -10, 0)
+            button.label:SetWordWrap(false)
+            addon.Media:BindInterfaceFont(button.label, GameFontHighlight, isHeading and T.fontSize.group or T.fontSize.body, nil, isHeading and "heading" or nil)
+            if isHeading then
+                button:SetLabelColor(T.heading)
+                button.gapBefore = 10
+            end
+        end
+        button:SetScript("OnClick", function()
+            if isHeading then
+                collapsed[id] = not collapsed[id]
+                RefreshSidebar(self.categories[window.selectedCategory], selected)
+            else Select(id) end
+        end)
         if self.modules[id] and not self.modules[id].developer then
             button.status = W.Label(button, "", nil, 0, 0, 24, T.muted)
             button.status:ClearAllPoints()
@@ -398,17 +498,48 @@ function addon:CreateConfig()
     local function NestedButton(id)
         if nested[id] then return nested[id] end
         local module=addon.modules[id]
-        local button=W.Button(navigation.content,module.tabTitle or module.title,184,28,"tab")
+        local title = module.tabTitle or module.title
+        local button=W.Button(navigation.content,mode and ("· " .. title) or title,184,mode and 32 or 28,"tab")
+        button.modeLeftAligned=mode
         button.atelierNested=true
         button.label:ClearAllPoints()
-        button.label:SetPoint("LEFT",24,0)
+        button.label:SetPoint("LEFT",mode and 16 or 24,0)
         if module.classIcon then
             button.classIcon=button:CreateTexture(nil,"ARTWORK");button.classIcon:SetPoint("LEFT",24,0);button.classIcon:SetSize(18,18);button.classIcon:SetTexture(module.classIcon)
             button.label:ClearAllPoints();button.label:SetPoint("LEFT",48,0)
         end
         button.label:SetPoint("RIGHT",-10,0)
         button.label:SetJustifyH("LEFT")
-        addon.Media:BindInterfaceFont(button.label,GameFontHighlight,T.fontSize.small)
+        if mode then button.label:SetWordWrap(false) end
+        addon.Media:BindInterfaceFont(button.label,GameFontHighlight,mode and T.fontSize.body or T.fontSize.small)
+        if mode and module.classIcon then
+            -- Keep class identity while giving every child the same dot prefix.
+            button.classIcon:ClearAllPoints();button.classIcon:SetPoint("RIGHT",-8,0)
+            button.label:ClearAllPoints();button.label:SetPoint("LEFT",16,0);button.label:SetPoint("RIGHT",-32,0)
+        end
+        if mode then
+            -- Measure against a separate unbounded label: the visible label's
+            -- anchors must stay intact, and truncation must not hide its width.
+            local probe=navigation.fontProbe
+            if not probe then
+                probe=navigation:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+                probe:Hide();probe:SetWidth(0);probe:SetWordWrap(false);navigation.fontProbe=probe
+            end
+            function button:FitNavigationText()
+                addon.Media:BindInterfaceFont(probe,GameFontHighlight,T.fontSize.body)
+                probe:SetText(self.label:GetText())
+                local measured=probe:GetStringWidth()
+                local available=math.max(1,self:GetWidth()-(module.classIcon and 48 or 26))
+                local size=T.fontSize.body
+                if not (issecretvalue and issecretvalue(measured)) and type(measured)=="number" and measured>available and measured<math.huge then
+                    size=math.max(1,math.floor(size*available/measured*4)/4)
+                end
+                addon.Media:BindInterfaceFont(self.label,GameFontHighlight,size)
+                W.AlignTextLine(self,self.selectionEdge)
+            end
+            button:HookScript("OnSizeChanged",function(owner) owner:FitNavigationText() end)
+            addon.Media:RegisterFontListener(button,function(owner) owner:FitNavigationText() end)
+        end
         button:SetScript("OnClick",function() Select(id) end)
         nested[id]=button
         return button
@@ -418,8 +549,11 @@ function addon:CreateConfig()
         navigation.rows={}
         for _,root in ipairs(sidebarRoots) do
             navigation.rows[#navigation.rows+1]=root
-            if category and root==navigationButtons[category.id] then
-                for _,moduleID in ipairs(category.modules) do
+            local group = mode and root.categoryID and self.categories[root.categoryID] or nil
+            local expanded = mode and group and not collapsed[group.id]
+            if mode and group then root.expanded = expanded == true end
+            if expanded or (not mode and category and root==navigationButtons[category.id]) then
+                for _,moduleID in ipairs((group or category).modules) do
                     local button=NestedButton(moduleID)
                     button:SetSelected(moduleID==id)
                     navigation.rows[#navigation.rows+1]=button
@@ -427,9 +561,10 @@ function addon:CreateConfig()
             end
         end
         navigation:Layout()
+        if mode then for _,button in pairs(nested) do if button:IsShown() then button:FitNavigationText() end end end
         -- Reveal the clicked/search-routed module in the same existing scroll view.
         local button=nested[id]
-        if button and category then
+        if button and category and (not mode or not collapsed[category.id]) then
             local offset=button.offset or 0
             local value=navigation.scrollbar:GetValue()
             local visible=navigation.scroll:GetHeight()
@@ -450,7 +585,7 @@ function addon:CreateConfig()
     end)
     window:SetScript("OnShow", function()
         if self.ReloadManager.prompt then self.ReloadManager.prompt:Hide() end
-        self:UpdateWindowBounds(); Select(selected)
+        self:UpdateWindowBounds(); Select(selected, true)
         -- Fills in labels left blank by a font still loading on a fresh launch.
         addon.Media:ScheduleTextRedraw()
     end)

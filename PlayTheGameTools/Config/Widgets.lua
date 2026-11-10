@@ -60,9 +60,40 @@ function W.CrispText(region)
 end
 
 local function Paint(texture, color, alpha)
+    if texture.modeAsset then
+        local usable=texture.appliedModeAsset==texture.modeAsset or addon.Media:ApplyTexture(texture,texture.modeAsset,color)
+        if usable then
+            texture.appliedModeAsset=texture.modeAsset
+            texture:SetVertexColor(color[1], color[2], color[3], alpha or color[4] or 1)
+            return
+        end
+        if texture.modeAsset=="ModeCheckSurface" or texture.modeAsset=="ModeCheckMark" or texture.modeAsset=="ModeToggleSurface" then
+            -- The already bundled circular thumb remains a rounded fallback
+            -- while a new small-control file is unavailable to this client.
+            if addon.Media:ApplyTexture(texture,"ModeThumb",color) then
+                texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
+            else texture:SetColorTexture(0,0,0,0) end
+            return
+        end
+        -- Missing borders must never become opaque rectangles over controls.
+        if texture.modeAsset:find("Border",1,true) then texture:SetColorTexture(0,0,0,0);return end
+    end
     texture:SetColorTexture(color[1], color[2], color[3], alpha or color[4] or 1)
 end
 W.Paint = Paint
+
+-- Static neutral sheen over the large Figma material, below all controls/text.
+-- Reuses the gradient API already used by the Forever map renderer.
+function W.ModeSheen(frame,inset)
+    local texture=frame:CreateTexture(nil,"BACKGROUND",nil,2)
+    inset=inset or 0
+    texture:SetPoint("TOPLEFT",inset,-inset);texture:SetPoint("BOTTOMRIGHT",-inset,inset)
+    texture.modeAsset="ModeSurface";Paint(texture,{1,1,1,1})
+    if texture.SetGradient and CreateColor then
+        texture:SetGradient("VERTICAL",CreateColor(1,1,1,0.018),CreateColor(1,1,1,0))
+    else texture:SetAlpha(0.008) end
+    return texture
+end
 
 function W.Fill(frame, color, layer, inset, alpha)
     color = InterfaceColor(color)
@@ -71,8 +102,16 @@ function W.Fill(frame, color, layer, inset, alpha)
     texture:SetPoint("TOPLEFT", inset, -inset)
     texture:SetPoint("BOTTOMRIGHT", -inset, inset)
     Paint(texture, color, alpha)
+    if T.id=="mode" and color==T.line then
+        texture.modeAsset="ModeDivider";Paint(texture,color,alpha)
+    end
     if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background then
-        addon.Media:PaintSurface(texture,color,alpha)
+        -- Configuration surfaces belong to the interface theme. Global Texture
+        -- is reserved for module displays, never the settings window or popups.
+        if T.id == "mode" then
+            texture.modeAsset = "ModeSurface"
+            Paint(texture, color, alpha)
+        end
     end
     return texture
 end
@@ -82,6 +121,21 @@ end
 function W.Outline(frame, color, layer, inset, alpha, scope)
     scope=scope or addon.Media:FrameScope(frame)
     inset = inset or 0
+    local style=addon.Media:GlobalStyle("border",scope) or "thin"
+    if T.id == "mode" and not frame.ptgSquareOutline and (frame.modeFixedSprite or style == "thin" or style == "none") then
+        local texture=frame:CreateTexture(nil,layer or "BORDER")
+        texture:SetPoint("TOPLEFT",inset,-inset);texture:SetPoint("BOTTOMRIGHT",-inset,inset)
+        texture.modeAsset=frame.modeBorderAsset or "ModeBorder"
+        local outline={edges={texture},shown=true,kind=style,rounded=true}
+        function outline:SetShown(shown) self.shown=shown;texture:SetShown(shown and self.kind~="none") end
+        function outline:SetColor(value,opacity)
+            Paint(texture,InterfaceColor(value),opacity or 0.36)
+            self.kind=addon.Media:GlobalStyle("border",scope)=="none" and "none" or "thin"
+            self:SetShown(self.shown)
+        end
+        outline:SetColor(color,alpha)
+        return outline
+    end
     local edges = {}
     local function Edge(a, ax, ay, b, bx, by, horizontal)
         local edge = frame:CreateTexture(nil, layer or "BORDER")
@@ -183,7 +237,7 @@ function W.BlizzardBackdrop(frame, kind)
         edgeFile = dialog and ART.dialogBorder or ART.tooltipBorder,
         tile = true, tileSize = dialog and 32 or 16, edgeSize = 1,
         insets = dialog and { left = 11, right = 12, top = 12, bottom = 11 } or { left = 4, right = 4, top = 4, bottom = 4 },
-    })
+    }, nil, true)
     if not ok then return false end
     if dialog then
         frame:SetBackdropColor(1, 1, 1, 1)
@@ -277,7 +331,7 @@ function W.Heading(parent, text, size, x, y, width, color)
     color = InterfaceColor(color)
     if color == nil or color == T.primary or color == T.text then color = T.heading end
     local label = W.Label(parent, text, "GameFontNormalLarge", x, y, width, color)
-    addon.Media:BindInterfaceFont(label, GameFontNormalLarge, size)
+    addon.Media:BindInterfaceFont(label, GameFontNormalLarge, size, nil, "heading")
     return label
 end
 
@@ -350,6 +404,22 @@ local LIST = { tab = true, row = true }
 local function Color(key) return key and T[key] end
 -- Stock push-button label gold (NORMAL_FONT_COLOR); reads on the red art.
 local BUTTON_GOLD = { 1, 0.82, 0, 1 }
+local MODE_HEADING = { label = "heading", hoverLabel = "highlight" }
+
+-- The line follows visible text, not the width of its clickable row. Native
+-- string measurements are local UI data; reject restricted/invalid results.
+function W.AlignTextLine(button, line)
+    local width=button.label:GetStringWidth()
+    if (issecretvalue and issecretvalue(width)) or type(width)~="number" or width~=width or width<0 or width==math.huge then return end
+    width=math.min(width,math.max(8,button:GetWidth()-20))
+    local available=button.label:GetWidth()
+    if not (issecretvalue and issecretvalue(available)) and type(available)=="number" and available>0 then width=math.min(width,available) end
+    line:ClearAllPoints();line:SetSize(math.max(8,width),2)
+    local justify=button.label.GetJustifyH and button.label:GetJustifyH() or (button.modeLeftAligned and "LEFT" or "CENTER")
+    if justify=="LEFT" then line:SetPoint("TOPLEFT",button.label,"BOTTOMLEFT",0,-2)
+    elseif justify=="RIGHT" then line:SetPoint("TOPRIGHT",button.label,"BOTTOMRIGHT",0,-2)
+    else line:SetPoint("TOP",button.label,"BOTTOM",0,-2) end
+end
 
 function W.Button(parent, text, width, height, style)
     local button = CreateFrame("Button", nil, parent)
@@ -360,13 +430,20 @@ function W.Button(parent, text, width, height, style)
     button.skinStyle = style
     if style == "toggle" or style == "checkbox" then return W.Switch(button, text, height, style) end
     -- Resolved per button: the theme is applied after this file loads.
-    local recipe = (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
+    local recipe = (T.id == "mode" and style == "categoryHeading" and MODE_HEADING)
+        or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
     button.fill = W.Fill(button, T.surface, "BACKGROUND")
+    if T.id=="mode" then
+        button.modeBorderAsset="ModeControlBorder"
+        button.fill:ClearAllPoints()
+        button.fill:SetPoint("TOPLEFT",1,-1);button.fill:SetPoint("BOTTOMRIGHT",-1,1)
+        button.fill.modeAsset="ModeControlSurface";Paint(button.fill,T.surface)
+    end
     button.outline = W.Outline(button, T.line, "BORDER")
     -- Kept for consumers that tint the selected state directly.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0.08)
     button.activeGlow:Hide()
-    if recipe.edge then
+    if recipe.edge or T.id == "mode" then
         -- Selected navigation rows carry an accent bar on the leading edge
         -- (3px in Modern, where it is the main "you are here" marker).
         button.selectionEdge = W.Fill(button, T.primary, "OVERLAY")
@@ -374,6 +451,12 @@ function W.Button(parent, text, width, height, style)
         button.selectionEdge:SetPoint("TOPLEFT"); button.selectionEdge:SetPoint("BOTTOMLEFT")
         button.selectionEdge:SetWidth(T.blizzardArt and 2 or 3)
         button.selectionEdge:Hide()
+        if T.id == "mode" then
+            button.selectionEdge.modeAsset="ModeSelection"
+            -- Export already contains cyan; white tint keeps its exact hue.
+            Paint(button.selectionEdge,{1,1,1,1})
+            button.selectionEdge:SetTexCoord(0,1,0,1)
+        end
     end
     button.label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     button.label:SetPoint("CENTER")
@@ -447,7 +530,25 @@ function W.Button(parent, text, width, height, style)
         if not available then color = T.unavailable end
         self.label:SetTextColor(color[1], color[2], color[3], color[4] or 1)
         self.activeGlow:SetShown(selected and style ~= "primary" and style ~= "underline")
-        if self.selectionEdge then self.selectionEdge:SetShown(selected) end
+        if T.id == "mode" then
+            -- Hover lights text only. A separate etched line marks selection;
+            -- resting fills and borders never brighten with hover/selection.
+            local plain=style=="tab" or style=="underline" or style=="categoryHeading"
+            Paint(self.fill, plain and T.background or T.surface, plain and 0 or 1)
+            self.outline:SetShown(not plain)
+            if not plain then self.outline:SetColor(T.line,0.8) end
+            self.activeGlow:Hide()
+            local modeColor=self.labelColor or (style=="categoryHeading" and T.heading or T.secondary)
+            if not available then modeColor=T.unavailable
+            elseif selected or hovered then modeColor=T.primary end
+            self.label:SetTextColor(unpack(modeColor))
+            self.label:SetShadowColor(T.primary[1], T.primary[2], T.primary[3], available and (selected or hovered) and 0.55 or 0)
+            self.label:SetShadowOffset(0, -1)
+        end
+        if self.selectionEdge then
+            if T.id=="mode" then W.AlignTextLine(self,self.selectionEdge) end
+            self.selectionEdge:SetShown(selected)
+        end
         if self.blizzardHighlight then
             -- Stock list rows: the highlight bar shows on hover and holds while selected.
             self.blizzardHighlight:SetShown(hovered or selected)
@@ -474,6 +575,10 @@ function W.Button(parent, text, width, height, style)
     button:HookScript("OnMouseDown",function(self) self.pressed=true;self:RefreshAppearance() end)
     button:HookScript("OnMouseUp",function(self) self.pressed=false;self:RefreshAppearance() end)
     button:HookScript("OnHide",function(self) self.hovered=false;self.pressed=false;self:RefreshAppearance() end)
+    if T.id=="mode" then
+        addon.Media:RegisterFontListener(button,function(owner) W.AlignTextLine(owner,owner.selectionEdge) end)
+        button:HookScript("OnSizeChanged",function(owner) W.AlignTextLine(owner,owner.selectionEdge) end)
+    end
     button:RefreshAppearance()
     return button
 end
@@ -532,12 +637,24 @@ function W.Switch(button, text, height, style)
     local toggle = style == "toggle"
     local h = 18
     local w = toggle and 34 or 18
-    local track = button:CreateTexture(nil, "BACKGROUND")
-    track:SetPoint("CENTER"); track:SetSize(w, h)
     local frame = CreateFrame("Frame", nil, button)
     frame:SetPoint("CENTER"); frame:SetSize(w, h)
-    local outline = W.Outline(frame, T.lineStrong, "BORDER")
-    local mark = button:CreateTexture(nil, "ARTWORK")
+    frame.ptgSquareOutline=T.id~="mode"
+    if T.id=="mode" then
+        frame.modeFixedSprite=true
+        -- A solid outer silhouette backs the inset interior. A hollow ring on
+        -- a separate frame can leave bright fill pixels visible past its edge.
+        frame.modeBorderAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
+    end
+    local outline = W.Outline(frame, T.lineStrong, T.id=="mode" and "BACKGROUND" or "BORDER")
+    local track = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "ARTWORK" or "BACKGROUND")
+    track:SetPoint("CENTER",frame,"CENTER",0,0); track:SetSize(w, h)
+    if T.id=="mode" then
+        track:SetSize(w-2,h-2)
+        track.modeAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
+    end
+    local mark = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "OVERLAY" or "ARTWORK")
+    if T.id=="mode" then mark.modeAsset=toggle and "ModeThumb" or "ModeCheckMark" end
     mark:SetSize(toggle and 12 or 10, toggle and 12 or 10)
     button.fill, button.knob, button.switchOutline = track, mark, outline
     -- Inert stand-in so shared consumers can still address the glow region.
@@ -553,10 +670,14 @@ function W.Switch(button, text, height, style)
         local on = self.selected == true
         local hovered = available and self.hovered
         if toggle then Paint(track, on and T.primary or T.surface)
-        -- A ticked box carries a faint accent wash behind its mark, so checked
-        -- and unchecked differ in area as well as in the small mark.
-        elseif on then Paint(track, T.primary, 0.16) else Paint(track, T.field) end
+        -- Mode recolors the same interior; other themes retain the faint wash.
+        elseif on then Paint(track, T.primary, T.id=="mode" and 1 or 0.16) else Paint(track, T.field) end
         outline:SetColor(on and T.primary or (hovered and T.secondary or T.lineStrong))
+        if T.id == "mode" then
+            self.activeGlow:Hide()
+            -- A thin charcoal rim stays the same color in both states.
+            outline:SetColor(T.background,1)
+        end
         mark:ClearAllPoints()
         if toggle then
             mark:SetPoint(on and "RIGHT" or "LEFT", track, on and "RIGHT" or "LEFT", on and -3 or 3, 0)
@@ -572,6 +693,10 @@ function W.Switch(button, text, height, style)
         for _, edge in ipairs(outline.edges) do edge:SetAlpha(alpha) end
         local color = self.labelColor or T.text
         self.label:SetTextColor(color[1], color[2], color[3], available and (color[4] or 1) or 0.5)
+        if T.id == "mode" then
+            self.label:SetShadowColor(T.primary[1],T.primary[2],T.primary[3],hovered and 0.55 or 0)
+            self.label:SetShadowOffset(0,-1)
+        end
     end
     function button:SetLabelColor(color) self.labelColor = color; self:RefreshAppearance() end
     local nativeSetEnabled = button.SetEnabled
@@ -661,7 +786,8 @@ function W.NumericInput(parent, getter, setter, minimum, maximum, width, decimal
     input:SetAutoFocus(false)
     input:SetMaxLetters(9)
     input:SetFontObject(GameFontHighlight)
-    input:SetTextInsets(8, 8, 0, 0)
+    input:SetTextInsets(T.id=="mode" and 4 or 8,T.id=="mode" and 4 or 8,0,0)
+    if T.id=="mode" then input:SetJustifyH("CENTER") end
     addon.Media:BindInterfaceFont(input, GameFontHighlight)
     W.CrispText(input)
     W.Texture(input, "InputField")
@@ -703,7 +829,8 @@ end
 function W.ScrollThumb(bar, height)
     local thumb = W.Texture(bar, "ScrollThumb", "OVERLAY")
     thumb:ClearAllPoints()
-    thumb:SetSize(4, height)
+    if T.id=="mode" then thumb.modeAsset="ModeScrollThumb";Paint(thumb,T.lineStrong) end
+    thumb:SetSize(T.id=="mode" and 2 or 4, height)
     thumb:SetVertexColor(unpack(T.lineStrong))
     bar:SetThumbTexture(thumb)
     bar:HookScript("OnEnter", function() thumb:SetVertexColor(unpack(T.muted)) end)
@@ -717,7 +844,7 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     local label = W.Label(parent, "", nil, 0, -8, 52, T.secondary)
     label:ClearAllPoints()
     label:SetPoint("RIGHT", 0, 0)
-    label:SetJustifyH("RIGHT")
+    label:SetJustifyH(T.id=="mode" and "CENTER" or "RIGHT")
     local slider = CreateFrame("Slider", nil, parent)
     slider:SetPoint("LEFT", 0, 0)
     slider:SetPoint("RIGHT", -62, 0)
@@ -740,6 +867,7 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     local thumb = W.Texture(slider, "SliderThumb", "OVERLAY")
     thumb:ClearAllPoints()
     thumb:SetSize(modern and 10 or 8, modern and 20 or 16)
+    if T.id=="mode" then thumb.modeAsset="ModeSliderThumb";Paint(thumb,T.text) end
     thumb:SetVertexColor(unpack(T.text))
     -- Blizzard: the stock slider knob, untinted.
     local stockThumb = T.blizzardArt and thumb:SetTexture(ART.sliderThumb) ~= false

@@ -57,9 +57,21 @@ function addon:SearchSettings(query)
 end
 
 function addon:CreateSettingsSearch(sidebar)
-    local input = CreateFrame("EditBox", nil, sidebar)
-    input:SetPoint("TOPLEFT", 0, 0)
-    input:SetPoint("TOPRIGHT", 0, 0)
+    local mode=T.id=="mode"
+    local input = CreateFrame("EditBox", nil, mode and self.configWindow.headerBar or sidebar)
+    if mode then
+        input:SetPoint("TOPLEFT",self.configWindow,"TOPLEFT",self.configWindow.contentLeft,-13)
+        input:SetWidth(200)
+        -- The drag strip ends before this left-aligned input. Keep a visible
+        -- fragment of that strip when recovering an off-screen window.
+        self.configWindow.headerReserved=self.configWindow:GetWidth()-self.configWindow.contentLeft+16
+        self.configWindow.header:ClearAllPoints()
+        self.configWindow.header:SetPoint("TOPLEFT")
+        self.configWindow.header:SetPoint("BOTTOMRIGHT",input,"BOTTOMLEFT",-16,-14)
+    else
+        input:SetPoint("TOPLEFT", 0, 0)
+        input:SetPoint("TOPRIGHT", 0, 0)
+    end
     input:SetHeight(30)
     input:SetAutoFocus(false)
     input:SetMaxLetters(80)

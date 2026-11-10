@@ -49,6 +49,23 @@ end
 -- Source originals and runtime cutouts share one bundled asset registry.
 M.textureBase = "Interface\\AddOns\\PlayTheGameTools\\Media\\Textures\\"
 M.Textures = {
+    ModeSurface = { file = "Mode/Surface.tga", slice = 12, rounded = true },
+    ModeBorder = { file = "Mode/Border.tga", slice = 12, transparent = true },
+    ModeSelection = { file = "Mode/Selection.tga", transparent = true },
+    ModeControlSurface = { file = "Mode/ControlSurface.tga", slice = 10, rounded = true },
+    ModeControlBorder = { file = "Mode/ControlBorder.tga", slice = 10, transparent = true },
+    -- Fixed-size controls use full sprites: no slice margins can flatten their
+    -- small alpha corners. Fresh paths avoid reusing previously cached images.
+    ModeCheckSurface = { file = "Mode/CheckSurfaceRound.tga", rounded = true },
+    ModeCheckBorder = { file = "Mode/CheckBorderRound.tga", transparent = true },
+    ModeCheckMark = { file = "Mode/CheckSurfaceRound.tga", rounded = true },
+    ModeToggleSurface = { file = "Mode/ToggleSurfacePill.tga", rounded = true },
+    ModeToggleBorder = { file = "Mode/ToggleBorderPill.tga", transparent = true },
+    ModeThumb = { file = "Mode/Thumb.tga", rounded = true },
+    ModeSliderThumb = { file = "Mode/CheckSurfaceRound.tga", rounded = true },
+    ModeScrollThumb = { file = "Mode/ScrollThumb.tga", rounded = true },
+    ModeDivider = { file = "Mode/Divider.tga", transparent = true },
+    ModeLogo = { file = "Mode/Logo.tga", transparent = true },
     ReadyCheck = { file = "Ready_Check.tga", transparent = true },
     Window = { file = "Panel_Graphite_Cutout.tga", slice = 16, rounded = true },
     Header = { file = "Header_Satin_Cutout.tga", slice = 16, rounded = true },
@@ -76,8 +93,8 @@ M.Textures = {
     RoundMarker = { file = "Round_Marker.tga", rounded = true },
 }
 
--- The settings interface is drawn from flat fills (Config/Widgets.lua) and
--- no longer reads bundled configuration art.
+-- Modern stays flat. The opt-in mode interface uses its own Figma exports;
+-- existing gameplay texture consumers and legacy assets remain unchanged.
 
 -- Return path and read-only rendering metadata; unknown names return nil.
 function M:GetTexture(name)
@@ -157,11 +174,15 @@ function M:RefreshBorders()
     for owner, callback in pairs(self.borderListeners) do callback(owner) end
 end
 
-function M:GetInterfaceFont(fallbackPath, scope)
+function M:GetInterfaceFont(fallbackPath, scope, weight)
+    local theme = addon.InterfaceTheme
+    local selection = self:GlobalStyle("font", scope)
+    if theme and theme.id == "mode" and (selection == nil or selection == "game" or selection == "media:PTG Lato") then
+        return "Interface\\AddOns\\PlayTheGameTools\\Media\\Fonts\\Lato-" .. (weight == "heading" and "Bold" or "Regular") .. ".ttf"
+    end
     local inherited=self:ResolveFont(self:GlobalStyle("font",scope))
     if inherited then return inherited end
     -- The Blizzard theme keeps the stock game fonts its artwork is drawn for.
-    local theme = addon.InterfaceTheme
     if theme and theme.blizzardArt then return fallbackPath or GameFontHighlight:GetFont() end
     return self:GetFont("Expressway") or fallbackPath or GameFontHighlight:GetFont()
 end
@@ -235,15 +256,15 @@ function M:GetDisplayFont(appearance, respectGlobal, scope)
 end
 
 function M:ApplyInterfaceFont(region, spec)
-    local preferred = self:GetInterfaceFont(spec.path,spec.scope)
+    local preferred = self:GetInterfaceFont(spec.path,spec.scope,spec.weight)
     if not region:SetFont(preferred, spec.size, spec.flags) then
         region:SetFont(spec.path, spec.size, spec.flags)
     end
 end
 
-function M:BindInterfaceFont(region, fontObject, fontSize, scope)
+function M:BindInterfaceFont(region, fontObject, fontSize, scope, weight)
     local path, size, flags = fontObject:GetFont()
-    local spec = { path = path, size = fontSize or size, flags = flags or "", scope = scope or self:FrameScope(region) }
+    local spec = { path = path, size = fontSize or size, flags = flags or "", scope = scope or self:FrameScope(region), weight = weight }
     self.regions[region] = spec
     self:ApplyInterfaceFont(region, spec)
 end
@@ -387,7 +408,7 @@ function M:PaintSurface(texture,color,alpha,scope)
     if texture:SetTexture(self:GetSurfaceTexture(scope))==false then texture:SetTexture(self.defaultStatusBar) end
     texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
 end
-function M:ApplyBackdrop(frame, backdrop, scope)
+function M:ApplyBackdrop(frame, backdrop, scope, preserveBackground)
     scope=scope or self:FrameScope(frame)
     local copy={};for k,v in pairs(backdrop) do copy[k]=v end
     local border=self:GetBorder(self:GlobalStyle("border",scope) or "thin") or {kind="thin",edgeSize=1}
@@ -397,7 +418,8 @@ function M:ApplyBackdrop(frame, backdrop, scope)
     if thickness==nil or thickness==1 then thickness=border.edgeSize or 1 end
     copy.edgeSize=math.max(1,math.min(thickness,12))
     if copy.insets then copy.insets={left=1,right=1,top=1,bottom=1} end
-    if copy.bgFile then copy.bgFile=self:GetSurfaceTexture(scope) end
+    -- Settings popups keep native theme artwork; displays inherit Global Texture.
+    if copy.bgFile and not preserveBackground then copy.bgFile=self:GetSurfaceTexture(scope) end
     frame:SetBackdrop(copy)
 end
 function M:SetGlobalStyle(kind,value,scope)
@@ -421,6 +443,11 @@ function M:RegisterBundledMedia()
     local ok,known=pcall(C_UIFileAsset.IsKnownFile,fontPath)
     if ok and not (issecretvalue and issecretvalue(known)) and known==true then
         library:Register("font","PTG JetBrains Mono",fontPath)
+    end
+    local lato="Interface\\AddOns\\PlayTheGameTools\\Media\\Fonts\\Lato-Regular.ttf"
+    local latoOK,latoKnown=pcall(C_UIFileAsset.IsKnownFile,lato)
+    if latoOK and not (issecretvalue and issecretvalue(latoKnown)) and latoKnown==true then
+        library:Register("font","PTG Lato",lato)
     end
     local base="Interface\\AddOns\\PlayTheGameTools\\Media\\SharedMedia\\"
     library:Register("border","PTG Clean",base.."PTG_Clean.tga")
