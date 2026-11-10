@@ -20,6 +20,10 @@ Bundled examples include **PTG JetBrains Mono**, **PTG Satin**, **PTG Matte**,
 and **PTG Clean**, alongside LSM's native choices and PTG panel textures.
 Installed media packs extend the same lists. Missing selections remain stored
 with safe fallbacks. Use header **Reload** after appearance changes.
+**Global Texture** applies only to module/feature displays. Configuration windows,
+pages, fields and popups keep their interface theme's original materials. A saved
+custom texture no longer replaces mode's graphite/sheen or Modern's flat surfaces;
+Blizzard popups retain native backgrounds. The selection remains saved for displays.
 
 **SharedMedia asset-pack integration:** SharedMedia is the additional-media addon;
 LibSharedMedia is the registry it uses. On first adoption, PTG enables/saves and
@@ -117,7 +121,7 @@ objects are handled on addon loading; unchanged faces are not rewritten.
 
 Owned module panel/icon borders resolve the global setting while retaining
 color/opacity/thickness and existing hidden or zero-size choices. Textures cover
-owned surfaces and bar fills. Item/spell art, map symbols and functional
+owned module surfaces and bar fills, excluding configuration surfaces. Item/spell art, map symbols and functional
 highlights retain their meaning. The Blizzard configuration theme retains its
 button/check art; its window/popup edges use Global Border.
 
@@ -226,7 +230,8 @@ and runtime media. No new native acceptance or release is claimed.
    PTG Satin and PTG Clean, then use header Reload. **Required state:** OOC;
    restart once if the running client has not discovered the new files/font.
    **Confirmation:** choices persist; addon and standard game UI fonts change,
-   eligible surfaces/edges inherit, and custom module font choices remain pinned.
+   eligible module surfaces/edges inherit, configuration backgrounds keep their
+   theme material, and custom module font choices remain pinned.
 2. **Navigation:** Play The Game Tools → Global Settings → Profiles → Create New
    Profile → Create. **Action:** save a named setup after changing module enable
    states and Edit Mode positions; select that name in the profile dropdown

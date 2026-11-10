@@ -4,6 +4,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Fix Global Texture leaking into configuration backgrounds: restore mode's
+  original graphite/sheen and keep Modern/Blizzard configuration materials
+  independent of the global display-texture selection. Modules still inherit
+  Global Texture; the saved selection is preserved. Apply with Reload OOC.
+
 - Add opt-in **mode** interface theme under Global Settings → Appearance:
   neutral graphite Figma satin/soft-corner textures, licensed Lato typography,
   gray headings, cyan text-only hover and etched selection lines. Expanded,

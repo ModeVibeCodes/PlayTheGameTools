@@ -39,11 +39,13 @@ native result remains pending owner confirmation.
 Lato Regular/Bold, selected from Figma's font catalog, is the mode configuration
 default when Global Font is **Game font**; **PTG Lato** is also available explicitly.
 Other explicit Global Font choices still win. This does not set the global font,
-change gameplay fonts or overwrite a saved choice. Custom Global Texture/Border
-choices remain supported and can override the default material/corner treatment.
-To review the authored materials use Global Texture **Flat**, Global Border
-**Thin**. Gameplay displays, module functions, class colors and state meanings
-are unchanged.
+change gameplay fonts or overwrite a saved choice. **Global Texture** affects
+module/feature displays only. Mode's window, page panels and configuration popups
+always use their original theme material and sheen, regardless of that selection.
+Modern keeps its flat surfaces and Blizzard keeps its native popup background.
+The selected global texture stays saved for module displays; no reset is needed
+to restore the interface. Global Border remains independent; use **Thin** to
+review authored corner treatment. Gameplay functions and state meanings are unchanged.
 
 The sidebar lists every populated category expanded by default each UI session.
 Bold gray category headings are plain text click targets: clicking collapses/expands
@@ -200,6 +202,13 @@ No release publication or automatic theme activation is included.
     **Required state:** OOC after `/reload`; **Confirmation:** the cyan interior
     replaces the same unfilled region and stays inside the larger rounded gray
     charcoal rim; the switch thumb remains contained and the original setting is restored.
+
+16. **Navigation:** PTG Tools → Global Settings → Appearance → Global Texture;
+    **Action:** inspect after `/reload` with the existing selection, then choose
+    **PTG Satin** and use header **Reload**; restore the original selection if desired;
+    **Required state:** OOC; **Confirmation:** original graphite window/page material
+    and sheen remain in both cases, including dropdown/popup surfaces. Module
+    displays continue to use the selected texture where they inherit Global Texture.
 
 Native validation remains pending owner feedback. Record Forever build,
 resolution, UI scale, font/media selections and screenshots when reporting fit.

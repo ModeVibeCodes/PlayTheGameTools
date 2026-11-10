@@ -408,7 +408,7 @@ function M:PaintSurface(texture,color,alpha,scope)
     if texture:SetTexture(self:GetSurfaceTexture(scope))==false then texture:SetTexture(self.defaultStatusBar) end
     texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
 end
-function M:ApplyBackdrop(frame, backdrop, scope)
+function M:ApplyBackdrop(frame, backdrop, scope, preserveBackground)
     scope=scope or self:FrameScope(frame)
     local copy={};for k,v in pairs(backdrop) do copy[k]=v end
     local border=self:GetBorder(self:GlobalStyle("border",scope) or "thin") or {kind="thin",edgeSize=1}
@@ -418,7 +418,8 @@ function M:ApplyBackdrop(frame, backdrop, scope)
     if thickness==nil or thickness==1 then thickness=border.edgeSize or 1 end
     copy.edgeSize=math.max(1,math.min(thickness,12))
     if copy.insets then copy.insets={left=1,right=1,top=1,bottom=1} end
-    if copy.bgFile then copy.bgFile=self:GetSurfaceTexture(scope) end
+    -- Settings popups keep native theme artwork; displays inherit Global Texture.
+    if copy.bgFile and not preserveBackground then copy.bgFile=self:GetSurfaceTexture(scope) end
     frame:SetBackdrop(copy)
 end
 function M:SetGlobalStyle(kind,value,scope)

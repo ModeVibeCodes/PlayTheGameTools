@@ -106,10 +106,12 @@ function W.Fill(frame, color, layer, inset, alpha)
         texture.modeAsset="ModeDivider";Paint(texture,color,alpha)
     end
     if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background then
-        if T.id == "mode" and (addon.Media:GlobalStyle("texture") or "default") == "default" then
+        -- Configuration surfaces belong to the interface theme. Global Texture
+        -- is reserved for module displays, never the settings window or popups.
+        if T.id == "mode" then
             texture.modeAsset = "ModeSurface"
             Paint(texture, color, alpha)
-        else addon.Media:PaintSurface(texture,color,alpha) end
+        end
     end
     return texture
 end
@@ -235,7 +237,7 @@ function W.BlizzardBackdrop(frame, kind)
         edgeFile = dialog and ART.dialogBorder or ART.tooltipBorder,
         tile = true, tileSize = dialog and 32 or 16, edgeSize = 1,
         insets = dialog and { left = 11, right = 12, top = 12, bottom = 11 } or { left = 4, right = 4, top = 4, bottom = 4 },
-    })
+    }, nil, true)
     if not ok then return false end
     if dialog then
         frame:SetBackdropColor(1, 1, 1, 1)

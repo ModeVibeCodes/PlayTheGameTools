@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+Global Texture is now limited to module/feature displays. Configuration fills use
+their own theme materials, and Blizzard popup backdrops preserve their native
+background. This restores mode graphite/sheen with a custom global texture still
+saved. No SavedVariables changes or new assets; `/reload` OOC. Regression coverage
+checks all three themes, detached configuration popups and module inheritance.
+Native appearance confirmation remains pending.
+
 Latest small-control correction replaces the separate hollow mode border with a
 solid outer silhouette behind the one-unit-inset fill on the same frame. Owner
 feedback accepted the improved containment; the latest thinner rim uses charcoal
