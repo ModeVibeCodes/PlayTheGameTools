@@ -27,6 +27,10 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   align search with page titles, and center/size the profile text group. Center
   numeric values and round the existing-size slider thumb. Existing editing,
   navigation, module logic and other themes remain unchanged; native review pending.
+  Fill-containment correction: use a solid rounded outer backing for mode toggles
+  and checkboxes, with the same inset interior in both states and a distinct gray
+  rim when checked. All regions share one frame; no new assets or state changes.
+  Native confirmation is pending after reload.
 
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.

@@ -124,6 +124,20 @@ mode.execute(r'''
     assert(not toggle.fill.slice and not toggle.switchOutline.edges[1].slice,'small controls use full oval sprites')
     assert(toggle.fill:GetWidth()==30 and toggle.fill:GetHeight()==14,'enabled toggle fill stays two units inside its border')
     assert(check.fill:GetWidth()==14 and check.fill:GetHeight()==14,'checkbox fill stays inside its border')
+    for _,control in ipairs({check,toggle}) do
+        local rim=control.switchOutline.edges[1]
+        assert(rim.modeAsset==control.fill.modeAsset,'outer silhouette and interior share the same rounded artwork')
+        assert(rim:GetParent()==control.fill:GetParent() and rim:GetParent()==control.knob:GetParent(),'all switch regions share one coordinate space')
+        assert(rim.layer=='BACKGROUND' and control.fill.layer=='ARTWORK' and control.knob.layer=='OVERLAY','solid backing remains beneath the inset fill and thumb')
+        local width,height=control.fill:GetWidth(),control.fill:GetHeight()
+        for _,selected in ipairs({false,true,false,true}) do
+            control:SetSelected(selected)
+            assert(control.fill:GetWidth()==width and control.fill:GetHeight()==height,'state recolors the same inset region')
+            assert(control.fill.appliedModeAsset==rim.appliedModeAsset,'state never replaces the interior silhouette')
+            if selected then assert(control.fill.vertexColor[4]==1 and rim.vertexColor[1]~=control.fill.vertexColor[1],'checked fill stays opaque inside a distinct rim') end
+        end
+        control:SetSelected(false)
+    end
     local value=27
     local row=CreateFrame('Frame',nil,UIParent)
     addon.ConfigWidgets.Slider(row,0,100,1,function() return value end,function(v) value=v end,'',true)

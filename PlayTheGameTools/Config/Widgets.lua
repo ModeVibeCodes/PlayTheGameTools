@@ -635,19 +635,23 @@ function W.Switch(button, text, height, style)
     local toggle = style == "toggle"
     local h = 18
     local w = toggle and 34 or 18
-    local track = button:CreateTexture(nil, "BACKGROUND")
-    track:SetPoint("CENTER"); track:SetSize(w, h)
-    if T.id=="mode" then track:SetSize(w-4,h-4) end
     local frame = CreateFrame("Frame", nil, button)
     frame:SetPoint("CENTER"); frame:SetSize(w, h)
     frame.ptgSquareOutline=T.id~="mode"
     if T.id=="mode" then
         frame.modeFixedSprite=true
-        track.modeAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
-        frame.modeBorderAsset=toggle and "ModeToggleBorder" or "ModeCheckBorder"
+        -- A solid outer silhouette backs the inset interior. A hollow ring on
+        -- a separate frame can leave bright fill pixels visible past its edge.
+        frame.modeBorderAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
     end
-    local outline = W.Outline(frame, T.lineStrong, "BORDER")
-    local mark = button:CreateTexture(nil, "ARTWORK")
+    local outline = W.Outline(frame, T.lineStrong, T.id=="mode" and "BACKGROUND" or "BORDER")
+    local track = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "ARTWORK" or "BACKGROUND")
+    track:SetPoint("CENTER",frame,"CENTER",0,0); track:SetSize(w, h)
+    if T.id=="mode" then
+        track:SetSize(w-4,h-4)
+        track.modeAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
+    end
+    local mark = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "OVERLAY" or "ARTWORK")
     if T.id=="mode" then mark.modeAsset=toggle and "ModeThumb" or "ModeCheckMark" end
     mark:SetSize(toggle and 12 or 10, toggle and 12 or 10)
     button.fill, button.knob, button.switchOutline = track, mark, outline
@@ -664,13 +668,13 @@ function W.Switch(button, text, height, style)
         local on = self.selected == true
         local hovered = available and self.hovered
         if toggle then Paint(track, on and T.primary or T.surface)
-        -- A ticked box carries a faint accent wash behind its mark, so checked
-        -- and unchecked differ in area as well as in the small mark.
-        elseif on then Paint(track, T.primary, 0.16) else Paint(track, T.field) end
+        -- Mode recolors the same interior; other themes retain the faint wash.
+        elseif on then Paint(track, T.primary, T.id=="mode" and 1 or 0.16) else Paint(track, T.field) end
         outline:SetColor(on and T.primary or (hovered and T.secondary or T.lineStrong))
         if T.id == "mode" then
             self.activeGlow:Hide()
-            outline:SetColor(on and T.primary or T.lineStrong)
+            -- The outer rim remains distinct from cyan fill in either state.
+            outline:SetColor(on and T.secondary or T.lineStrong,on and 0.8 or 0.36)
         end
         mark:ClearAllPoints()
         if toggle then

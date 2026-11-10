@@ -37,4 +37,24 @@ for name, size in sizes.items():
 for name in ('Lato-Regular.ttf', 'Lato-Bold.ttf'):
     assert files['Media/Fonts/' + name][:4] == b'\x00\x01\x00\x00'
 assert b'SIL OPEN FONT LICENSE' in files['LICENSES/Lato-OFL.txt']
+
+# Sample the actual alpha sprites at fractional UI coordinates. Every visible
+# inset fill sample must sit over the opaque core of the larger solid backing;
+# checking rectangle sizes alone missed the native hollow-ring artifact.
+def alpha_at(data, x, y):
+    w,h=struct.unpack_from('<HH',data,12)
+    x=max(0,min(w-1,x*w-.5));y=max(0,min(h-1,y*h-.5))
+    ix,iy=int(x),int(y);fx,fy=x-ix,y-iy
+    def a(px,py):
+        return data[18+(min(py,h-1)*w+min(px,w-1))*4+3]/255
+    return (a(ix,iy)*(1-fx)+a(ix+1,iy)*fx)*(1-fy)+(a(ix,iy+1)*(1-fx)+a(ix+1,iy+1)*fx)*fy
+
+for name,w,h in [('CheckSurfaceRound',18,18),('ToggleSurfacePill',34,18)]:
+    data=files['Media/Textures/Mode/'+name+'.tga']
+    for iy in range((h-4)*8):
+        for ix in range((w-4)*8):
+            x=(ix+.5)/8;y=(iy+.5)/8
+            fill=alpha_at(data,x/(w-4),y/(h-4))
+            outer=alpha_at(data,(x+2)/w,(y+2)/h)
+            assert outer>=fill and (fill<.5 or outer>.98),'colored interior must stay within the solid outer silhouette'
 print('PASS rounded Figma controls, circular thumb, neutral sheen, fading/beveled lines, transparent logo and font license')

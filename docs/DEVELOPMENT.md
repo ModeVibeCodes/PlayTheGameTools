@@ -1,5 +1,11 @@
 # Standalone Forever development
 
+Latest small-control correction replaces the separate hollow mode border with a
+solid outer silhouette behind the two-unit-inset fill on the same frame. The
+checked rim stays neutral gray; off/on recolors the identical interior. Tests
+sample actual sprite alpha containment as well as repeated state geometry.
+Lua-only, existing assets; `/reload` OOC. Native confirmation remains pending.
+
 Latest mode layout correction removes page/window perimeter outlines, contains
 checked fills inside their borders, centers and sizes the profile caption/name,
 left-aligns search with page titles, and centers numeric values. The slider thumb

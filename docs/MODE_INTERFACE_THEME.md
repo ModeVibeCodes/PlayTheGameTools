@@ -16,8 +16,12 @@ Disabled controls remain inactive and unlit.
 The outer window and module-page perimeter outlines are removed; control outlines
 and row separators remain. Button backgrounds are inset one unit, and checkbox/
 toggle tracks are inset two units inside their outer border geometry. Checked
-fills and circular thumbs therefore have room inside the outline rather than
-sharing its edge pixels.
+fills and circular thumbs have room inside the outer shape rather than sharing
+its edge pixels. Native feedback showed the previous hollow border still looked
+clipped when filled. Small controls now draw a solid rounded backing beneath the
+same inset interior and thumb, all on one frame. Off/on changes the interior color,
+not its dimensions or silhouette. The checked rim is neutral gray so it remains
+visibly distinct from the cyan interior. No new assets are needed.
 Checkboxes now use dedicated rounded silhouettes. On/off switches have capsule
 tracks and circular thumbs; their click handlers, hit targets and state remain
 unchanged. Buttons, including header controls, Collapse and Refresh, use dedicated
@@ -189,6 +193,12 @@ No release publication or automatic theme activation is included.
     **Action:** inspect the numeric field and slider thumb;
     **Required state:** OOC; **Confirmation:** centered value text and rounded
     thumb corners with the same thumb size; the current value is unchanged.
+15. **Navigation:** PTG Tools → Questing & Leveling → · Class Training → General → Level Up Window;
+    **Action:** note the original checkbox state, click twice to compare both
+    states and restore it; inspect the page's enabled switch without changing it;
+    **Required state:** OOC after `/reload`; **Confirmation:** the cyan interior
+    replaces the same unfilled region and stays inside the larger rounded gray
+    rim; the switch thumb remains contained and the original setting is restored.
 
 Native validation remains pending owner feedback. Record Forever build,
 resolution, UI scale, font/media selections and screenshots when reporting fit.
