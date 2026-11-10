@@ -148,7 +148,7 @@ end
 
 function addon:CreateConfig()
     local mode = T.id == "mode"
-    local sidebarWidth=mode and 208 or SIDEBAR_WIDTH
+    local sidebarWidth=SIDEBAR_WIDTH
     local window = CreateFrame("Frame", "PlayTheGameToolsConfigWindow", UIParent)
     window:Hide()
     self.configWindow = window
@@ -220,6 +220,7 @@ function addon:CreateConfig()
     if mode then window.headerArt:Hide() end
     window.title = W.Heading(header, mode and "PTG Tools" or "Play The Game Tools", T.fontSize.section, 20 + edge, -21, sidebarWidth - 24 - edge, mode and T.heading or T.text)
     if mode then
+        window.title:SetTextColor(unpack(T.primary))
         local logo=header:CreateTexture(nil,"ARTWORK")
         logo:SetPoint("LEFT",14,0);logo:SetSize(38,38)
         addon.Media:ApplyTexture(logo,"ModeLogo")
@@ -277,8 +278,8 @@ function addon:CreateConfig()
     window.previewButton, window.editButton, window.closeButton = preview, edit, close
     if mode then
         local profile=HeaderButton("Profile:",132)
-        profile:SetPoint("RIGHT")
-        close:ClearAllPoints();close:SetPoint("RIGHT",profile,"LEFT",-8,0)
+        profile:SetPoint("RIGHT",close,"LEFT",-8,0)
+        edit:ClearAllPoints();edit:SetPoint("RIGHT",profile,"LEFT",-8,0)
         profile.label:ClearAllPoints();profile.label:SetPoint("LEFT",10,0)
         profile.label:SetWidth(42);profile.label:SetJustifyH("LEFT");profile.label:SetWordWrap(false)
         profile.profileName=W.Label(profile,self.ProfileManager.activeName,nil,0,0,68,T.primary)
@@ -484,13 +485,35 @@ function addon:CreateConfig()
         end
         button.label:SetPoint("RIGHT",-10,0)
         button.label:SetJustifyH("LEFT")
-        -- Two lines fit longer module names without reducing reading size.
-        if mode then button.label:SetWordWrap(true) end
+        if mode then button.label:SetWordWrap(false) end
         addon.Media:BindInterfaceFont(button.label,GameFontHighlight,mode and T.fontSize.body or T.fontSize.small)
         if mode and module.classIcon then
             -- Keep class identity while giving every child the same dot prefix.
             button.classIcon:ClearAllPoints();button.classIcon:SetPoint("RIGHT",-8,0)
             button.label:ClearAllPoints();button.label:SetPoint("LEFT",16,0);button.label:SetPoint("RIGHT",-32,0)
+        end
+        if mode then
+            -- Measure against a separate unbounded label: the visible label's
+            -- anchors must stay intact, and truncation must not hide its width.
+            local probe=navigation.fontProbe
+            if not probe then
+                probe=navigation:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+                probe:Hide();probe:SetWidth(0);probe:SetWordWrap(false);navigation.fontProbe=probe
+            end
+            function button:FitNavigationText()
+                addon.Media:BindInterfaceFont(probe,GameFontHighlight,T.fontSize.body)
+                probe:SetText(self.label:GetText())
+                local measured=probe:GetStringWidth()
+                local available=math.max(1,self:GetWidth()-(module.classIcon and 48 or 26))
+                local size=T.fontSize.body
+                if not (issecretvalue and issecretvalue(measured)) and type(measured)=="number" and measured>available and measured<math.huge then
+                    size=math.max(1,math.floor(size*available/measured*4)/4)
+                end
+                addon.Media:BindInterfaceFont(self.label,GameFontHighlight,size)
+                W.AlignTextLine(self,self.selectionEdge)
+            end
+            button:HookScript("OnSizeChanged",function(owner) owner:FitNavigationText() end)
+            addon.Media:RegisterFontListener(button,function(owner) owner:FitNavigationText() end)
         end
         button:SetScript("OnClick",function() Select(id) end)
         nested[id]=button
@@ -513,6 +536,7 @@ function addon:CreateConfig()
             end
         end
         navigation:Layout()
+        if mode then for _,button in pairs(nested) do if button:IsShown() then button:FitNavigationText() end end end
         -- Reveal the clicked/search-routed module in the same existing scroll view.
         local button=nested[id]
         if button and category and (not mode or not collapsed[category.id]) then

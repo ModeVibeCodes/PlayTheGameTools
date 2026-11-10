@@ -17,6 +17,14 @@ Checkboxes now use dedicated rounded silhouettes. On/off switches have capsule
 tracks and circular thumbs; their click handlers, hit targets and state remain
 unchanged. Buttons, including header controls, Collapse and Refresh, use dedicated
 rounded control art rather than scaling the larger panel corners.
+Native screenshots exposed square small controls in the preceding revision.
+Checkbox runtime art is now 32×32 (the original Figma source is 24×24), and both
+checkboxes and switches use complete alpha sprites without texture slicing.
+Fresh file paths prevent reusing old cached images. Custom global borders cannot
+replace these small silhouettes with rectangular frames; **None** still hides
+their outlines. If a new small-control file is unavailable, the already bundled
+circular thumb supplies a rounded fallback instead of a solid square. The new
+native result remains pending owner confirmation.
 
 Lato Regular/Bold, selected from Figma's font catalog, is the mode configuration
 default when Global Font is **Game font**; **PTG Lato** is also available explicitly.
@@ -30,8 +38,10 @@ are unchanged.
 The sidebar lists every populated category expanded by default each UI session.
 Bold gray category headings are plain text click targets: clicking collapses/expands
 their children without selecting a different page or toggling a module. Children
-use an indented `·` prefix and body-size type. Child inset is 16 UI units, with
-wrapping for long names. Class icons remain available. Selection lines follow
+use an indented `·` prefix and single-line type. Child inset is 16 UI units; the
+navigation width is restored to 240 and each child measures the selected font,
+reducing its size only when needed to fit the available width. Word wrapping is
+disabled. Class icons remain available. Selection lines follow
 the measured text and alignment, fading toward the right; they no longer center
 under the entire clickable row. Internal section tabs share that line instead
 of drawing a second underline.
@@ -40,16 +50,16 @@ window within the session. Direct module/search navigation expands its category.
 The sidebar scrolls when needed. The redundant category tab strip above module
 pages is hidden only in mode, recovering space; internal module section tabs,
 enable switches, search, previews, Edit Mode and settings controls are retained.
-The navigation column is 208 UI units wide (previously 240); module page rows have
+The navigation column is 240 UI units wide; module page rows have
 12-unit inner padding to clear their borders. The visible scroll thumb is 2 units
 wide while its existing hit target stays unchanged. Descriptor copy is darker
 than body text (#A0A0A0 versus #D4D4D4). Separators remain 1 unit high with beveled
 ends. The header separator and the navigation/content vertical separator are hidden.
 
 The existing search field remains in the mode header. **Profile: <active name>**
-is the rightmost header button; only its profile name uses cyan. It opens **Global
+is immediately left of the rightmost **X** button; only its profile name uses cyan. It opens **Global
 Settings → Profiles** through the existing page/tab engine without mutating a
-profile. The mode window title is **PTG Tools**, preceded by the owner's supplied
+profile. The cyan mode window title is **PTG Tools**, preceded by the owner's supplied
 logo with its navy background removed. Addon metadata and other themes keep the
 existing Play The Game Tools name.
 
@@ -129,8 +139,9 @@ No release publication or automatic theme activation is included.
    without changing the theme, and scroll **Profiles**; **Required state:** OOC;
    **Confirmation:** a single fading line sits directly under selected text,
    buttons have rounded corners, rows stay inside their borders, and the thinner
-   scroll indicator works. Logo/title sit at upper left; **Profile: <active name>**
-   is far right with only its name cyan. Neither removed separator is visible.
+   scroll indicator works. Logo/title sit at upper left in cyan; **X** is far right
+   and **Profile: <active name>** is immediately left with only its name cyan.
+   Neither removed separator is visible.
 8. **Navigation:** PTG Tools → Global Settings → Optimizations → Auto Loot;
    **Action:** hover the checkbox and inspect its shape without changing the value;
    **Required state:** OOC; **Confirmation:** rounded checkbox corners, unchanged
@@ -140,6 +151,15 @@ No release publication or automatic theme activation is included.
    **Action:** inspect/hover without changing the current state; **Required state:**
    OOC; **Confirmation:** capsule track and circular thumb, unchanged enabled state
    and no clipping. Report any remaining clipped page and UI/font scale.
+10. **Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements → Loot Sparkles → Options → Enable Loot Sparkles;
+    **Action:** inspect the checkbox without changing its value;
+    **Required state:** OOC after `/reload` with this revision;
+    **Confirmation:** rounded corners rather than the reported solid square,
+    with the same saved checked/unchecked state.
+11. **Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements / · Enhanced Experience Bar;
+    **Action:** inspect both sidebar entries, then click each;
+    **Required state:** OOC; **Confirmation:** each name stays on one line and
+    opens the same page. Long names may use a slightly smaller selected font.
 
 Native validation remains pending owner feedback. Record Forever build,
 resolution, UI scale, font/media selections and screenshots when reporting fit.

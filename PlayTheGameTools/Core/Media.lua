@@ -54,11 +54,13 @@ M.Textures = {
     ModeSelection = { file = "Mode/Selection.tga", transparent = true },
     ModeControlSurface = { file = "Mode/ControlSurface.tga", slice = 10, rounded = true },
     ModeControlBorder = { file = "Mode/ControlBorder.tga", slice = 10, transparent = true },
-    ModeCheckSurface = { file = "Mode/CheckSurface.tga", slice = 6, rounded = true },
-    ModeCheckBorder = { file = "Mode/CheckBorder.tga", slice = 6, transparent = true },
-    ModeCheckMark = { file = "Mode/CheckSurface.tga", rounded = true },
-    ModeToggleSurface = { file = "Mode/ToggleSurface.tga", slice = 8, rounded = true },
-    ModeToggleBorder = { file = "Mode/ToggleBorder.tga", slice = 8, transparent = true },
+    -- Fixed-size controls use full sprites: no slice margins can flatten their
+    -- small alpha corners. Fresh paths avoid reusing previously cached images.
+    ModeCheckSurface = { file = "Mode/CheckSurfaceRound.tga", rounded = true },
+    ModeCheckBorder = { file = "Mode/CheckBorderRound.tga", transparent = true },
+    ModeCheckMark = { file = "Mode/CheckSurfaceRound.tga", rounded = true },
+    ModeToggleSurface = { file = "Mode/ToggleSurfacePill.tga", rounded = true },
+    ModeToggleBorder = { file = "Mode/ToggleBorderPill.tga", transparent = true },
     ModeThumb = { file = "Mode/Thumb.tga", rounded = true },
     ModeScrollThumb = { file = "Mode/ScrollThumb.tga", rounded = true },
     ModeDivider = { file = "Mode/Divider.tga", transparent = true },

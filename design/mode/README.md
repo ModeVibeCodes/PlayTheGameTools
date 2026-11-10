@@ -13,8 +13,8 @@ Source file: https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO
 | Border | 6:33 | 128 × 128 | White 1px inside stroke, 10px soft corners, transparent center; tinted by runtime border palette |
 | Selection | 6:34 | 128 × 4 | Cyan #00F0FF underline fading from left to right; anchored to measured text |
 | ControlSurface / ControlBorder | 22:31 / 22:32 | 64 × 32 | 9px rounded buttons, separately tintable fill/border |
-| CheckSurface / CheckBorder | 22:33 / 22:34 | 24 × 24 | Rounded checkbox geometry with 5px corners |
-| ToggleSurface / ToggleBorder | 22:35 / 22:36 | 32 × 16 | Capsule on/off tracks |
+| CheckSurface / CheckBorder → CheckSurfaceRound / CheckBorderRound | 22:33 / 22:34 | 24 × 24 source; 32 × 32 runtime | Rounded checkbox geometry, resampled for power-of-two runtime files; full sprites without slicing |
+| ToggleSurface / ToggleBorder → ToggleSurfacePill / ToggleBorderPill | 22:35 / 22:36 | 32 × 16 | Capsule tracks drawn as complete sprites without slicing |
 | Thumb | 22:37 | 32 × 32 | Circular switch thumb |
 | ScrollThumb | 22:38 | 4 × 64 | Thin antialiased indicator, rendered 2 units wide |
 | Divider | 22:39 | 256 × 4 | Even separator with beveled ends, rendered 1 unit high |
@@ -22,12 +22,16 @@ Source file: https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO
 PNGs were exported through the Figma Plugin API `exportAsync({format:'PNG',
 contentsOnly:true})` and `figma.base64Encode`. This preserves transparent alpha;
 the generic asset preview export includes the page background and is not used.
-Runtime TGAs are exact RGBA conversions, not regenerated approximations:
+Runtime TGAs preserve RGBA pixels except the documented checkbox/logo resampling:
 `python tools/build_mode_textures.py` with Pillow. Source PNGs/design files are
 outside the addon; only TGAs are included in the runtime package. Texture slicing
-uses the existing native texture-slice helper and 12px margins for fixed corners.
+uses the existing native helper with 12px margins on panels and 10px on buttons;
+small checkbox/switch sprites do not use slicing.
 Missing surfaces fall back to readable neutral fills; missing borders stay clear.
-Control art uses dedicated slices so small corners retain their shape. Surface
+Small checkbox/switch sprites now bypass slicing so the full rounded silhouette
+is drawn. Their runtime paths changed after the owner reported square controls;
+the original source PNGs remain untouched. All runtime canvases are powers of two.
+Large surfaces and control buttons retain their existing slices. Surface
 6:32 also includes subtle neutral sheen/detail layers. The Starter tool-call limit
 was reached after these assets were exported; the composed screen could not be
 updated with the final header/spacing refinement in this pass.

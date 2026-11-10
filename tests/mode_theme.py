@@ -23,13 +23,15 @@ mode.execute(r'''
     local before=addon.ProfileCodec.Encode(PTGToolsDB)
     addon:ToggleConfig()
     local w=addon.configWindow
-    assert(w.title:GetText()=='PTG Tools' and w.sidebarWidth==208)
+    assert(w.title:GetText()=='PTG Tools' and w.sidebarWidth==240)
+    assert(w.title.color[1]==0 and w.title.color[2]==240/255 and w.title.color[3]==1,'cyan branding')
     assert(w.brandLogo and not w.headerArt:IsShown() and not w.columnEdge:IsShown())
     assert(w.brandLogo.points[1][5]==0,'logo centers inside the header without overlapping navigation')
     assert(w.canvasSheen.gradient.minimum.a==0.018 and w.bodySheen.gradient.maximum.a==0,'static neutral background sheen')
     assert(w.profileButton.label:GetText()=='Profile:' and w.profileButton.profileName:GetText()==addon.ProfileManager.activeName)
     assert(w.profileButton.profileName.color[2]==T.primary[2] and w.profileButton.label.color[1]==T.secondary[1])
-    assert(w.closeButton.points[1][2]==w.profileButton,'profile is rightmost')
+    assert(w.closeButton.points[1][1]=='RIGHT' and w.closeButton.points[1][2]==w.headerControls,'close is rightmost')
+    assert(w.profileButton.points[1][2]==w.closeButton and w.editButton.points[1][2]==w.profileButton,'profile is immediately left of close')
     assert(T.muted[1]<T.secondary[1] and T.secondary[1]<T.text[1],'descriptor hierarchy')
     assert(w.searchInput:GetParent()==w.headerBar and w.searchInput:GetWidth()==200,'header search')
     assert(w.canvas.modeAsset=='ModeSurface' and w.bodyBorder.rounded,'Figma material and soft border')
@@ -51,7 +53,8 @@ mode.execute(r'''
             for _,id in ipairs(category.modules) do
                 local button=w.sidebarModuleButtons[id]
                 assert(rows[button] and button:IsShown() and button.label:GetText():sub(1,3)=='· ')
-                assert(button.label.font[2]==T.fontSize.body)
+                assert(button.label.font[2]<=T.fontSize.body and not button.label.wordWrap)
+                assert(button.label:GetStringWidth()<=button:GetWidth()-(addon.modules[id].classIcon and 48 or 26),'single-line child fits '..id)
             end
             local selected=w.selectedPage
             heading.scripts.OnClick()
@@ -91,6 +94,10 @@ mode.execute(r'''
     local oldWidth=b:GetWidth();b:SetWidth(100);b.scripts.OnSizeChanged(b)
     assert(b.selectionEdge:GetWidth()<=80,'line follows resized text area')
     b:SetWidth(oldWidth);b.scripts.OnSizeChanged(b)
+    local oldText=b.label:GetText();b.label:SetText('· Enhanced Experience Bar')
+    b:SetWidth(164);b:FitNavigationText()
+    assert(not b.label.wordWrap and b.label:GetStringWidth()<=138,'long subcategory fits one line at constrained width')
+    b.label:SetText(oldText);b:SetWidth(oldWidth);b:FitNavigationText()
     local page=w.pages.combatTimer
     assert(page.contentInset==12)
     for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12,'visible page rows clear left borders') end end
@@ -101,6 +108,16 @@ mode.execute(r'''
     assert(button.fill.modeAsset=='ModeControlSurface' and button.outline.rounded)
     local toggle=w.moduleHeader.toggle
     assert(toggle.switchOutline.rounded and toggle.fill.modeAsset=='ModeToggleSurface' and toggle.knob.modeAsset=='ModeThumb','rounded track and circular thumb')
+    assert(not toggle.fill.slice and not toggle.switchOutline.edges[1].slice,'small controls use full oval sprites')
+    assert(not check.fill.slice and not check.knob.slice,'checkbox full-sprite round corners')
+    testMissingTextures={[addon.Media:GetTexture('ModeCheckSurface')]=true}
+    local pendingCheck=addon.ConfigWidgets.Button(UIParent,'',18,18,'checkbox')
+    assert(pendingCheck.fill.texture==addon.Media:GetTexture('ModeThumb'),'unavailable new art falls back to a circle, never a solid square')
+    testMissingTextures=nil
+    local oldBorder=addon.db.globalMedia.border;addon.db.globalMedia.border='media:PTG Clean'
+    local customCheck=addon.ConfigWidgets.Button(UIParent,'',18,18,'checkbox')
+    assert(customCheck.switchOutline.rounded,'global border must not replace the checkbox silhouette with a rectangle')
+    addon.db.globalMedia.border=oldBorder
     toggle:SetSelected(true);assert(not toggle.activeGlow:IsShown())
     toggle:SetEnabled(false);assert(not toggle.activeGlow:IsShown())
     toggle:SetEnabled(true);toggle:SetSelected(false)

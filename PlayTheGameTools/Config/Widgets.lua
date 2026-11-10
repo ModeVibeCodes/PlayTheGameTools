@@ -67,6 +67,14 @@ local function Paint(texture, color, alpha)
             texture:SetVertexColor(color[1], color[2], color[3], alpha or color[4] or 1)
             return
         end
+        if texture.modeAsset=="ModeCheckSurface" or texture.modeAsset=="ModeCheckMark" or texture.modeAsset=="ModeToggleSurface" then
+            -- The already bundled circular thumb remains a rounded fallback
+            -- while a new small-control file is unavailable to this client.
+            if addon.Media:ApplyTexture(texture,"ModeThumb",color) then
+                texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
+            else texture:SetColorTexture(0,0,0,0) end
+            return
+        end
         -- Missing borders must never become opaque rectangles over controls.
         if texture.modeAsset:find("Border",1,true) then texture:SetColorTexture(0,0,0,0);return end
     end
@@ -112,7 +120,7 @@ function W.Outline(frame, color, layer, inset, alpha, scope)
     scope=scope or addon.Media:FrameScope(frame)
     inset = inset or 0
     local style=addon.Media:GlobalStyle("border",scope) or "thin"
-    if T.id == "mode" and not frame.ptgSquareOutline and (style == "thin" or style == "none") then
+    if T.id == "mode" and not frame.ptgSquareOutline and (frame.modeFixedSprite or style == "thin" or style == "none") then
         local texture=frame:CreateTexture(nil,layer or "BORDER")
         texture:SetPoint("TOPLEFT",inset,-inset);texture:SetPoint("BOTTOMRIGHT",-inset,inset)
         texture.modeAsset=frame.modeBorderAsset or "ModeBorder"
@@ -631,6 +639,7 @@ function W.Switch(button, text, height, style)
     frame:SetPoint("CENTER"); frame:SetSize(w, h)
     frame.ptgSquareOutline=T.id~="mode"
     if T.id=="mode" then
+        frame.modeFixedSprite=true
         track.modeAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
         frame.modeBorderAsset=toggle and "ModeToggleBorder" or "ModeCheckBorder"
     end

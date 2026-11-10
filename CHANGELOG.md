@@ -18,6 +18,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   separators. Remove header/navigation divider lines; place Profile far right
   and accent only its name. Prior appearance received positive owner feedback;
   these final native refinements still need review.
+  Screenshot correction: replace 24px checkbox runtime files with 32px images;
+  draw small controls without slices so their rounded silhouettes remain intact.
+  Fit subcategories on one line using a wider navigation area and measured text.
+  Restore Close far right with Profile next to it; make PTG Tools cyan. Native
+  verification of this correction remains pending.
 
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.

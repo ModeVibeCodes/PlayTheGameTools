@@ -3,9 +3,10 @@
 Experimental **mode** interface theme: opt-in under Global Settings → Appearance,
 using existing Lua files and the existing theme reload/profile flow. Revised Figma
 graphite/soft-corner/selection/control textures, the owner logo and licensed Lato
-fonts add fifteen media files; 116 Lua chunks remain. Latest refinement narrows
-the navigation, adds page padding, rounded controls/circular switches, text-aligned
-fading selections and rightmost profile-name styling. No module logic, TOC or
+fonts add fifteen media files; 116 Lua chunks remain. Latest native screenshot
+correction uses power-of-two, unsliced checkbox/switch sprites, one-line fitted
+navigation at 240 units, cyan PTG Tools branding, and Profile immediately left of
+the rightmost Close. Padded rows and text-aligned fading selection remain. No module logic, TOC or
 default theme changes. Test with `/reload` OOC from the feature
 branch in the existing live-linked public checkout; preserve its junction and
 settings. Native fit remains pending. Run tests/mode_theme.py with smoke/global/
