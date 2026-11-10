@@ -12,6 +12,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   module controls and gameplay behavior are preserved. Apply with Reload OOC;
   new asset discovery may need a restart only if reload falls back. Native review
   pending. See docs/MODE_INTERFACE_THEME.md.
+  Refinement: PTG logo/short title, 208-unit sidebar, padded module rows, darker
+  descriptors, text-aligned right-fading underlines, rounded checkboxes/buttons,
+  capsule on/off tracks with circular thumbs, thin scroll indicator and beveled
+  separators. Remove header/navigation divider lines; place Profile far right
+  and accent only its name. Prior appearance received positive owner feedback;
+  these final native refinements still need review.
 
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.

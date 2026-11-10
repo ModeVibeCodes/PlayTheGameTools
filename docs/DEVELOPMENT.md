@@ -2,8 +2,11 @@
 
 Experimental **mode** interface theme: opt-in under Global Settings → Appearance,
 using existing Lua files and the existing theme reload/profile flow. Revised Figma
-graphite/soft-corner/selection textures and licensed Lato fonts add five media files;
-116 Lua chunks remain. No module logic, TOC or default theme changes. Test with `/reload` OOC from the feature
+graphite/soft-corner/selection/control textures, the owner logo and licensed Lato
+fonts add fifteen media files; 116 Lua chunks remain. Latest refinement narrows
+the navigation, adds page padding, rounded controls/circular switches, text-aligned
+fading selections and rightmost profile-name styling. No module logic, TOC or
+default theme changes. Test with `/reload` OOC from the feature
 branch in the existing live-linked public checkout; preserve its junction and
 settings. Native fit remains pending. Run tests/mode_theme.py with smoke/global/
 Edit Mode, tests/mode_assets.py and the builder. Restart only if new assets are

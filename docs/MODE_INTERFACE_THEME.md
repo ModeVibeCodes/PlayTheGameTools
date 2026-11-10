@@ -13,8 +13,10 @@ there is no blue tint in body material. Original Figma satin gradients and soft
 10px corner silhouettes replace flat default surfaces. Cyan etched lines denote
 selection. Only text lights on hover; whole-row/button glow washes are removed.
 Disabled controls remain inactive and unlit.
-Small native switches/checkboxes retain their square state geometry rather than
-becoming circles; the softer corners apply to panels, fields and larger controls.
+Checkboxes now use dedicated rounded silhouettes. On/off switches have capsule
+tracks and circular thumbs; their click handlers, hit targets and state remain
+unchanged. Buttons, including header controls, Collapse and Refresh, use dedicated
+rounded control art rather than scaling the larger panel corners.
 
 Lato Regular/Bold, selected from Figma's font catalog, is the mode configuration
 default when Global Font is **Game font**; **PTG Lato** is also available explicitly.
@@ -28,16 +30,28 @@ are unchanged.
 The sidebar lists every populated category expanded by default each UI session.
 Bold gray category headings are plain text click targets: clicking collapses/expands
 their children without selecting a different page or toggling a module. Children
-use an indented `·` prefix and body-size type. Child inset is reduced from 24 to
-16 UI units, with wrapping for long names. Class icons remain available.
+use an indented `·` prefix and body-size type. Child inset is 16 UI units, with
+wrapping for long names. Class icons remain available. Selection lines follow
+the measured text and alignment, fading toward the right; they no longer center
+under the entire clickable row. Internal section tabs share that line instead
+of drawing a second underline.
 Disclosure state survives unrelated page navigation and closing/reopening the
 window within the session. Direct module/search navigation expands its category.
 The sidebar scrolls when needed. The redundant category tab strip above module
 pages is hidden only in mode, recovering space; internal module section tabs,
 enable switches, search, previews, Edit Mode and settings controls are retained.
-The existing search field moves into the mode header beside the existing header
-controls. **Profile: <active name>** opens **Global Settings → Profiles** through
-the existing page/tab engine; it does not select, create or mutate a profile.
+The navigation column is 208 UI units wide (previously 240); module page rows have
+12-unit inner padding to clear their borders. The visible scroll thumb is 2 units
+wide while its existing hit target stays unchanged. Descriptor copy is darker
+than body text (#A0A0A0 versus #D4D4D4). Separators remain 1 unit high with beveled
+ends. The header separator and the navigation/content vertical separator are hidden.
+
+The existing search field remains in the mode header. **Profile: <active name>**
+is the rightmost header button; only its profile name uses cyan. It opens **Global
+Settings → Profiles** through the existing page/tab engine without mutating a
+profile. The mode window title is **PTG Tools**, preceded by the owner's supplied
+logo with its navy background removed. Addon metadata and other themes keep the
+existing Play The Game Tools name.
 
 ## Design reference
 
@@ -47,6 +61,9 @@ The screenshots supplied by the owner informed hierarchy,
 spacing and neutral surfaces; no reference-addon code or assets were copied.
 The preview is a design reference, not an in-game screenshot. Client text
 measurement, font selection, clipping and native rendering still need review.
+The latest rounded-control/line assets were authored and exported in Figma, but
+the Starter plan tool-call limit prevented updating the composed preview for this
+last refinement. Its composition therefore reflects the previous revision.
 
 Original surface, border and selection exports are retained under `design/mode/`.
 `python tools/build_mode_textures.py` (Pillow) converts their RGBA pixels unchanged
@@ -65,7 +82,7 @@ transparent corners, border transparency, selection hue and packaged font licens
 Static/mock checks
 do not establish native visual or gameplay acceptance.
 
-This revision edits existing Lua files and adds three TGAs plus two licensed TTFs;
+This revision edits existing Lua files and adds thirteen TGAs plus two licensed TTFs;
 there are no new Lua files or TOC entries. Try `/reload` OOC first. If the running
 client cannot discover a new asset/font (missing-texture warning, missing art or
 fallback font), one full client restart may be needed; do not close it routinely
@@ -102,16 +119,38 @@ No release publication or automatic theme activation is included.
    **Action:** click the button; **Required state:** OOC;
    **Confirmation:** Global Settings opens with **Profiles** selected and the same
    active profile; no profile change occurs from opening it.
-6. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global Font / Global Texture / Global Border;
+6. **Navigation:** PTG Tools → Global Settings → Appearance → Global Font / Global Texture / Global Border;
    **Action:** choose **PTG Lato**, **Flat**, **Thin**, respectively, then header
    **Reload**; **Required state:** OOC, optional when existing custom media differs;
    **Confirmation:** the recommended Lato type and authored graphite satin/soft
    corners appear. Your previous choices can be restored through the same controls.
+7. **Navigation:** PTG Tools → Global Settings → Appearance / Profiles;
+   **Action:** alternate the two tabs, hover **Modern**, **Blizzard** and **mode**
+   without changing the theme, and scroll **Profiles**; **Required state:** OOC;
+   **Confirmation:** a single fading line sits directly under selected text,
+   buttons have rounded corners, rows stay inside their borders, and the thinner
+   scroll indicator works. Logo/title sit at upper left; **Profile: <active name>**
+   is far right with only its name cyan. Neither removed separator is visible.
+8. **Navigation:** PTG Tools → Global Settings → Optimizations → Auto Loot;
+   **Action:** hover the checkbox and inspect its shape without changing the value;
+   **Required state:** OOC; **Confirmation:** rounded checkbox corners, unchanged
+   saved state and normal text-only hover.
+9. **Navigation:** PTG Tools → Timers → · Combat Timer → header's unlabeled module
+   enable switch (beside **Enabled** / **Disabled**);
+   **Action:** inspect/hover without changing the current state; **Required state:**
+   OOC; **Confirmation:** capsule track and circular thumb, unchanged enabled state
+   and no clipping. Report any remaining clipped page and UI/font scale.
 
 Native validation remains pending owner feedback. Record Forever build,
 resolution, UI scale, font/media selections and screenshots when reporting fit.
 
-November 9 static verification: all 33 standalone regression scripts pass. The
-Figma PNG → TGA conversions preserve RGBA pixels exactly, and the deterministic
-release build passes with 116 Lua chunks / 205 package files. No native rendering
-or gameplay acceptance is inferred from these results.
+The owner reports the previous revision looks sharp; this is scoped visual
+feedback, not module/gameplay acceptance. Current native refinement review remains
+pending. Texture conversion retains exact Figma RGBA pixels; the owner logo is
+downsampled separately for its 38-unit header presentation.
+
+November 9 verification: all 33 regression scripts pass on the final revision,
+including text alignment/resizing, inner padding, rounded control geometry,
+profile-only accent text and asset transparency/fade checks. The deterministic
+build passes at 116 Lua chunks / 215 package files. The header and body sheen
+layers are static, neutral and non-interactive; there is no new polling.

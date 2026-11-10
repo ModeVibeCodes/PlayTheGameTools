@@ -33,6 +33,9 @@ name Lato. Full terms: LICENSES/Lato-OFL.txt. Pinned source, hashes and Figma
 design provenance: design/mode/README.md. Font terms remain separate from the
 addon distribution license. The original mode Figma Surface/Border/Selection
 artwork and its RGBA TGA conversions are Copyright (c) 2026 Mode, MIT.
+The mode header also uses the addon owner's supplied PTG logo, with an ImageGen
+transparent-background derivative and a downsampled runtime copy. It is branding
+artwork, distinct from the Figma control materials; see design/mode/README.md.
 
 Original Play The Game Tools code: Copyright (c) 2026 Mode, MIT; see LICENSE.
 That grant does not replace third-party ownership or notices below.

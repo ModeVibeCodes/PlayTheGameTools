@@ -148,9 +148,11 @@ end
 
 function addon:CreateConfig()
     local mode = T.id == "mode"
+    local sidebarWidth=mode and 208 or SIDEBAR_WIDTH
     local window = CreateFrame("Frame", "PlayTheGameToolsConfigWindow", UIParent)
     window:Hide()
     self.configWindow = window
+    window.sidebarWidth=sidebarWidth
     window:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
     window:SetFrameStrata("DIALOG")
     window:SetMovable(true)
@@ -158,20 +160,23 @@ function addon:CreateConfig()
     window:EnableMouse(true)
     -- Flat app shell: a canvas, a full-height sidebar column and one hairline frame.
     window.canvas = W.Fill(window, T.background, "BACKGROUND")
+    if mode then window.canvasSheen=W.ModeSheen(window) end
     window.border = W.Outline(window, T.lineStrong, "OVERLAY")
     -- Sublevel 1 keeps the column above the canvas within the same draw layer.
     local column = window:CreateTexture(nil, "BACKGROUND", nil, 1)
     W.Paint(column, T.sidebar)
     column:SetPoint("TOPLEFT", 1, -1); column:SetPoint("BOTTOMLEFT", 1, 1)
-    column:SetWidth(SIDEBAR_WIDTH)
+    column:SetWidth(sidebarWidth)
     if mode then
         column.modeAsset="ModeSurface";W.Paint(column,T.sidebar)
         column:ClearAllPoints();column:SetPoint("TOPLEFT",8,-8);column:SetPoint("BOTTOMLEFT",8,8)
-        column:SetWidth(SIDEBAR_WIDTH-8)
+        column:SetWidth(sidebarWidth-8)
     end
     local columnEdge = W.Fill(window, T.line, "BORDER")
-    columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 1, -1)
-    columnEdge:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 1, 1); columnEdge:SetWidth(1)
+    columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", sidebarWidth + 1, -1)
+    columnEdge:SetPoint("BOTTOMLEFT", sidebarWidth + 1, 1); columnEdge:SetWidth(1)
+    if mode then columnEdge:Hide() end
+    window.columnEdge=columnEdge
     window.sidebarColumn = column
     -- Blizzard theme: the stock dialog box replaces the canvas and hairline
     -- frame; the sidebar column and its edge sit inside the dialog border.
@@ -210,9 +215,18 @@ function addon:CreateConfig()
     header:EnableMouse(false)
     window.headerArt = W.Fill(header, T.line, "BORDER")
     window.headerArt:ClearAllPoints()
-    window.headerArt:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
+    window.headerArt:SetPoint("BOTTOMLEFT", sidebarWidth + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
     window.headerArt:SetHeight(1)
-    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20 + edge, -21, SIDEBAR_WIDTH - 24 - edge, mode and T.heading or T.text)
+    if mode then window.headerArt:Hide() end
+    window.title = W.Heading(header, mode and "PTG Tools" or "Play The Game Tools", T.fontSize.section, 20 + edge, -21, sidebarWidth - 24 - edge, mode and T.heading or T.text)
+    if mode then
+        local logo=header:CreateTexture(nil,"ARTWORK")
+        logo:SetPoint("LEFT",14,0);logo:SetSize(38,38)
+        addon.Media:ApplyTexture(logo,"ModeLogo")
+        window.brandLogo=logo
+        window.title:ClearAllPoints();window.title:SetPoint("LEFT",logo,"RIGHT",8,0)
+        window.title:SetWidth(sidebarWidth-72)
+    end
     window.title:SetWordWrap(false)
     local controls = CreateFrame("Frame", nil, header)
     controls:SetPoint("TOPRIGHT", -16 - edge, -14 - edge / 2)
@@ -222,7 +236,7 @@ function addon:CreateConfig()
     controls:EnableMouse(false)
     function self:UpdateConfigTitle(id)
         -- The brand stays fixed; the page header below names the current page.
-        window.title:SetText("Play The Game Tools")
+        window.title:SetText(mode and "PTG Tools" or "Play The Game Tools")
     end
     local drag = CreateFrame("Frame", nil, header)
     drag:SetPoint("TOPLEFT")
@@ -262,9 +276,23 @@ function addon:CreateConfig()
     window.reloadButton=reload
     window.previewButton, window.editButton, window.closeButton = preview, edit, close
     if mode then
-        local profile=HeaderButton("Profile: "..self.ProfileManager.activeName,132)
-        profile:SetPoint("RIGHT",reload,"LEFT",-10,0)
-        profile.label:SetWidth(116);profile.label:SetWordWrap(false)
+        local profile=HeaderButton("Profile:",132)
+        profile:SetPoint("RIGHT")
+        close:ClearAllPoints();close:SetPoint("RIGHT",profile,"LEFT",-8,0)
+        profile.label:ClearAllPoints();profile.label:SetPoint("LEFT",10,0)
+        profile.label:SetWidth(42);profile.label:SetJustifyH("LEFT");profile.label:SetWordWrap(false)
+        profile.profileName=W.Label(profile,self.ProfileManager.activeName,nil,0,0,68,T.primary)
+        profile.profileName:ClearAllPoints();profile.profileName:SetPoint("LEFT",56,0);profile.profileName:SetPoint("RIGHT",-8,0)
+        profile.profileName:SetWordWrap(false)
+        local refresh=profile.RefreshAppearance
+        function profile:RefreshAppearance()
+            refresh(self)
+            self.label:SetTextColor(unpack(T.secondary));self.label:SetShadowColor(0,0,0,0);self.label:SetShadowOffset(0,0)
+            self.profileName:SetTextColor(unpack(self:IsEnabled() and T.primary or T.unavailable))
+            self.profileName:SetShadowColor(T.primary[1],T.primary[2],T.primary[3],self:IsEnabled() and self.hovered and 0.55 or 0)
+            self.profileName:SetShadowOffset(0,-1)
+        end
+        profile:RefreshAppearance()
         profile:SetScript("OnClick",function()
             self:SelectConfigPage("globalSettings")
             window.pages.globalSettings:SelectSectionTab(2)
@@ -275,17 +303,18 @@ function addon:CreateConfig()
     local sidebar = CreateFrame("Frame", nil, window)
     sidebar:SetPoint("TOPLEFT", 12 + edge, -HEADER_HEIGHT - 4)
     sidebar:SetPoint("BOTTOMLEFT", 12 + edge, 12 + edge)
-    sidebar:SetWidth(SIDEBAR_WIDTH - 22 - edge)
+    sidebar:SetWidth(sidebarWidth - 22 - edge)
     local navigation = W.Page(sidebar, 0)
     navigation:ClearAllPoints()
     navigation:SetPoint("TOPLEFT", 0, mode and 0 or -44)
     navigation:SetPoint("BOTTOMRIGHT")
 
     local body = CreateFrame("Frame", nil, window)
-    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 30, -16)
+    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", mode and 24 or 30, -16)
     body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
     if mode then
         window.bodySurface=W.Fill(body,T.panel,"BACKGROUND",-12)
+        window.bodySheen=W.ModeSheen(body,-12)
         window.bodyBorder=W.Outline(body,T.line,"BORDER",-12,0.7)
     end
     local moduleHeader = W.ModuleHeader(body)
@@ -303,7 +332,7 @@ function addon:CreateConfig()
     window.collapsedCategories = collapsed
 
     function self:RefreshConfig()
-        if window.profileButton then window.profileButton.label:SetText("Profile: "..self.ProfileManager.activeName) end
+        if window.profileButton then window.profileButton.profileName:SetText(self.ProfileManager.activeName) end
         moduleHeader:Refresh()
         preview:SetSelected(self.previewMode)
         edit:SetSelected(self.editMode)
@@ -382,7 +411,7 @@ function addon:CreateConfig()
     end
     local function AddNavigation(id, label, developer)
         local isHeading = mode and self.categories[id] ~= nil
-        local button = W.Button(developer and sidebar or navigation.content, label, developer and SIDEBAR_WIDTH - 22 - edge or 184, 34, isHeading and "categoryHeading" or "tab")
+        local button = W.Button(developer and sidebar or navigation.content, label, developer and sidebarWidth - 22 - edge or 184, 34, isHeading and "categoryHeading" or "tab")
         button.categoryID = isHeading and id or nil
         if developer then button:SetPoint("BOTTOMLEFT", sidebar, "BOTTOMLEFT", 0, 0)
         else button:SetPoint("TOPLEFT", 0, -navigation.cursor) end
@@ -391,6 +420,7 @@ function addon:CreateConfig()
         button.label:SetPoint("RIGHT", -54, 0)
         button.label:SetJustifyH("LEFT")
         if mode then
+            button.modeLeftAligned=true
             button.label:ClearAllPoints()
             button.label:SetPoint("LEFT", 10, 0)
             button.label:SetPoint("RIGHT", -10, 0)
@@ -444,6 +474,7 @@ function addon:CreateConfig()
         local module=addon.modules[id]
         local title = module.tabTitle or module.title
         local button=W.Button(navigation.content,mode and ("· " .. title) or title,184,mode and 32 or 28,"tab")
+        button.modeLeftAligned=mode
         button.atelierNested=true
         button.label:ClearAllPoints()
         button.label:SetPoint("LEFT",mode and 16 or 24,0)

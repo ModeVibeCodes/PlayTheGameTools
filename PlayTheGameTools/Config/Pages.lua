@@ -16,6 +16,7 @@ function W.Page(parent, minimumWidth)
     scroll:SetScrollChild(content)
     page.content, page.scroll = content, scroll
     page.settingsScroll = scroll
+    page.contentInset=T.id=="mode" and minimumWidth~=0 and 12 or 0
 
     local bar = CreateFrame("Slider", nil, page)
     bar:SetPoint("TOPRIGHT", -4, -4)
@@ -36,6 +37,7 @@ function W.Page(parent, minimumWidth)
     function page:Layout()
         local width = math.max(minimumWidth or 320, scroll:GetWidth() - 4)
         content:SetWidth(width)
+        width=math.max(1,width-self.contentInset*2)
         local cursor = 0
         for _, row in ipairs(self.rows) do
             row:SetWidth(width)
@@ -47,7 +49,7 @@ function W.Page(parent, minimumWidth)
             if show then
                 cursor = cursor + (row.gapBefore or 0)
                 row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", 0, -cursor)
+                row:SetPoint("TOPLEFT", self.contentInset, -cursor)
                 row.offset = cursor
                 cursor = cursor + row:GetHeight() + (row.gapAfter or 4)
             end

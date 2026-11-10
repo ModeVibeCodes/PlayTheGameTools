@@ -87,7 +87,7 @@ local MODE = {
     surface = RGB(53, 53, 53), hover = RGB(53, 53, 53),
     line = RGB(66, 66, 66), lineStrong = RGB(179, 179, 179),
     text = RGB(212, 212, 212), heading = RGB(212, 212, 212),
-    secondary = RGB(179, 179, 179), muted = RGB(179, 179, 179),
+    secondary = RGB(179, 179, 179), muted = RGB(160, 160, 160),
 }
 
 -- Saved values are ids; an unknown id falls back to the default at runtime

@@ -11,7 +11,13 @@ Source file: https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO
 | --- | --- | --- | --- |
 | Surface | 6:32 | 128 × 128 | Neutral white-to-96.5%-gray satin gradient, 10px transparent corners; tinted by neutral runtime surface palette |
 | Border | 6:33 | 128 × 128 | White 1px inside stroke, 10px soft corners, transparent center; tinted by runtime border palette |
-| Selection | 6:34 | 8 × 64 | Thin cyan #00F0FF line with quiet fading ends on transparency |
+| Selection | 6:34 | 128 × 4 | Cyan #00F0FF underline fading from left to right; anchored to measured text |
+| ControlSurface / ControlBorder | 22:31 / 22:32 | 64 × 32 | 9px rounded buttons, separately tintable fill/border |
+| CheckSurface / CheckBorder | 22:33 / 22:34 | 24 × 24 | Rounded checkbox geometry with 5px corners |
+| ToggleSurface / ToggleBorder | 22:35 / 22:36 | 32 × 16 | Capsule on/off tracks |
+| Thumb | 22:37 | 32 × 32 | Circular switch thumb |
+| ScrollThumb | 22:38 | 4 × 64 | Thin antialiased indicator, rendered 2 units wide |
+| Divider | 22:39 | 256 × 4 | Even separator with beveled ends, rendered 1 unit high |
 
 PNGs were exported through the Figma Plugin API `exportAsync({format:'PNG',
 contentsOnly:true})` and `figma.base64Encode`. This preserves transparent alpha;
@@ -21,6 +27,18 @@ Runtime TGAs are exact RGBA conversions, not regenerated approximations:
 outside the addon; only TGAs are included in the runtime package. Texture slicing
 uses the existing native texture-slice helper and 12px margins for fixed corners.
 Missing surfaces fall back to readable neutral fills; missing borders stay clear.
+Control art uses dedicated slices so small corners retain their shape. Surface
+6:32 also includes subtle neutral sheen/detail layers. The Starter tool-call limit
+was reached after these assets were exported; the composed screen could not be
+updated with the final header/spacing refinement in this pass.
+
+`Logo.png` is the addon owner's supplied **ptg addon.png**, with background removal
+performed through ImageGen. The second cutout was selected after inspecting alpha
+and its actual 38px presentation against the #2B2B2B canvas; the faint fully/near
+transparent export pixels are not an opaque backing. The source PNG is retained;
+the builder downsamples it to a 128px RGBA TGA for the mode header. This owner-supplied
+brand asset is separate from the original Figma control artwork. Logo, settings,
+frame names and metadata in the other themes are unchanged.
 
 The composed preview remains editable text, instances and frames. It uses Lato
 Regular/Bold, verified in the Figma font catalog. No flattened UI image is embedded
