@@ -33,7 +33,7 @@ local function Hex(r,g,b) return string.format("%02x%02x%02x",math.floor(r*255+.
 function UI.ClassText(token)
     if not token then return "All classes" end
     local name=LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token] or (token:sub(1,1)..token:sub(2):lower())
-    local c=RAID_CLASS_COLORS and RAID_CLASS_COLORS[token]
+    local c=addon.GlobalSettings:GetClassColor(token)
     return c and ("|cff"..Hex(c.r,c.g,c.b)..name.."|r") or name
 end
 function UI.ClassesText(q)
@@ -115,7 +115,7 @@ function UI.New(page, module)
             for index,offset in ipairs(offsets) do
                 local glow=slot.headerGlow[index] or button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
                 slot.headerGlow[index]=glow
-                glow:SetFont(face,size,"OUTLINE");glow:SetAlpha(.12);glow:SetJustifyH("LEFT");glow:SetJustifyV("TOP");glow:SetWordWrap(true)
+                glow:SetFont(addon.Media:GetInterfaceFont(face),size,"OUTLINE");glow:SetAlpha(.12);glow:SetJustifyH("LEFT");glow:SetJustifyV("TOP");glow:SetWordWrap(true)
                 glow:ClearAllPoints();glow:SetPoint("TOPLEFT",button.label,"TOPLEFT",offset[1],offset[2]);glow:SetPoint("TOPRIGHT",button.label,"TOPRIGHT",offset[1],offset[2])
                 glow:SetText(button.label:GetText());glow:Show()
             end

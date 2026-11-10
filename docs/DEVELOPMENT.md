@@ -1,5 +1,60 @@
 # Standalone Forever development
 
+November 9 closeout: the owner accepted the current mode interface and global
+texture isolation, and authorized PR #24's merge into main. This is scoped visual
+acceptance; it does not establish new gameplay/module validation. Future design
+experiments should use a new branch and PR. Final runtime checks passed all 33
+regression scripts and the deterministic 116-Lua / 215-file package build.
+
+Global Texture is now limited to module/feature displays. Configuration fills use
+their own theme materials, and Blizzard popup backdrops preserve their native
+background. This restores mode graphite/sheen with a custom global texture still
+saved. No SavedVariables changes or new assets; `/reload` OOC. Regression coverage
+checks all three themes, detached configuration popups and module inheritance.
+Native appearance confirmation remains pending.
+
+Latest small-control correction replaces the separate hollow mode border with a
+solid outer silhouette behind the one-unit-inset fill on the same frame. Owner
+feedback accepted the improved containment; the latest thinner rim uses charcoal
+#2B2B2B in both states. Off/on recolors the identical interior. Tests
+sample actual sprite alpha containment as well as repeated state geometry.
+Lua-only, existing assets; `/reload` OOC. Native confirmation remains pending.
+
+Latest mode layout correction removes page/window perimeter outlines, contains
+checked fills inside their borders, centers and sizes the profile caption/name,
+left-aligns search with page titles, and centers numeric values. The slider thumb
+keeps its 10×20 size with rounded corners. Lua-only; `/reload` OOC, no new media.
+Static checks include these geometry and callback contracts; native review pending.
+
+Experimental **mode** interface theme: opt-in under Global Settings → Appearance,
+using existing Lua files and the existing theme reload/profile flow. Revised Figma
+graphite/soft-corner/selection/control textures, the owner logo and licensed Lato
+fonts add fifteen media files; 116 Lua chunks remain. Latest native screenshot
+correction uses power-of-two, unsliced checkbox/switch sprites, one-line fitted
+navigation at 240 units, cyan PTG Tools branding, and Profile immediately left of
+the rightmost Close. Padded rows and text-aligned fading selection remain. No module logic, TOC or
+default theme changes. Test with `/reload` OOC from the feature
+branch in the existing live-linked public checkout; preserve its junction and
+settings. Native fit remains pending. Run tests/mode_theme.py with smoke/global/
+Edit Mode, tests/mode_assets.py and the builder. Restart only if new assets are
+not discovered by the running client. [Design and exact checks](MODE_INTERFACE_THEME.md).
+
+Owner accepted Global Settings and authorized public PR #23's merge to main on
+2026-11-09. Final UI refinement removes the SharedMedia status row and relocates
+Interface Theme to Global Settings → Appearance below the media controls. Focused
+smoke/global/SharedMedia regressions and deterministic 116-Lua / 199-file builds
+pass. Broader native checks remain in GLOBAL_SETTINGS.md. Preserve the existing
+Forever test junction and SavedVariables; no release publication is authorized.
+
+Media discovery adds a path-only 55-entry installed-provider catalog plus an
+account LSM registration cache. Ordinary disabled providers are never loaded/enabled;
+the owner's subsequent explicit SharedMedia/MyMedia activation is the exception.
+Run tests/media_discovery.py with the regression scripts; current packaging is
+116 Lua / 199 files. The external read-only indexer and runtime discovery limits
+are documented in [Global Settings](GLOBAL_SETTINGS.md).
+
+Global Settings expands to four tabs and reuses the existing profile engine with an account-wide selection. Bundled LSM/dependencies and two new runtime files bring the addon to 114 Lua chunks. Run tests/global_settings.py and all standalone regressions, then the release builder. New source/media may require one full client restart for discovery; subsequent edits use /reload. See [contract and native checks](GLOBAL_SETTINGS.md).
+
 Guild Roster adds Guild Tools -> Roster (twelfth module, two Lua files, 109 chunks).
 Members come from `C_Club`, the documented path Blizzard's Forever member list uses;
 `GetGuildRosterInfo` does not appear in the published Forever source and is not

@@ -3,28 +3,7 @@ local M, W, T = addon.ForeverAutomation, addon.ConfigWidgets, addon.Theme
 
 function M:CreateConfigPage(parent)
     local page = W.Page(parent, 480)
-    page:Group("Convenience")
-    local cells = page:ToggleGrid({{
-        label = "Auto Loot",
-        get = function() return self.db.autoLoot == true end,
-        set = function(value) self:SetOption("autoLoot", value) end,
-    }})
-    page.automationControls = { autoLoot = cells[1] }
-    local note = W.Label(page:Row("Auto Loot", 64),
-        "Enables Blizzard's setting. Turning this off leaves your current client setting unchanged.", nil, 0, -4, 440, T.muted)
-    note:SetWordWrap(true)
-    local status = W.Label(page:Row("Availability", 64), "", nil, 0, -4, 440, T.muted)
-    status:SetWordWrap(true)
-    page.availabilityLabel = status
-    page.refreshers[#page.refreshers + 1] = function()
-        local available, reason = self:Capability()
-        local cell = cells[1]
-        -- A saved opt-in can still be switched off if the native setting disappears.
-        local editable = available or self.db.autoLoot == true
-        cell.frame:SetEnabled(editable); cell.button:SetEnabled(editable)
-        cell.label:SetTextColor(unpack(available and T.text or T.muted))
-        status:SetText(available and "Available; changes apply outside combat on enable, with no queued retry." or reason)
-    end
+    page.automationControls = {}
     page:Group("Quests")
     local quests = page:ToggleGrid({
         { label = "Auto Accept Quests", get = function() return self.db.autoAccept == true end,

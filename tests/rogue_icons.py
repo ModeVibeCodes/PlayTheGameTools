@@ -18,7 +18,7 @@ assert(Visible(p.poisonSliders['watchStyle:iconSize']) and Visible(p.poisonSlide
 assert(not p.poisonSliders['watchStyle:iconPadding'] and not p.poisonSliders['launcherStyle:iconPadding'] and not p.poisonSliders['flyoutStyle:iconPadding'])
 assert(not p.poisonSliders['watchStyle:spacing'] and not p.poisonSliders['watchStyle:cellWidth'])
 assert(Visible(p.poisonSliders['launcherStyle:iconBorderSize']))
-assert(not M.watchButtons[1].iconEdges[1]:IsShown() and not M.watchButtons[1].iconBackground:IsShown(),'Default reminder remains bare')
+assert(not M.watchButtons[1].globalIconBorder.iconBorder:IsShown() and not M.watchButtons[1].iconBackground:IsShown(),'Default reminder remains bare')
 local a,b=M.watchButtons[1],M.watchButtons[2]
 local input=p.poisonSliders['watchStyle:iconGap'].numericInput
 for _,gap in ipairs({0,8,30,120}) do
@@ -33,18 +33,18 @@ assert(a.icon.points[1][4]==0 and a.icon.points[2][4]==0,'Legacy image inset is 
 M:SetStyle('watchStyle','iconBorderSize',4);M:SetStyle('watchStyle','iconBorderOpacity',65)
 M:SetStyle('watchStyle','iconBorderColor',{0.2,0.7,0.9});M:SetStyle('watchStyle','iconOpacity',40)
 for _,button in ipairs(M.watchButtons) do
- assert(button.iconEdges[1]:IsShown() and button.iconEdges[1].height==4)
- assert(button.iconEdges[1].color[2]==0.7 and button.iconEdges[1].color[4]==0.65)
+ assert(button.globalIconBorder.iconBorder:IsShown() and button.globalIconBorder.thinEdges[1].height==4)
+ assert(button.globalIconBorder.thinEdges[1].color[2]==0.7 and button.globalIconBorder.thinEdges[1].color[4]==0.65)
  assert(button.icon.vertexColor[4]==0.4)
 end
 assert(M.db.watchStyle.borderSize==0 and M.db.watchStyle.backgroundOpacity==0,'Icon border does not add reminder-window chrome')
 M:SetStyle('launcherStyle','iconSize',56);M:SetStyle('launcherStyle','iconPadding',5)
 M:SetStyle('launcherStyle','iconBorderSize',3);M:SetStyle('launcherStyle','iconBorderColor',{1,0.3,0.7})
 assert(M.openButton.icon.points[1][4]==M.db.launcherStyle.padding+3)
-assert(M.openButton.iconEdges[1].height==3 and M.openButton.iconEdges[1].color[1]==1)
-assert(M.watchButtons[1].iconEdges[1].height==4,'Two icon styles remain independent')
+assert(M.openButton.globalIconBorder.thinEdges[1].height==3 and M.openButton.globalIconBorder.thinEdges[1].color[1]==1)
+assert(M.watchButtons[1].globalIconBorder.thinEdges[1].height==4,'Two icon styles remain independent')
 M:SetStyle('watchStyle','iconBackgroundOpacity',50);M:SetStyle('watchStyle','iconBackgroundColor',{0.1,0.2,0.3})
-assert(a.iconBackground:IsShown() and a.iconBackground.color[4]==0.5)
+assert(a.iconBackground:IsShown() and a.iconBackground.vertexColor[4]==0.5)
 M:SetStyle('watchStyle','iconSize',20);M:SetStyle('watchStyle','iconBorderSize',6)
 assert(a.icon.points[1][4]==6 and a.icon.points[2][4]==-6,'Border leaves positive drawable texture area')
 assert(not M:SetStyle('watchStyle','iconGap',121) and not M:SetStyle('watchStyle','iconGap',-1))
@@ -53,7 +53,7 @@ local source=addon.PositionManager:GetPosition('roguePoisonReminder')
 M:EnterElementEdit(false);assert(addon.PositionManager.elements.roguePoisonReminder.decoration.frame:IsShown())
 addon:SetEditMode(false)
 assert(addon.PositionManager:GetPosition('roguePoisonReminder').x==source.x)
-M:MinimalReminder();assert(not a.iconEdges[1]:IsShown() and not a.iconBackground:IsShown())
+M:MinimalReminder();assert(not a.globalIconBorder.iconBorder:IsShown() and not a.iconBackground:IsShown())
 M:SetStyle('watchStyle','iconBorderSize',2)
 ''')
 saved=lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
@@ -62,7 +62,7 @@ restored.execute(r'''
 local M=addon.ForeverRogue
 assert(M.db.watchStyle.iconPadding==16 and M.db.watchStyle.iconBorderSize==2 and M.db.watchStyle.iconGap==30)
 assert(M.db.launcherStyle.iconSize==56 and M.db.launcherStyle.iconBorderSize==3)
-assert(M.openButton.iconEdges[1].height==3)
+assert(M.openButton.globalIconBorder.thinEdges[1].height==3)
 local defaults={launcherStyle={borderSize=2,borderColor={0.72,0.3,1}},flyoutStyle={borderSize=1,borderColor={0.32,0.4,0.48}},watchStyle={spacing=24,cellWidth=200,iconPadding=10}}
 M.Initialize(defaults)
 assert(defaults.launcherStyle.borderSize==0 and defaults.launcherStyle.borderColor[1]==0.32 and defaults.flyoutStyle.borderSize==0)

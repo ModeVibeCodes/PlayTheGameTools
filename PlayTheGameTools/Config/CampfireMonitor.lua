@@ -152,7 +152,7 @@ function C:AddConfig(page)
     page.refreshers[#page.refreshers+1]=function()
         fontOwner.db.appearance.font=self.db.contributionFont;fontOwner.db.appearance.fontMedia=self.db.contributionFontMedia
         refreshFont()
-        if self.db.contributionUseInterfaceFont then font.label:SetText("Interface font (choose to override)") end
+        if self.db.contributionUseInterfaceFont then font.label:SetText("Interface font") end
     end
     for _,entry in ipairs({{"Title Text Size","TitleSize"},{"Kit Name Size","NameSize"},{"Profession / Count Size","InfoSize"},
         {"Place Text Size","ActionSize"},{"Hint Text Size","HintSize"},{"Footer Text Size","FooterSize"},{"Dismiss Text Size","DismissSize"}}) do Slider(entry[1],"contribution"..entry[2]) end

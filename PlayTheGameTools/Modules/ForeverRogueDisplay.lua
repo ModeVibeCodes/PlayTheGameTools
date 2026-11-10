@@ -6,7 +6,7 @@ local function Surface(parent)
     local f=CreateFrame("Frame",nil,parent,"BackdropTemplate");f:SetFrameStrata("MEDIUM");f:Hide();return f
 end
 local function Paint(f,s)
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile=s.borderSize>0 and "Interface\\Buttons\\WHITE8X8" or nil,edgeSize=math.max(1,s.borderSize)})
+    addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile=s.borderSize>0 and "Interface\\Buttons\\WHITE8X8" or nil,edgeSize=math.max(1,s.borderSize)},"foreverRogue")
     f:SetBackdropColor(s.backgroundColor[1],s.backgroundColor[2],s.backgroundColor[3],s.backgroundOpacity/100)
     f:SetBackdropBorderColor(s.borderColor[1],s.borderColor[2],s.borderColor[3],s.borderSize>0 and s.borderOpacity/100 or 0)
     f:SetScale(s.scale/100);f:SetAlpha(s.opacity/100)
@@ -25,16 +25,17 @@ local function PaintIcon(b,s,base)
     b.icon:SetTexCoord(s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1,s.cropIcons and 0.06 or 0,s.cropIcons and 0.94 or 1)
     b.icon:SetVertexColor(s.iconColor[1],s.iconColor[2],s.iconColor[3],s.iconOpacity/100);b.icon:SetShown(s.showIcons)
     b.iconBackground:ClearAllPoints();b.iconBackground:SetPoint("TOPLEFT",base,-base);b.iconBackground:SetPoint("BOTTOMRIGHT",-base,base)
-    b.iconBackground:SetColorTexture(s.iconBackgroundColor[1],s.iconBackgroundColor[2],s.iconBackgroundColor[3],s.iconBackgroundOpacity/100)
+    addon.Media:PaintSurface(b.iconBackground,s.iconBackgroundColor,s.iconBackgroundOpacity/100,"foreverRogue")
     b.iconBackground:SetShown(s.showIcons and s.iconBackgroundOpacity>0)
-    for i,t in ipairs(b.iconEdges) do
-        t:ClearAllPoints();t:SetColorTexture(s.iconBorderColor[1],s.iconBorderColor[2],s.iconBorderColor[3],s.iconBorderOpacity/100)
-        if i==1 then t:SetPoint("TOPLEFT",base,-base);t:SetPoint("TOPRIGHT",-base,-base);t:SetHeight(edge)
-        elseif i==2 then t:SetPoint("BOTTOMLEFT",base,base);t:SetPoint("BOTTOMRIGHT",-base,base);t:SetHeight(edge)
-        elseif i==3 then t:SetPoint("TOPLEFT",base,-base-edge);t:SetPoint("BOTTOMLEFT",base,base+edge);t:SetWidth(edge)
-        else t:SetPoint("TOPRIGHT",-base,-base-edge);t:SetPoint("BOTTOMRIGHT",-base,base+edge);t:SetWidth(edge) end
-        t:SetShown(s.showIcons and edge>0 and s.iconBorderOpacity>0)
+    for _,t in ipairs(b.iconEdges) do t:Hide() end
+    if not b.globalIconBorder then
+        b.iconSurface=CreateFrame("Frame",nil,b);b.iconSurface:EnableMouse(false)
+        b.globalIconBorder={};addon.Border.Create(b.globalIconBorder,b.iconSurface)
     end
+    b.iconSurface:ClearAllPoints();b.iconSurface:SetPoint("TOPLEFT",base,-base);b.iconSurface:SetSize(s.iconSize,s.iconSize)
+    addon.Border.Apply(b.globalIconBorder,{borderStyle=s.showIcons and edge>0 and addon.Media:GlobalStyle("border","foreverRogue") or "none",
+        borderColor=s.iconBorderColor,borderOpacity=s.iconBorderOpacity/100,borderSize=edge,inset=true})
+    addon.Border.Render(b.globalIconBorder)
 end
 function M:StopDrag()
     local f=self.dragging;if not f then return end

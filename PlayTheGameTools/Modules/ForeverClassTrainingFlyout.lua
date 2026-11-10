@@ -139,13 +139,14 @@ end
 function M:ApplyFlyoutOpacity(f)
     local T,alpha=addon.InterfaceTheme,self:FlyoutOpacity()/100
     if f.blizzardSkin then f:SetBackdropColor(T.panel[1],T.panel[2],T.panel[3],alpha)
-    elseif f.background then f.background:SetColorTexture(T.panel[1],T.panel[2],T.panel[3],alpha) end
+    elseif f.background then addon.Media:PaintSurface(f.background,T.panel,alpha,"foreverClassTraining") end
 end
 
 function M:CreateTrainingFlyout()
     if self.trainingFlyout then return end
     local W,T=addon.ConfigWidgets,addon.Theme
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");f:SetSize(320,440)
+    f.ptgMediaScope="foreverClassTraining"
     f:SetFrameStrata("DIALOG");f:SetClampedToScreen(true);f:EnableMouse(true)
     f:SetResizable(true)
     -- Follow the selected interface theme: the stock tooltip backdrop under Blizzard,
@@ -156,7 +157,7 @@ function M:CreateTrainingFlyout()
     else
         local background=f:CreateTexture(nil,"BACKGROUND");background:SetPoint("TOPLEFT",1,-1);background:SetPoint("BOTTOMRIGHT",-1,1)
         f.background=background
-        f:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+        addon.Media:ApplyBackdrop(f,{edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverClassTraining")
         f:SetBackdropBorderColor(I.lineStrong[1],I.lineStrong[2],I.lineStrong[3],0.85)
     end
     self:ApplyFlyoutOpacity(f)

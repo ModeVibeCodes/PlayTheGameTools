@@ -147,11 +147,11 @@ function M:CreateConfigPage(parent)
     for i=1,6 do
         local family=i>1 and D.families[i-1] or nil
         local b=CreateFrame("Button",nil,c,"BackdropTemplate");page.poisonGrid[i]=b;b.family=family
-        b:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=2})
+        addon.Media:ApplyBackdrop(b,{edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=2},"foreverRogue")
         b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetPoint("TOPLEFT",2,-2);b.icon:SetPoint("BOTTOMRIGHT",-2,2);b.icon:SetTexCoord(0.06,0.94,0.06,0.94)
         local stripe=b:CreateTexture(nil,"OVERLAY");stripe:SetPoint("BOTTOMLEFT",2,2);stripe:SetPoint("BOTTOMRIGHT",-2,2);stripe:SetHeight(18);stripe:SetColorTexture(0,0,0,0.85)
-        b.label=b:CreateFontString(nil,"OVERLAY","GameFontHighlight");b.label:SetPoint("BOTTOM",0,5);b.label:SetFont(GameFontHighlight:GetFont(),10,"OUTLINE");b.label:SetTextColor(1,0.95,0.65)
-        b.count=b:CreateFontString(nil,"OVERLAY","GameFontHighlight");b.count:SetPoint("TOPRIGHT",-4,-4);b.count:SetFont(GameFontHighlight:GetFont(),11,"OUTLINE")
+        b.label=b:CreateFontString(nil,"OVERLAY","GameFontHighlight");b.label:SetPoint("BOTTOM",0,5);b.label:SetFont(addon.Media:GetInterfaceFont(),10,"OUTLINE");b.label:SetTextColor(1,0.95,0.65)
+        b.count=b:CreateFontString(nil,"OVERLAY","GameFontHighlight");b.count:SetPoint("TOPRIGHT",-4,-4);b.count:SetFont(addon.Media:GetInterfaceFont(),11,"OUTLINE")
         b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
         b:SetScript("OnClick",function() if self:CanConfigure() and b.available then self:SetOption("quickApply",family and ("family:"..family) or "last");page:Refresh() end end)
         b:SetScript("OnEnter",function() if GameTooltip then GameTooltip:SetOwner(b,"ANCHOR_TOP");GameTooltip:SetText(b.tip or "Poison");GameTooltip:Show() end end)

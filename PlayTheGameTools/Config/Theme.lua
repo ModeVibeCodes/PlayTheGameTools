@@ -76,13 +76,28 @@ local BLIZZARD = {
     muted = { 0.58, 0.56, 0.52, 1 },
 }
 
+-- mode: configuration-only graphite surfaces and a cyan accent. Existing palettes,
+-- gameplay colors and the default theme remain unchanged.
+local MODE = {
+    primary = RGB(0, 240, 255), enabled = RGB(127, 219, 151),
+    off = RGB(179, 179, 179), unavailable = RGB(114, 114, 114),
+    highlight = RGB(212, 212, 212), ink = RGB(24, 24, 24),
+    sidebar = RGB(35, 35, 35), field = RGB(37, 37, 37),
+    background = RGB(43, 43, 43), panel = RGB(48, 48, 48),
+    surface = RGB(53, 53, 53), hover = RGB(53, 53, 53),
+    line = RGB(66, 66, 66), lineStrong = RGB(179, 179, 179),
+    text = RGB(212, 212, 212), heading = RGB(212, 212, 212),
+    secondary = RGB(179, 179, 179), muted = RGB(160, 160, 160),
+}
+
 -- Saved values are ids; an unknown id falls back to the default at runtime
 -- and is never rewritten.
 addon.InterfaceThemes = {
-    order = { "modern", "blizzard" },
+    order = { "modern", "blizzard", "mode" },
     default = "modern",
     modern = { label = "Modern", palette = MODERN },
     blizzard = { label = "Blizzard", palette = BLIZZARD, blizzardArt = true },
+    mode = { label = "mode", palette = MODE },
 }
 
 local function Copy(color) return { color[1], color[2], color[3], color[4] or 1 } end

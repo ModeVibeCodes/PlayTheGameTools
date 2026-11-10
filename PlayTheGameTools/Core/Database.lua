@@ -47,6 +47,8 @@ if addon.Edition and addon.Edition.name == "Forever" then
                 autoGossip = true } }, window = { x = 0, y = 0, theme = "modern" } }
 end
 
+defaults.globalMedia = {font = "game", texture = "default", border = "thin", overrides = {}}
+
 -- Fill missing keys only; retain unknown keys for future migrations.
 local function ApplyDefaults(target, source, path)
     for key, value in pairs(source) do
@@ -72,6 +74,20 @@ function addon:PrepareDatabase(database)
     local version=database.schemaVersion
     assert(version==nil or version==SCHEMA_VERSION,"Play The Game Tools: unsupported database version; settings were not reset.")
     ApplyDefaults(database,defaults,"PTGToolsDB")
+    addon.GlobalSettings:Prepare(database)
+    local function MediaKey(value, kind, inherit)
+        assert(type(value)=="string" and #value<=256, "Invalid global media setting.")
+        local builtins = kind=="font" and {game=true,chat=true} or kind=="border" and {thin=true,none=true} or {default=true}
+        assert((inherit and value=="inherit") or builtins[value] or value:match("^media:.+")
+            or (kind=="texture" and value:match("^background:.+")), "Invalid global media choice.")
+    end
+    for _,kind in ipairs({"font","texture","border"}) do MediaKey(database.globalMedia[kind],kind) end
+    for id,override in pairs(database.globalMedia.overrides) do
+        assert(type(id)=="string" and type(override)=="table", "Invalid module media override.")
+        for _,kind in ipairs({"font","texture","border"}) do
+            if override[kind]~=nil then MediaKey(override[kind],kind,true) end
+        end
+    end
     for _,key in ipairs({"x","y"}) do
         local value=database.window[key]
         assert(value==value and math.abs(value)<math.huge,"Play The Game Tools: invalid window position.")

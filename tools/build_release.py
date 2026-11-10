@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = ROOT / 'PlayTheGameTools'
-DOCUMENTS = ('README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'TESTING.md', 'CATALOG_SOURCES.md', 'LICENSES/GPL-3.0.txt')
+DOCUMENTS = ('README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'TESTING.md', 'CATALOG_SOURCES.md', 'LICENSES/GPL-3.0.txt', 'LICENSES/LGPL-2.1.txt', 'LICENSES/CallbackHandler-BSD.txt', 'LICENSES/JetBrainsMono-OFL.txt', 'LICENSES/Lato-OFL.txt')
 MEDIA = {'.tga', '.blp', '.png', '.jpg', '.jpeg', '.ogg', '.mp3', '.wav', '.ttf', '.otf'}
 
 

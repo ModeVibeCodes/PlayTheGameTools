@@ -98,12 +98,12 @@ local oldTexture,oldChoices=media.GetStatusBar,media.GetStatusBars
 function media:GetStatusBar(key) if key=='media:Fixture' then return 'FixtureTexture' end;return oldTexture(self,key) end
 function media:GetStatusBars() return {{key='default',label='Flat'},{key='media:Fixture',label='Fixture'}} end
 rested=100
-assert(#M:GetTextureChoices()==4)
+assert(#M:GetTextureChoices()==5)
 assert(M:SetOption('barTexture','media:Fixture') and M.xpFill.texture=='FixtureTexture' and M.restedFill.texture=='FixtureTexture')
 media.GetStatusBar,media.GetStatusBars=oldTexture,oldChoices
 assert(M:SetOption('barTexture','blizzardXP'))
 assert(M:SetOption('sessionFont','chat') and M.db.font=='game')
-assert(M.sessionText.font[1]==ChatFontNormal:GetFont() and M.text.font[1]==GameFontHighlight:GetFont())
+assert(M.sessionText.font[1]==addon.Media.chatFont and M.text.font[1]==addon.Media.gameFont)
 assert(M:SetOption('sessionOutline',false) and M.sessionText.font[3]=='' and M.text.font[3]=='OUTLINE')
 assert(M:SetOption('sessionTextColor',{0.2,0.4,0.6}) and M.db.textColor[1]~=0.2)
 assert(M:SetOption('sessionAlign','LEFT') and M.db.align=='CENTER')

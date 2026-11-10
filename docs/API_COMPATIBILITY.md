@@ -1,5 +1,29 @@
 # Forever API compatibility notes
 
+## mode small-control rendering
+
+Owner screenshots showed square checkbox/toggle windows despite rounded source
+art. The previous checkbox runtime canvas was 24×24. It is now resampled to
+32×32, with power-of-two dimensions enforced for every mode runtime asset.
+Checkboxes and fixed-size switches use full RGBA sprites and deliberately do not
+call SetTextureSliceMargins. Panel/button slicing remains unchanged. Fresh small
+control paths avoid retaining the prior client texture cache. Custom global
+borders do not replace these small silhouettes with rectangular frames.
+
+Blizzard's [texture slice schema](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd)
+and [native texture-slice usage](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_AuraContainer/Blizzard_AuraContainerUtil.lua)
+were inspected; no new or guessed texture API was introduced. These changes
+address concrete asset/geometry issues but do not prove which native condition
+caused each screenshot. Mock geometry/alpha checks are not native acceptance.
+
+Disabled-provider media discovery uses C_AddOns.DoesAddOnExist plus supplied
+C_UIFileAsset.IsKnownFile paths; it never loads/enables providers. The latter API
+does not guarantee loose-file openability. WoW exposes no arbitrary addon-file
+listing here: known-path metadata plus an account LSM registration cache provide
+bounded discovery, with native rendering still pending. See [Global Settings](GLOBAL_SETTINGS.md).
+
+Global Settings now includes standard Blizzard FontObject face changes (OOC), bundled LSM, account-wide profile selection, native CVar writes with accepted-value readback, UIParent scaling, UIErrorsFrame event ownership and generation-cancelled OOC loot-slot requests. Current Forever UI source, Naowh behavior/licensing, client range uncertainties and native gates are recorded in [Global Settings](GLOBAL_SETTINGS.md). Earlier addon-only/optional-library/no-game-font statements were superseded by the requested expansion.
+
 ## Enhanced Experience Bar
 
 Uses public player XP/rest state, quest log metadata and reward XP APIs behind
