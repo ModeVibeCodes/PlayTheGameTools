@@ -1,5 +1,15 @@
 # Standalone Forever development
 
+November 10: new Mode-only page-material experiment on
+`codex/mode-page-material-refinement`, based on public main after PR #22's Class
+Training popout fix. Dedicated #2A2A2A page tint, existing Figma base/sheens and a
+new Figma-generated abstract overlay at 18% opacity. Sidebar/control palettes,
+module logic, profiles and other themes are unchanged. One runtime TGA; missing
+art stays transparent. Start with `/reload` OOC. Native validation is pending;
+see [page-material experiment](MODE_INTERFACE_THEME.md#november-10-page-material-experiment).
+Validation: all 33 regression scripts pass; deterministic package build passes
+with 116 Lua chunks / 216 files, including one additional page-detail TGA.
+
 November 9 closeout: the owner accepted the current mode interface and global
 texture isolation, and authorized PR #24's merge into main. This is scoped visual
 acceptance; it does not establish new gameplay/module validation. Future design

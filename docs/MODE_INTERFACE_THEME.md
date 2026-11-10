@@ -6,6 +6,37 @@ Modern remains the default. Modern and Blizzard retain their palettes and layout
 The selected theme uses the existing profile setting and reload flow; no settings
 are reset or migrated. Theme changes affect configuration surfaces only.
 
+## November 10 page-material experiment
+
+The follow-up branch `codex/mode-page-material-refinement` starts the next round
+of page-layout work with a material-only change. Mode's page area uses a dedicated
+**#2A2A2A** tint (previously #303030), closer to the unchanged **#232323** sidebar.
+Existing panel/control colors, typography, navigation and module layout remain.
+The original Figma surface and sheen stay in place. One static abstract detail
+layer, generated in Figma at [node 24:31](https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO?node-id=24-31),
+adds soft diagonal planes and fine grain at **18% opacity** below all controls.
+It is rendered once across the page area, without slicing, animation or polling.
+Global Texture cannot override this interface material. Modern, Blizzard and
+module/feature displays retain their existing appearance.
+
+This prototype reuses the existing Figma materials as its base. Figma's layout
+editing MCP tool is capped on the Starter plan; its separate image-generation
+tool successfully created the new source. No composed-preview or Figma token
+updates are claimed. Source, conversion and hashes are in `design/mode/README.md`.
+One 512×512 RGBA runtime TGA is added; source artwork stays outside the package.
+If the client cannot discover that file, the overlay stays transparent and the
+darker base remains usable. Start with `/reload` OOC; native fit remains pending.
+
+**Navigation:** PTG Tools → Questing & Leveling → · Class Training → General.
+**Action:** `/reload`, reopen the page, inspect the background and switch between
+General and Level Up Window, then reopen Global Settings → Appearance.
+**Required state:** OOC, Interface Theme set to **mode**.
+**Confirmation:** page area is slightly darker with faint abstract detail, all
+text/controls remain clear and operable, and the existing sidebar/control colors
+are unchanged. This is a native visual check; static tests do not establish fit.
+
+## Existing interface baseline
+
 The revised mode palette uses neutral graphite **#2B2B2B**, labels **#B3B3B3**,
 headings/body text **#D4D4D4**, and cyan **#00F0FF** for selected/hovered text and
 selection lines. Related surfaces use neutral gray steps with equal RGB channels;

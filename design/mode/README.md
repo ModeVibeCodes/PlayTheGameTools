@@ -7,6 +7,31 @@ pixels, icons, code or assets is copied into the addon.
 
 Source file: https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO
 
+## November 10 abstract page material
+
+`PageAbstractSource.png` was generated directly in that Figma file using its
+image-generation tool (`gpt-image-2.5-flare`), node **24:31**:
+https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO?node-id=24-31
+The original 1024×1024 opaque PNG is retained here. It contains subdued charcoal
+diagonal planes and fine grain; there is no reference-addon or dashboard artwork.
+It is original generated artwork for this addon, distributed with this repository.
+
+`tools/build_mode_textures.py` converts it to 512×512 RGBA
+`Media/Textures/Mode/PageAbstract.tga` with Lanczos downsampling only. It does not
+recolor, crop or slice the design. The runtime draws it at 18% opacity over the
+existing Figma Surface, tinted #2A2A2A, and beneath the existing static sheen.
+This leaves the sidebar at #232323 and keeps the material independent of Global
+Texture. It is not applied to controls, other themes or gameplay displays.
+
+Figma layout editing was unavailable at the Starter MCP call limit, and its web
+editor was not signed in. The separate image-generation tool succeeded. No
+new Figma token/component library or updated composed screen is claimed.
+
+- Source SHA256: `fbcfb1a99e5cc69bdc1879a41ddd9a9e4d7162aca599c41ad1ffbcd982d0e656`
+- Runtime SHA256: `6f8e0a347f062ec812771621f8a9f628fa616dd0a04cccb0a46d0213962c2511`
+
+## Original interface assets
+
 | PNG / runtime TGA | Figma source node | Size | Treatment |
 | --- | --- | --- | --- |
 | Surface | 6:32 | 128 × 128 | Neutral white-to-96.5%-gray satin gradient, 10px transparent corners; tinted by neutral runtime surface palette |

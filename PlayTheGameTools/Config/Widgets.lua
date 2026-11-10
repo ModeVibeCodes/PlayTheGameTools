@@ -95,6 +95,19 @@ function W.ModeSheen(frame,inset)
     return texture
 end
 
+-- Fixed abstract material below page controls and the existing sheen. Missing
+-- artwork stays transparent so the darker base remains usable after /reload.
+function W.ModePageDetail(frame,inset)
+    local texture=frame:CreateTexture(nil,"BACKGROUND",nil,1)
+    inset=inset or 0
+    texture:SetPoint("TOPLEFT",inset,-inset);texture:SetPoint("BOTTOMRIGHT",-inset,inset)
+    texture.modeAsset="ModePageDetail"
+    if addon.Media:ApplyTexture(texture,"ModePageDetail") then
+        texture:SetVertexColor(1,1,1,0.18)
+    else texture:SetColorTexture(0,0,0,0) end
+    return texture
+end
+
 function W.Fill(frame, color, layer, inset, alpha)
     color = InterfaceColor(color)
     local texture = frame:CreateTexture(nil, layer or "BACKGROUND")
@@ -105,7 +118,7 @@ function W.Fill(frame, color, layer, inset, alpha)
     if T.id=="mode" and color==T.line then
         texture.modeAsset="ModeDivider";Paint(texture,color,alpha)
     end
-    if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background then
+    if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background or color==T.pageBackground then
         -- Configuration surfaces belong to the interface theme. Global Texture
         -- is reserved for module displays, never the settings window or popups.
         if T.id == "mode" then

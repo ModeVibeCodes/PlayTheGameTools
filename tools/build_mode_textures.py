@@ -1,4 +1,4 @@
-"""Convert Figma PNGs to RGBA TGA; resample only checkboxes and the owner logo."""
+"""Convert Figma PNGs to RGBA TGA, with documented checkbox/logo/detail sizing."""
 from pathlib import Path
 from PIL import Image
 
@@ -32,6 +32,11 @@ def build():
     logo=ROOT/'design/mode/Logo.png'
     if logo.exists():
         Image.open(logo).convert('RGBA').resize((128,128),Image.Resampling.LANCZOS).save(DEST/'Logo.tga',compression=None)
+    # Figma-generated abstract detail is a full-frame overlay, never sliced.
+    detail=Image.open(ROOT/'design/mode/PageAbstractSource.png').convert('RGBA')
+    assert detail.size==(1024,1024)
+    detail.resize((512,512),Image.Resampling.LANCZOS).save(DEST/'PageAbstract.tga',compression=None)
+    print('PASS Figma page detail: PageAbstract.tga')
 
 if __name__ == '__main__':
     build()

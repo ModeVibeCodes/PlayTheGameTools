@@ -34,6 +34,13 @@ for name, size in sizes.items():
         assert pixels[0][3]==0 and pixels[16*32+16][3]==255,'circular thumb silhouette'
     elif name=='Logo':
         assert pixels[0][3]==0 and any(a>200 for _,_,_,a in pixels),'transparent owner logo'
+detail=files['Media/Textures/Mode/PageAbstract.tga']
+header=struct.unpack('<BBBHHBHHHHBB',detail[:18])
+assert header[2]==2 and header[10]==32 and header[8:10]==(512,512),'power-of-two RGBA page detail'
+pixels=[tuple(detail[i:i+4]) for i in range(18,18+512*512*4,4)]
+assert all(a==255 and max(b,g,r)-min(b,g,r)<=3 for b,g,r,a in pixels),'opaque near-neutral source is blended at low runtime opacity'
+values=[r for b,g,r,a in pixels]
+assert 32<=min(values)<max(values)<=70 and max(values)-min(values)>=8,'restrained but non-flat abstract detail'
 for name in ('Lato-Regular.ttf', 'Lato-Bold.ttf'):
     assert files['Media/Fonts/' + name][:4] == b'\x00\x01\x00\x00'
 assert b'SIL OPEN FONT LICENSE' in files['LICENSES/Lato-OFL.txt']

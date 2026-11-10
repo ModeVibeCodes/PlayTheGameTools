@@ -4,6 +4,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Start the next Mode page-refinement experiment: darken only the page area from
+  #303030 to #2A2A2A and overlay faint Figma-generated abstract planes/grain at
+  18% opacity over the existing Figma material. Other themes, sidebar/control
+  colors, module behavior and global-texture isolation are preserved. Native
+  visual review is pending; use Reload OOC first.
+
 - Owner accepted the current mode cosmetic refresh and Global Texture isolation,
   and authorized PR #24's merge into main on 2026-11-09. Future interface changes
   will use a new PR; this acceptance does not expand module/gameplay validation.
