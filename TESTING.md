@@ -178,15 +178,21 @@ game state. Leave a feature off if you are not ready to exercise it.
 ## Guild Roster
 
 Run `python tests/guild_roster.py`. Mocks do not establish native member data, so
-these checks need the game client. New Lua files need one full client restart.
+these checks need the game client. The page has two tabs, **Members** and
+**Analytics**. The search and analytics revision adds no files; `/reload` applies it.
 
 | Check | Navigation | Action | Required state | Confirmation |
 | --- | --- | --- | --- | --- |
-| R1 Turn on | `/ptg` → Guild Tools → Roster | Click the switch at the top right of the page | Logged in on a character in a guild | Switch reads **Enabled**; **Class Summary** shows **Total Members** and all nine classes with a count, including 0 |
-| R2 Members by class | `/ptg` → Guild Tools → Roster | Scroll to the bottom of **Members by Class**, then compare with the native guild window | R1 done | Each class with members has a colored heading such as **Mage (12)** and its names alphabetically; **Total Members** matches the native member count; offline members are included |
-| R3 Totals agree | `/ptg` → Guild Tools → Roster | Compare each **Class Summary** count with the number in that class's heading | R1 done | Every count matches its heading |
-| R4 No guild | `/ptg` → Guild Tools → Roster | Open the page | Roster enabled on a character not in a guild | Page reads **You are not in a guild.** and **Total Members: 0**, with no Lua error |
+| R1 Turn on | `/ptg` → Guild Tools → Roster → **Analytics** | Click the switch at the top right of the page | Logged in on a character in a guild | Switch reads **Enabled**; **Class Summary** shows **Total Members**, **Online Now** and all nine classes with a count, including 0 |
+| R2 Members by class | `/ptg` → Guild Tools → Roster → **Members** | Scroll to the bottom of the list, then compare with the native guild window | R1 done | Each class with members has a colored heading such as **Mage (12)** and its names alphabetically, each with its level on the right; the line above the list reads **N members, M online** and both numbers match the native window; offline members are included |
+| R3 Totals agree | `/ptg` → Guild Tools → Roster → **Analytics**, then **Members** | Compare each **Class Summary** count with the number in that class's heading | R1 done; search box empty, **All Classes** and **All Members** selected | Every count matches its heading |
+| R4 No guild | `/ptg` → Guild Tools → Roster | Open the page, then click **Analytics** | Roster enabled on a character not in a guild | Both tabs read **You are not in a guild.**; **Analytics** shows **Total Members: 0** and no breakdowns, with no Lua error |
 | R5 Turn off | `/ptg` → Guild Tools → Roster | Click the switch at the top right of the page | Roster enabled | Switch reads **Disabled**; names are cleared and the page asks you to turn on the switch |
+| R6 Online marker and tooltip | `/ptg` → Guild Tools → Roster → **Members** | Hover one online and one offline name | R1 done | Online names have a small accent square before them. The tooltip shows the name, then **Level N Race Class**, **Rank: …**, then **Online in Zone** for an online member or **Last online … ago** for an offline one, plus **Note:** / **Officer Note:** when the native window shows them. Moving away closes it |
+| R7 Search | `/ptg` → Guild Tools → Roster → **Members** | Type part of a name in the box reading **Search name, zone, rank, note or level**, then a zone, a rank name, `60`, and `40-59`; then clear the box | R1 done | Each search lists only matching members and reads **Showing X of N members** (or **No members match your search.**); numbers match levels only; clearing restores the full list |
+| R8 Filters | `/ptg` → Guild Tools → Roster → **Members** | Choose a class in **All Classes**, then **Online** and **Offline** in **All Members**; return both to **All Classes** and **All Members** | R1 done | Only that class is listed; **Online** shows only marked names and matches the native online count for that class; **Offline** shows the rest |
+| R9 Breakdowns | `/ptg` → Guild Tools → Roster → **Analytics** | Scroll through **Level**, **Rank**, **Race**, **Last Online** and **Online By Zone** | R1 done | Each line shows a bar and **count (share%)**; the longest bar is the largest count; **Rank** follows the guild's rank order; **Last Online** starts with **Online Now** equal to **Online Now** above; **Online By Zone** counts only online members, or reads **Nobody is online right now.** |
+| R10 Nothing saved | `/ptg` → Guild Tools → Roster → **Members** | Type a search and choose a class filter, then `/reload` and reopen the page | R1 done | The search box is empty and the filters read **All Classes** and **All Members** |
 
 ## F. Reporting and release gate
 

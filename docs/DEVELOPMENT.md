@@ -16,6 +16,14 @@ are documented in [Global Settings](GLOBAL_SETTINGS.md).
 
 Global Settings expands to four tabs and reuses the existing profile engine with an account-wide selection. Bundled LSM/dependencies and two new runtime files bring the addon to 114 Lua chunks. Run tests/global_settings.py and all standalone regressions, then the release builder. New source/media may require one full client restart for discovery; subsequent edits use /reload. See [contract and native checks](GLOBAL_SETTINGS.md).
 
+Roster Search and Analytics extend the existing Roster files (no new chunks; /reload
+applies it). Member details use only `ClubMemberInfo` fields in the published
+Forever source: level, race (via `C_CreatureInfo.GetRaceInfo`), zone, guildRank/
+guildRankOrder, memberNote/officerNote, presence and lastOnline*. Online means
+Online/Away/Busy, as the native member count does. A restricted detail reads as
+unknown; a restricted name or class still rejects the read. Search and filters are
+session-only. Run `python tests/guild_roster.py`; native validation is pending.
+
 Guild Roster adds Guild Tools -> Roster (twelfth module, two Lua files, 109 chunks).
 Members come from `C_Club`, the documented path Blizzard's Forever member list uses;
 `GetGuildRosterInfo` does not appear in the published Forever source and is not

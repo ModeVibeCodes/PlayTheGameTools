@@ -4,6 +4,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Guild Tools -> Roster now has Members and Analytics tabs. Members adds a search
+  box (name, class, race, zone, rank, notes, or a level such as 60 or 40-59),
+  Class and Status filters, levels beside names, an online marker and a hover
+  tooltip with rank, zone or last online, and notes. Analytics keeps the Class
+  Summary and adds Online Now plus bar breakdowns by level, rank, race, last
+  online and zone. Still read-only and session-only; native validation is pending.
+
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.
 
