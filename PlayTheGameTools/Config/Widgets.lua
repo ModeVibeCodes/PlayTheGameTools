@@ -648,7 +648,7 @@ function W.Switch(button, text, height, style)
     local track = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "ARTWORK" or "BACKGROUND")
     track:SetPoint("CENTER",frame,"CENTER",0,0); track:SetSize(w, h)
     if T.id=="mode" then
-        track:SetSize(w-4,h-4)
+        track:SetSize(w-2,h-2)
         track.modeAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
     end
     local mark = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "OVERLAY" or "ARTWORK")
@@ -673,8 +673,8 @@ function W.Switch(button, text, height, style)
         outline:SetColor(on and T.primary or (hovered and T.secondary or T.lineStrong))
         if T.id == "mode" then
             self.activeGlow:Hide()
-            -- The outer rim remains distinct from cyan fill in either state.
-            outline:SetColor(on and T.secondary or T.lineStrong,on and 0.8 or 0.36)
+            -- A thin charcoal rim stays the same color in both states.
+            outline:SetColor(T.background,1)
         end
         mark:ClearAllPoints()
         if toggle then

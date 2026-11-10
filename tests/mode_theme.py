@@ -122,8 +122,8 @@ mode.execute(r'''
     local toggle=w.moduleHeader.toggle
     assert(toggle.switchOutline.rounded and toggle.fill.modeAsset=='ModeToggleSurface' and toggle.knob.modeAsset=='ModeThumb','rounded track and circular thumb')
     assert(not toggle.fill.slice and not toggle.switchOutline.edges[1].slice,'small controls use full oval sprites')
-    assert(toggle.fill:GetWidth()==30 and toggle.fill:GetHeight()==14,'enabled toggle fill stays two units inside its border')
-    assert(check.fill:GetWidth()==14 and check.fill:GetHeight()==14,'checkbox fill stays inside its border')
+    assert(toggle.fill:GetWidth()==32 and toggle.fill:GetHeight()==16,'toggle has a one-unit rim')
+    assert(check.fill:GetWidth()==16 and check.fill:GetHeight()==16,'checkbox has a one-unit rim')
     for _,control in ipairs({check,toggle}) do
         local rim=control.switchOutline.edges[1]
         assert(rim.modeAsset==control.fill.modeAsset,'outer silhouette and interior share the same rounded artwork')
@@ -134,6 +134,7 @@ mode.execute(r'''
             control:SetSelected(selected)
             assert(control.fill:GetWidth()==width and control.fill:GetHeight()==height,'state recolors the same inset region')
             assert(control.fill.appliedModeAsset==rim.appliedModeAsset,'state never replaces the interior silhouette')
+            assert(rim.vertexColor[1]==43/255 and rim.vertexColor[2]==43/255 and rim.vertexColor[3]==43/255 and rim.vertexColor[4]==1,'border remains charcoal in both states')
             if selected then assert(control.fill.vertexColor[4]==1 and rim.vertexColor[1]~=control.fill.vertexColor[1],'checked fill stays opaque inside a distinct rim') end
         end
         control:SetSelected(false)

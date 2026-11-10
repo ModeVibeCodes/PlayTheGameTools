@@ -31,6 +31,8 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   and checkboxes, with the same inset interior in both states and a distinct gray
   rim when checked. All regions share one frame; no new assets or state changes.
   Native confirmation is pending after reload.
+  Owner reports improved containment; reduce mode switch/checkbox rims from two
+  units to one and use charcoal #2B2B2B in both states. Native fit review pending.
 
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.

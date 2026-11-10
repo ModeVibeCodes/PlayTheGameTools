@@ -15,13 +15,14 @@ selection. Only text lights on hover; whole-row/button glow washes are removed.
 Disabled controls remain inactive and unlit.
 The outer window and module-page perimeter outlines are removed; control outlines
 and row separators remain. Button backgrounds are inset one unit, and checkbox/
-toggle tracks are inset two units inside their outer border geometry. Checked
+toggle tracks are inset one unit inside their outer border geometry. Checked
 fills and circular thumbs have room inside the outer shape rather than sharing
 its edge pixels. Native feedback showed the previous hollow border still looked
 clipped when filled. Small controls now draw a solid rounded backing beneath the
 same inset interior and thumb, all on one frame. Off/on changes the interior color,
-not its dimensions or silhouette. The checked rim is neutral gray so it remains
-visibly distinct from the cyan interior. No new assets are needed.
+not its dimensions or silhouette. After positive owner feedback on containment,
+the rim is reduced from two units to one and uses charcoal **#2B2B2B** in both
+states. This thinner/darker refinement awaits native review. No new assets are needed.
 Checkboxes now use dedicated rounded silhouettes. On/off switches have capsule
 tracks and circular thumbs; their click handlers, hit targets and state remain
 unchanged. Buttons, including header controls, Collapse and Refresh, use dedicated
@@ -198,7 +199,7 @@ No release publication or automatic theme activation is included.
     states and restore it; inspect the page's enabled switch without changing it;
     **Required state:** OOC after `/reload`; **Confirmation:** the cyan interior
     replaces the same unfilled region and stays inside the larger rounded gray
-    rim; the switch thumb remains contained and the original setting is restored.
+    charcoal rim; the switch thumb remains contained and the original setting is restored.
 
 Native validation remains pending owner feedback. Record Forever build,
 resolution, UI scale, font/media selections and screenshots when reporting fit.

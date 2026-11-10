@@ -1,8 +1,9 @@
 # Standalone Forever development
 
 Latest small-control correction replaces the separate hollow mode border with a
-solid outer silhouette behind the two-unit-inset fill on the same frame. The
-checked rim stays neutral gray; off/on recolors the identical interior. Tests
+solid outer silhouette behind the one-unit-inset fill on the same frame. Owner
+feedback accepted the improved containment; the latest thinner rim uses charcoal
+#2B2B2B in both states. Off/on recolors the identical interior. Tests
 sample actual sprite alpha containment as well as repeated state geometry.
 Lua-only, existing assets; `/reload` OOC. Native confirmation remains pending.
 

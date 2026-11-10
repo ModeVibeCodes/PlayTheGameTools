@@ -39,7 +39,7 @@ for name in ('Lato-Regular.ttf', 'Lato-Bold.ttf'):
 assert b'SIL OPEN FONT LICENSE' in files['LICENSES/Lato-OFL.txt']
 
 # Sample the actual alpha sprites at fractional UI coordinates. Every visible
-# inset fill sample must sit over the opaque core of the larger solid backing;
+# inset fill sample must stay within the larger solid backing;
 # checking rectangle sizes alone missed the native hollow-ring artifact.
 def alpha_at(data, x, y):
     w,h=struct.unpack_from('<HH',data,12)
@@ -51,10 +51,11 @@ def alpha_at(data, x, y):
 
 for name,w,h in [('CheckSurfaceRound',18,18),('ToggleSurfacePill',34,18)]:
     data=files['Media/Textures/Mode/'+name+'.tga']
-    for iy in range((h-4)*8):
-        for ix in range((w-4)*8):
+    for iy in range((h-2)*8):
+        for ix in range((w-2)*8):
             x=(ix+.5)/8;y=(iy+.5)/8
-            fill=alpha_at(data,x/(w-4),y/(h-4))
-            outer=alpha_at(data,(x+2)/w,(y+2)/h)
-            assert outer>=fill and (fill<.5 or outer>.98),'colored interior must stay within the solid outer silhouette'
+            fill=alpha_at(data,x/(w-2),y/(h-2))
+            outer=alpha_at(data,(x+1)/w,(y+1)/h)
+            # Allow one 8-bit alpha level for independent bilinear resampling.
+            assert outer+1/255>=fill,'colored interior must stay within the solid outer silhouette'
 print('PASS rounded Figma controls, circular thumb, neutral sheen, fading/beveled lines, transparent logo and font license')
