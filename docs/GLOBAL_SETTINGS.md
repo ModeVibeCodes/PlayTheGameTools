@@ -9,8 +9,9 @@ confirmation; mocks do not establish rendering, security or gameplay acceptance.
 
 **Interface Theme** offers **Modern**, **Blizzard**, and experimental **mode**.
 Modern remains the default. Select a theme and use header **Reload** OOC.
-[mode's design and exact test packet](MODE_INTERFACE_THEME.md) cover its slate/blue
-palette and expanded, collapsible text navigation; existing themes remain intact.
+[mode's design and exact test packet](MODE_INTERFACE_THEME.md) cover its neutral
+graphite/cyan Figma materials, Lato typography, header search/profile shortcut and
+expanded, collapsible text navigation; existing themes remain intact.
 
 **Global Font**, **Global Texture**, and **Global Border** list every available
 LibSharedMedia font, status-bar/background texture and border. LibSharedMedia,

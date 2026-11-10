@@ -5,10 +5,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 ## Unreleased
 
 - Add opt-in **mode** interface theme under Global Settings → Appearance:
-  slate surfaces, blue headings, quiet hover/selection lighting and expanded,
-  collapsible text category headings with dot-prefixed children. Existing themes,
+  neutral graphite Figma satin/soft-corner textures, licensed Lato typography,
+  gray headings, cyan text-only hover and etched selection lines. Expanded,
+  collapsible text categories have less-indented dot-prefixed children. Header
+  search and active-profile shortcut reuse existing controls/pages. Existing themes,
   module controls and gameplay behavior are preserved. Apply with Reload OOC;
-  native review pending. See docs/MODE_INTERFACE_THEME.md.
+  new asset discovery may need a restart only if reload falls back. Native review
+  pending. See docs/MODE_INTERFACE_THEME.md.
 
 - Owner accepted Global Settings and authorized PR #23's public main merge on
   2026-11-09; broader native coverage remains documented in GLOBAL_SETTINGS.md.

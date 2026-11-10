@@ -76,18 +76,18 @@ local BLIZZARD = {
     muted = { 0.58, 0.56, 0.52, 1 },
 }
 
--- mode: configuration-only slate surfaces and blue type. Existing palettes,
+-- mode: configuration-only graphite surfaces and a cyan accent. Existing palettes,
 -- gameplay colors and the default theme remain unchanged.
 local MODE = {
-    primary = RGB(126, 190, 246), enabled = RGB(127, 219, 151),
-    off = RGB(158, 169, 182), unavailable = RGB(114, 127, 141),
-    highlight = RGB(207, 231, 252), ink = RGB(15, 26, 38),
-    sidebar = RGB(25, 31, 39), field = RGB(24, 30, 38),
-    background = RGB(32, 39, 48), panel = RGB(39, 47, 57),
-    surface = RGB(47, 57, 69), hover = RGB(55, 69, 84),
-    line = RGB(56, 68, 81), lineStrong = RGB(104, 123, 143),
-    text = RGB(220, 226, 233), heading = RGB(143, 202, 252),
-    secondary = RGB(191, 201, 213), muted = RGB(158, 171, 186),
+    primary = RGB(0, 240, 255), enabled = RGB(127, 219, 151),
+    off = RGB(179, 179, 179), unavailable = RGB(114, 114, 114),
+    highlight = RGB(212, 212, 212), ink = RGB(24, 24, 24),
+    sidebar = RGB(35, 35, 35), field = RGB(37, 37, 37),
+    background = RGB(43, 43, 43), panel = RGB(48, 48, 48),
+    surface = RGB(53, 53, 53), hover = RGB(53, 53, 53),
+    line = RGB(66, 66, 66), lineStrong = RGB(179, 179, 179),
+    text = RGB(212, 212, 212), heading = RGB(212, 212, 212),
+    secondary = RGB(179, 179, 179), muted = RGB(179, 179, 179),
 }
 
 -- Saved values are ids; an unknown id falls back to the default at runtime

@@ -60,6 +60,16 @@ function W.CrispText(region)
 end
 
 local function Paint(texture, color, alpha)
+    if texture.modeAsset then
+        local usable=texture.appliedModeAsset==texture.modeAsset or addon.Media:ApplyTexture(texture,texture.modeAsset,color)
+        if usable then
+            texture.appliedModeAsset=texture.modeAsset
+            texture:SetVertexColor(color[1], color[2], color[3], alpha or color[4] or 1)
+            return
+        end
+        -- Missing borders must never become opaque rectangles over controls.
+        if texture.modeAsset=="ModeBorder" then texture:SetColorTexture(0,0,0,0);return end
+    end
     texture:SetColorTexture(color[1], color[2], color[3], alpha or color[4] or 1)
 end
 W.Paint = Paint
@@ -72,7 +82,10 @@ function W.Fill(frame, color, layer, inset, alpha)
     texture:SetPoint("BOTTOMRIGHT", -inset, inset)
     Paint(texture, color, alpha)
     if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background then
-        addon.Media:PaintSurface(texture,color,alpha)
+        if T.id == "mode" and (addon.Media:GlobalStyle("texture") or "default") == "default" then
+            texture.modeAsset = "ModeSurface"
+            Paint(texture, color, alpha)
+        else addon.Media:PaintSurface(texture,color,alpha) end
     end
     return texture
 end
@@ -82,6 +95,21 @@ end
 function W.Outline(frame, color, layer, inset, alpha, scope)
     scope=scope or addon.Media:FrameScope(frame)
     inset = inset or 0
+    local style=addon.Media:GlobalStyle("border",scope) or "thin"
+    if T.id == "mode" and not frame.ptgSquareOutline and (style == "thin" or style == "none") then
+        local texture=frame:CreateTexture(nil,layer or "BORDER")
+        texture:SetPoint("TOPLEFT",inset,-inset);texture:SetPoint("BOTTOMRIGHT",-inset,inset)
+        texture.modeAsset="ModeBorder"
+        local outline={edges={texture},shown=true,kind=style,rounded=true}
+        function outline:SetShown(shown) self.shown=shown;texture:SetShown(shown and self.kind~="none") end
+        function outline:SetColor(value,opacity)
+            Paint(texture,InterfaceColor(value),opacity or 0.36)
+            self.kind=addon.Media:GlobalStyle("border",scope)=="none" and "none" or "thin"
+            self:SetShown(self.shown)
+        end
+        outline:SetColor(color,alpha)
+        return outline
+    end
     local edges = {}
     local function Edge(a, ax, ay, b, bx, by, horizontal)
         local edge = frame:CreateTexture(nil, layer or "BORDER")
@@ -277,7 +305,7 @@ function W.Heading(parent, text, size, x, y, width, color)
     color = InterfaceColor(color)
     if color == nil or color == T.primary or color == T.text then color = T.heading end
     local label = W.Label(parent, text, "GameFontNormalLarge", x, y, width, color)
-    addon.Media:BindInterfaceFont(label, GameFontNormalLarge, size)
+    addon.Media:BindInterfaceFont(label, GameFontNormalLarge, size, nil, "heading")
     return label
 end
 
@@ -368,7 +396,7 @@ function W.Button(parent, text, width, height, style)
     -- Kept for consumers that tint the selected state directly.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0.08)
     button.activeGlow:Hide()
-    if recipe.edge then
+    if recipe.edge or T.id == "mode" then
         -- Selected navigation rows carry an accent bar on the leading edge
         -- (3px in Modern, where it is the main "you are here" marker).
         button.selectionEdge = W.Fill(button, T.primary, "OVERLAY")
@@ -376,6 +404,18 @@ function W.Button(parent, text, width, height, style)
         button.selectionEdge:SetPoint("TOPLEFT"); button.selectionEdge:SetPoint("BOTTOMLEFT")
         button.selectionEdge:SetWidth(T.blizzardArt and 2 or 3)
         button.selectionEdge:Hide()
+        if T.id == "mode" then
+            button.selectionEdge.modeAsset="ModeSelection"
+            -- Export already contains cyan; white tint keeps its exact hue.
+            Paint(button.selectionEdge,{1,1,1,1})
+            if not recipe.edge then
+                button.selectionEdge:ClearAllPoints()
+                button.selectionEdge:SetPoint("BOTTOMLEFT",10,1);button.selectionEdge:SetPoint("BOTTOMRIGHT",-10,1)
+                button.selectionEdge:SetHeight(2)
+                button.selectionEdge:SetWidth(width or 120)
+                button.selectionEdge:SetTexCoord(0,1,0,1)
+            end
+        end
     end
     button.label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     button.label:SetPoint("CENTER")
@@ -450,11 +490,18 @@ function W.Button(parent, text, width, height, style)
         self.label:SetTextColor(color[1], color[2], color[3], color[4] or 1)
         self.activeGlow:SetShown(selected and style ~= "primary" and style ~= "underline")
         if T.id == "mode" then
-            -- Static translucent wash and soft text light; no animation,
-            -- polling, extra mouse target or external texture required.
-            Paint(self.activeGlow, T.primary, selected and 0.075 or 0.04)
-            self.activeGlow:SetShown(available and (selected or hovered))
-            self.label:SetShadowColor(T.primary[1], T.primary[2], T.primary[3], available and (selected or hovered) and 0.35 or 0)
+            -- Hover lights text only. A separate etched line marks selection;
+            -- resting fills and borders never brighten with hover/selection.
+            local plain=style=="tab" or style=="underline" or style=="categoryHeading"
+            Paint(self.fill, plain and T.background or T.surface, plain and 0 or 1)
+            self.outline:SetShown(not plain)
+            if not plain then self.outline:SetColor(T.line,0.8) end
+            self.activeGlow:Hide()
+            local modeColor=self.labelColor or (style=="categoryHeading" and T.heading or T.secondary)
+            if not available then modeColor=T.unavailable
+            elseif selected or hovered then modeColor=T.primary end
+            self.label:SetTextColor(unpack(modeColor))
+            self.label:SetShadowColor(T.primary[1], T.primary[2], T.primary[3], available and (selected or hovered) and 0.55 or 0)
             self.label:SetShadowOffset(0, -1)
         end
         if self.selectionEdge then self.selectionEdge:SetShown(selected) end
@@ -546,6 +593,9 @@ function W.Switch(button, text, height, style)
     track:SetPoint("CENTER"); track:SetSize(w, h)
     local frame = CreateFrame("Frame", nil, button)
     frame:SetPoint("CENTER"); frame:SetSize(w, h)
+    -- Tiny native switches/checkboxes keep square state geometry; a 10px
+    -- panel corner would turn an 18px checkbox into a circle.
+    frame.ptgSquareOutline=true
     local outline = W.Outline(frame, T.lineStrong, "BORDER")
     local mark = button:CreateTexture(nil, "ARTWORK")
     mark:SetSize(toggle and 12 or 10, toggle and 12 or 10)
@@ -553,11 +603,6 @@ function W.Switch(button, text, height, style)
     -- Inert stand-in so shared consumers can still address the glow region.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0)
     button.activeGlow:Hide()
-    if T.id == "mode" then
-        button.activeGlow:ClearAllPoints()
-        button.activeGlow:SetPoint("CENTER", track, "CENTER", 0, 0)
-        button.activeGlow:SetSize(w + 6, h + 6)
-    end
     button.label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     button.label:SetPoint("CENTER")
     button.label:SetText(text)
@@ -573,9 +618,8 @@ function W.Switch(button, text, height, style)
         elseif on then Paint(track, T.primary, 0.16) else Paint(track, T.field) end
         outline:SetColor(on and T.primary or (hovered and T.secondary or T.lineStrong))
         if T.id == "mode" then
-            Paint(self.activeGlow, T.primary, on and 0.075 or 0.04)
-            self.activeGlow:SetShown(available and (on or hovered))
-            if hovered then outline:SetColor(T.primary) end
+            self.activeGlow:Hide()
+            outline:SetColor(on and T.primary or T.lineStrong)
         end
         mark:ClearAllPoints()
         if toggle then
@@ -592,6 +636,10 @@ function W.Switch(button, text, height, style)
         for _, edge in ipairs(outline.edges) do edge:SetAlpha(alpha) end
         local color = self.labelColor or T.text
         self.label:SetTextColor(color[1], color[2], color[3], available and (color[4] or 1) or 0.5)
+        if T.id == "mode" then
+            self.label:SetShadowColor(T.primary[1],T.primary[2],T.primary[3],hovered and 0.55 or 0)
+            self.label:SetShadowOffset(0,-1)
+        end
     end
     function button:SetLabelColor(color) self.labelColor = color; self:RefreshAppearance() end
     local nativeSetEnabled = button.SetEnabled

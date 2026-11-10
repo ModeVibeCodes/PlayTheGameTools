@@ -14,14 +14,21 @@ lua.execute('''
 ''')
 state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 mode, _ = load(state)
-mode.execute('''
+mode.execute(r'''
     local T=addon.InterfaceTheme
     assert(T.id=='mode' and not T.blizzardArt)
-    assert(T.heading[3]>T.heading[1] and T.primary[3]>T.primary[1])
+    assert(T.background[1]==43/255 and T.background[1]==T.background[2] and T.background[2]==T.background[3])
+    assert(T.text[1]==212/255 and T.secondary[1]==179/255 and T.primary[1]==0 and T.primary[2]==240/255 and T.primary[3]==1)
     assert(addon.Theme.primary[1]==128/255 and addon.Theme.primary[2]==239/255,'gameplay palette retained')
     local before=addon.ProfileCodec.Encode(PTGToolsDB)
     addon:ToggleConfig()
     local w=addon.configWindow
+    assert(w.searchInput:GetParent()==w.headerBar and w.searchInput:GetWidth()==200,'header search')
+    assert(w.canvas.modeAsset=='ModeSurface' and w.bodyBorder.rounded,'Figma material and soft border')
+    assert(w.title.font[1]:find('Lato%-Bold.ttf') and w.navigationButtons.dashboard.label.font[1]:find('Lato%-Regular.ttf'))
+    w.profileButton.scripts.OnClick()
+    assert(w.selectedPage=='globalSettings' and w.pages.globalSettings.selectedSection.title=='Profiles','existing profile page shortcut')
+    addon:SelectConfigPage('dashboard')
     assert(not w.categoryNavigation:IsShown(),'no duplicate module strip')
     local function VisibleRows()
         local result={};for _,row in ipairs(w.navigation.rows) do result[row]=true end;return result
@@ -66,18 +73,40 @@ mode.execute('''
     addon:SelectConfigPage(results[1].module.id)
     assert(not w.collapsedCategories[cid] and w.sidebarModuleButtons.combatTimer:IsShown(),'direct/search routing reveals child')
     local b=w.sidebarModuleButtons.combatTimer
-    b.scripts.OnEnter(b);assert(b.activeGlow:IsShown() and b.label.shadowColor[4]>0)
+    local resting=b.fill.vertexColor[4]
+    b.scripts.OnEnter(b);assert(not b.activeGlow:IsShown() and b.label.shadowColor[4]>0 and b.fill.vertexColor[4]==resting,'text-only hover')
     b:SetEnabled(false);assert(not b.activeGlow:IsShown() and b.label.shadowColor[4]==0)
     b:SetEnabled(true);b.scripts.OnLeave(b)
-    assert(b.activeGlow:IsShown(),'selected wash survives mouse leave')
+    assert(not b.activeGlow:IsShown() and b.selectionEdge:IsShown() and b.selectionEdge.modeAsset=='ModeSelection','selected line survives mouse leave')
     local toggle=w.moduleHeader.toggle
-    toggle:SetSelected(true);assert(toggle.activeGlow:IsShown())
+    assert(#toggle.switchOutline.edges==4,'small switches retain square native geometry')
+    toggle:SetSelected(true);assert(not toggle.activeGlow:IsShown())
     toggle:SetEnabled(false);assert(not toggle.activeGlow:IsShown())
     toggle:SetEnabled(true);toggle:SetSelected(false)
-    toggle.scripts.OnEnter(toggle);assert(toggle.activeGlow:IsShown())
+    toggle.scripts.OnEnter(toggle);assert(not toggle.activeGlow:IsShown() and toggle.label.shadowColor[4]>0)
     toggle.scripts.OnLeave(toggle);assert(not toggle.activeGlow:IsShown())
     addon:SelectConfigPage('dashboard');assert(not b.activeGlow:IsShown())
     assert(addon.ProfileCodec.Encode(PTGToolsDB)==before,'navigation preserves all saved preferences')
+    local media=addon.Media
+    local original=addon.db.globalMedia.font
+    addon.db.globalMedia.font='media:PTG JetBrains Mono';media:RefreshFonts()
+    assert(w.title.font[1]:find('JetBrainsMono%-Regular.ttf'),'explicit font customization retained')
+    addon.db.globalMedia.font=original;media:RefreshFonts()
+    assert(w.title.font[1]:find('Lato%-Bold.ttf'))
+    local t=CreateFrame('Frame',nil,UIParent):CreateTexture(nil,'BACKGROUND')
+    t.modeAsset='ModeSurface';testMissingTextures={[media:GetTexture('ModeSurface')]=true}
+    addon.ConfigWidgets.Paint(t,T.background)
+    assert(t.color[1]==43/255 and t.color[4]==1,'missing art retains a readable solid fallback')
+    t=CreateFrame('Frame',nil,UIParent):CreateTexture(nil,'BACKGROUND')
+    t.modeAsset='ModeBorder';testMissingTextures={[media:GetTexture('ModeBorder')]=true}
+    addon.ConfigWidgets.Paint(t,T.lineStrong);assert(t.color[4]==0,'missing border never covers its controls')
+    testMissingTextures=nil
+    testMissingFonts={
+        [ [[Interface\AddOns\PlayTheGameTools\Media\Fonts\Lato-Regular.ttf]] ]=true,
+        [ [[Interface\AddOns\PlayTheGameTools\Media\Fonts\Lato-Bold.ttf]] ]=true,
+    }
+    media:RefreshFonts();assert(not w.title.font[1]:find('Lato%-'),'undiscovered font keeps native fallback')
+    testMissingFonts=nil;media:RefreshFonts()
     addon:SelectConfigPage('globalSettings')
     local page=w.pages.globalSettings
     assert(#page.sections==4 and page.themeButtons[3].selected and page.mediaControls['global:font'])
@@ -103,4 +132,4 @@ modern.execute('''
     assert(w.navigationButtons.timers.skinStyle=='tab')
     assert(w.sidebarModuleButtons.combatTimer.label.font[2]==addon.InterfaceTheme.fontSize.small)
 ''')
-print('PASS mode theme, all module pages, collapse/search, reload, persistence and existing themes')
+print('PASS mode palette/materials/font, text-only hover, profile/header search, all pages, collapse/reload, persistence and existing themes')

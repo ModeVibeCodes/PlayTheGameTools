@@ -49,6 +49,9 @@ end
 -- Source originals and runtime cutouts share one bundled asset registry.
 M.textureBase = "Interface\\AddOns\\PlayTheGameTools\\Media\\Textures\\"
 M.Textures = {
+    ModeSurface = { file = "Mode/Surface.tga", slice = 12, rounded = true },
+    ModeBorder = { file = "Mode/Border.tga", slice = 12, transparent = true },
+    ModeSelection = { file = "Mode/Selection.tga", transparent = true },
     ReadyCheck = { file = "Ready_Check.tga", transparent = true },
     Window = { file = "Panel_Graphite_Cutout.tga", slice = 16, rounded = true },
     Header = { file = "Header_Satin_Cutout.tga", slice = 16, rounded = true },
@@ -76,8 +79,8 @@ M.Textures = {
     RoundMarker = { file = "Round_Marker.tga", rounded = true },
 }
 
--- The settings interface is drawn from flat fills (Config/Widgets.lua) and
--- no longer reads bundled configuration art.
+-- Modern stays flat. The opt-in mode interface uses its own Figma exports;
+-- existing gameplay texture consumers and legacy assets remain unchanged.
 
 -- Return path and read-only rendering metadata; unknown names return nil.
 function M:GetTexture(name)
@@ -157,11 +160,15 @@ function M:RefreshBorders()
     for owner, callback in pairs(self.borderListeners) do callback(owner) end
 end
 
-function M:GetInterfaceFont(fallbackPath, scope)
+function M:GetInterfaceFont(fallbackPath, scope, weight)
+    local theme = addon.InterfaceTheme
+    local selection = self:GlobalStyle("font", scope)
+    if theme and theme.id == "mode" and (selection == nil or selection == "game" or selection == "media:PTG Lato") then
+        return "Interface\\AddOns\\PlayTheGameTools\\Media\\Fonts\\Lato-" .. (weight == "heading" and "Bold" or "Regular") .. ".ttf"
+    end
     local inherited=self:ResolveFont(self:GlobalStyle("font",scope))
     if inherited then return inherited end
     -- The Blizzard theme keeps the stock game fonts its artwork is drawn for.
-    local theme = addon.InterfaceTheme
     if theme and theme.blizzardArt then return fallbackPath or GameFontHighlight:GetFont() end
     return self:GetFont("Expressway") or fallbackPath or GameFontHighlight:GetFont()
 end
@@ -235,15 +242,15 @@ function M:GetDisplayFont(appearance, respectGlobal, scope)
 end
 
 function M:ApplyInterfaceFont(region, spec)
-    local preferred = self:GetInterfaceFont(spec.path,spec.scope)
+    local preferred = self:GetInterfaceFont(spec.path,spec.scope,spec.weight)
     if not region:SetFont(preferred, spec.size, spec.flags) then
         region:SetFont(spec.path, spec.size, spec.flags)
     end
 end
 
-function M:BindInterfaceFont(region, fontObject, fontSize, scope)
+function M:BindInterfaceFont(region, fontObject, fontSize, scope, weight)
     local path, size, flags = fontObject:GetFont()
-    local spec = { path = path, size = fontSize or size, flags = flags or "", scope = scope or self:FrameScope(region) }
+    local spec = { path = path, size = fontSize or size, flags = flags or "", scope = scope or self:FrameScope(region), weight = weight }
     self.regions[region] = spec
     self:ApplyInterfaceFont(region, spec)
 end
@@ -421,6 +428,11 @@ function M:RegisterBundledMedia()
     local ok,known=pcall(C_UIFileAsset.IsKnownFile,fontPath)
     if ok and not (issecretvalue and issecretvalue(known)) and known==true then
         library:Register("font","PTG JetBrains Mono",fontPath)
+    end
+    local lato="Interface\\AddOns\\PlayTheGameTools\\Media\\Fonts\\Lato-Regular.ttf"
+    local latoOK,latoKnown=pcall(C_UIFileAsset.IsKnownFile,lato)
+    if latoOK and not (issecretvalue and issecretvalue(latoKnown)) and latoKnown==true then
+        library:Register("font","PTG Lato",lato)
     end
     local base="Interface\\AddOns\\PlayTheGameTools\\Media\\SharedMedia\\"
     library:Register("border","PTG Clean",base.."PTG_Clean.tga")

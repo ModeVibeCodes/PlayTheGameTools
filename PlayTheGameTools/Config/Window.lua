@@ -16,7 +16,7 @@ function addon:RecoverWindowPosition()
     local w,h=window:GetWidth()*ratio,window:GetHeight()*ratio
     local keep=math.min(40,width/4,height/4)
     -- Retain a draggable header fragment, not the full window rectangle.
-    local minX=-width/2-w/2+HEADER_RESERVED*ratio+keep
+    local minX=-width/2-w/2+(window.headerReserved or HEADER_RESERVED)*ratio+keep
     local maxX=width/2+w/2-keep
     local minY=-height/2-h/2+keep
     local maxY=height/2-h/2+HEADER_HEIGHT*ratio-keep
@@ -164,6 +164,11 @@ function addon:CreateConfig()
     W.Paint(column, T.sidebar)
     column:SetPoint("TOPLEFT", 1, -1); column:SetPoint("BOTTOMLEFT", 1, 1)
     column:SetWidth(SIDEBAR_WIDTH)
+    if mode then
+        column.modeAsset="ModeSurface";W.Paint(column,T.sidebar)
+        column:ClearAllPoints();column:SetPoint("TOPLEFT",8,-8);column:SetPoint("BOTTOMLEFT",8,8)
+        column:SetWidth(SIDEBAR_WIDTH-8)
+    end
     local columnEdge = W.Fill(window, T.line, "BORDER")
     columnEdge:ClearAllPoints(); columnEdge:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 1, -1)
     columnEdge:SetPoint("BOTTOMLEFT", SIDEBAR_WIDTH + 1, 1); columnEdge:SetWidth(1)
@@ -211,7 +216,8 @@ function addon:CreateConfig()
     window.title:SetWordWrap(false)
     local controls = CreateFrame("Frame", nil, header)
     controls:SetPoint("TOPRIGHT", -16 - edge, -14 - edge / 2)
-    controls:SetSize(360, 28)
+    controls:SetSize(mode and 464 or 360, 28)
+    window.headerReserved=mode and 720 or HEADER_RESERVED
     controls:SetFrameLevel(header:GetFrameLevel() + 1)
     controls:EnableMouse(false)
     function self:UpdateConfigTitle(id)
@@ -255,6 +261,16 @@ function addon:CreateConfig()
     end)
     window.reloadButton=reload
     window.previewButton, window.editButton, window.closeButton = preview, edit, close
+    if mode then
+        local profile=HeaderButton("Profile: "..self.ProfileManager.activeName,132)
+        profile:SetPoint("RIGHT",reload,"LEFT",-10,0)
+        profile.label:SetWidth(116);profile.label:SetWordWrap(false)
+        profile:SetScript("OnClick",function()
+            self:SelectConfigPage("globalSettings")
+            window.pages.globalSettings:SelectSectionTab(2)
+        end)
+        window.profileButton=profile
+    end
 
     local sidebar = CreateFrame("Frame", nil, window)
     sidebar:SetPoint("TOPLEFT", 12 + edge, -HEADER_HEIGHT - 4)
@@ -262,12 +278,16 @@ function addon:CreateConfig()
     sidebar:SetWidth(SIDEBAR_WIDTH - 22 - edge)
     local navigation = W.Page(sidebar, 0)
     navigation:ClearAllPoints()
-    navigation:SetPoint("TOPLEFT", 0, -44)
+    navigation:SetPoint("TOPLEFT", 0, mode and 0 or -44)
     navigation:SetPoint("BOTTOMRIGHT")
 
     local body = CreateFrame("Frame", nil, window)
     body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 30, -16)
     body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
+    if mode then
+        window.bodySurface=W.Fill(body,T.panel,"BACKGROUND",-12)
+        window.bodyBorder=W.Outline(body,T.line,"BORDER",-12,0.7)
+    end
     local moduleHeader = W.ModuleHeader(body)
     window.moduleHeader = moduleHeader
     local pageHost = CreateFrame("Frame", nil, body)
@@ -283,6 +303,7 @@ function addon:CreateConfig()
     window.collapsedCategories = collapsed
 
     function self:RefreshConfig()
+        if window.profileButton then window.profileButton.label:SetText("Profile: "..self.ProfileManager.activeName) end
         moduleHeader:Refresh()
         preview:SetSelected(self.previewMode)
         edit:SetSelected(self.editMode)
@@ -374,7 +395,7 @@ function addon:CreateConfig()
             button.label:SetPoint("LEFT", 10, 0)
             button.label:SetPoint("RIGHT", -10, 0)
             button.label:SetWordWrap(false)
-            addon.Media:BindInterfaceFont(button.label, GameFontHighlight, isHeading and T.fontSize.group or T.fontSize.body)
+            addon.Media:BindInterfaceFont(button.label, GameFontHighlight, isHeading and T.fontSize.group or T.fontSize.body, nil, isHeading and "heading" or nil)
             if isHeading then
                 button:SetLabelColor(T.heading)
                 button.gapBefore = 10
@@ -425,7 +446,7 @@ function addon:CreateConfig()
         local button=W.Button(navigation.content,mode and ("· " .. title) or title,184,mode and 32 or 28,"tab")
         button.atelierNested=true
         button.label:ClearAllPoints()
-        button.label:SetPoint("LEFT",24,0)
+        button.label:SetPoint("LEFT",mode and 16 or 24,0)
         if module.classIcon then
             button.classIcon=button:CreateTexture(nil,"ARTWORK");button.classIcon:SetPoint("LEFT",24,0);button.classIcon:SetSize(18,18);button.classIcon:SetTexture(module.classIcon)
             button.label:ClearAllPoints();button.label:SetPoint("LEFT",48,0)
@@ -438,7 +459,7 @@ function addon:CreateConfig()
         if mode and module.classIcon then
             -- Keep class identity while giving every child the same dot prefix.
             button.classIcon:ClearAllPoints();button.classIcon:SetPoint("RIGHT",-8,0)
-            button.label:ClearAllPoints();button.label:SetPoint("LEFT",24,0);button.label:SetPoint("RIGHT",-32,0)
+            button.label:ClearAllPoints();button.label:SetPoint("LEFT",16,0);button.label:SetPoint("RIGHT",-32,0)
         end
         button:SetScript("OnClick",function() Select(id) end)
         nested[id]=button
