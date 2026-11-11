@@ -211,6 +211,7 @@ back.execute('''
     local popup=CreateFrame('Frame',nil,UIParent)
     assert(addon.ConfigWidgets.BlizzardBackdrop(popup,'tooltip'))
     assert(popup.backdrop.bgFile==[[Interface\\Tooltips\\UI-Tooltip-Background]],'Blizzard popup retains native theme background with a custom global texture')
+    assert(popup.backdrop.edgeFile==addon.ConfigWidgets.BlizzardArt.tooltipBorder and popup.backdrop.edgeSize==16,'Blizzard popup retains the stock tooltip edge')
     addon:SetInterfaceTheme('modern')
 ''')
 modern, _ = load(back.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
