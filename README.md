@@ -1,6 +1,6 @@
 # Play The Game Tools
 
-**By Mode** · WoW Forever · Public beta candidate 0.2.0-beta.1
+**By Mode and Prox** · WoW Forever · Public beta candidate 0.2.0-beta.1
 
 Play The Game Tools brings useful everyday tools into one modular addon with a unified dark
 configuration interface. Enable the features you want, adjust their appearance,
