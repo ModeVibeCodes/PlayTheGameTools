@@ -28,6 +28,33 @@ lua.globals().expectedInventory=expected
 lua.execute(inventory+r'''
 addon:ToggleConfig()
 assert(Inventory()==expectedInventory,'all original module setting rows retained')
+-- Native anchored viewports resolve after their strip. The mock normally gives
+-- unsized frames 1024 units, which previously hid this startup ordering bug.
+for _,id in ipairs({'foreverGuildRoster','lootSparkles','foreverClassTraining'}) do
+ local p=addon:EnsureConfigPage(id);local strip=p.sectionTabs;local viewport=strip.viewport
+ local widths={};for i,button in ipairs(strip.buttons) do widths[i]=button:GetWidth() end
+ viewport:SetWidth(0);strip:Layout()
+ for i,button in ipairs(strip.buttons) do assert(button:GetWidth()==widths[i],'unresolved viewport must not shrink existing click targets '..id) end
+ assert(viewport.scripts.OnSizeChanged,'resolved viewport needs its own layout notification '..id)
+ for _,width in ipairs({900,720,1080}) do
+  viewport:SetWidth(width);viewport.scripts.OnSizeChanged(viewport,width,34)
+  for _,button in ipairs(strip.buttons) do
+   assert(button:GetWidth()>100 and button:GetHeight()==30,'pill must retain a usable click target '..id)
+   assert(button.tabX+button.tabWidth<=width,'pills stay inside their resolved viewport '..id)
+  end
+ end
+ strip.buttons[1].scripts.OnClick();assert(p.selectedSection==p.sections[1],'recovered pill is clickable '..id)
+end
+local quick=addon:EnsureConfigPage('foreverQuickAccess');local quickBar=quick.modeLayout.bar
+quickBar:SetWidth(0);quick:Layout()
+for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()>100,'unresolved custom bar preserves usable pills') end
+quickBar:SetWidth(760);quickBar.scripts.OnSizeChanged(quickBar,760,78)
+for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()>300,'custom pills recover on their own size event') end
+local clearBar=quickBar.ClearAllPoints;local barAnchors=0
+function quickBar:ClearAllPoints() barAnchors=barAnchors+1;clearBar(self);self.scripts.OnSizeChanged(self,self:GetWidth(),self:GetHeight()) end
+quick:Layout();quick:Layout()
+assert(barAnchors==0 and not quick.modeLayout.layingOut,'unchanged bar anchors cannot create native size feedback')
+quickBar.ClearAllPoints=clearBar
 local panels={'options','text','appearance','position'}
 for _,id in ipairs(addon.moduleOrder) do
  addon:SelectConfigPage(id)

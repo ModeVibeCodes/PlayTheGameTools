@@ -4,6 +4,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Fix Mode primary pills collapsing into one-pixel, unusable targets when their
+  anchored viewport has not resolved its width. Wait for a usable viewport,
+  relayout on the viewport's own size/show events, and retain safe widths for
+  other Mode pill bars. Settings and module behavior are unchanged; `/reload` OOC.
+
 - After owner approval of Campfire Monitor, extend the compact layout across
   Forever module settings in Mode only: fitted bordered pills, tucked sub-tabs,
   consistent Options/Text/Appearance/Position placement, picker-only colors,

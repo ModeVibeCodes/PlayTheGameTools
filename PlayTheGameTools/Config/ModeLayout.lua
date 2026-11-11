@@ -270,8 +270,14 @@ function W.ApplyModeModuleLayout(page,id)
         local mainHeight=not plan.preserveSections and #state.features>1 and 44 or 0
         local barHeight=hasSettings and mainHeight+(panelCount>1 and 34 or 0)+8 or 0
         bar:SetShown(owned and barHeight>0)
-        bar:ClearAllPoints();bar:SetPoint("TOPLEFT",0,-top);bar:SetPoint("TOPRIGHT",-24,-top);bar:SetHeight(math.max(1,barHeight))
-        local width=math.max(1,bar:GetWidth())
+        if state.barTop~=top then
+            state.barTop=top
+            bar:ClearAllPoints();bar:SetPoint("TOPLEFT",0,-top);bar:SetPoint("TOPRIGHT",-24,-top)
+        end
+        if bar:GetHeight()~=math.max(1,barHeight) then bar:SetHeight(math.max(1,barHeight)) end
+        local width=bar:GetWidth()
+        if width<64 then width=state.tabWidth or math.max(480,self.scroll:GetWidth())
+        else state.tabWidth=width end
         for i,button in ipairs(state.buttons) do
             local gap=math.min(8,width/20);local cell=math.max(1,(width-24-gap*(#state.buttons-1))/#state.buttons)
             button:ClearAllPoints();button:SetPoint("TOPLEFT",12+(i-1)*(cell+gap),0);button:SetWidth(cell)
@@ -354,6 +360,7 @@ function W.ApplyModeModuleLayout(page,id)
         end
         state.layingOut=false
     end
+    bar:SetScript("OnSizeChanged",function() page:Layout() end)
     addon.Media:RegisterFontListener(bar,function() page:Layout() end)
     page:SelectModePanel(state.feature,"options")
     if page.UpdatePreviewLayout then page:UpdatePreviewLayout() end

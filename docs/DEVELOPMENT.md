@@ -1,5 +1,13 @@
 # Standalone Forever development
 
+Mode rollout correction: native screenshots exposed primary section pills
+collapsing before their anchored viewport resolved. Mode SectionTabs now anchor
+early, preserve existing widths while unresolved, and listen to viewport sizing
+and showing. Custom/Campfire bars also relayout on their own size events; custom
+bar anchors are cached to prevent resize feedback. The regression explicitly
+models zero-width initialization (the default mock previously returned 1024).
+No new files/assets or setting changes; test with `/reload` OOC.
+
 November 10 Mode rollout: the owner accepted Campfire Monitor's design and
 authorized adapting the remaining module settings. Shared Config/ModePlans.lua
 and Config/ModeLayout.lua route existing controls without gameplay or saved-data

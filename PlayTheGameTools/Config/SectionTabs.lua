@@ -26,6 +26,7 @@ function W.SectionTabs(page, order)
     assert(#sections == #page.sections, "Play The Game Tools: settings tabs must include every section.")
     local strip = CreateFrame("Frame", nil, page)
     strip:SetHeight(34)
+    if modePills then strip:SetPoint("TOPLEFT");strip:SetPoint("TOPRIGHT",-24,0) end
     -- Underline tabs rest on one baseline hairline across the strip.
     strip.baseline = W.Fill(strip, T.line, "BACKGROUND")
     strip.baseline:ClearAllPoints(); strip.baseline:SetPoint("BOTTOMLEFT", 0, 2); strip.baseline:SetPoint("BOTTOMRIGHT", 0, 2)
@@ -46,7 +47,11 @@ function W.SectionTabs(page, order)
     end
     function strip:Layout()
         if modePills then
-            local available=math.max(1,viewport:GetWidth())
+            -- Anchored children can still report zero while their parent is
+            -- resolving size. Keep the existing hit targets until the viewport
+            -- delivers its own size event, rather than saving one-pixel pills.
+            local available=viewport:GetWidth()
+            if available<64 then return end
             local gap=math.min(8,available/20)
             local width=math.max(1,(available-24-gap*(#sections-1))/#sections)
             for i,button in ipairs(self.buttons) do
@@ -118,6 +123,10 @@ function W.SectionTabs(page, order)
     right:SetScript("OnClick", function() strip:Scroll(offset + 160) end)
     viewport:EnableMouseWheel(true); viewport:SetScript("OnMouseWheel", function(_, delta) strip:Scroll(offset - delta * 100) end)
     strip:SetScript("OnSizeChanged", function() strip:Layout() end)
+    if modePills then
+        viewport:SetScript("OnSizeChanged",function() strip:Layout() end)
+        strip:HookScript("OnShow",function() strip:Layout() end)
+    end
     page.sectionTabs = strip
     addon.Media:RegisterFontListener(strip, function(owner) owner:Layout() end)
     strip:Layout()

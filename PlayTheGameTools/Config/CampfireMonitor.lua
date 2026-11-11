@@ -538,8 +538,9 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             local width=math.max(456,self.content:GetWidth()-self.contentInset*2)
             page.contributionFont:SetWidth(math.max(160,math.min(260,width-198)))
             local available=bar:GetWidth()
-            if available<=0 then available=self.scroll:GetWidth() end
-            if available<=0 then available=width end
+            if available<64 then available=state.tabWidth or self.scroll:GetWidth() end
+            if available<64 then available=width end
+            state.tabWidth=available
             local padding=math.min(12,available/8)
             local usable=available-padding*2
             local gap=math.min(8,usable/12)
@@ -601,5 +602,6 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             if not row.campfireHidden and row.campfireElement==id and row.campfirePanel=="options" then target.row=row;break end
         end
     end
+    bar:SetScript("OnSizeChanged",function() page:Layout() end)
     addon.Media:RegisterFontListener(bar,function() page:Layout() end)
 end

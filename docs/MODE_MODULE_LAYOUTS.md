@@ -5,6 +5,13 @@ to the other module settings pages in PR #26. This rollout is **Mode only**.
 Modern and Blizzard keep their existing page layouts. Broad native acceptance
 is pending; the owner will review all modules before considering other themes.
 
+Native correction: the initial rollout could condense primary pills into a
+one-pixel target during unresolved viewport sizing. The follow-up preserves
+usable widths and relayouts when the viewport/bar actually finishes sizing.
+First retest **Gameplay Enhancements**, **Roster** and **Class Training** after
+`/reload` OOC: the main pills must be full-width, readable and clickable, including
+after resizing or reopening the window. No new artwork or restart is required.
+
 The shared presentation layer reuses existing controls, getter/setter callbacks,
 visibility predicates, search entries and saved settings. It adds no gameplay
 behavior, settings defaults or SavedVariables migration. No settings were deleted.
