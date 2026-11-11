@@ -7,6 +7,9 @@ switch or runtime behavior. [Implementation and exact checks](CHARACTER_RESKIN.m
 Screenshot refinement adds the navigation-gray material, dedicated tab spacing,
 helm-relative stat rows, rarity/ammo edges and reversible Mode control/portrait/
 name styling. Unreadable effects and irrelevant generic controls are hidden.
+Latest refinement: quiet unified framing, circular portrait crop, Mode scrollbar,
+independent Quick Stats pill with per-stat choices, and toggleable gold/equipped
+durability footer rows. Native refinement validation remains pending.
 
 Mode module layouts: Campfire's flow is owner-accepted and now applied across
 module settings in Mode only. Every setting and callback is retained, with

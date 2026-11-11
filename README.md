@@ -13,8 +13,8 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 
 - **Reskins → Character Panel (opt-in pilot):** Mode-themed native character
   sheet, SharedMedia fonts, relevant panel/border/text controls, rarity edges and
-  enchant/weapon-imbue labels and quick
-  stats. Damage Meters and Chat Window are planned pages. See the
+  enchant/weapon-imbue labels, independent stat choices and optional gold/
+  durability readouts. Damage Meters and Chat Window are planned pages. See the
   [pilot guide](docs/CHARACTER_RESKIN.md); native acceptance is pending.
 
 - **Global Settings:** shared addon/game UI fonts, bundled LibSharedMedia choices,

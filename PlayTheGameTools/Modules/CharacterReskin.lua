@@ -10,7 +10,13 @@ for _, entry in ipairs({{"damageMeterReskin","Damage Meters"},{"chatReskin","Cha
         configDescription="Planned phase. Character Panel is the current refinement target."})
 end
 local D=addon.ForeverRogueData -- shared guarded reads, independent of Rogue enable state/class
+M.statNames={"Strength","Agility","Stamina","Intellect","Spirit","Armor","Attack Power","Holy Spell Power","Healing",
+    "Melee Crit","Spell Crit","Melee Hit","Melee Haste","Spell Haste","Expertise","Dodge","Parry","Block"}
+local statsShown={};for _,name in ipairs(M.statNames) do statsShown[name]=true end
 M.defaults={quickStats=true,enhancements=true,font="game",fontMedia="",fontSize=11,outline=false,shadow=true,
+    showGold=true,showDurability=true,statsShown=statsShown,
+    quickStyle={font="game",fontMedia="",fontSize=11,outline=false,shadow=true,textColor={212/255,212/255,212/255}},
+    frameColor={66/255,66/255,66/255},frameOpacity=70,frameSize=1,
     textColor={212/255,212/255,212/255},accentColor={0,240/255,1},
     enchantColor={127/255,219/255,151/255},imbueColor={230/255,184/255,1},
     panelColor={35/255,35/255,35/255},panelOpacity=100,titleSize=15,portraitSize=28,itemBorderSize=2,
@@ -22,18 +28,34 @@ M.defaults={quickStats=true,enhancements=true,font="game",fontMedia="",fontSize=
     padding=0,borderX=0,borderY=0,statsX=140,statsY=-4,statsWidth=116,statsAlign="LEFT",statsAnchor="TOPLEFT",
     enchantX=5,enchantY=0,enchantWidth=76,enchantAlign="AUTO"}
 M.ranges={fontSize={8,22,1},backgroundOpacity={0,100,1},foregroundOpacity={0,100,1},borderOpacity={0,100,1},
+    frameOpacity={0,100,1},frameSize={1,2,1},
     panelOpacity={0,100,1},titleSize={12,24,1},portraitSize={20,40,1},itemBorderSize={1,4,1},
     quickStatsX={0,120,1},quickStatsY={-150,100,1},quickStatsWidth={90,220,1},
     borderSize={1,12,1},padding={0,20,1},borderX={-30,30,1},borderY={-30,30,1},statsX={-150,250,1},
     statsY={-350,50,1},statsWidth={80,240,1},enchantX={-60,80,1},enchantY={-30,30,1},enchantWidth={40,160,1}}
 function M.Initialize(db)
-    for key,default in pairs(M.defaults) do
-        if db[key]==nil then db[key]=addon.ProfileCodec.Copy(default) end
-        local v=db[key];assert(D.Public(v) and type(v)==type(default),"Invalid character reskin setting: "..key)
+    local migrateQuickStyle=db.quickStyle==nil
+    local function Fill(target,defaults)
+      for key,default in pairs(defaults) do
+        if target[key]==nil then target[key]=addon.ProfileCodec.Copy(default) end
+        local v=target[key];assert(D.Public(v) and type(v)==type(default),"Invalid character reskin setting: "..key)
+        if type(default)=="table" then
+            if default[1]~=nil then for i=1,3 do assert(D.Number(v[i],0,1),"Invalid character reskin color") end
+            else Fill(v,default) end
+        end
+      end
+    end
+    Fill(db,M.defaults)
+    if migrateQuickStyle then
+        db.quickStyle={font=db.font,fontMedia=db.fontMedia,fontSize=db.fontSize,outline=db.outline,shadow=db.shadow,
+            textColor=addon.ProfileCodec.Copy(db.textColor)}
+    end
+    for key in pairs(M.defaults) do
+        local v=db[key]
         local r=M.ranges[key]
         if r then assert(D.Number(v,r[1],r[2]) and v==math.floor(v),"Invalid character reskin range: "..key) end
-        if type(default)=="table" then for i=1,3 do assert(D.Number(v[i],0,1),"Invalid character reskin color") end end
     end
+    assert(D.Number(db.quickStyle.fontSize,8,22) and db.quickStyle.fontSize==math.floor(db.quickStyle.fontSize),"Invalid quick stats font size")
     assert(({LEFT=true,CENTER=true,RIGHT=true})[db.statsAlign],"Invalid stats alignment")
     assert(({TOPLEFT=true,TOP=true,TOPRIGHT=true})[db.statsAnchor],"Invalid stats anchor")
     assert(({AUTO=true,LEFT=true,CENTER=true,RIGHT=true})[db.enchantAlign],"Invalid enhancement alignment")
@@ -61,8 +83,8 @@ function M:HideTextures(host)
     if not host or not host.GetRegions then return end
     for _,r in ipairs({host:GetRegions()}) do if r:IsObjectType("Texture") then self:HideArt(r) end end
 end
-function M:Font(text,color,size)
-    local db=self.db
+function M:Font(text,color,size,style)
+    local db=style or self.db
     local path=addon.Media:GetFont(db.fontMedia) or (db.fontMedia=="" and addon.Media:GetDisplayFont(db,true))
         or addon.Media:GetFont("Expressway") or addon.Media.gameFont
     if text:SetFont(path,size or db.fontSize,db.outline and "OUTLINE" or "")==false then
@@ -71,7 +93,7 @@ function M:Font(text,color,size)
     text:SetTextColor(unpack(color or db.textColor));text:SetShadowColor(0,0,0,db.shadow and .85 or 0)
     text:SetShadowOffset(db.shadow and 1 or 0,db.shadow and -1 or 0)
 end
-function M:Surface(host,foreground)
+function M:Surface(host,outlined)
     if not host then return end
     local s=self.surfaces[host]
     if not s then
@@ -80,19 +102,17 @@ function M:Surface(host,foreground)
         s.line=s:CreateTexture(nil,"BORDER");s.line:SetPoint("TOPLEFT",1,-1);s.line:SetPoint("TOPRIGHT",-1,-1);s.line:SetHeight(1)
         self.surfaces[host]=s
     end
-    local db=self.db;local p=0
-    -- Backdrop edges are inside this expanded rectangle: inner edge begins at the host's outer edge.
-    local edge={kind="thin",edgeSize=1}
-    local size=db.borderSize
-    s:ClearAllPoints();s:SetPoint("TOPLEFT",host,"TOPLEFT",-p-size,p+size)
-    s:SetPoint("BOTTOMRIGHT",host,"BOTTOMRIGHT",p+size,-p-size)
-    local ok=pcall(s.SetBackdrop,s,{edgeFile=edge.path or "Interface\\Buttons\\WHITE8X8",edgeSize=size>0 and size or 1})
-    if not ok then s:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=size>0 and size or 1}) end
-    s:SetBackdropBorderColor(db.borderColor[1],db.borderColor[2],db.borderColor[3],size>0 and db.borderOpacity/100 or 0)
+    local db=self.db
+    local size=host==_G.CharacterFrame and db.frameSize or 1
+    s:ClearAllPoints();s:SetAllPoints(host)
+    if outlined then
+        s:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=size})
+        s:SetBackdropBorderColor(db.frameColor[1],db.frameColor[2],db.frameColor[3],db.frameOpacity/100)
+    else s:SetBackdrop(nil) end
     if not addon.Media:ApplyTexture(s.fill,"ModeSurface") then s.fill:SetColorTexture(1,1,1,1) end
     local c=db.panelColor
     s.fill:SetVertexColor(c[1],c[2],c[3],db.panelOpacity/100)
-    s.line:SetColorTexture(db.borderColor[1],db.borderColor[2],db.borderColor[3],db.borderOpacity/100)
+    s.line:Hide()
     s:Show()
 end
 function M:StyleNativeFonts(host)
@@ -114,7 +134,7 @@ function M:StyleStats(host,depth)
         if r:IsObjectType("Texture") then
             local atlas=D.Call(r.GetAtlas,r)
             if type(atlas)=="string" and (atlas:find("UI-Character-Info-Stat",1,true) or atlas:find("UI-Character-Info-Line",1,true)) then self:HideArt(r) end
-            if atlas=="UI-Character-Info-Title" then self:HideArt(r);self:Surface(host,true) end
+            if atlas=="UI-Character-Info-Title" then self:HideArt(r);self:Surface(host) end
         end
     end
     for _,child in ipairs({host:GetChildren()}) do
@@ -129,6 +149,7 @@ function M:Restore()
     for _,s in pairs(self.surfaces) do s:Hide() end
     for _,text in pairs(self.labels) do text:Hide() end
     if self.stats then self.stats:Hide() end
+    if self.footer then self.footer:Hide() end
 end
 M.slots={{"Head",1,"left"},{"Neck",2,"left"},{"Shoulder",3,"left"},{"Back",15,"left"},
     {"Chest",5,"left"},{"Shirt",4,"left"},{"Tabard",19,"left"},{"Wrist",9,"left"},
@@ -146,18 +167,26 @@ function M:Refresh()
         root:HookScript("OnShow",function() if self.active then self:Refresh() end end)
         root:HookScript("OnHide",function() if self.active then self:Refresh() end end)
         paper:HookScript("OnHide",function() if self.active then self:Refresh() end end)
+        if type(hooksecurefunc)=="function" then
+            for _,method in ipairs({"UpdateTitle","UpdatePortrait"}) do
+                if type(root[method])=="function" then hooksecurefunc(root,method,function()
+                    if self.active and D.OutsideCombat() and root:IsShown() and paper:IsShown() then self:Refresh() end
+                end) end
+            end
+        end
         self.hooked=true
     end
     if not root:IsShown() or not paper:IsShown() then self:Restore();return end
-    self:HideTextures(root);self:HideTextures(root.NineSlice);self:Surface(root)
+    self:HideTextures(root);self:HideTextures(root.NineSlice);self:Surface(root,true)
     for _,host in pairs({root.LeftPaneHost,root.RightPaneHost,paper.TopBackgroundStripHost}) do
-        self:HideTextures(host);self:Surface(host,true);self:StyleNativeFonts(host)
+        self:HideTextures(host);self:Surface(host);self:StyleNativeFonts(host)
     end
     self:StyleNativeFonts(root.TitleContainer)
     self:StyleNativeFonts(_G.PaperDollLevelInfo)
     local stats=D.Call(function() return root:GetStatsPane() end)
     if stats then
         self:HideTextures(stats);self:Surface(stats)
+        self:StyleScrollBar(stats.ScrollBar)
         self:StyleStats(stats,0)
         if not self.statsHooked and type(stats.ScrollBoxOnUpdate)=="function" and type(hooksecurefunc)=="function" then
             hooksecurefunc(stats,"ScrollBoxOnUpdate",function()
@@ -173,14 +202,18 @@ function M:Refresh()
         if slot then self:HideTextures(slot.BorderFrame);self:StyleItem(slot,entry[2]) end
     end
     self:StyleChrome(root,paper,model)
-    self:UpdateStats(model or paper);self:UpdateEnhancements()
+    self:UpdateStats(model or paper);self:UpdateEnhancements();self:UpdateFooter(root,paper,model)
     self.status="Active. Native equipment buttons and model controls retained."
 end
 function M:OnEnable()
     self.active=true;self.events=self.events or CreateFrame("Frame")
     self.events:UnregisterAllEvents()
     for _,e in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_REGEN_ENABLED","PLAYER_EQUIPMENT_CHANGED",
-        "UNIT_STATS","UNIT_AURA","COMBAT_RATING_UPDATE","UNIT_ATTACK_POWER","UNIT_DAMAGE","GET_ITEM_INFO_RECEIVED","WEAPON_ENCHANT_CHANGED"}) do self.events:RegisterEvent(e) end
+        "UNIT_STATS","UNIT_AURA","COMBAT_RATING_UPDATE","UNIT_ATTACK_POWER","UNIT_DAMAGE","GET_ITEM_INFO_RECEIVED","WEAPON_ENCHANT_CHANGED",
+        "PLAYER_MONEY","UPDATE_INVENTORY_ALERTS"}) do self.events:RegisterEvent(e) end
+    -- Keep the inspected native alert/show refreshes if this optional event is
+    -- unavailable on a Forever build; an unsupported event must not abort init.
+    pcall(self.events.RegisterEvent,self.events,"UPDATE_INVENTORY_DURABILITY")
     self.events:SetScript("OnEvent",function(_,event,unit)
         if event:sub(1,5)=="UNIT_" and unit~="player" then return end
         if event=="PLAYER_REGEN_ENABLED" or event=="ADDON_LOADED" or not self.hooked or (_G.CharacterFrame and CharacterFrame:IsShown() and _G.PaperDollFrame and PaperDollFrame:IsShown()) then self:Refresh() end

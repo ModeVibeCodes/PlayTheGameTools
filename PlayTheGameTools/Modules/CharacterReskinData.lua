@@ -12,6 +12,7 @@ function M:UpdateStats(host)
     t:Hide();if not db.quickStats then return end
     local rows={}
     local function Add(name,value,percent)
+        if not db.statsShown[name] then return end
         rows[#rows+1]=name..": "..(value and string.format(percent and "%.1f%%" or "%.0f",value) or "—")
     end
     for i,name in ipairs({"Strength","Agility","Stamina","Intellect","Spirit"}) do
@@ -34,18 +35,59 @@ function M:UpdateStats(host)
     Add("Parry",Number(GetParryChance),true);Add("Block",Number(GetBlockChance),true)
     local helm=_G.CharacterHeadSlot
     if not helm then return end
-    local height=db.fontSize+3
+    for _,row in ipairs(t.rows) do row:SetText("");row:Hide() end
+    if #rows==0 then return end
+    local height=db.quickStyle.fontSize+3
     t:SetFrameLevel(math.max(host:GetFrameLevel(),helm:GetFrameLevel())+5)
     t:SetSize(db.quickStatsWidth,height*#rows)
     t:ClearAllPoints();t:SetPoint("TOPLEFT",helm,"TOPRIGHT",db.quickStatsX,db.quickStatsY)
     for i,value in ipairs(rows) do
         local row=t.rows[i]
         if not row then row=t:CreateFontString(nil,"OVERLAY");t.rows[i]=row end
-        self:Font(row);row:SetWordWrap(false);row:SetJustifyH("LEFT");row:SetJustifyV("MIDDLE")
+        self:Font(row,db.quickStyle.textColor,nil,db.quickStyle);row:SetWordWrap(false);row:SetJustifyH("LEFT");row:SetJustifyV("MIDDLE")
         row:ClearAllPoints();row:SetPoint("TOPLEFT",0,-(i-1)*height);row:SetSize(db.quickStatsWidth,height)
         row:SetText(value);row:Show()
     end
     t:Show()
+end
+function M:UpdateFooter(root,paper,model)
+    if not self.footer then
+        self.footer=CreateFrame("Frame",nil,paper);self.footer:EnableMouse(false)
+        self.footer.gold=self.footer:CreateFontString(nil,"OVERLAY")
+        self.footer.durability=self.footer:CreateFontString(nil,"OVERLAY")
+    end
+    local view,db=self.footer,self.db
+    view:Hide();view.gold:Hide();view.durability:Hide()
+    if not db.showGold and not db.showDurability then return end
+    view:ClearAllPoints();view:SetPoint("BOTTOMLEFT",root.LeftPaneHost or paper,"BOTTOMLEFT",16,12)
+    view:SetSize(125,(db.fontSize+4)*2);view:SetFrameLevel((model or paper):GetFrameLevel()+5)
+    local function Row(text,y,color)
+        self:Font(text,color);text:ClearAllPoints();text:SetPoint("BOTTOMLEFT",view,"BOTTOMLEFT",0,y)
+        text:SetSize(125,db.fontSize+4);text:SetWordWrap(false);text:SetJustifyH("LEFT");text:Show()
+    end
+    if db.showGold then
+        local copper=Number(GetMoney)
+        if copper and copper>=0 then
+            copper=math.floor(copper)
+            view.gold:SetText(string.format("%dg %02ds %02dc",math.floor(copper/10000),math.floor(copper/100)%100,copper%100))
+        else view.gold:SetText("Gold: —") end
+        Row(view.gold,0,{.83,.73,.48})
+    end
+    if db.showDurability then
+        local total,maximum,unknown=0,0,type(GetInventoryItemDurability)~="function"
+        if not unknown then for slot=1,18 do
+            local ok,current,limit=pcall(GetInventoryItemDurability,slot)
+            if not ok or not D.Public(current) or not D.Public(limit) then unknown=true
+            elseif current~=nil or limit~=nil then
+                if D.Number(current,0,1e9) and D.Number(limit,1,1e9) and current<=limit then total=total+current;maximum=maximum+limit
+                else unknown=true end
+            end
+        end end
+        local percent=not unknown and maximum>0 and math.floor(100*total/maximum+.5)
+        view.durability:SetText("Durability: "..(percent and percent.."%" or "—"))
+        Row(view.durability,db.showGold and db.fontSize+5 or 0,db.textColor)
+    end
+    view:Show()
 end
 -- Only typed permanent-enchantment lines are summarized. Ordinary item stats
 -- must never be mistaken for enchant stats. Unknown effects retain a short name.

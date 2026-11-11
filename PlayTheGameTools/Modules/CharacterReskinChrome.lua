@@ -84,10 +84,10 @@ function M:SkinButton(button,glyph,iconSize)
         local function Render()
             if not self.active or not D.OutsideCombat() or not _G.CharacterFrame or not CharacterFrame:IsShown() then return end
             local selected=D.Call(button.GetChecked,button)==true
-            local color=(selected or state.hovered) and self.db.accentColor or self.db.borderColor
-            surface:SetBackdropBorderColor(color[1],color[2],color[3],selected and 1 or .7)
+            local color=(selected or state.hovered) and self.db.accentColor or self.db.frameColor
+            surface:SetBackdropBorderColor(color[1],color[2],color[3],selected and .8 or self.db.frameOpacity/100)
             surface.fill:SetVertexColor(state.pressed and .10 or 35/255,state.pressed and .10 or 35/255,state.pressed and .10 or 35/255,1)
-            surface.line:SetColorTexture(color[1],color[2],color[3],selected and 1 or .35)
+            surface.line:SetColorTexture(color[1],color[2],color[3],.6);surface.line:SetShown(selected)
         end
         state.render=Render
         for _,script in ipairs({"OnEnter","OnLeave","OnMouseDown","OnMouseUp","OnEnable","OnDisable"}) do
@@ -105,21 +105,43 @@ end
 function M:StyleChrome(root,paper,model)
     local portrait=root.PortraitContainer and root.PortraitContainer.portrait
     if portrait then
-        self:RememberGeometry(portrait);portrait:ClearAllPoints();portrait:SetSize(self.db.portraitSize,self.db.portraitSize)
-        portrait:SetPoint("TOPLEFT",root,"TOPLEFT",8,-4)
-        self:Edge(portrait,root.PortraitContainer,portrait,self.db.borderColor,1)
+        local source=D.Call(portrait.GetTexture,portrait)
+        if source then
+            local view=self.portraitView
+            if not view then
+                view=CreateFrame("Frame",nil,root.PortraitContainer);view:EnableMouse(false)
+                view.rim=view:CreateTexture(nil,"BACKGROUND");view.rim:SetAllPoints()
+                view.icon=view:CreateTexture(nil,"ARTWORK");view.icon:SetPoint("CENTER",view,"CENTER",0,0)
+                view.mask=view:CreateMaskTexture();view.mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask","CLAMPTOBLACKADDITIVE","CLAMPTOBLACKADDITIVE")
+                view.mask:SetPoint("TOPLEFT",view,"TOPLEFT",1,-1);view.mask:SetPoint("BOTTOMRIGHT",view,"BOTTOMRIGHT",-1,1)
+                view.icon:AddMaskTexture(view.mask)
+                self.portraitView=view;self.decorations[view]=view
+            end
+            local size=self.db.portraitSize
+            view:ClearAllPoints();view:SetPoint("TOPLEFT",root,"TOPLEFT",10,-5);view:SetSize(size,size);view.icon:SetSize(size,size)
+            addon.Media:ApplyTexture(view.rim,"ModeThumb")
+            view.rim:SetVertexColor(self.db.frameColor[1],self.db.frameColor[2],self.db.frameColor[3],self.db.frameOpacity/100)
+            view.icon:SetTexture(source)
+            if portrait.GetTexCoord then view.icon:SetTexCoord(portrait:GetTexCoord()) end
+            self:HideArt(portrait);view:Show()
+        end
     end
     local container=root.TitleContainer
     local name=container and container.TitleText
     if container and name then
-        self:RememberGeometry(container);self:RememberGeometry(name)
-        container:ClearAllPoints();container:SetPoint("TOPLEFT",root,"TOPLEFT",42,-2);container:SetPoint("TOPRIGHT",root,"TOPRIGHT",-42,-2);container:SetHeight(22)
-        name:ClearAllPoints();name:SetAllPoints(container);name:SetJustifyH("CENTER");name:SetJustifyV("MIDDLE")
-        self:Font(name,self.db.textColor,self.db.titleSize)
+        local view=self.headerTitle
+        if not view then
+            view=CreateFrame("Frame",nil,container);view:EnableMouse(false);view:SetFrameLevel(container:GetFrameLevel()+1)
+            view.text=view:CreateFontString(nil,"OVERLAY");view.text:SetAllPoints();view.text:SetJustifyH("CENTER");view.text:SetJustifyV("MIDDLE")
+            self.headerTitle=view;self.decorations[view]=view
+        end
+        view:ClearAllPoints();view:SetPoint("TOPLEFT",root,"TOPLEFT",52,-5);view:SetPoint("TOPRIGHT",root,"TOPRIGHT",-52,-5);view:SetHeight(28)
+        local title=D.Call(name.GetText,name);view.text:SetText(type(title)=="string" and title or "")
+        self:Font(view.text,self.db.textColor,self.db.titleSize);self:HideArt(name);view:Show()
     end
     if root.CloseButton then
         self:RememberGeometry(root.CloseButton);root.CloseButton:ClearAllPoints();root.CloseButton:SetSize(26,26)
-        root.CloseButton:SetPoint("TOPRIGHT",root,"TOPRIGHT",-4,0);self:SkinButton(root.CloseButton,"X")
+        root.CloseButton:SetPoint("TOPRIGHT",root,"TOPRIGHT",-6,-6);self:SkinButton(root.CloseButton,"X")
     end
     self:SkinButton(root.RightPaneToggleButton,D.Call(root.IsRightPaneCollapsed,root)==true and ">" or "<")
     for i=1,4 do self:SkinButton(_G["PaperDollSidebarTab"..i],nil,28) end
@@ -145,4 +167,40 @@ function M:StyleChrome(root,paper,model)
     if host then for _,child in ipairs({host:GetChildren()}) do for _,region in ipairs({child:GetRegions()}) do
         if D.Call(region.GetAtlas,region)=="common-framedivider" then self:HideArt(region) end
     end end end
+end
+function M:StyleScrollBar(bar)
+    if not bar or not bar.Track or not bar.Track.Thumb then return end
+    self.scrollViews=self.scrollViews or {}
+    local view=self.scrollViews[bar]
+    if not view then
+        local function Face(parent)
+            local frame=CreateFrame("Frame",nil,parent);frame:SetAllPoints(parent);frame:SetFrameLevel(parent:GetFrameLevel()+2);frame:EnableMouse(false)
+            self.decorations[frame]=frame;return frame
+        end
+        view={track=Face(bar.Track),thumb=Face(bar.Track.Thumb),arrows={}}
+        view.track.line=view.track:CreateTexture(nil,"OVERLAY")
+        view.track.line:SetPoint("TOP",view.track,"TOP",0,0);view.track.line:SetPoint("BOTTOM",view.track,"BOTTOM",0,0);view.track.line:SetWidth(1)
+        view.track.line:SetColorTexture(66/255,66/255,66/255,.35)
+        view.thumb.line=view.thumb:CreateTexture(nil,"OVERLAY")
+        addon.Media:ApplyTexture(view.thumb.line,"ModeScrollThumb")
+        view.thumb.line:SetPoint("TOP",view.thumb,"TOP",0,0);view.thumb.line:SetPoint("BOTTOM",view.thumb,"BOTTOM",0,0);view.thumb.line:SetWidth(2)
+        local palette=addon.InterfaceThemes.mode.palette
+        local function Tint(color) view.thumb.line:SetVertexColor(unpack(color)) end
+        Tint(palette.lineStrong)
+        bar.Track.Thumb:HookScript("OnEnter",function() if self.active and D.OutsideCombat() then Tint(palette.muted) end end)
+        bar.Track.Thumb:HookScript("OnLeave",function() if self.active and D.OutsideCombat() then Tint(palette.lineStrong) end end)
+        for _,entry in ipairs({{bar.Back,"^"},{bar.Forward,"v"}}) do
+            local button,glyph=entry[1],entry[2]
+            if button then
+                local face=Face(button);face.text=face:CreateFontString(nil,"OVERLAY");face.text:SetAllPoints()
+                face.text:SetJustifyH("CENTER");face.text:SetJustifyV("MIDDLE");self:Font(face.text,palette.muted,10);face.text:SetText(glyph)
+                view.arrows[#view.arrows+1]=face
+            end
+        end
+        self.scrollViews[bar]=view
+    end
+    self:HideTextures(bar.Track);self:HideTextures(bar.Track.Thumb)
+    if bar.Back then self:HideTextures(bar.Back) end
+    if bar.Forward then self:HideTextures(bar.Forward) end
+    view.track:Show();view.thumb:Show();for _,face in ipairs(view.arrows) do face:Show() end
 end

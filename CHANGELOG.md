@@ -4,6 +4,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Unify character-panel framing with a subdued outer edge, borderless nested
+  canvases, circular cropped portrait, centered name copy and Mode scrollbar.
+  Give Quick Stats its own pill, per-stat choices and independent text styling.
+  Add separate default-on gold and weighted equipped-durability footer toggles.
+  Preserve native interactions, old preferences and OOC restoration; native
+  visual confirmation of this refinement remains pending.
+
 - Refine the character reskin from native screenshots: reserve settings space
   below the pills, anchor separate quick-stat rows beside the helm, use Mode's
   navigation material, strengthen rarity borders and refit ammo. Add Mode faces

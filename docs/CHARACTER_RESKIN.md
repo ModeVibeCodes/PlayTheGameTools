@@ -4,7 +4,43 @@ November 10, 2026. Character Panel is the only implemented reskin. Damage Meters
 and Chat Window are explicitly planned pages with no runtime enable switch.
 The pilot is opt-in, works under every configuration theme and preserves settings.
 
-## Screenshot refinement
+## Unified framing and independent displays
+
+The next owner screenshot showed doubled bright lines around nested panes and
+an awkward square portrait/name header. The current framing uses one subdued
+outer edge (#424242 at 70% by default). Nested canvases and stat heading plates
+have no full rectangular outlines; model/name crossbars are removed. Buttons
+use consistent one-unit edges with cyan reserved for hover/selection. Rarity
+edges remain separate, because they communicate item quality.
+
+The portrait is an addon-owned copy of the native spec/class texture and its
+texture coordinates, masked one pixel inside a circular ModeThumb rim. Its
+native texture and geometry remain intact underneath. The name also uses an
+owned, centered text region with equal 52-unit margins and a shared vertical
+center with portrait/close controls. The hidden originals restore on disable;
+secure post-hooks mirror native title/portrait updates outside combat.
+
+The native stats scrollbar retains its track/thumb size, anchors, hit targets,
+wheel/drag/step behavior and atlas state. Only native artwork is faded. Owned
+art uses the same two-unit ModeScrollThumb sprite and normal/hover tint as the
+addon interface, with a quiet one-unit track and small step glyphs.
+
+Quick Stats has its own pill. Show Quick Stats, per-stat choices, font, size,
+outline, shadow, color and placement are independent of panel text. Existing
+profiles inherit their prior shared text style once when the new style is
+missing; later edits stay separate. Hidden stats compact the list, and choosing
+none hides it. The panel's master enable state still controls this module.
+
+Options includes Show Gold and Show Durability, both default on. Gold displays
+carried copper as g/s/c at the bottom-left of the model pane. Durability sits
+above it (or uses the bottom row when gold is off). It is the rounded, weighted
+percentage: sum of current durability / sum of maximum durability over equipped
+slots 1–18 that have durability. Non-durable slots do not contribute. Missing or
+restricted values display a dash; partial durability is never presented as a
+complete total. Updates use native money/durability/inventory events and refresh
+OOC while open, with no polling. Both rows disappear on module disable.
+
+## Earlier screenshot refinement
 
 The owner confirmed a native start and supplied screenshots showing overlapping
 settings tabs, clipped quick stats and leftover Blizzard artwork. This refinement
@@ -26,9 +62,8 @@ awaits native confirmation; the first screenshot is not acceptance of the change
 - Add two-unit, full-color rarity edges around actual equipment icons. The size
   is adjustable. Common/empty/unreadable quality uses neutral gray. Refit ammo to
   its icon bounds, fading only stock bevel and arrow; preserve count/cooldown.
-- Shrink the native portrait to 28 units with a thin Mode border. Center the name
-  inside equal title margins at 15 units. Portrait/title/close geometry and native
-  fonts/decoration restore on disable or leaving the paper doll, outside combat.
+- Default the circular portrait copy to 28 units and the centered name to 15.
+  Native originals, fonts and close-button geometry restore outside combat.
 - Hide unreadable enhancement labels, including unknown weapon imbues. Remove
   Unknown Enhancement Color. Recognized permanent bonuses remain green; known
   poisons remain lavender; readable proc names retain a short name.
@@ -40,14 +75,16 @@ new texture files or client restart are expected.
 
 ## Relevant settings
 
-Options: Show Quick Stats, Show Enhancements, Status.
+Options: Show Enhancements, Show Gold, Show Durability, Status.
+Quick Stats: Show Quick Stats, Quick Stats Font, Quick Stats Font Size,
+Quick Stats Outline, Quick Stats Shadow, Quick Stats Color, Quick Stats Gap,
+Quick Stats Y Offset, Quick Stats Width, Displayed Stats (18 individual toggles).
 Text: Text Font (SharedMedia), Font Size, Text Outline, Text Shadow, Text Color,
 Enchant Color, Weapon Enhancement Color, Character Name Size.
 Appearance: Panel Color, Panel Opacity, Class Icon Size, Item Rarity Border Size,
 Control Accent Color.
 Borders: Panel Border Size, Panel Border Opacity, Panel Border Color.
-Position: Quick Stats Gap, Quick Stats Y Offset, Quick Stats Width,
-Enhancement X Offset, Enhancement Y Offset, Enhancement Width.
+Position: Enhancement X Offset, Enhancement Y Offset, Enhancement Width.
 
 Generic surface-media, foreground-opacity, border-media/padding/shift and quick
 stats anchor/alignment controls are removed from this pilot. Their earlier stored
@@ -69,10 +106,10 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
    switching tabs and scrolling still reaches every displayed setting.
 2. **Navigation:** WoW Character Info → Character → helm slot/model window.
    **Action:** open the sheet; inspect the entire quick-stat list.
-   **Required state:** OOC, Show Quick Stats enabled.
+   **Required state:** OOC, Quick Stats → Show Quick Stats enabled.
    **Confirmation:** all rows render, left-aligned immediately beside the helm,
    without covering its icon. Compare values to the native stats pane.
-3. **Navigation:** Play The Game Tools → Reskins → Character Panel → Position →
+3. **Navigation:** Play The Game Tools → Reskins → Character Panel → Quick Stats →
    Quick Stats Gap / Quick Stats Y Offset / Quick Stats Width.
    **Action:** adjust each. **Required state:** OOC, character sheet open.
    **Confirmation:** only the text list moves/resizes; its left edge stays
@@ -106,14 +143,34 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
    **Confirmation:** original art/fonts/portrait/name/button geometry restore;
    custom text disappears, and enable/reload preserves preferences.
 
+9. **Navigation:** Play The Game Tools → Reskins → Character Panel → Quick Stats
+   → Displayed Stats → Strength / Agility (checkboxes).
+   **Action:** hide individual stats, change Quick Stats Font Size / Quick Stats
+   Color, then change Text → Font Size. **Required state:** OOC.
+   **Confirmation:** the list compacts; quick-stat styling stays independent of
+   panel text. Turning all stats off hides the list; toggles survive reload.
+10. **Navigation:** Play The Game Tools → Reskins → Character Panel → Options →
+    Show Gold / Show Durability. **Action:** toggle each separately, then earn/
+    spend money or repair normally with the sheet open. **Required state:** OOC.
+    **Confirmation:** gold appears at bottom left, durability above; each row
+    hides independently. Amounts/condition refresh. Compare durability with the
+    weighted total of worn gear, not the worst individual item.
+11. **Navigation:** WoW Character Info → Character → stats scrollbar/header.
+    **Action:** drag/wheel/step through stats and hover the thumb; inspect header.
+    **Required state:** OOC. **Confirmation:** slim Mode scrollbar still works,
+    portrait has a circular crop/rim, name is centered, and no bright crossbar
+    cuts through the portrait or the model. Disable the module to check full
+    native artwork/scrollbar restoration.
+
 ## Validation limits
 
-All 37 local regression scripts pass. The release builder passes with the
-current candidate, and the focused checks were rerun after the final cleanup.
+All 37 local regression scripts pass; focused checks and the deterministic
+package build pass after the final cleanup. These remain mocked/static results.
 
-Regression fixtures cover tab separation, individual helm-relative rows, rarity
-edge geometry/colors, ammo decoration, native click-handler preservation,
-portrait/title restoration, restricted/missing enhancement suppression, combat
-restoration and profiles. The package has 122 Lua chunks / 224 files. Static and
-mocked checks do not establish native appearance, secure interaction, overlap,
-localization or performance; inspect this candidate before another reskin phase.
+Regression fixtures cover native ownership/restoration, tab separation, circular
+portrait copy/mask and source coordinates, equal title margins, no nested frame
+outlines, slim scrollbar artwork, independent stat filtering/styling/persistence,
+gold denomination formatting, durability aggregation/updates and restricted
+footer values. Static and mocked results cannot establish native appearance,
+secure interaction, text overlap, cropping or scrolling. The package remains
+122 Lua chunks / 224 files; no new media or client restart is expected.

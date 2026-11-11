@@ -4,6 +4,9 @@ Reskins: run `tests/character_reskin.py`, `tests/mode_module_layouts.py` and smo
 Screenshot refinements cover dedicated pill/content spacing, individual stat
 rows beside the helm, Mode-native control faces and reversible portrait/name
 geometry, dark navigation surfaces, rarity edges and the refitted ammo slot.
+Current checks also cover unified subtle framing, circular portrait crop, Mode
+scroll artwork, Quick Stats per-stat/style independence and optional gold/
+weighted durability footer updates. Use the Quick Stats pill for its controls.
 Use the [exact character-panel checks](docs/CHARACTER_RESKIN.md#native-validation)
 after OOC `/reload`. The pilot defaults off; native appearance, positioning and
 equipment interactions require owner confirmation before another reskin phase.

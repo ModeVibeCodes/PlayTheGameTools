@@ -2,6 +2,25 @@
 
 ## Character-panel reskin pilot — November 10, 2026
 
+Latest framing uses owned portrait/title copies: original spec/class texture
+coordinates are retained and a TempPortraitAlphaMask crops one pixel inside the
+ModeThumb circular rim; originals restore by alpha. Native title/portrait
+updates are mirrored through OOC post-hooks. MinimalScrollBar structure was
+inspected in [Forever XML](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_SharedXML/Shared/Scroll/MinimalScrollBar.xml)
+and [scripts](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_SharedXML/Shared/Scroll/MinimalScrollBar.lua).
+Track/Thumb/Back/Forward keep native scripts, atlas state, sizing and hit targets;
+custom track/thumb/step artwork is noninteractive. Native thumb atlases remain
+available to its OnSizeChanged handler while alpha-hidden.
+Gold uses guarded GetMoney (already used by existing Forever merchant/training
+modules). Durability follows GetInventoryItemDurability(slot) in the inspected
+Forever PaperDoll source: sum current/max over worn durable slots 1–18, rounded
+to a percent. Missing/restricted durable data invalidates the aggregate rather
+than reporting a misleading partial total. Refreshes use PLAYER_MONEY,
+optional UPDATE_INVENTORY_DURABILITY and inspected native UPDATE_INVENTORY_ALERTS, equipment/show/
+world events and OOC regeneration; there is no polling or combat readout update.
+An unsupported optional durability event is caught; the native alert/show
+refreshes remain available instead of aborting module initialization.
+
 Reviewed the [Forever CharacterFrame XML](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Camelot/CharacterFrame.xml),
 [PaperDoll XML](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Camelot/PaperDollFrame.xml),
 [stats implementation](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Camelot/PaperDollFrameStats.lua),
@@ -24,7 +43,8 @@ Screenshot refinement also inspects Forever's
 and [portrait/title mixins](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_SharedXML/PortraitFrame.lua).
 Chrome styles the existing model buttons, PaperDollSidebarTab1–4,
 RightPaneToggleButton and CloseButton without replacing native scripts or
-checked state. Portrait/title geometry is snapshotted/restored OOC. Rarity uses
+checked state. Modified native icon/close geometry is snapshotted/restored OOC;
+portrait/title originals remain underneath the current owned copies. Rarity uses
 the same GetInventoryItemQuality read as PaperDollItemSlotButton_Update;
 GetItemQualityColor supplies the color, with a neutral fallback. Ammo's count,
 icon and cooldown are preserved while only its bevel/arrow decoration is faded.

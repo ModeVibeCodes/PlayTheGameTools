@@ -1,5 +1,14 @@
 # Standalone Forever development
 
+Latest character-panel refinement removes nested model/title rectangles, uses
+one dark outer frame, circular masked portrait/name copies and slim Mode scroll
+art over the native controller. Quick Stats now owns a pill, all stat choices,
+font/color/placement and enable state. Gold/durability are separate Options
+toggles; durability aggregates current/max over durable equipped slots. Legacy
+shared quick-stat styling migrates once; subsequent panel edits stay separate.
+No new files/media, 122 Lua / 224 package files; native appearance/interaction
+review remains pending. [Current labels and checks](CHARACTER_RESKIN.md).
+
 Character-panel screenshot refinement: the pilot rendered natively, but tabs
 overlapped options, stats clipped, and stock stats/ammo/chrome artwork remained.
 Reskins now reserves a dedicated tab/content boundary, uses the Mode sidebar
