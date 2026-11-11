@@ -4,6 +4,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Correct the description scope: retain category subheadings, panel summaries and
+  minor labels in their original positions. Move the long explanatory blocks,
+  including Quest Automation and Merchant Automation, to Mode page bottoms.
+  Active automation rejection warnings return inline until cleared. Preserve
+  all settings and original-theme layouts.
+
 - Move optional Mode panel summaries and general explanatory notes to full-width
   page footers. Short pages place them at the bottom; long/wrapped notes scroll
   after controls without overlap. Keep live status and essential operational

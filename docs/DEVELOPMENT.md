@@ -1,5 +1,15 @@
 # Standalone Forever development
 
+Owner clarification supersedes the broad descriptor pass below: category
+subheadings, short panel summaries, separators and minor text stay in their
+approved locations. Only explicitly tagged explanatory blocks move to the
+bottom, including Quest Automation / Merchant Automation, Visibility Help,
+Food Selection, Other Addon Suites and Rogue's reference paragraphs. Source
+statuses and brief control instructions stay inline. Rejection warnings in the
+two automation blocks temporarily restore their original parent/anchors/height
+and return to footer placement when cleared. The injected Loot Sparkles status
+sentence is removed; original status text is preserved. Mode only; `/reload` OOC.
+
 Mode descriptor refinement: optional panel summaries and selected background
 notes now use full-width bottom rows. Pages lays out controls first, then footer
 notes after the form/toggle gutter or against the viewport bottom on short pages.

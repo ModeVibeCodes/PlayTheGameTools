@@ -9,7 +9,9 @@ function M:CreateConfigPage(parent)
     end
     local function Note(text,height)
         local c,row=FullRow("",height or 44);local t=W.Label(c,text,nil,0,-8,380,addon.Theme.muted);t:SetWordWrap(true)
-        row.layoutChildren=function(_,width) t:SetWidth(width-12) end;return t
+        row.layoutChildren=function(_,width) t:SetWidth(width-12) end
+        if text and text~="" then page:FooterNote(t) end
+        return t
     end
     local function Toggles(entries,group)
         local items={}

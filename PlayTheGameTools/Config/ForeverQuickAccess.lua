@@ -72,6 +72,7 @@ function M:CreateConfigPage(parent)
     local note=W.Label(page:Row("Visibility Help",96),
         "0% hides the bar and passes clicks through. Hover reveal works outside combat when opacity is above 0%. Profession opening and movement require being outside combat. Unlocking or Preview/Edit reveals learned icons.",nil,0,-4,280,addon.Theme.muted)
     note:SetWordWrap(true)
+    page:FooterNote(note)
     page:Section("Positioning")
     Toggle("Lock Bar","locked")
     local move=W.Label(page:Row("Move Bar",72),"Turn off Lock Bar, then drag any profession icon. Turn Lock Bar back on to open profession pages.",nil,0,-4,280,addon.Theme.muted)

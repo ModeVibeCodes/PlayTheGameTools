@@ -2,12 +2,11 @@
 
 ## Mode layout pilot — November 10
 
-Latest descriptor refinement moves panel summaries and optional Shared Style /
-Buffs TLDR explanations to full-width bottom notes. The live Campfire Status and
-contribution placement instructions remain inline. Narrow pages reclaim the
-former caption space; long notes scroll after fields. Text and controls remain
-available, with search preserved. Older inline-description notes below are
-historical; [current checks](MODE_MODULE_LAYOUTS.md#bottom-descriptions).
+Owner clarification restores panel summaries, category subheadings and minor
+text to their approved inline/left-column locations. Only the Shared Style /
+Buffs TLDR explanatory blocks use full-width bottom notes. Live Campfire Status
+and contribution placement instructions remain inline. Text and controls remain
+available, with search preserved; [current checks](MODE_MODULE_LAYOUTS.md#bottom-descriptions).
 
 The owner has now accepted this flow and authorized a Mode-only rollout to the
 other modules. Campfire retains the approved layout below; the shared rollout

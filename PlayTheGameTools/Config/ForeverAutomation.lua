@@ -20,6 +20,7 @@ function M:CreateConfigPage(parent)
     local questStatus = W.Label(page:Row("Quest Automation", 80), "", nil, 0, -4, 440, T.muted)
     questStatus:SetWordWrap(true)
     page.questStatusLabel = questStatus
+    page:FooterNote(questStatus,function() return self.questBlocked end)
     page.refreshers[#page.refreshers + 1] = function()
         select:Refresh()
         questStatus:SetText(self.questBlocked and "Unavailable this session: native quest action rejected. Leave quests manual and review before retrying." or
@@ -42,6 +43,9 @@ function M:CreateConfigPage(parent)
     page.repairThresholdSlider = thresholdRow.slider
     local merchantStatus = W.Label(page:Row("Merchant Automation", 80), "", nil, 0, -4, 440, T.muted)
     merchantStatus:SetWordWrap(true); page.merchantStatusLabel = merchantStatus
+    page:FooterNote(merchantStatus,function()
+        local blocked=self.merchantBlocked or {};return blocked.sellJunk or blocked.repair
+    end)
     page.refreshers[#page.refreshers + 1] = function()
         local blocked = self.merchantBlocked or {}
         merchantStatus:SetText((blocked.sellJunk or blocked.repair) and
@@ -61,6 +65,7 @@ function M:CreateConfigPage(parent)
         gossip[1].frame:SetEnabled(available); gossip[1].button:SetEnabled(available)
         gossip[1].label:SetTextColor(unpack(T.muted)); gossipStatus:SetText(reason)
     end
+    page.refreshers[#page.refreshers+1]=function() if page.modeFooterLayout then page:Layout() end end
     page:Finish()
     return page
 end

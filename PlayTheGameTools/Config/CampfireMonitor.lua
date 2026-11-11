@@ -238,6 +238,7 @@ end
 -- Campfire-only Mode pilot. Other themes keep the existing long-form groups.
 -- Selection is session presentation state, never a saved module option.
 function C:ApplyModeConfigLayout(page,firstRow,section)
+    page.modeFooterLayout=true
     local state={element="general",panel="options",last={},buttons={},panels={},section=section,searchEntries={},sideRows={}}
     page.campfirePilot=state
     local headingSize=T.fontSize.section+5
@@ -407,8 +408,6 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
     local bar=CreateFrame("Frame",nil,page);state.bar=bar
     bar:SetPoint("TOPLEFT",0,-40);bar:SetPoint("TOPRIGHT",-24,-40);bar:SetHeight(100)
     state.caption=W.Label(bar,"",nil,4,-78,440,T.muted)
-    state.footer,state.footerNote=W.ModeFooterCaption(page)
-    state.footer.visibleWhen=function() return page.selectedSection==section end
     state.caption:SetPoint("TOPRIGHT",-8,-78);state.caption:SetWordWrap(false)
     local rule=W.Fill(bar,T.line,"BACKGROUND")
     state.rule=rule;rule:SetHeight(1)
@@ -498,9 +497,9 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             self.layoutMinHeight=mixed and 60+toggleCount*42 or 0
         end
         state.summary:SetShown(active and wide and not general)
-        state.summaryTitle:SetShown(not mixed);state.summaryText:Hide();state.summaryUnderline:SetShown(not mixed)
+        state.summaryTitle:SetShown(not mixed);state.summaryText:SetShown(not mixed);state.summaryUnderline:SetShown(not mixed)
         state.inlineHeader:SetShown(mixed or compactHeader)
-        state.inlineSeparator:Hide();state.inlineText:Hide()
+        state.inlineSeparator:SetShown(mixed);state.inlineText:SetShown(mixed)
         state.inlineHeader:SetWidth(math.max(456,self.scroll:GetWidth()-4-self.contentInset*2))
         for _,group in ipairs(state.toggleGroups) do
             local move=mixed and group.row.campfireElement==state.element and group.row.campfirePanel==state.panel
@@ -511,9 +510,9 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
                 cell.button:ClearAllPoints();cell.button:SetPoint("TOPLEFT",move and -6 or -7,-6)
             end
         end
-        state.caption:Hide()
+        state.caption:SetShown(not wide)
         bar:SetShown(active)
-        local height=general and 56 or 84
+        local height=general and (wide and 56 or 80) or (wide and 84 or 100)
         bar:SetHeight(height)
         local top=active and 48+height or 40
         if (active or not self.modeLayout) and state.viewportTop~=top then
@@ -521,7 +520,6 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             self.scroll:ClearAllPoints();self.scroll:SetPoint("TOPLEFT",0,-top);self.scroll:SetPoint("BOTTOMRIGHT",-24,0)
             self.scrollbar:ClearAllPoints();self.scrollbar:SetPoint("TOPRIGHT",-4,-top-4);self.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
         end
-        if active then state.footerNote:SetText(captions[state.element][state.panel]) end
         layout(self)
         local leftY=40
         for _,group in ipairs(state.toggleGroups) do

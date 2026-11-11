@@ -16,6 +16,8 @@ function F:AddConfig(page)
     refresh:SetScript("OnClick",function() if D.OutsideCombat() then self:Scan();self:Render();page:Refresh() end end)
     local help=W.Label(page:Row("Food Selection",112),"Select your food below. Native food/drink candidates include drinks; leave those unselected. Include Bandages adds carried bandages. The bar is manual and out of combat only. Its Hide button turns off Show Food Bar; return here to show it again.",nil,0,-4,280,addon.Theme.muted)
     help:SetWordWrap(true)
+    if addon.InterfaceTheme.id=="mode" then help:SetText(help:GetText():gsub("Select your food below%.","Select your food from the list.")) end
+    page:FooterNote(help)
     page.foodCells={}
     for i=1,self.limit do
         local cell=page:ToggleGrid({{label="Food item "..i,

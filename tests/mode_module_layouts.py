@@ -114,9 +114,9 @@ for _,row in ipairs(spark.rows) do
  if row.settingsTitle=='Loot Sparkles Status' then status=row end
 end
 assert(how and how.settingsFooterNote and how:IsShown() and how.offset>status.offset+status:GetHeight(),'explanation follows active status and controls')
-assert(not status.settingsFooterNote and spark.sparkleStatus:GetText():find('Before enabling',1,true),'essential compatibility instruction stays with live status')
+assert(not status.settingsFooterNote and spark.sparkleStatus:GetText()==(addon.LootSparkles.status or 'Disabled.'),'live status retains its original text and location')
 assert(how.points[1][4]==spark.contentInset and how.settingsFooterNote:GetWidth()>800,'footer uses full page width')
-assert(spark.modeLayout.description:GetParent()==spark.modeLayout.footer and not spark.modeLayout.separator:IsShown(),'generic descriptor leaves the content heading')
+assert(spark.modeLayout.description:GetParent()==spark.modeLayout.header and spark.modeLayout.description:IsShown(),'category subheadings stay in their original header position')
 local getHeight=how.settingsFooterNote.GetStringHeight
 function how.settingsFooterNote:GetStringHeight() return 160 end
 spark.scroll:SetHeight(180);spark:Layout()
@@ -130,8 +130,23 @@ spark.scroll:SetHeight(700);spark:Layout()
 assert(spark.content:GetHeight()>=700,'short page footer rests at viewport bottom')
 local quickNotes=addon:EnsureConfigPage('foreverQuickAccess')
 for _,row in ipairs(quickNotes.rows) do
- if row.settingsTitle=='Visibility Help' or row.settingsTitle=='Move Bar' or row.settingsTitle=='Food Selection' then assert(not row.settingsFooterNote,'instructions needed to use controls stay inline') end
+ if row.settingsTitle=='Visibility Help' or row.settingsTitle=='Food Selection' then assert(row.settingsFooterNote,'long explanatory blocks go below settings') end
+ if row.settingsTitle=='Move Bar' then assert(not row.settingsFooterNote,'brief control instructions stay inline') end
 end
+local A=addon.ForeverAutomation;local automation=addon:EnsureConfigPage('foreverAutomation')
+automation:SelectModePanel('Quests','options');automation:Refresh();automation.scroll:SetHeight(700);automation:Layout()
+local questRow,modifierRow
+for _,row in ipairs(automation.rows) do
+ if row.settingsTitle=='Quest Automation' then questRow=row end
+ if row.settingsTitle=='Modifier Bypass' then modifierRow=row end
+end
+assert(questRow.settingsFooterNote==automation.questStatusLabel and questRow.offset>modifierRow.offset+modifierRow:GetHeight(),'the exact Quest Automation descriptor from the owner screenshot moves below settings')
+assert(automation.modeLayout.description:GetParent()==automation.modeLayout.header,'moving a paragraph does not move its category subheading')
+A.questBlocked=true;automation:Refresh()
+assert(not questRow.settingsFooterMoved and automation.questStatusLabel:GetParent()==questRow.settingsHost and questRow:GetHeight()==80,'active rejection warning returns to its original inline layout')
+assert(automation.questStatusLabel:GetText():find('Unavailable this session',1,true))
+A.questBlocked=nil;automation:Refresh()
+assert(questRow.settingsFooterMoved and questRow.offset>modifierRow.offset+modifierRow:GetHeight(),'normal explanation returns to the bottom when the warning clears')
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
 assert(timer.layoutInsetLeft==188 and timer.layoutTopInset==0,'wide plain forms keep the heading beside the fields')

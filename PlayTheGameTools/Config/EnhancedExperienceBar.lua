@@ -52,6 +52,7 @@ function M:CreateConfigPage(parent)
     local coexist = W.Label(page:Row("Other Addon Suites", 100),
         "Use PTG Only hides detected Blizzard/Ellesmere XP bars while this module is enabled. Use Existing Bar hides PTG and returns visibility to their owners. The toggles let you hide each bar separately while using PTG. Other suites remain controlled in their own settings. No external saved settings are changed.", nil, 0, -4, 360, addon.Theme.muted)
     coexist:SetWordWrap(true)
+    page:FooterNote(coexist)
     page:Section("Bar Appearance")
     Toggles({{"Hide at Maximum Level", "hideAtMax"}})
     local texture = W.Select(page:Row("Bar Texture", 48), 280, function() return self:GetTextureChoices() end,

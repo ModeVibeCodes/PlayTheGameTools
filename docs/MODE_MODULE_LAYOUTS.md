@@ -27,9 +27,10 @@ padding keeps their complete outlines visible, with no touching baseline. The
 smaller rectangular tabs tuck below a clipped separator
 when inactive and rise when selected. Only panels with existing settings appear.
 Each feature remembers its last panel until reload. Content headings are 20 units
-with thin, symmetric fading underlines. Wide forms place the heading beside their
-fields; mixed slider/toggle pages keep checkboxes under the left heading.
-Optional descriptions now sit at the bottom rather than occupying that space.
+with thin, symmetric fading underlines. Wide forms keep the heading and short
+subheading beside their fields; mixed slider/toggle pages keep checkboxes under
+the left heading and the short subheading inline after its separator. Only the
+long explanatory blocks move to the bottom; minor text keeps its location.
 
 | Sidebar category → page | Main pills / retained views | Common settings panels |
 | --- | --- | --- |
@@ -55,23 +56,25 @@ feature gates. A hidden result no longer attempts to scroll to a missing offset.
 
 ## Bottom descriptions
 
-Mode panel summaries, including Campfire's and Dungeon Loot General's summaries,
-now appear in full-width footers. General reference notes also move down: Loot
-Sparkles **How It Works**, Threat Meter's overview, XP **Forecasts / Session Scope**,
-and Campfire **Shared Style / Buffs TLDR**. Their text is retained. Footer notes
+The owner's clarification keeps category subheadings, short panel summaries and
+minor text in their original locations, including Campfire and Dungeon Loot.
+The long explanatory blocks move down: Automation **Quest Automation / Merchant
+Automation**, Quick Access **Visibility Help / Food Selection**, Loot Sparkles
+**How It Works**, Threat Meter's overview, XP **Other Addon Suites / Forecasts /
+Session Scope**, Campfire **Shared Style / Buffs TLDR**, and Rogue's threshold /
+poison-selection reference paragraphs. Their meaning is retained. Footer notes
 rest at the viewport bottom on short pages and scroll after controls on long
 pages. They measure wrapped text and clear both the form and left toggle column.
-Search still reveals the original explanation row. Narrow header bars no longer
-reserve extra space for an optional caption.
+Search still reveals the original explanation row. Header/subheading spacing is
+restored to the approved arrangement.
 
-Live status and instructions needed to operate controls stay inline: quest
-modifier and blocked-action guidance, repair limits, food choices, visibility
-and click-through behavior, bar dragging, choosing another XP bar, poison
-selection/thresholds, and contribution placement. Loot Sparkles' live status
-includes the short instruction to disable competing sparkle addons first; the
-full explanation and conditional restart information remain in How It Works.
-No unconditional restart request is added. Modern and Blizzard retain their
-original note layout.
+Live statuses, brief dragging instructions and contribution placement guidance
+remain inline. If quest or merchant automation is rejected, that block's live
+warning temporarily returns beside the controls with its original layout; once
+cleared, the normal explanation returns to the footer. Loot Sparkles keeps its
+original live status text; compatibility/restart information remains in How It
+Works. No unconditional restart request is added. Modern and Blizzard retain
+their original note layout.
 
 ## Exact in-game checks
 
@@ -157,11 +160,19 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
     inspect **Loot Sparkles Status**, then read **How It Works** at the bottom;
     narrow/shorten the window and search **How It Works** from Appearance.
     **Required state:** OOC, Mode selected. **Confirmation:** settings and live
-    status stay above the optional explanation; the compatibility instruction
-    remains beside status. Footer text uses the page width, wraps without
+    status stay above the explanation, with original status text and category
+    subheadings unchanged. Footer text uses the page width, wraps without
     clipping, scrolls after controls when needed and remains searchable. Inspect
     Campfire **Camp Buffs → Options** and **General** for the same footer flow,
     with contribution placement instructions still near their controls.
+13. **Navigation:** PTG Tools → Quality of Life → **Automation** → **Quests**.
+    **Action:** inspect **Modifier Bypass** and **Quest Automation**, then visit
+    **Merchant** and inspect **Merchant Automation**. **Required state:** OOC,
+    Mode selected; no NPC transaction is needed. **Confirmation:** the long
+    explanatory blocks are at the bottom, while category subheadings, minor
+    labels and controls retain their previous positions. Do not deliberately
+    trigger a rejected native action; conditional warning restoration is
+    covered by the mock regression and awaits ordinary native observation.
 
 Static validation: `tests/mode_module_layouts.py` checks complete original
 settings-label inventories, panel/search reachability, native callback ownership,

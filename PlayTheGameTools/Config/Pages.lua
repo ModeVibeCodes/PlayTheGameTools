@@ -43,10 +43,14 @@ function W.Page(parent, minimumWidth)
         local cursor = self.layoutTopInset or 0
         local footers={}
         local function Prepare(row,footer)
+            if not footer and row.settingsFooterMoved and row.settingsFooterRestore then
+                row.settingsFooterRestore();row.settingsFooterMoved=false
+            end
             local rowWidth=footer and math.max(1,content:GetWidth()-self.contentInset*2) or width
             row:SetWidth(rowWidth)
             if row.layoutChildren then row:layoutChildren(rowWidth) end
             if footer then
+                row.settingsFooterMoved=true
                 local note=row.settingsFooterNote
                 if note:GetParent()~=row then note:SetParent(row) end
                 local title=row.settingsLabel
@@ -69,9 +73,8 @@ function W.Page(parent, minimumWidth)
             row:SetShown(show)
             return show
         end
-        if self.modeFooterLayout then for _,row in ipairs(self.modeFooterRows or {}) do footers[#footers+1]=row end end
         for _, row in ipairs(self.rows) do
-            if self.modeFooterLayout and row.settingsFooterNote then footers[#footers+1]=row
+            if self.modeFooterLayout and row.settingsFooterNote and (not row.settingsFooterInlineWhen or not row.settingsFooterInlineWhen()) then footers[#footers+1]=row
             elseif Prepare(row,false) then
                 cursor = cursor + (row.gapBefore or 0)
                 row:ClearAllPoints()
@@ -104,10 +107,26 @@ function W.Page(parent, minimumWidth)
     function page:Refresh()
         for _, refresh in ipairs(self.refreshers) do refresh() end
     end
-    function page:FooterNote(note)
+    function page:FooterNote(note,inlineWhen)
         local row=note:GetParent().row
         assert(row,"Play The Game Tools: footer notes must belong to a settings row.")
         row.settingsFooterNote=note
+        row.settingsFooterInlineWhen=inlineWhen
+        if inlineWhen then
+            local function Points(region)
+                local out={};for i=1,region:GetNumPoints() do out[i]={region:GetPoint(i)} end;return out
+            end
+            local host,height,noteWidth=note:GetParent(),row:GetHeight(),note:GetWidth()
+            local notePoints,labelPoints=Points(note),Points(row.settingsLabel)
+            local labelWidth=row.settingsLabel:GetWidth()
+            row.settingsFooterRestore=function()
+                note:SetParent(host);note:ClearAllPoints();note:SetWidth(noteWidth)
+                for _,point in ipairs(notePoints) do note:SetPoint(unpack(point)) end
+                local label=row.settingsLabel;label:ClearAllPoints();label:SetWidth(labelWidth);label:SetTextColor(unpack(T.text))
+                for _,point in ipairs(labelPoints) do label:SetPoint(unpack(point)) end
+                row:SetHeight(height)
+            end
+        end
     end
     function page:SetSectionExpanded(section, expanded)
         section.expanded = expanded

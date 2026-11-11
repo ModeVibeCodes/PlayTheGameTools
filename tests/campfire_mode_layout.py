@@ -90,7 +90,7 @@ for _,width in ipairs({1000,840,480}) do
  assert(size.row:GetHeight()==46,'picker-only paired row fits even at the narrow supported width')
  assert(size:GetWidth()>100 and color.host:GetWidth()==80,'removed hex/Apply space goes to the slider')
  assert(pilot.summary:IsShown()==(width~=480) and page.layoutInsetLeft==(width~=480 and 188 or 0),'reference-style left column collapses on narrow pages')
- assert(pilot.togglesLeft==(width~=480) and pilot.inlineHeader:IsShown() and not pilot.inlineText:IsShown() and pilot.footer:IsShown(),'mixed panels keep left toggles and move their optional description to the footer')
+ assert(pilot.togglesLeft==(width~=480) and pilot.inlineHeader:IsShown() and pilot.inlineText:IsShown()==(width~=480),'category subheadings retain their approved inline placement')
  local cell=page.campfireControls.contributionUseInterfaceFont
  assert((cell.frame:GetParent()~=page.campfireControls.enabled.frame:GetParent()) and cell.frame:GetWidth()>0)
  if width~=480 then assert(cell.frame:GetWidth()==172 and size.row.points[1][4]==page.contentInset+188,'toggles sit under the left header while sliders stay in the right column') end
