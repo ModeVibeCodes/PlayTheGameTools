@@ -1,5 +1,16 @@
 # Standalone Forever development
 
+Mode descriptor refinement: optional panel summaries and selected background
+notes now use full-width bottom rows. Pages lays out controls first, then footer
+notes after the form/toggle gutter or against the viewport bottom on short pages.
+Wrapped text determines height; long notes scroll naturally and search still
+reveals their original row. Source rows and Class Training's dynamic pools are
+not reordered. Live status, modifier/repair/blocked-action guidance, food choices,
+click-through/dragging instructions and contribution placement guidance remain
+inline. Loot Sparkles retains a brief compatibility instruction by its live
+status while How It Works moves below controls. Other themes retain their
+original positions. No assets/defaults/gameplay changes; `/reload` OOC.
+
 Mode capsule refinement: all primary rows now share a centered 128×32 preferred
 size with eight-unit gaps. The existing 4:1 capsule is scaled proportionally on
 narrow rows, preserving round ends. Mode section strips have 40 units of height

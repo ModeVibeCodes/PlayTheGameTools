@@ -4,6 +4,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Move optional Mode panel summaries and general explanatory notes to full-width
+  page footers. Short pages place them at the bottom; long/wrapped notes scroll
+  after controls without overlap. Keep live status and essential operational
+  instructions inline. Preserve all note text, settings, search and other themes.
+
 - Standardize Mode primary pills at 128×32 and center their group across module
   pages instead of stretching short rows into long ovals. Narrow rows scale all
   capsules proportionally. Give section viewports vertical clearance and remove

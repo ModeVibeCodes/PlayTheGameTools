@@ -41,20 +41,56 @@ function W.Page(parent, minimumWidth)
         local leftInset=self.contentInset+(self.layoutInsetLeft or 0)
         width=math.max(1,width-leftInset-self.contentInset)
         local cursor = self.layoutTopInset or 0
-        for _, row in ipairs(self.rows) do
-            row:SetWidth(width)
-            if row.layoutChildren then row:layoutChildren(width) end
+        local footers={}
+        local function Prepare(row,footer)
+            local rowWidth=footer and math.max(1,content:GetWidth()-self.contentInset*2) or width
+            row:SetWidth(rowWidth)
+            if row.layoutChildren then row:layoutChildren(rowWidth) end
+            if footer then
+                local note=row.settingsFooterNote
+                if note:GetParent()~=row then note:SetParent(row) end
+                local title=row.settingsLabel
+                local titled=title and row.settingsTitle and row.settingsTitle~=""
+                if titled then
+                    title:Show();title:ClearAllPoints();title:SetPoint("TOPLEFT",0,0);title:SetWidth(rowWidth)
+                    title:SetTextColor(unpack(T.muted))
+                end
+                note:ClearAllPoints();note:SetPoint("TOPLEFT",0,titled and -20 or 0);note:SetWidth(math.max(1,rowWidth-8));note:SetWordWrap(true)
+                note:SetTextColor(unpack(T.muted))
+                local height=note:GetStringHeight()
+                if (issecretvalue and issecretvalue(height)) or type(height)~="number" or height~=height or height<0 or height==math.huge then height=32 end
+                row:SetHeight(math.max(14,height)+(titled and 20 or 0)+12)
+                if row.divider then row.divider:Hide() end
+            end
             local show = row.sectionHeader or not row.section or row.section.expanded
             if self.sectionTabs then show = not row.sectionHeader and (not row.section or row.section == self.selectedSection) and (not row.section or row.section.expanded) end
             if self.ModeRowVisible then show=self:ModeRowVisible(row,show) end
             if row.visibleWhen then show=show and row.visibleWhen() end
             row:SetShown(show)
-            if show then
+            return show
+        end
+        if self.modeFooterLayout then for _,row in ipairs(self.modeFooterRows or {}) do footers[#footers+1]=row end end
+        for _, row in ipairs(self.rows) do
+            if self.modeFooterLayout and row.settingsFooterNote then footers[#footers+1]=row
+            elseif Prepare(row,false) then
                 cursor = cursor + (row.gapBefore or 0)
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", leftInset, -cursor)
                 row.offset = cursor
                 cursor = cursor + row:GetHeight() + (row.gapAfter or 4)
+            end
+        end
+        local visibleFooters,footerHeight={},0
+        for _,row in ipairs(footers) do
+            if Prepare(row,true) then visibleFooters[#visibleFooters+1]=row;footerHeight=footerHeight+row:GetHeight()+8 end
+        end
+        if #visibleFooters>0 then
+            -- Short pages rest their notes at the bottom; long pages scroll
+            -- naturally past controls. Never overlay fields or the toggle gutter.
+            cursor=math.max(cursor+12,self.layoutMinHeight or 0,scroll:GetHeight()-footerHeight-12)
+            for _,row in ipairs(visibleFooters) do
+                row:ClearAllPoints();row:SetPoint("TOPLEFT",self.contentInset,-cursor);row.offset=cursor
+                cursor=cursor+row:GetHeight()+8
             end
         end
         self.cursor = cursor
@@ -67,6 +103,11 @@ function W.Page(parent, minimumWidth)
     scroll:SetScript("OnSizeChanged", function() page:Layout() end)
     function page:Refresh()
         for _, refresh in ipairs(self.refreshers) do refresh() end
+    end
+    function page:FooterNote(note)
+        local row=note:GetParent().row
+        assert(row,"Play The Game Tools: footer notes must belong to a settings row.")
+        row.settingsFooterNote=note
     end
     function page:SetSectionExpanded(section, expanded)
         section.expanded = expanded

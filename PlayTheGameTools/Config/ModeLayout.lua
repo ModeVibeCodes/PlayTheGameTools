@@ -8,6 +8,15 @@ local function Measure(label)
     return math.max(1,math.ceil(width))
 end
 
+function W.ModeFooterCaption(page,note)
+    local row=CreateFrame("Frame",nil,page.content)
+    note=note or W.Label(row,"",nil,0,0,400,T.muted)
+    note:SetParent(row);row.settingsFooterNote=note
+    page.modeFooterRows=page.modeFooterRows or {};page.modeFooterRows[#page.modeFooterRows+1]=row
+    page.modeFooterLayout=true
+    return row,note
+end
+
 -- Dungeon Loot keeps its pooled, navigable catalog. Only its General settings
 -- get compact panels; recycled rows carry the panel of their current content.
 function W.SetupModeBrowser(page,root)
@@ -22,6 +31,9 @@ function W.SetupModeBrowser(page,root)
     local separator=W.Label(header,"·",nil,0,0,8,T.muted);addon.Media:BindInterfaceFont(separator,GameFontHighlight,14)
     separator:ClearAllPoints();separator:SetPoint("LEFT",heading,"RIGHT",8,0)
     local description=W.Label(header,"",nil,0,0,300,T.muted);description:ClearAllPoints();description:SetPoint("LEFT",separator,"RIGHT",8,0)
+    local footer=W.ModeFooterCaption(root,description)
+    footer.visibleWhen=function() return addon.DungeonLoot.active and addon.DungeonLoot.view.tab=="general" end
+    separator:Hide()
     local _,align=W.ModeHeadingRule(header,heading)
     local choices={{"options","Options","Show the shortcut icon or choose its keybinding."},{"appearance","Appearance","Adjust the shortcut icon size and opacity."},
         {"position","Position","Move or reset the shortcut icon."},{"data","Data","Review and refresh the bundled dungeon data."}}
@@ -44,7 +56,7 @@ function W.SetupModeBrowser(page,root)
             button.label:ClearAllPoints();button.label:SetPoint("CENTER",0,selected and 0 or 4);button.label:SetWidth(math.max(1,cell-16));button.label:SetWordWrap(false)
             if selected then heading:SetText(entry[2]);description:SetText(entry[3]) end
         end
-        heading:SetWidth(Measure(heading));align();description:SetWidth(math.max(1,width-heading:GetWidth()-56))
+        heading:SetWidth(Measure(heading));align()
         return active
     end
 end
@@ -169,6 +181,8 @@ function W.ApplyModeModuleLayout(page,id)
     state.description=W.Label(header,"",nil,0,0,300,T.muted)
     state.description:ClearAllPoints();state.description:SetPoint("LEFT",state.separator,"RIGHT",8,0);state.description:SetWordWrap(true)
     state.underline,state.alignUnderline=W.ModeHeadingRule(header,state.heading)
+    state.footer=W.ModeFooterCaption(page,state.description)
+    state.footer.visibleWhen=function() return state.footerShown end
     local function Available(feature,panel)
         for row,route in pairs(state.routes) do
             if route.feature==feature and route.panel==panel and not row.sectionHeader and not row.subsectionHeading then return true end
@@ -323,7 +337,7 @@ function W.ApplyModeModuleLayout(page,id)
         end
         if owned then
             self.layoutInsetLeft=(mixed or summary) and 188 or 0
-            self.layoutTopInset=summary and 0 or ((hasSettings or dataHeader) and (wide and 44 or 72) or 0)
+            self.layoutTopInset=summary and 0 or ((hasSettings or dataHeader) and 36 or 0)
             self.layoutMinHeight=mixed and leftY+12 or (summary and 112 or 0)
             local viewportTop=top+barHeight
             if state.viewportTop~=viewportTop then
@@ -336,12 +350,8 @@ function W.ApplyModeModuleLayout(page,id)
         local title="Options";for _,entry in ipairs(panels) do if entry[1]==state.panel then title=entry[2] end end
         if dataHeader then title=state.feature end
         state.heading:SetText(title);state.heading:SetWidth(Measure(state.heading));state.alignUnderline()
-        state.separator:SetShown(wide and not summary)
-        state.description:ClearAllPoints()
-        if summary then state.description:SetPoint("TOPLEFT",state.heading,"BOTTOMLEFT",0,-12)
-        elseif wide then state.description:SetPoint("LEFT",state.separator,"RIGHT",8,0)
-        else state.description:SetPoint("TOPLEFT",0,-30) end
-        state.description:SetWidth(math.max(1,header:GetWidth()-((wide and not summary) and state.heading:GetWidth()+32 or 0)))
+        state.separator:Hide()
+        state.footerShown=owned and (hasSettings or dataHeader)
         state.description:SetText(dataHeader and "Browse the current information below." or W.ModePanelDescriptions[state.panel]);state.mixed=mixed
         layout(self)
         for _,group in ipairs(state.groups) do

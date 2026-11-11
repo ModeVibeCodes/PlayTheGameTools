@@ -5,6 +5,10 @@ module settings in Mode only. Every setting and callback is retained, with
 feature-specific catalogs/browsers intact. Modern/Blizzard retain their layouts;
 broad native testing is pending. [Coverage map and exact checks](MODE_MODULE_LAYOUTS.md).
 
+Mode optional descriptions now use full-width page footers; live status and
+instructions needed to operate controls remain inline. All text and settings
+are retained, with natural scrolling/search and existing-theme layout isolation.
+
 Global Settings: Appearance / Profiles / Optimizations / Class Colors, with bundled LSM media, standard game fonts, account-wide profiles, fast loot, scale/zoom and red-error controls. Previous page was user-reviewed; additions are static/mock validated, native review pending. See [Global Settings](GLOBAL_SETTINGS.md).
 
 | Feature | Configuration | Scope | Native status |

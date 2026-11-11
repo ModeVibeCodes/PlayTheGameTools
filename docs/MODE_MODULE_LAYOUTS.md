@@ -27,9 +27,9 @@ padding keeps their complete outlines visible, with no touching baseline. The
 smaller rectangular tabs tuck below a clipped separator
 when inactive and rise when selected. Only panels with existing settings appear.
 Each feature remembers its last panel until reload. Content headings are 20 units
-with thin, symmetric fading underlines. Wide forms place the heading and muted
-description beside their fields; mixed slider/toggle pages put the description
-inline after a dot, with checkboxes under the left heading.
+with thin, symmetric fading underlines. Wide forms place the heading beside their
+fields; mixed slider/toggle pages keep checkboxes under the left heading.
+Optional descriptions now sit at the bottom rather than occupying that space.
 
 | Sidebar category → page | Main pills / retained views | Common settings panels |
 | --- | --- | --- |
@@ -52,6 +52,26 @@ and opacity/color pairs share rows. On wide pages with both sliders and toggles,
 checkboxes move below the left heading; sliders stay in the form. Narrow pages
 restore checkbox rows. Search follows the visible host and respects disabled
 feature gates. A hidden result no longer attempts to scroll to a missing offset.
+
+## Bottom descriptions
+
+Mode panel summaries, including Campfire's and Dungeon Loot General's summaries,
+now appear in full-width footers. General reference notes also move down: Loot
+Sparkles **How It Works**, Threat Meter's overview, XP **Forecasts / Session Scope**,
+and Campfire **Shared Style / Buffs TLDR**. Their text is retained. Footer notes
+rest at the viewport bottom on short pages and scroll after controls on long
+pages. They measure wrapped text and clear both the form and left toggle column.
+Search still reveals the original explanation row. Narrow header bars no longer
+reserve extra space for an optional caption.
+
+Live status and instructions needed to operate controls stay inline: quest
+modifier and blocked-action guidance, repair limits, food choices, visibility
+and click-through behavior, bar dragging, choosing another XP bar, poison
+selection/thresholds, and contribution placement. Loot Sparkles' live status
+includes the short instruction to disable competing sparkle addons first; the
+full explanation and conditional restart information remain in How It Works.
+No unconditional restart request is added. Modern and Blizzard retain their
+original note layout.
 
 ## Exact in-game checks
 
@@ -132,6 +152,16 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
     previously checked module, then restore Mode and reload. **Required state:**
     OOC. **Confirmation:** both original themes retain their original layouts
     and color editors; edited module values and profile data persist.
+12. **Navigation:** PTG Tools → Questing & Leveling → Gameplay Enhancements →
+    **Loot Sparkles** → **Options**. **Action:** `/reload`, reopen the page,
+    inspect **Loot Sparkles Status**, then read **How It Works** at the bottom;
+    narrow/shorten the window and search **How It Works** from Appearance.
+    **Required state:** OOC, Mode selected. **Confirmation:** settings and live
+    status stay above the optional explanation; the compatibility instruction
+    remains beside status. Footer text uses the page width, wraps without
+    clipping, scrolls after controls when needed and remains searchable. Inspect
+    Campfire **Camp Buffs → Options** and **General** for the same footer flow,
+    with contribution placement instructions still near their controls.
 
 Static validation: `tests/mode_module_layouts.py` checks complete original
 settings-label inventories, panel/search reachability, native callback ownership,

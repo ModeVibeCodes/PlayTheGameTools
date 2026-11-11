@@ -104,6 +104,34 @@ for _,id in ipairs(addon.moduleOrder) do
   end
  end
 end
+-- Optional prose belongs below controls and outside the form gutter. Live
+-- status and operational instructions keep their original in-form positions.
+local spark=addon:EnsureConfigPage('lootSparkles')
+spark:SelectModePanel('Loot Sparkles','options');spark.scroll:SetHeight(700);spark:Layout()
+local how,status
+for _,row in ipairs(spark.rows) do
+ if row.settingsTitle=='How It Works' then how=row end
+ if row.settingsTitle=='Loot Sparkles Status' then status=row end
+end
+assert(how and how.settingsFooterNote and how:IsShown() and how.offset>status.offset+status:GetHeight(),'explanation follows active status and controls')
+assert(not status.settingsFooterNote and spark.sparkleStatus:GetText():find('Before enabling',1,true),'essential compatibility instruction stays with live status')
+assert(how.points[1][4]==spark.contentInset and how.settingsFooterNote:GetWidth()>800,'footer uses full page width')
+assert(spark.modeLayout.description:GetParent()==spark.modeLayout.footer and not spark.modeLayout.separator:IsShown(),'generic descriptor leaves the content heading')
+local getHeight=how.settingsFooterNote.GetStringHeight
+function how.settingsFooterNote:GetStringHeight() return 160 end
+spark.scroll:SetHeight(180);spark:Layout()
+assert(how:GetHeight()>=180 and how.offset>status.offset+status:GetHeight(),'wrapped footer scrolls below fields rather than overlaying them')
+local howEntry
+for _,entry in ipairs(spark.searchEntries) do if entry.label=='How It Works' then howEntry=entry end end
+spark:SelectModePanel('Loot Sparkles','appearance');spark:Reveal(howEntry)
+assert(how:IsShown() and spark.modeLayout.panel=='options' and spark.scrollbar:GetValue()>0,'search still reveals the bottom explanation')
+how.settingsFooterNote.GetStringHeight=getHeight
+spark.scroll:SetHeight(700);spark:Layout()
+assert(spark.content:GetHeight()>=700,'short page footer rests at viewport bottom')
+local quickNotes=addon:EnsureConfigPage('foreverQuickAccess')
+for _,row in ipairs(quickNotes.rows) do
+ if row.settingsTitle=='Visibility Help' or row.settingsTitle=='Move Bar' or row.settingsTitle=='Food Selection' then assert(not row.settingsFooterNote,'instructions needed to use controls stay inline') end
+end
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
 assert(timer.layoutInsetLeft==188 and timer.layoutTopInset==0,'wide plain forms keep the heading beside the fields')
@@ -189,6 +217,7 @@ addon:ToggleConfig();Inventory()
 for _,id in ipairs(addon.moduleOrder) do
  local p=addon:EnsureConfigPage(id);assert(not p.modeLayout and not p.modeBrowser,'Blizzard layout stays original')
  for _,color in ipairs(p.settingsColors or {}) do assert(color.hex:IsShown() and (not color.apply or color.apply:IsShown())) end
+ assert(not p.modeFooterLayout,'other themes keep their original description positions')
 end
 ''')
 print('PASS Mode module inventory, responsive panels, search, gutter restore, callbacks, browser recycling and theme isolation (mock only)')
