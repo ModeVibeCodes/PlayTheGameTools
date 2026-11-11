@@ -206,7 +206,7 @@ function M:CreateConfigPage(parent)
             local active=i==1 and self.db.quickApply=="last" or b.family and family==b.family
             b:SetBackdropBorderColor(active and 1 or 0.28,active and 0.85 or 0.32,active and 0.3 or 0.38,1)
         end
-        page.settingsButtons[2]:SetEnabled(self.active and next(self.dismissed)~=nil)
+        page.settingsButtons[2]:SetEnabled(self.active and (next(self.dismissed)~=nil or self.quickDismissed==true))
         page.displayButtons[1]:SetEnabled(self.db.watcher);page.displayButtons[2]:SetEnabled(self.db.flyout)
         status:SetText(not self.isRogue and "Rogue characters only." or not self.active and "Enable Rogue Tools using the header switch." or (self.lastMessage or self.status or "Ready."))
         page:Layout()

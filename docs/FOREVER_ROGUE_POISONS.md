@@ -245,3 +245,32 @@ The final correction uses true inter-icon gap and borderless Quick Access defaul
 with custom borders retained. Static layout/icon/charge regressions and the
 Forever package build passed. This confirmation does not establish exhaustive
 poison-family or combat coverage beyond the checklist above.
+
+## Quick Access right-click dismissal follow-up (2026-11-10)
+
+The existing **Right-click to Dismiss** toggle also governs the Quick Access
+Poisons launcher. Right-click hides its icon and closes the expanded menu without
+using poison or dismissing either Reminder hand. It stays hidden across polling,
+bag refreshes, combat transitions and visibility changes, including Always Outside
+Combat, until **Settings -> Restore Dismissed** or `/reload`. Dismissal is runtime
+state only. Preview/Edit Mode reveals it for positioning without clearing the
+dismissal; right-click there does not dismiss it. Quick Access remains OOC-only.
+
+Focused mocked regression coverage: `tests/rogue_quick_dismiss.py` checks hide/menu
+close, independent Reminder visibility, restore with Reminder disabled, reload,
+combat transitions, Always visibility, preview/Edit Mode and left-click preservation.
+Native behavior still needs owner confirmation.
+
+**Navigation:** `/ptg` -> Class Tools -> Rogue -> Display -> **Right-click to Dismiss**
+(on), **Quick Access Poisons** (on), **Quick Access Visibility** -> **Always Outside Combat**.
+**Action:** `/reload`; left-click the launcher to open its menu, then right-click
+the launcher. **Required state:** Rogue, module enabled, OOC, normal locked display,
+Preview/Edit Mode off. **Confirmation:** icon and menu disappear, Reminder hands
+remain independently visible, no poison is consumed; neither timer ticks nor bag
+updates bring the launcher back.
+
+**Navigation:** `/ptg` -> Class Tools -> Rogue -> Settings -> **Restore Dismissed**.
+**Action:** click **Restore Dismissed**. **Required state:** OOC, launcher dismissed.
+**Confirmation:** launcher returns and left-click opens its menu. Repeat dismissal
+and `/reload` to confirm reload also restores it; turn **Right-click to Dismiss**
+off in Display and confirm right-click neither hides nor opens the menu.

@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+Rogue Quick Access dismissal follow-up (2026-11-10): right-click the launcher to
+hide it and close its menu for the session. The existing dismissal toggle governs
+both displays; Settings -> Restore Dismissed restores both. Preview/Edit Mode
+reveals the icon without clearing dismissal. No new API, TOC or saved fields.
+Run `tests/rogue_quick_dismiss.py`, `tests/rogue_layout.py` and smoke/build.
+Native right-click acceptance remains pending.
+
 November 10 closeout: the owner accepted the final layout/descriptor placement
 and authorized merging PR #26 into main, explicitly retaining Mode-only scope.
 Mode guards and other-theme regression coverage were reviewed. Current main's
