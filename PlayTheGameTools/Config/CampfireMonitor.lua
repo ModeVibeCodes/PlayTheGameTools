@@ -449,10 +449,12 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         if addon.CloseTimerColorPicker then addon:CloseTimerColorPicker() end
         if addon.CloseFontDropdown then addon:CloseFontDropdown() end
     end
+    state.pillButtons={}
     for _,entry in ipairs(elements) do
         local id=entry[1]
         local button=W.Button(bar,entry[2],120,30,"roundedTab")
         button:SetScript("OnClick",function() page:SelectCampfirePanel(id) end);state.buttons[id]=button
+        state.pillButtons[#state.pillButtons+1]=button
     end
     state.panelViewport=CreateFrame("ScrollFrame",nil,bar)
     state.panelViewport:SetPoint("TOPLEFT",12,-38);state.panelViewport:SetPoint("TOPRIGHT",-12,-38);state.panelViewport:SetHeight(34)
@@ -543,17 +545,13 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             state.tabWidth=available
             local padding=math.min(12,available/8)
             local usable=available-padding*2
-            local gap=math.min(8,usable/12)
-            local cell=(usable-gap*3)/4
-            local groupWidth=cell*4+gap*3
-            local start=(available-groupWidth)/2
+            local cell=W.LayoutModePills(state.pillButtons,available) or 128
             state.panelContent:SetWidth(usable)
             state.panelViewport:SetVerticalScroll(0)
             state.panelViewport:SetShown(not general)
             for i,entry in ipairs(elements) do
                 local button=state.buttons[entry[1]]
-                button:ClearAllPoints();button:SetPoint("TOPLEFT",start+(i-1)*(cell+gap),0);button:SetWidth(cell)
-                button.label:SetWidth(math.max(1,cell-20));button.label:SetWordWrap(false);button:SetSelected(state.element==entry[1])
+                button:SetSelected(state.element==entry[1])
             end
             for i,entry in ipairs(panels) do
                 local button=state.panels[entry[1]]

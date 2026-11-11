@@ -278,10 +278,9 @@ function W.ApplyModeModuleLayout(page,id)
         local width=bar:GetWidth()
         if width<64 then width=state.tabWidth or math.max(480,self.scroll:GetWidth())
         else state.tabWidth=width end
+        W.LayoutModePills(state.buttons,width)
         for i,button in ipairs(state.buttons) do
-            local gap=math.min(8,width/20);local cell=math.max(1,(width-24-gap*(#state.buttons-1))/#state.buttons)
-            button:ClearAllPoints();button:SetPoint("TOPLEFT",12+(i-1)*(cell+gap),0);button:SetWidth(cell)
-            W.FitModeTab(button,cell);button:SetShown(mainHeight>0)
+            button:SetShown(mainHeight>0)
             button:SetSelected(state.features[i][1]==state.feature)
         end
         viewport:ClearAllPoints();viewport:SetPoint("TOPLEFT",0,-mainHeight);viewport:SetPoint("TOPRIGHT",0,-mainHeight)
@@ -297,6 +296,7 @@ function W.ApplyModeModuleLayout(page,id)
             end
         end
         rule:ClearAllPoints();rule:SetPoint("TOPLEFT",0,-mainHeight-(panelCount>1 and 34 or 0));rule:SetPoint("TOPRIGHT",0,-mainHeight-(panelCount>1 and 34 or 0))
+        rule:SetShown(panelCount>1)
         header:SetShown(owned and (hasSettings or dataHeader))
         local sliderCount,toggleCount=0,0
         for row,route in pairs(state.routes) do

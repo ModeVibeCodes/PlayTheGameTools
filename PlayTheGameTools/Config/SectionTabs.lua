@@ -13,6 +13,23 @@ function W.FitModeTab(button,width)
     if button.selectionEdge then W.AlignTextLine(button,button.selectionEdge) end
 end
 
+-- The capsule export is 4:1. Keep that aspect ratio instead of stretching its
+-- round ends into ellipses on pages with only two or three sections.
+function W.LayoutModePills(buttons,available)
+    if available<64 or #buttons==0 then return end
+    local gap=8
+    local width=math.min(128,math.max(1,(available-24-gap*(#buttons-1))/#buttons))
+    local height=width/4
+    local start=(available-width*#buttons-gap*(#buttons-1))/2
+    for i,button in ipairs(buttons) do
+        local x=start+(i-1)*(width+gap)
+        button:ClearAllPoints();button:SetPoint("TOPLEFT",x,(height-36)/2);button:SetSize(width,height)
+        W.FitModeTab(button,width)
+        button.tabX,button.tabWidth=x,width
+    end
+    return width
+end
+
 -- Session-only presentation of existing section/row metadata, also used by search.
 function W.SectionTabs(page, order)
     if page.sectionTabs or #page.sections < 2 then return end
@@ -25,15 +42,16 @@ function W.SectionTabs(page, order)
     else for _, section in ipairs(page.sections) do sections[#sections+1] = section end end
     assert(#sections == #page.sections, "Play The Game Tools: settings tabs must include every section.")
     local strip = CreateFrame("Frame", nil, page)
-    strip:SetHeight(34)
+    strip:SetHeight(modePills and 40 or 34)
     if modePills then strip:SetPoint("TOPLEFT");strip:SetPoint("TOPRIGHT",-24,0) end
     -- Underline tabs rest on one baseline hairline across the strip.
     strip.baseline = W.Fill(strip, T.line, "BACKGROUND")
     strip.baseline:ClearAllPoints(); strip.baseline:SetPoint("BOTTOMLEFT", 0, 2); strip.baseline:SetPoint("BOTTOMRIGHT", 0, 2)
     strip.baseline:SetHeight(1)
+    if modePills then strip.baseline:Hide() end
     local viewport = CreateFrame("ScrollFrame", nil, strip)
     viewport:SetPoint("TOPLEFT", 0, 0); viewport:SetPoint("BOTTOMRIGHT", 0, 0)
-    local content = CreateFrame("Frame", nil, viewport); content:SetSize(1, 32); viewport:SetScrollChild(content)
+    local content = CreateFrame("Frame", nil, viewport); content:SetSize(1, modePills and 38 or 32); viewport:SetScrollChild(content)
     local left = W.Button(strip, "<", 26, 28, "secondary"); left:SetPoint("LEFT")
     local right = W.Button(strip, ">", 26, 28, "secondary"); right:SetPoint("RIGHT")
     strip.buttons, strip.sections, strip.viewport = {}, sections, viewport
@@ -52,13 +70,7 @@ function W.SectionTabs(page, order)
             -- delivers its own size event, rather than saving one-pixel pills.
             local available=viewport:GetWidth()
             if available<64 then return end
-            local gap=math.min(8,available/20)
-            local width=math.max(1,(available-24-gap*(#sections-1))/#sections)
-            for i,button in ipairs(self.buttons) do
-                button:ClearAllPoints();button:SetPoint("TOPLEFT",12+(i-1)*(width+gap),0);button:SetSize(width,30)
-                W.FitModeTab(button,width)
-                button.tabX,button.tabWidth=12+(i-1)*(width+gap),width
-            end
+            W.LayoutModePills(self.buttons,available)
             content:SetWidth(available);self.maximum=0;self:Scroll(0);return
         end
         local x = 0

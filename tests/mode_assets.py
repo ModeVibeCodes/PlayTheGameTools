@@ -62,7 +62,7 @@ def alpha_at(data, x, y):
         return data[18+(min(py,h-1)*w+min(px,w-1))*4+3]/255
     return (a(ix,iy)*(1-fx)+a(ix+1,iy)*fx)*(1-fy)+(a(ix,iy+1)*(1-fx)+a(ix+1,iy+1)*fx)*fy
 
-for name,w,h,inset in [('CheckSurfaceRound',18,18,1),('ToggleSurfacePill',34,18,1),('PillSurface',156,30,1.5)]:
+for name,w,h,inset in [('CheckSurfaceRound',18,18,1),('ToggleSurfacePill',34,18,1),('PillSurface',128,32,1.5),('PillSurface',108,27,1.5)]:
     data=files['Media/Textures/Mode/'+name+'.tga']
     for iy in range(int((h-2*inset)*8)):
         for ix in range(int((w-2*inset)*8)):

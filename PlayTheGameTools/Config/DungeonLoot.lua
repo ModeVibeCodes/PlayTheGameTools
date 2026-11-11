@@ -170,10 +170,11 @@ function M:CreateConfigPage(parent)
     end
     function page:Layout()
         local width=self:GetWidth()
-        for index,b in ipairs(buttons) do
-            local cell=T.id=="mode" and math.max(1,(width-48)/4) or (width-12)/4
-            b:ClearAllPoints();b:SetSize(cell,32);b:SetPoint("TOPLEFT",T.id=="mode" and 12+(index-1)*(cell+8) or (index-1)*(width+4)/4,0)
-            if T.id=="mode" then W.FitModeTab(b,cell);W.AlignTextLine(b,b.underline) end
+        if T.id=="mode" then W.LayoutModePills(buttons,width)
+        else
+            for index,b in ipairs(buttons) do
+                b:ClearAllPoints();b:SetSize((width-12)/4,32);b:SetPoint("TOPLEFT",(index-1)*(width+4)/4,0)
+            end
         end
         local questTab=M.active and M.view.dungeon~=nil and M.view.tab=="quests"
         self.faction:SetShown(questTab)

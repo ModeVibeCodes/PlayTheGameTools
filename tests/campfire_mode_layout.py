@@ -99,6 +99,7 @@ for _,width in ipairs({1000,840,480}) do
  local left=first.points[1][4];local right=last.points[1][4]+last:GetWidth()
  assert(left>=0 and right<=width and math.abs((left+right)/2-width/2)<.001,'pill row stays centered within the page at each width')
  assert(first:GetWidth()==last:GetWidth() and first.points[1][5]==last.points[1][5] and not last.label.wordWrap,'pills resize equally on one row')
+ assert(first:GetWidth()<=128 and first:GetWidth()/first:GetHeight()==4,'primary capsules keep the same preferred size and circular end proportions')
 end
 -- Existing setters and native picker/cancel still operate from the moved controls.
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)

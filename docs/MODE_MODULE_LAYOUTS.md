@@ -9,7 +9,7 @@ Native correction: the initial rollout could condense primary pills into a
 one-pixel target during unresolved viewport sizing. The follow-up preserves
 usable widths and relayouts when the viewport/bar actually finishes sizing.
 First retest **Gameplay Enhancements**, **Roster** and **Class Training** after
-`/reload` OOC: the main pills must be full-width, readable and clickable, including
+`/reload` OOC: the main pills must be properly sized, readable and clickable, including
 after resizing or reopening the window. No new artwork or restart is required.
 
 The shared presentation layer reuses existing controls, getter/setter callbacks,
@@ -21,7 +21,10 @@ Menu navigation; the General shortcut buttons still open their customization.
 ## Layout map
 
 Open **PTG Tools**, then follow the sidebar category and page below. Main pills
-fit one centered row; the smaller rectangular tabs tuck below a clipped separator
+share a preferred 128×32 size and eight-unit gaps in one centered row. They scale
+proportionally only when a narrow row cannot fit the full group. Primary viewport
+padding keeps their complete outlines visible, with no touching baseline. The
+smaller rectangular tabs tuck below a clipped separator
 when inactive and rise when selected. Only panels with existing settings appear.
 Each feature remembers its last panel until reload. Content headings are 20 units
 with thin, symmetric fading underlines. Wide forms place the heading and muted

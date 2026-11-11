@@ -39,9 +39,13 @@ for _,id in ipairs({'foreverGuildRoster','lootSparkles','foreverClassTraining'})
  for _,width in ipairs({900,720,1080}) do
   viewport:SetWidth(width);viewport.scripts.OnSizeChanged(viewport,width,34)
   for _,button in ipairs(strip.buttons) do
-   assert(button:GetWidth()>100 and button:GetHeight()==30,'pill must retain a usable click target '..id)
+   assert(button:GetWidth()==128 and button:GetHeight()==32,'primary pills have the same default size across pages '..id)
    assert(button.tabX+button.tabWidth<=width,'pills stay inside their resolved viewport '..id)
+   assert(-button.points[1][5]+button:GetHeight()<strip:GetHeight(),'rounded border clears the clipping viewport '..id)
   end
+  local first,last=strip.buttons[1],strip.buttons[#strip.buttons]
+  assert(math.abs((first.tabX+last.tabX+last.tabWidth)/2-width/2)<.001,'fixed-size pill group stays centered '..id)
+  assert(not strip.baseline:IsShown(),'no baseline touches the pill border '..id)
  end
  strip.buttons[1].scripts.OnClick();assert(p.selectedSection==p.sections[1],'recovered pill is clickable '..id)
 end
@@ -49,7 +53,7 @@ local quick=addon:EnsureConfigPage('foreverQuickAccess');local quickBar=quick.mo
 quickBar:SetWidth(0);quick:Layout()
 for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()>100,'unresolved custom bar preserves usable pills') end
 quickBar:SetWidth(760);quickBar.scripts.OnSizeChanged(quickBar,760,78)
-for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()>300,'custom pills recover on their own size event') end
+for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()==128 and button:GetHeight()==32,'custom pills recover at the common size on their own size event') end
 local clearBar=quickBar.ClearAllPoints;local barAnchors=0
 function quickBar:ClearAllPoints() barAnchors=barAnchors+1;clearBar(self);self.scripts.OnSizeChanged(self,self:GetWidth(),self:GetHeight()) end
 quick:Layout();quick:Layout()

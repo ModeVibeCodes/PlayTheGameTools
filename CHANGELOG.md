@@ -4,6 +4,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Standardize Mode primary pills at 128×32 and center their group across module
+  pages instead of stretching short rows into long ovals. Narrow rows scale all
+  capsules proportionally. Give section viewports vertical clearance and remove
+  redundant baselines touching the borders; tucked secondary tabs are unchanged.
+
 - Fix Mode primary pills collapsing into one-pixel, unusable targets when their
   anchored viewport has not resolved its width. Wait for a usable viewport,
   relayout on the viewport's own size/show events, and retain safe widths for

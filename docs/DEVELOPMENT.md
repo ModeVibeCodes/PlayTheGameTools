@@ -1,5 +1,13 @@
 # Standalone Forever development
 
+Mode capsule refinement: all primary rows now share a centered 128×32 preferred
+size with eight-unit gaps. The existing 4:1 capsule is scaled proportionally on
+narrow rows, preserving round ends. Mode section strips have 40 units of height
+and a 38-unit scroll child, clearing the 32-unit pills; their redundant baseline
+is hidden. Standalone Options forms also omit the duplicate rule. Dungeon Loot,
+shared module rows and Campfire use the same geometry helper. No asset/default
+changes; focused geometry, alpha containment and callback checks plus build.
+
 Mode rollout correction: native screenshots exposed primary section pills
 collapsing before their anchored viewport resolved. Mode SectionTabs now anchor
 early, preserve existing widths while unresolved, and listen to viewport sizing
