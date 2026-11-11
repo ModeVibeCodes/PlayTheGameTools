@@ -116,8 +116,8 @@ themed.execute('''
     assert(T.text[1]<1 and T.text[2]<1 and T.panel[4]==1,'soft body text, opaque popups')
     SlashCmdList.PLAYTHEGAMETOOLS()
     local window=addon.configWindow
-    assert(window.blizzardBackdrop=='dialog' and window.backdrop.edgeFile==addon.Media.defaultStatusBar and window.backdrop.bgFile==nil)
-    assert(window.backdrop.edgeSize==1,'global Thin replaces the native wide dialog edge')
+    assert(window.blizzardBackdrop=='dialog' and window.backdrop.edgeFile==ART.dialogBorder and window.backdrop.bgFile==nil)
+    assert(window.backdrop.edgeSize==32 and window.backdrop.insets.top==12,'stock dialog edge is not replaced by Global Border')
     assert(window.canvas.shown~=false and window.canvas.color[4]==1,'opaque canvas under the dialog border')
     for _,id in ipairs(addon.moduleOrder) do addon:SelectConfigPage(id); assert(window.pages[id],id) end
     addon:SelectConfigPage('dashboard')

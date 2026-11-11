@@ -231,13 +231,15 @@ function W.BlizzardBackdrop(frame, kind)
         if frame.OnBackdropSizeChanged then frame:HookScript("OnSizeChanged", frame.OnBackdropSizeChanged) end
     end
     local dialog = kind == "dialog"
-    local ok = pcall(addon.Media.ApplyBackdrop, addon.Media, frame, {
+    -- Theme artwork is set directly: Global Border/Texture belong to module
+    -- displays and would replace the stock dialog and tooltip edges here.
+    local ok = pcall(frame.SetBackdrop, frame, {
         -- The dialog owner draws its own opaque canvas and stone (Window.lua).
         bgFile = not dialog and ART.tooltipBackground or nil,
         edgeFile = dialog and ART.dialogBorder or ART.tooltipBorder,
-        tile = true, tileSize = dialog and 32 or 16, edgeSize = 1,
+        tile = true, tileSize = dialog and 32 or 16, edgeSize = dialog and 32 or 16,
         insets = dialog and { left = 11, right = 12, top = 12, bottom = 11 } or { left = 4, right = 4, top = 4, bottom = 4 },
-    }, nil, true)
+    })
     if not ok then return false end
     if dialog then
         frame:SetBackdropColor(1, 1, 1, 1)

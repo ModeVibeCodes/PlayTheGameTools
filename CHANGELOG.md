@@ -4,6 +4,10 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Fix the Blizzard theme's settings window and popups losing their stock dialog
+  and tooltip borders: Global Border no longer replaces configuration edges and
+  applies to module displays only. The saved selection is preserved. Reload OOC.
+
 - Owner accepted the current mode cosmetic refresh and Global Texture isolation,
   and authorized PR #24's merge into main on 2026-11-09. Future interface changes
   will use a new PR; this acceptance does not expand module/gameplay validation.
