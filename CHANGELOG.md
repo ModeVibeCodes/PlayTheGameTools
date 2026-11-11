@@ -4,6 +4,14 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Finish character-panel controls: native C_Item rarity colors with subtle
+  static halos, separate stat-name/number colors, working 1–4 unit outer border,
+  centered modifier text cells with effective width, cyan enchant default and
+  class portrait aligned above the helm. Rename Enchants & Equipment Modifiers
+  and Positioning; group all placement controls there. Hide disabled features'
+  dependent rows immediately. Prior no-error native feedback is recorded;
+  this final refinement awaits native confirmation.
+
 - Fix character-reskin first-show/reload construction: assign fonts before
   setting name, gold and durability text. Cover native empty-title/open-panel
   startup with strict font fixtures. Hide the native model/stats divider early

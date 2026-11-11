@@ -1,5 +1,16 @@
 # Standalone Forever development
 
+Owner confirmed 31a1f57 looks better with no errors. Final requested refinement:
+use documented C_Item.GetItemQualityColor plus static rarity halos; split quick
+stat name/number colors; draw the outer border as an inside-fit high-layer frame
+with responsive 1–4 unit thickness and non-overlapping corners; center modifier
+text within its width. Defaults put the portrait above helm and enchants at
+#04B5DB (migrate the old green default once, retain custom colors). Positioning
+owns labeled sections for every placement control. Disabled feature controls
+hide via row predicates and immediate relayout. Existing keys/preferences and
+font-before-text construction remain intact. Current refinement is not yet
+native-accepted; 122 Lua / 224 files, no new media or client restart expected.
+
 Reload error investigation: 094c9de's owned title called SetText before SetFont;
 the gold/durability rows had the same latent ordering problem. Native font
 errors interrupted styling, leaving native chrome/divider visible and could

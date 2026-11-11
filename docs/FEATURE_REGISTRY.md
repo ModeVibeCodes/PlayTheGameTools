@@ -14,6 +14,10 @@ Reload correction assigns fonts before title/footer text, covers enabled-module
 startup with an already-open sheet, fades the native divider early and aligns
 the name to the level/class model-pane center. Current saved profiles validate
 read-only; the separate Campfire report remains unreplicated.
+Owner confirmed no-error rendering of that correction. Final requested polish
+adds native rarity halos, split stat colors, fitted/working border thickness,
+effective modifier cell width, cyan enchants and helm-aligned portrait defaults;
+Positioning groups all placements and hides disabled features' controls.
 
 Mode module layouts: Campfire's flow is owner-accepted and now applied across
 module settings in Mode only. Every setting and callback is retained, with

@@ -15,12 +15,15 @@ M.statNames={"Strength","Agility","Stamina","Intellect","Spirit","Armor","Attack
 local statsShown={};for _,name in ipairs(M.statNames) do statsShown[name]=true end
 M.defaults={quickStats=true,enhancements=true,font="game",fontMedia="",fontSize=11,outline=false,shadow=true,
     showGold=true,showDurability=true,statsShown=statsShown,
-    quickStyle={font="game",fontMedia="",fontSize=11,outline=false,shadow=true,textColor={212/255,212/255,212/255}},
+    quickStyle={font="game",fontMedia="",fontSize=11,outline=false,shadow=true,textColor={212/255,212/255,212/255},
+        nameColor={212/255,212/255,212/255},valueColor={212/255,212/255,212/255}},
     frameColor={66/255,66/255,66/255},frameOpacity=70,frameSize=1,
     textColor={212/255,212/255,212/255},accentColor={0,240/255,1},
-    enchantColor={127/255,219/255,151/255},imbueColor={230/255,184/255,1},
+    enchantColor={4/255,181/255,219/255},modifierColorRevision=1,imbueColor={230/255,184/255,1},
     panelColor={35/255,35/255,35/255},panelOpacity=100,titleSize=15,portraitSize=28,itemBorderSize=2,
     quickStatsX=6,quickStatsY=0,quickStatsWidth=116,
+    portraitX=0,portraitY=80,titleX=0,titleY=0,controlsX=0,controlsY=0,
+    goldX=16,goldY=12,durabilityX=16,durabilityY=28,
     -- Retired pilot fields remain valid for old profiles; the UI exposes only
     -- settings used by the current character-panel presentation.
     backgroundColor={42/255,42/255,42/255},foregroundColor={53/255,53/255,53/255},borderColor={179/255,179/255,179/255},
@@ -28,13 +31,18 @@ M.defaults={quickStats=true,enhancements=true,font="game",fontMedia="",fontSize=
     padding=0,borderX=0,borderY=0,statsX=140,statsY=-4,statsWidth=116,statsAlign="LEFT",statsAnchor="TOPLEFT",
     enchantX=5,enchantY=0,enchantWidth=76,enchantAlign="AUTO"}
 M.ranges={fontSize={8,22,1},backgroundOpacity={0,100,1},foregroundOpacity={0,100,1},borderOpacity={0,100,1},
-    frameOpacity={0,100,1},frameSize={1,2,1},
+    frameOpacity={0,100,1},frameSize={1,4,1},
+    portraitX={-150,150,1},portraitY={20,160,1},titleX={-150,150,1},titleY={-30,30,1},controlsX={-150,150,1},controlsY={-100,100,1},
+    goldX={0,260,1},goldY={0,150,1},durabilityX={0,260,1},durabilityY={0,150,1},
     panelOpacity={0,100,1},titleSize={12,24,1},portraitSize={20,40,1},itemBorderSize={1,4,1},
     quickStatsX={0,120,1},quickStatsY={-150,100,1},quickStatsWidth={90,220,1},
     borderSize={1,12,1},padding={0,20,1},borderX={-30,30,1},borderY={-30,30,1},statsX={-150,250,1},
     statsY={-350,50,1},statsWidth={80,240,1},enchantX={-60,80,1},enchantY={-30,30,1},enchantWidth={40,160,1}}
 function M.Initialize(db)
     local migrateQuickStyle=db.quickStyle==nil
+    local migrateNames=not db.quickStyle or db.quickStyle.nameColor==nil
+    local migrateValues=not db.quickStyle or db.quickStyle.valueColor==nil
+    local oldEnchant=db.modifierColorRevision==nil and db.enchantColor
     local function Fill(target,defaults)
       for key,default in pairs(defaults) do
         if target[key]==nil then target[key]=addon.ProfileCodec.Copy(default) end
@@ -49,6 +57,12 @@ function M.Initialize(db)
     if migrateQuickStyle then
         db.quickStyle={font=db.font,fontMedia=db.fontMedia,fontSize=db.fontSize,outline=db.outline,shadow=db.shadow,
             textColor=addon.ProfileCodec.Copy(db.textColor)}
+    end
+    if migrateNames then db.quickStyle.nameColor=addon.ProfileCodec.Copy(db.quickStyle.textColor) end
+    if migrateValues then db.quickStyle.valueColor=addon.ProfileCodec.Copy(db.quickStyle.textColor) end
+    if type(oldEnchant)=="table" and math.abs(oldEnchant[1]-127/255)<.000001
+        and math.abs(oldEnchant[2]-219/255)<.000001 and math.abs(oldEnchant[3]-151/255)<.000001 then
+        db.enchantColor=addon.ProfileCodec.Copy(M.defaults.enchantColor)
     end
     for key in pairs(M.defaults) do
         local v=db[key]
@@ -66,7 +80,13 @@ function M:SetAppearance(key,value)
     local copy=addon.ProfileCodec.Copy(self.db);copy[key]=value
     if not pcall(self.Initialize,copy) then return false end
     self.db[key]=addon.ProfileCodec.Copy(value);self:Refresh()
-    if self.page then self.page:Refresh() end
+    if self.page then
+        if value==false then
+            if addon.CloseTimerColorPicker then addon:CloseTimerColorPicker() end
+            if addon.CloseFontDropdown then addon:CloseFontDropdown() end
+        end
+        self.page:Refresh();self.page:Layout()
+    end
     return true
 end
 function M:GetFonts() return addon.Media:GetFonts() end
@@ -103,10 +123,9 @@ function M:Surface(host,outlined)
         self.surfaces[host]=s
     end
     local db=self.db
-    local size=host==_G.CharacterFrame and db.frameSize or 1
     s:ClearAllPoints();s:SetAllPoints(host)
-    if outlined then
-        s:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=size})
+    if outlined and host~=_G.CharacterFrame then
+        s:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
         s:SetBackdropBorderColor(db.frameColor[1],db.frameColor[2],db.frameColor[3],db.frameOpacity/100)
     else s:SetBackdrop(nil) end
     if not addon.Media:ApplyTexture(s.fill,"ModeSurface") then s.fill:SetColorTexture(1,1,1,1) end
@@ -177,7 +196,8 @@ function M:Refresh()
         self.hooked=true
     end
     if not root:IsShown() or not paper:IsShown() then self:Restore();return end
-    self:HideTextures(root);self:HideTextures(root.NineSlice);self:Surface(root,true)
+    self:HideTextures(root);self:HideTextures(root.NineSlice);self:HideTextures(root.FrameGlow);self:Surface(root)
+    self:StylePanelBorder(root)
     for _,host in pairs({root.LeftPaneHost,root.RightPaneHost,paper.TopBackgroundStripHost}) do
         self:HideTextures(host);self:Surface(host);self:StyleNativeFonts(host)
     end

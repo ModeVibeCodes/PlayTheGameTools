@@ -47,7 +47,8 @@ CASES = r'''
     local icon=CharacterHeadSlot:CreateTexture(nil,'ARTWORK');CharacterHeadSlot.icon=icon
     CharacterHeadSlot:SetPoint('TOPLEFT',PaperDollFrame,'TOPLEFT',30,-80)
     GetInventoryItemQuality=function(_,slot) return slot==1 and 2 or 1 end
-    GetItemQualityColor=function(q) assert(q==2);return .12,1,0 end
+    C_Item=C_Item or {};C_Item.GetItemQualityColor=function(q) if q==2 then return .12,1,0 end;return 1,1,1 end
+    GetItemQualityColor=nil -- The deprecated global must not be required.
     local name=CharacterFrame:CreateFontString(nil,'OVERLAY');name:SetFont('Original',17,'OUTLINE');name:SetTextColor(.8,.7,.6,1)
     CharacterFrame.TitleContainer=CreateFrame('Frame',nil,CharacterFrame)
     CharacterFrame.TitleContainer.fixtureRegions={name};CharacterFrame.TitleContainer.TitleText=name
@@ -68,7 +69,9 @@ CASES = r'''
     CharacterFrame.CloseButton=Button(CharacterFrame)
     CharacterFrame.RightPaneToggleButton=Button(CharacterFrame)
     PaperDollSidebarTab1=Button(CharacterFrame);PaperDollSidebarTab1.checked=true
-    PaperDollFrame.CharacterModelScene.ControlFrame={zoomInButton=Button(PaperDollFrame.CharacterModelScene)}
+    local controls=CreateFrame('Frame',nil,PaperDollFrame.CharacterModelScene)
+    controls:SetPoint('TOP',CharacterFrame.LeftPaneHost,'TOP',0,-40);controls.zoomInButton=Button(controls)
+    PaperDollFrame.CharacterModelScene.ControlFrame=controls
     CharacterAmmoSlot=Button(PaperDollFrame);CharacterAmmoSlotIconTexture=CharacterAmmoSlot.Icon
     local arrow=CreateFrame('Frame',nil,CharacterAmmoSlot);local arrowArt=arrow:CreateTexture(nil,'OVERLAY')
     arrowArt.atlas='UI-Character-Info-GearSlot-Arrow';arrow.fixtureRegions={arrowArt};CharacterAmmoSlot.fixtureChildren={arrow}
@@ -87,7 +90,7 @@ CASES = r'''
     GetInventoryItemDurability=function(slot) if slot==1 then return 50,100 elseif slot==5 then return 100,200 end end
     function CharacterFrame:GetStatsPane() return pane end
     local function StatsText()
-        local values={};for _,row in ipairs(addon.CharacterReskin.stats.rows) do values[#values+1]=row:GetText() end
+        local values={};for _,row in ipairs(addon.CharacterReskin.stats.rows) do values[#values+1]=(row:GetText() or ''):gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','') end
         return table.concat(values,'\n')
     end
     UnitStat=function(_,i) return 1,10*i end
@@ -103,6 +106,9 @@ CASES = r'''
     local legacy={fontSize=14,textColor={.3,.4,.5}}
     M.Initialize(legacy);assert(legacy.quickStyle.fontSize==14 and legacy.quickStyle.textColor[1]==.3)
     legacy.fontSize=12;M.Initialize(legacy);assert(legacy.quickStyle.fontSize==14,'one-time quick style migration')
+    local old={enchantColor={127/255,219/255,151/255}};M.Initialize(old);assert(old.enchantColor[1]==4/255 and old.enchantColor[2]==181/255)
+    local custom={enchantColor={.7,.2,.1}};M.Initialize(custom);assert(custom.enchantColor[1]==.7,'custom enchant colors retained')
+    assert(legacy.quickStyle.nameColor[1]==.3 and legacy.quickStyle.valueColor[1]==.3,'legacy stats color fills both new roles')
     assert(not M.active and art:GetAlpha()==.75 and not M.stats)
     addon:SetModuleEnabled('characterReskin',true)
     assert(art:GetAlpha()==0 and icon:GetAlpha()==1,'only owned decoration hidden')
@@ -117,14 +123,25 @@ CASES = r'''
     assert(M.headerTitle.points[1][4]==48 and M.headerTitle.points[2][4]==-48,'equal model-pane name margins')
     assert(dividerArt:GetAlpha()==0,'native model/stats divider removed')
     assert(not M.surfaces[CharacterFrame.LeftPaneHost].backdrop and not M.surfaces[CharacterFrame.RightPaneHost].backdrop and not M.surfaces[CharacterFrame].line:IsShown(),'no nested frame crossbars')
-    assert(M.surfaces[CharacterFrame].borderColor[1]==66/255,'subtle unified outer frame')
+    assert(M.panelBorder.edges[1].color[1]==66/255 and M.panelBorder:GetFrameLevel()>CharacterFrame.LeftPaneHost:GetFrameLevel(),'outer frame stays above opaque panes')
+    assert(M.panelBorder.edges[2].points[1][5]==0 and M.panelBorder.edges[3].points[1][5]==-1,'border fits inside window without doubled corners')
+    assert(M:SetAppearance('frameSize',4) and M.panelBorder.edges[1].height==4 and M.panelBorder.edges[3].width==4,'border size changes actual overlay geometry')
+    M:SetAppearance('frameSize',1)
+    assert(M.portraitView.points[1][2]==CharacterHeadSlot and M.portraitView.points[1][4]==0,'class icon centered above helm by default')
+    M:SetAppearance('controlsX',20);assert(controls.points[1][4]==20,'model control position applied');M:SetAppearance('controlsX',0)
+    M:SetAppearance('portraitX',12);assert(M.portraitView.points[1][4]==12);M:SetAppearance('portraitX',0)
+    local glow=M.decorations[M.itemBorders[1].glows[1]]
+    assert(glow:IsShown() and glow.edges[1].color[2]==1 and glow.edges[1].color[4]<.2,'rarity halo uses native C_Item color')
+    assert(M.labels[1].justifyH=='CENTER' and M.labels[1].width==76)
+    M:SetAppearance('enchantWidth',140);assert(M.labels[1].width==140 and M.labels[1].justifyH=='CENTER','width changes centered modifier cell')
+    M:SetAppearance('enchantWidth',76)
     assert(pane.ScrollBar.Track.Begin:GetAlpha()==0 and M.scrollViews[pane.ScrollBar].thumb.line.width==2,'slim Mode scroll thumb replaces stock artwork')
     assert(M.footer.gold:GetText()=='12g 34s 56c' and M.footer.durability:GetText()=='Durability: 50%','gold and weighted worn durability')
     assert(M.db.showGold and M.db.showDurability and M.footer.durability.points[1][5]>M.footer.gold.points[1][5])
     GetMoney=function() return 200000 end;FireEvent('PLAYER_MONEY');assert(M.footer.gold:GetText()=='20g 00s 00c')
     GetInventoryItemDurability=function(slot) if slot==1 then return 100,100 elseif slot==5 then return 200,200 end end
     FireEvent('UPDATE_INVENTORY_DURABILITY');assert(M.footer.durability:GetText()=='Durability: 100%')
-    M:SetAppearance('showGold',false);assert(not M.footer.gold:IsShown() and M.footer.durability.points[1][5]==0)
+    M:SetAppearance('showGold',false);assert(not M.footer.gold:IsShown() and M.footer.durability.points[1][5]==28)
     M:SetAppearance('showGold',true)
     assert(race:GetAlpha()==0 and M.surfaces[pane].fill.vertexColor[1]==35/255,'stats pane uses navigation gray')
     assert(CharacterFrame.CloseButton.normalTexture:GetAlpha()==0 and M.buttonSkins[CharacterFrame.CloseButton].label:GetText()=='X')
@@ -152,12 +169,15 @@ CASES = r'''
     local bad=addon.ProfileCodec.Copy(M.db.statsShown);bad.Strength='yes';assert(not M:SetAppearance('statsShown',bad))
     local badStyle=addon.ProfileCodec.Copy(M.db.quickStyle);badStyle.fontSize=100;assert(not M:SetAppearance('quickStyle',badStyle))
     testCombat=true
+    controls:SetSize(130,32) -- Native OnShow can resolve its layout after our first hook.
     assert(not M:SetAppearance('statsX',20))
     addon:SetModuleEnabled('characterReskin',false)
     assert(art:GetAlpha()==0 and M.pending,'restoration deferred during combat')
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
     assert(art:GetAlpha()==.75 and name.font[1]=='Original' and name.font[2]==17)
     assert(dividerArt:GetAlpha()==.65,'native divider restored on disable')
+    assert(controls.points[1][4]==0 and controls.points[1][5]==-40,'native model control geometry restored')
+    assert(controls:GetWidth()==130,'restoring offsets preserves native-resolved control size')
     assert(portrait:GetWidth()==62 and portrait.points[1][4]==-5 and name.points[1][4]==0 and name.points[1][5]==-5,'native geometry restored')
     assert(portrait:GetAlpha()==1 and name:GetAlpha()==1 and pane.ScrollBar.Track.Begin:GetAlpha()==1 and not M.portraitView:IsShown() and not M.headerTitle:IsShown() and not M.footer:IsShown(),'custom chrome/footer fully restored')
     assert(arrowArt:GetAlpha()==1 and CharacterFrame.CloseButton.normalTexture:GetAlpha()==1)
@@ -200,6 +220,28 @@ CASES = r'''
     assert(not addon.configWindow.moduleHeader.toggle:IsShown())
     addon:SelectConfigPage('characterReskin');assert(addon.configWindow.moduleHeader.toggle:IsShown())
     local page=addon.configWindow.pages.characterReskin
+    local function Find(label)
+        for _,row in ipairs(page.rows) do if row.settingsTitle==label then return row end end
+        error('missing setting '..label)
+    end
+    local positioning
+    for _,section in ipairs(page.sections) do if section.title=='Positioning' then positioning=section end end
+    assert(positioning and Find('Quick Stats Gap').section==positioning and Find('Class Icon X Offset').section==positioning)
+    page:SelectSectionTab(positioning)
+    M:SetAppearance('enhancements',false)
+    assert(not Find('Enchants & Equipment Modifiers X Offset'):IsShown() and not Find('Enchants & Equipment Modifiers Width'):IsShown())
+    page:SelectSectionTab(Find('Enchant Text Color').section);assert(not Find('Enchant Text Color'):IsShown())
+    M:SetAppearance('enhancements',true);assert(Find('Enchant Text Color'):IsShown())
+    M:SetAppearance('quickStats',false)
+    page:SelectSectionTab(Find('Stat Name Color').section);assert(not Find('Stat Name Color'):IsShown())
+    page:SelectSectionTab(positioning);assert(not Find('Quick Stats Gap'):IsShown() and not Find('Gold X Offset'):IsShown() and not Find('Durability X Offset'):IsShown())
+    M:SetAppearance('quickStats',true)
+    local style=addon.ProfileCodec.Copy(M.db.quickStyle);style.nameColor={1,0,0};style.valueColor={0,1,0};M:SetAppearance('quickStyle',style)
+    assert(M.stats.rows[1]:GetText():find('|cffff0000Strength:',1,true) and M.stats.rows[1]:GetText():find('|cff00ff00',1,true),'stat name and number colors independent')
+    page:SelectSectionTab(Find('Panel Border Size').section)
+    Find('Panel Border Size').settingsHost.slider:SetValue(4,true)
+    assert(M.panelBorder.edges[1].height==4,'actual UI slider changes border')
+    M:SetAppearance('frameSize',1)
     local quick
     for _,section in ipairs(page.sections) do if section.title=='Quick Stats' then quick=section end end
     assert(quick and #page.statControls==18,'dedicated quick stats pill and per-stat choices')

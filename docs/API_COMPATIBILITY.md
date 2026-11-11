@@ -2,6 +2,17 @@
 
 ## Character-panel reskin pilot — November 10, 2026
 
+Final rarity correction uses documented C_Item.GetItemQualityColor(quality),
+[Forever item API](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua),
+with the inspected native GetInventoryItemQuality(player,slot) read. The former
+global color call could silently fall back to gray. Three low-alpha static
+outer rings provide rarity glow without timers or additional libraries; empty/
+restricted quality does not receive a guessed rarity glow. The window edge now
+uses four owned textures above native NineSlice/opaque pane levels; inside-fit
+geometry and non-overlapping corners avoid backdrop masking/bottom clipping.
+Only the decorative FrameGlow regions are alpha-hidden and restored. Native
+equipment geometry and interactions stay owned by Blizzard.
+
 Reload regression: newly created FontStrings without an inherited FontObject
 require SetFont before even an empty SetText. The owned title and footer
 violated that order; strict font/open-panel startup fixtures now cover it.

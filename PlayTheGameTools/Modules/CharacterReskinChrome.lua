@@ -4,23 +4,23 @@ if not M then return end
 
 -- Snapshot only the geometry we deliberately change. Native scripts, checked
 -- states, hit rectangles, equipment actions and model behavior stay untouched.
-function M:RememberGeometry(region)
+function M:RememberGeometry(region,anchorsOnly)
     if not region or self.savedGeometry[region] then return end
-    local state={width=region:GetWidth(),height=region:GetHeight(),points={}}
+    local state={width=region:GetWidth(),height=region:GetHeight(),points={},anchorsOnly=anchorsOnly}
     for i=1,region:GetNumPoints() do state.points[i]={region:GetPoint(i)} end
     if region.GetJustifyH then state.h=region:GetJustifyH();state.v=region:GetJustifyV() end
     self.savedGeometry[region]=state
 end
 function M:RestoreChrome()
     for region,state in pairs(self.savedGeometry) do
-        region:ClearAllPoints();region:SetSize(state.width,state.height)
+        region:ClearAllPoints();if not state.anchorsOnly then region:SetSize(state.width,state.height) end
         for _,point in ipairs(state.points) do region:SetPoint(unpack(point)) end
         if state.h then region:SetJustifyH(state.h);region:SetJustifyV(state.v) end
     end
     self.savedGeometry={}
     for _,frame in pairs(self.decorations) do frame:Hide() end
 end
-function M:Edge(key,owner,target,color,size)
+function M:Edge(key,owner,target,color,size,outset)
     local frame=self.decorations[key]
     if not frame then
         frame=CreateFrame("Frame",nil,owner);frame:EnableMouse(false)
@@ -29,20 +29,43 @@ function M:Edge(key,owner,target,color,size)
     end
     frame:SetFrameLevel(owner:GetFrameLevel()+2)
     frame:ClearAllPoints();frame:SetAllPoints(target)
+    outset=outset or size
     for i,edge in ipairs(frame.edges) do
         edge:ClearAllPoints()
         if i<=2 then
-            local side=i==1 and "TOP" or "BOTTOM";local y=i==1 and size or -size
-            edge:SetPoint(side.."LEFT",frame,side.."LEFT",-size,y)
-            edge:SetPoint(side.."RIGHT",frame,side.."RIGHT",size,y);edge:SetHeight(size)
+            local side=i==1 and "TOP" or "BOTTOM";local y=i==1 and outset or -outset
+            edge:SetPoint(side.."LEFT",frame,side.."LEFT",-outset,y)
+            edge:SetPoint(side.."RIGHT",frame,side.."RIGHT",outset,y);edge:SetHeight(size)
         else
-            local side=i==3 and "LEFT" or "RIGHT";local x=i==3 and -size or size
-            edge:SetPoint("TOP"..side,frame,"TOP"..side,x,0)
-            edge:SetPoint("BOTTOM"..side,frame,"BOTTOM"..side,x,0);edge:SetWidth(size)
+            local side=i==3 and "LEFT" or "RIGHT";local x=i==3 and -outset or outset
+            edge:SetPoint("TOP"..side,frame,"TOP"..side,x,outset-size)
+            edge:SetPoint("BOTTOM"..side,frame,"BOTTOM"..side,x,-outset+size);edge:SetWidth(size)
         end
         edge:SetColorTexture(color[1],color[2],color[3],color[4] or 1)
     end
     frame:Show();return frame
+end
+function M:StylePanelBorder(root)
+    local frame=self.panelBorder
+    if not frame then
+        frame=CreateFrame("Frame",nil,root);frame:EnableMouse(false);frame.edges={}
+        for i=1,4 do frame.edges[i]=frame:CreateTexture(nil,"OVERLAY") end
+        self.panelBorder=frame;self.decorations[frame]=frame
+    end
+    frame:SetAllPoints(root);frame:SetFrameLevel(math.max(root:GetFrameLevel()+6,root.NineSlice and root.NineSlice:GetFrameLevel()+1 or 501))
+    local size,c=self.db.frameSize,self.db.frameColor
+    for i,edge in ipairs(frame.edges) do
+        edge:ClearAllPoints()
+        if i<=2 then
+            local side=i==1 and "TOP" or "BOTTOM"
+            edge:SetPoint(side.."LEFT",frame,side.."LEFT",0,0);edge:SetPoint(side.."RIGHT",frame,side.."RIGHT",0,0);edge:SetHeight(size)
+        else
+            local side=i==3 and "LEFT" or "RIGHT"
+            edge:SetPoint("TOP"..side,frame,"TOP"..side,0,-size);edge:SetPoint("BOTTOM"..side,frame,"BOTTOM"..side,0,size);edge:SetWidth(size)
+        end
+        edge:SetColorTexture(c[1],c[2],c[3],self.db.frameOpacity/100)
+    end
+    frame:Show()
 end
 function M:StyleItem(slot,id)
     local icon=slot.Icon or slot.icon or _G["Character"..(id==0 and "Ammo" or "").."SlotIconTexture"]
@@ -51,11 +74,19 @@ function M:StyleItem(slot,id)
     self:HideArt(slot.IconBorder)
     local quality=D.Call(GetInventoryItemQuality,"player",id)
     local color={.44,.44,.44,1}
-    if D.Number(quality,0,8) and quality>1 then
-        local native=D.Call(function() local r,g,b=GetItemQualityColor(quality);return {r,g,b} end)
+    local known=D.Number(quality,0,8)
+    if known then
+        local native=D.Call(function() local r,g,b=C_Item.GetItemQualityColor(quality);return {r,g,b} end)
         if native and D.Number(native[1],0,1) and D.Number(native[2],0,1) and D.Number(native[3],0,1) then color=native end
     end
     self.itemBorders[id]=self:Edge(slot,slot,icon,color,self.db.itemBorderSize)
+    local border=self.itemBorders[id];border:SetFrameLevel(slot:GetFrameLevel()+6)
+    border.glows=border.glows or {}
+    for i=1,3 do
+        border.glows[i]=border.glows[i] or {}
+        local halo=self:Edge(border.glows[i],slot,icon,{color[1],color[2],color[3],(.20-i*.045)},1,self.db.itemBorderSize+i)
+        halo:SetFrameLevel(slot:GetFrameLevel()+5);halo:SetShown(known)
+    end
 end
 function M:SkinButton(button,glyph,iconSize)
     if not button then return end
@@ -118,7 +149,9 @@ function M:StyleChrome(root,paper,model)
                 self.portraitView=view;self.decorations[view]=view
             end
             local size=self.db.portraitSize
-            view:ClearAllPoints();view:SetPoint("TOPLEFT",root,"TOPLEFT",10,-5);view:SetSize(size,size);view.icon:SetSize(size,size)
+            view:ClearAllPoints()
+            view:SetPoint("CENTER",_G.CharacterHeadSlot or root,"CENTER",self.db.portraitX,self.db.portraitY)
+            view:SetSize(size,size);view.icon:SetSize(size,size)
             addon.Media:ApplyTexture(view.rim,"ModeThumb")
             view.rim:SetVertexColor(self.db.frameColor[1],self.db.frameColor[2],self.db.frameColor[3],self.db.frameOpacity/100)
             view.icon:SetTexture(source)
@@ -138,8 +171,8 @@ function M:StyleChrome(root,paper,model)
         -- Share the level/class heading's model-pane center, including when
         -- the stats pane is expanded. The native left host starts at y=-20.
         local host=root.LeftPaneHost or root
-        local y=root.LeftPaneHost and 15 or -5
-        view:ClearAllPoints();view:SetPoint("TOPLEFT",host,"TOPLEFT",48,y);view:SetPoint("TOPRIGHT",host,"TOPRIGHT",-48,y);view:SetHeight(28)
+        local y=(root.LeftPaneHost and 15 or -5)+self.db.titleY
+        view:ClearAllPoints();view:SetPoint("TOPLEFT",host,"TOPLEFT",48+self.db.titleX,y);view:SetPoint("TOPRIGHT",host,"TOPRIGHT",-48+self.db.titleX,y);view:SetHeight(28)
         self:Font(view.text,self.db.textColor,self.db.titleSize)
         local title=D.Call(name.GetText,name);view.text:SetText(type(title)=="string" and title or "")
         self:HideArt(name);view:Show()
@@ -152,6 +185,10 @@ function M:StyleChrome(root,paper,model)
     for i=1,4 do self:SkinButton(_G["PaperDollSidebarTab"..i],nil,28) end
     local controls=model and model.ControlFrame
     if controls then
+        if controls.ClearAllPoints then
+            self:RememberGeometry(controls,true);controls:ClearAllPoints()
+            controls:SetPoint("TOP",root.LeftPaneHost or paper,"TOP",self.db.controlsX,-40+self.db.controlsY)
+        end
         for _,entry in ipairs({{"zoomInButton","+"},{"zoomOutButton","-"},{"rotateLeftButton","<"},{"rotateRightButton",">"},{"resetButton","R"}}) do
             self:SkinButton(controls[entry[1]],entry[2])
         end

@@ -11,9 +11,11 @@ function M:UpdateStats(host)
     local t,db=self.stats,self.db
     t:Hide();if not db.quickStats then return end
     local rows={}
+    local function Color(c) return string.format("|cff%02x%02x%02x",math.floor(c[1]*255+.5),math.floor(c[2]*255+.5),math.floor(c[3]*255+.5)) end
     local function Add(name,value,percent)
         if not db.statsShown[name] then return end
-        rows[#rows+1]=name..": "..(value and string.format(percent and "%.1f%%" or "%.0f",value) or "—")
+        rows[#rows+1]=Color(db.quickStyle.nameColor)..name..":|r "..Color(db.quickStyle.valueColor)
+            ..(value and string.format(percent and "%.1f%%" or "%.0f",value) or "—").."|r"
     end
     for i,name in ipairs({"Strength","Agility","Stamina","Intellect","Spirit"}) do
         Add(name,Number(function() local _,effective=UnitStat("player",i);return effective end))
@@ -59,14 +61,14 @@ function M:UpdateFooter(root,paper,model)
     local view,db=self.footer,self.db
     view:Hide();view.gold:Hide();view.durability:Hide()
     if not db.showGold and not db.showDurability then return end
-    view:ClearAllPoints();view:SetPoint("BOTTOMLEFT",root.LeftPaneHost or paper,"BOTTOMLEFT",16,12)
-    view:SetSize(125,(db.fontSize+4)*2);view:SetFrameLevel((model or paper):GetFrameLevel()+5)
-    local function Row(text,y,color)
-        self:Font(text,color);text:ClearAllPoints();text:SetPoint("BOTTOMLEFT",view,"BOTTOMLEFT",0,y)
+    view:ClearAllPoints();view:SetPoint("BOTTOMLEFT",root.LeftPaneHost or paper,"BOTTOMLEFT",0,0)
+    view:SetSize(125,math.max(db.goldY,db.durabilityY)+db.fontSize+4);view:SetFrameLevel((model or paper):GetFrameLevel()+5)
+    local function Row(text,key,color)
+        self:Font(text,color);text:ClearAllPoints();text:SetPoint("BOTTOMLEFT",view,"BOTTOMLEFT",db[key.."X"],db[key.."Y"])
         text:SetSize(125,db.fontSize+4);text:SetWordWrap(false);text:SetJustifyH("LEFT");text:Show()
     end
     if db.showGold then
-        Row(view.gold,0,{.83,.73,.48})
+        Row(view.gold,"gold",{.83,.73,.48})
         local copper=Number(GetMoney)
         if copper and copper>=0 then
             copper=math.floor(copper)
@@ -74,7 +76,7 @@ function M:UpdateFooter(root,paper,model)
         else view.gold:SetText("Gold: —") end
     end
     if db.showDurability then
-        Row(view.durability,db.showGold and db.fontSize+5 or 0,db.textColor)
+        Row(view.durability,"durability",db.textColor)
         local total,maximum,unknown=0,0,type(GetInventoryItemDurability)~="function"
         if not unknown then for slot=1,18 do
             local ok,current,limit=pcall(GetInventoryItemDurability,slot)
@@ -157,10 +159,12 @@ function M:UpdateEnhancements()
             if self.db.enhancements then
                 local db=self.db;self:Font(text);text:SetWordWrap(true);text:SetWidth(db.enchantWidth);text:SetHeight(0)
                 text:ClearAllPoints()
-                if e[3]=="bottom" then text:SetPoint("TOP",slot,"BOTTOM",db.enchantX,-5+db.enchantY)
+                if e[3]=="bottom" then text:SetPoint("TOPLEFT",slot,"BOTTOMLEFT",db.enchantX,-5+db.enchantY)
                 elseif e[3]=="right" then text:SetPoint("RIGHT",slot,"LEFT",-db.enchantX,db.enchantY)
                 else text:SetPoint("LEFT",slot,"RIGHT",db.enchantX,db.enchantY) end
-                text:SetJustifyH(db.enchantAlign~="AUTO" and db.enchantAlign or e[3]=="right" and "RIGHT" or e[3]=="bottom" and "CENTER" or "LEFT")
+                -- Width describes a centered text cell, so adjusting it also
+                -- visibly moves short labels instead of only wrapping long ones.
+                text:SetJustifyH("CENTER")
                 local value=self:Enhancement(e[2]);text:SetText(value);text:SetShown(value~="")
             end
         end

@@ -1,5 +1,13 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Final character-panel polish: confirm native rarity glow, independent Stat Name
+Color / Stat Number Color, live Panel Border Size, centered modifier-cell Width,
+default portrait above helm and default cyan enchants. Positioning groups every
+placement control; disabling a feature immediately hides its dependent rows.
+See the current exact checklist in docs/CHARACTER_RESKIN.md. Prior owner feedback
+confirmed the font-order correction rendered without errors; this polish still
+requires a new native review. Static checks do not extend that acceptance.
+
 Reload regression: `tests/character_reskin.py` now rejects SetText on an
 unfonted owned FontString and starts an enabled module with an already-open
 character panel and an empty native title. In game, OOC `/reload` with Character

@@ -4,6 +4,34 @@ November 10, 2026. Character Panel is the only implemented reskin. Damage Meters
 and Chat Window are explicitly planned pages with no runtime enable switch.
 The pilot is opt-in, works under every configuration theme and preserves settings.
 
+## Final control and appearance refinement
+
+The owner accepted 31a1f57 as looking better with no errors. The following new
+polish remains pending native review:
+
+- Rarity comes from C_Item.GetItemQualityColor, correcting the missing legacy
+  global call. Equipped icons gain three restrained, static outer glow rings.
+  Unknown/empty quality does not get a guessed color; native item interaction
+  and count/cooldown regions remain unchanged.
+- Quick Stats has Stat Name Color and Stat Number Color. Inline color segments
+  keep one font/size per row, with independent name/value colors. Old single
+  color choices initialize both new colors once, preserving existing choices.
+- The window border is a dedicated high-layer overlay with visible 1–4 unit
+  thickness. Four inside-fit edges meet without doubled corners. It follows
+  actual window resize/collapse bounds, and stock decorative FrameGlow is faded.
+- Enchants & Equipment Modifiers replaces enhancement terminology in controls.
+  Its Width slider sizes centered text cells, visibly shifting short labels as
+  well as wrapping longer text. Enchant Text Color defaults to #04B5DB; the old
+  green default migrates once, while explicitly different colors are retained.
+- The class portrait defaults to the helm slot's horizontal center, above it.
+  Positioning now owns Class Icon, Character Name, Model Controls, Quick Stats,
+  Enchants & Equipment Modifiers, Gold and Durability groups. Each group names
+  the element moved by its sliders. Portrait/control/name/footer offsets are
+  cosmetic and restore or hide correctly when the module is disabled.
+- Disabling a feature hides its dependent color/font/stat/position rows, and
+  immediately relayouts the page. The enable checkbox remains reachable. Saved
+  preferences are retained so re-enabling restores the prior customization.
+
 ## Unified framing and independent displays
 
 ### Reload investigation and correction
@@ -57,7 +85,7 @@ none hides it. The panel's master enable state still controls this module.
 
 Options includes Show Gold and Show Durability, both default on. Gold displays
 carried copper as g/s/c at the bottom-left of the model pane. Durability sits
-above it (or uses the bottom row when gold is off). It is the rounded, weighted
+above it with independent positioning, even when gold is off. It is the rounded, weighted
 percentage: sum of current durability / sum of maximum durability over equipped
 slots 1–18 that have durability. Non-durable slots do not contribute. Missing or
 restricted values display a dash; partial durability is never presented as a
@@ -89,7 +117,7 @@ awaits native confirmation; the first screenshot is not acceptance of the change
 - Default the circular portrait copy to 28 units and the centered name to 15.
   Native originals, fonts and close-button geometry restore outside combat.
 - Hide unreadable enhancement labels, including unknown weapon imbues. Remove
-  Unknown Enhancement Color. Recognized permanent bonuses remain green; known
+  Unknown Enhancement Color. Permanent enchants default to #04B5DB; known
   poisons remain lavender; readable proc names retain a short name.
 
 No reference-addon code or assets were copied. EllesmereUI's published API was
@@ -99,16 +127,20 @@ new texture files or client restart are expected.
 
 ## Relevant settings
 
-Options: Show Enhancements, Show Gold, Show Durability, Status.
+Options: Show Enchants & Equipment Modifiers, Show Gold, Show Durability, Status.
 Quick Stats: Show Quick Stats, Quick Stats Font, Quick Stats Font Size,
-Quick Stats Outline, Quick Stats Shadow, Quick Stats Color, Quick Stats Gap,
-Quick Stats Y Offset, Quick Stats Width, Displayed Stats (18 individual toggles).
-Text: Text Font (SharedMedia), Font Size, Text Outline, Text Shadow, Text Color,
-Enchant Color, Weapon Enhancement Color, Character Name Size.
+Quick Stats Outline, Quick Stats Shadow, Stat Name Color, Stat Number Color,
+Displayed Stats (18 toggles). Its customization rows hide while it is disabled.
+Text: Panel Text (Text Font, Font Size, Text Outline, Text Shadow, Text Color),
+Enchants & Equipment Modifiers (Enchant Text Color, Equipment Modifier Text
+Color; hidden when disabled), Character Name Size.
 Appearance: Panel Color, Panel Opacity, Class Icon Size, Item Rarity Border Size,
 Control Accent Color.
-Borders: Panel Border Size, Panel Border Opacity, Panel Border Color.
-Position: Enhancement X Offset, Enhancement Y Offset, Enhancement Width.
+Borders: Panel Border Size (1–4), Panel Border Opacity, Panel Border Color.
+Positioning: labeled groups for Class Icon, Character Name, Model Controls,
+Quick Stats, Enchants & Equipment Modifiers, Gold and Durability. Each has X/Y
+controls; Quick Stats also has Width, and Enchants & Equipment Modifiers has
+Width. Feature groups hide when their corresponding display is disabled.
 
 Generic surface-media, foreground-opacity, border-media/padding/shift and quick
 stats anchor/alignment controls are removed from this pilot. Their earlier stored
@@ -133,7 +165,7 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
    **Required state:** OOC, Quick Stats → Show Quick Stats enabled.
    **Confirmation:** all rows render, left-aligned immediately beside the helm,
    without covering its icon. Compare values to the native stats pane.
-3. **Navigation:** Play The Game Tools → Reskins → Character Panel → Quick Stats →
+3. **Navigation:** Play The Game Tools → Reskins → Character Panel → Positioning → Quick Stats →
    Quick Stats Gap / Quick Stats Y Offset / Quick Stats Width.
    **Action:** adjust each. **Required state:** OOC, character sheet open.
    **Confirmation:** only the text list moves/resizes; its left edge stays
@@ -155,7 +187,7 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
    Appearance / Borders. **Action:** change font, name size, panel color/opacity,
    portrait size, rarity border size and panel border controls; cancel a picker.
    **Required state:** OOC. **Confirmation:** only relevant panel elements change;
-   cancel restores its prior color; no Unknown Enhancement Color control exists.
+   cancel restores its prior color; disabled features hide dependent controls.
 7. **Navigation:** WoW Character Info → Character → enchanted equipment slot.
    **Action:** compare visible labels to native tooltips, replace gear and
    apply/remove a poison normally. **Required state:** OOC.
@@ -169,8 +201,7 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
 
 9. **Navigation:** Play The Game Tools → Reskins → Character Panel → Quick Stats
    → Displayed Stats → Strength / Agility (checkboxes).
-   **Action:** hide individual stats, change Quick Stats Font Size / Quick Stats
-   Color, then change Text → Font Size. **Required state:** OOC.
+   **Action:** hide individual stats, change Quick Stats Font Size / Stat Name Color / Stat Number Color, then change Text → Font Size. **Required state:** OOC.
    **Confirmation:** the list compacts; quick-stat styling stays independent of
    panel text. Turning all stats off hides the list; toggles survive reload.
 10. **Navigation:** Play The Game Tools → Reskins → Character Panel → Options →
@@ -192,6 +223,28 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
     **Required state:** OOC. **Confirmation:** no new Font not set/profile
     initialization errors, full chrome/footer styling, no hard native divider,
     and the name centered above level/class. Existing module pages still open.
+
+13. **Navigation:** Play The Game Tools → Reskins → Character Panel → Borders
+    → Panel Border Size. **Action:** change 1 to 4 and collapse/expand the native
+    stats pane. **Required state:** OOC. **Confirmation:** the outer border
+    visibly thickens, stays inside the window and meets cleanly at the bottom.
+14. **Navigation:** Play The Game Tools → Reskins → Character Panel → Quick Stats
+    → Stat Name Color / Stat Number Color → Pick. **Action:** choose distinct
+    colors. **Required state:** OOC, Show Quick Stats enabled. **Confirmation:**
+    names and numbers use separate colors while the rows retain their font.
+15. **Navigation:** Play The Game Tools → Reskins → Character Panel → Options
+    → Show Enchants & Equipment Modifiers; Positioning → Enchants & Equipment
+    Modifiers → Enchants & Equipment Modifiers Width.
+    **Action:** enable and adjust width, then disable and inspect Text and
+    Positioning. **Required state:** OOC. **Confirmation:** text-cell centering/
+    wrapping visibly changes; dependent colors/placement rows hide when off.
+    Repeat with Show Quick Stats, Show Gold and Show Durability to verify their
+    customization groups hide and reappear without losing preferences.
+16. **Navigation:** WoW Character Info → Character → equipped icons / class
+    portrait. **Action:** inspect different rarities; use Positioning → Class
+    Icon → Class Icon X Offset / Class Icon Y Offset if desired.
+    **Required state:** OOC. **Confirmation:** subtle rarity-colored halos,
+    default portrait centered above helm, and no lost equipment interactions.
 
 ## Validation limits
 
