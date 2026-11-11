@@ -1,8 +1,9 @@
 # Standalone Forever development
 
 Rogue Quick Access dismissal follow-up (2026-11-10): right-click the launcher to
-hide it and close its menu for the session. The existing dismissal toggle governs
-both displays; Settings -> Restore Dismissed restores both. Preview/Edit Mode
+hide it and close its menu for the session. Quick Access right-click is always available;
+Settings -> Dismiss Quick Access also hides it. The Reminder toggle is separately
+labeled Right-click to Dismiss Reminders. Restore Dismissed restores both. Preview/Edit Mode
 reveals the icon without clearing dismissal. No new API, TOC or saved fields.
 Run `tests/rogue_quick_dismiss.py`, `tests/rogue_layout.py` and smoke/build.
 Native right-click acceptance remains pending.

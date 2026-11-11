@@ -4,8 +4,8 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
-- Rogue Quick Access Poisons now supports right-click dismissal using the existing
-  Right-click to Dismiss setting. Hides the launcher/menu until Restore Dismissed
+- Rogue Quick Access Poisons now always supports right-click dismissal and has a
+  Settings -> Dismiss Quick Access button, independent of the Reminder toggle. Hides the launcher/menu until Restore Dismissed
   or reload; Preview/Edit Mode still reveals it. Left-click applications unchanged.
 
 - Owner accepted the final module layout and requested PR #26's merge to main.

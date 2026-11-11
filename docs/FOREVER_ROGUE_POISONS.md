@@ -19,7 +19,7 @@ The page has exactly three sections in this order:
 
 | Section | Controls |
 | --- | --- |
-| **Display** | **Poison Reminder**, **Quick Access Poisons**, **Reminder Visibility**, **Quick Access Visibility**, **Use Time Threshold**, **Use Charge Threshold**, **Reminder Threshold (min)**, **Charge Threshold**, **Show Poison Charges**, **Right-click to Dismiss**, **Customize Reminder**, **Customize Quick Access** |
+| **Display** | **Poison Reminder**, **Quick Access Poisons**, **Reminder Visibility**, **Quick Access Visibility**, **Use Time Threshold**, **Use Charge Threshold**, **Reminder Threshold (min)**, **Charge Threshold**, **Show Poison Charges**, **Right-click to Dismiss Reminders**, **Customize Reminder**, **Customize Quick Access** |
 | **Settings** | Six poison tiles: **Recent**, **Instant**, **Deadly**, **Crippling**, **Mind-numbing**, **Wound** (localized native first words); **Refresh Poisons**, **Restore Dismissed**; current status |
 | **Position** | Separate enabled-element groups for Poison Reminder and Quick Access Poisons, each with **Enter Edit Mode**, **Reset Position**, **Lock Position**, and paired **X** / **Y** sliders |
 
@@ -115,7 +115,7 @@ replacement/hooks are added. Reagent/cast/target requirements still belong to Wo
 
 ### Dismissal
 
-With Right-click to Dismiss on, right-click either reminder icon to hide that hand
+With Right-click to Dismiss Reminders on, right-click either reminder icon to hide that hand
 only. This is session-only presentation state; it survives timer ticks, bag scans,
 combat transitions and poison expiration into Missing. It rearms after a poison
 refresh/replacement, equipped weapon change, restored data-state change, explicit
@@ -184,7 +184,7 @@ establish native rendering, target acceptance, input routing or event-order safe
    **Confirmation:** three sections in order; default reminder has icons and hand
    text without background/border/countdown/counts; customized old styles persist.
 2. **Navigation:** Rogue -> **Display** -> **Poison Reminder**, **Reminder
-   Visibility**, **Right-click to Dismiss**; on-screen **Main Hand** / **Off Hand**.
+   Visibility**, **Right-click to Dismiss Reminders**; on-screen **Main Hand** / **Off Hand**.
    **Action:** right-click one due reminder, wait/tick or change bags, then refresh
    that poison or click Settings -> **Restore Dismissed**. **Required state:** real
    equipped poison or missing poison, no Preview/Edit Mode. **Confirmation:** one
@@ -248,8 +248,9 @@ poison-family or combat coverage beyond the checklist above.
 
 ## Quick Access right-click dismissal follow-up (2026-11-10)
 
-The existing **Right-click to Dismiss** toggle also governs the Quick Access
-Poisons launcher. Right-click hides its icon and closes the expanded menu without
+Right-click dismissal is always available on the Quick Access Poisons launcher,
+independent of **Right-click to Dismiss Reminders**. **Settings -> Dismiss Quick
+Access** invokes the same action. Right-click hides its icon and closes the expanded menu without
 using poison or dismissing either Reminder hand. It stays hidden across polling,
 bag refreshes, combat transitions and visibility changes, including Always Outside
 Combat, until **Settings -> Restore Dismissed** or `/reload`. Dismissal is runtime
@@ -261,8 +262,7 @@ close, independent Reminder visibility, restore with Reminder disabled, reload,
 combat transitions, Always visibility, preview/Edit Mode and left-click preservation.
 Native behavior still needs owner confirmation.
 
-**Navigation:** `/ptg` -> Class Tools -> Rogue -> Display -> **Right-click to Dismiss**
-(on), **Quick Access Poisons** (on), **Quick Access Visibility** -> **Always Outside Combat**.
+**Navigation:** `/ptg` -> Class Tools -> Rogue -> Display -> **Quick Access Poisons** (on), **Quick Access Visibility** -> **Always Outside Combat**.
 **Action:** `/reload`; left-click the launcher to open its menu, then right-click
 the launcher. **Required state:** Rogue, module enabled, OOC, normal locked display,
 Preview/Edit Mode off. **Confirmation:** icon and menu disappear, Reminder hands
@@ -272,5 +272,10 @@ updates bring the launcher back.
 **Navigation:** `/ptg` -> Class Tools -> Rogue -> Settings -> **Restore Dismissed**.
 **Action:** click **Restore Dismissed**. **Required state:** OOC, launcher dismissed.
 **Confirmation:** launcher returns and left-click opens its menu. Repeat dismissal
-and `/reload` to confirm reload also restores it; turn **Right-click to Dismiss**
-off in Display and confirm right-click neither hides nor opens the menu.
+and `/reload` to confirm reload also restores it; turn **Right-click to Dismiss Reminders**
+off in Display and confirm Quick Access right-click still dismisses the launcher.
+
+**Navigation:** `/ptg` -> Class Tools -> Rogue -> Settings -> **Dismiss Quick Access**.
+**Action:** restore the launcher, then click **Dismiss Quick Access**. **Required
+state:** OOC, Preview/Edit Mode off. **Confirmation:** icon and open menu disappear
+without poison use, even with no poisons applied; Restore Dismissed becomes enabled.

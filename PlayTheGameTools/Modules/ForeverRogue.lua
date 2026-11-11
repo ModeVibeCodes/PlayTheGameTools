@@ -224,7 +224,7 @@ function M:DismissReminder(hand)
     self:Render();if D.OutsideCombat() and self.page then self.page:Refresh() end;return true
 end
 function M:DismissQuickAccess()
-    if not self.active or not D.OutsideCombat() or self.previewing or self.editing or not self.db.dismissOnRightClick then return false end
+    if not self.active or not D.OutsideCombat() or self.previewing or self.editing then return false end
     self.quickDismissed=true;self.menuOpen=false
     if GameTooltip then GameTooltip:Hide() end
     self:Render();if self.page then self.page:Refresh() end;return true

@@ -127,8 +127,8 @@ actions and charge tests pass; native visual layout still needs owner review.
 ## Rogue Quick Access dismissal (2026-11-10)
 
 The existing ordinary launcher Button now registers LeftButtonUp/RightButtonUp.
-Right release changes only runtime visibility/menu state outside combat, governed
-by the existing dismissal toggle. Preview/Edit Mode ignores dismissal for layout.
+Right release changes only runtime visibility/menu state outside combat. It is independent of the Reminder dismissal toggle,
+and the explicit Dismiss Quick Access settings button invokes the same method. Preview/Edit Mode ignores dismissal for layout.
 Native item buttons, action attributes and combat guards are unchanged; no new
 gameplay API or saved fields. Mock checks establish behavior in the harness only;
 owner validation of native clicks/rendering remains pending.

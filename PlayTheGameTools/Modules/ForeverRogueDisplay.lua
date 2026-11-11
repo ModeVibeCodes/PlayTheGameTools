@@ -142,7 +142,7 @@ function M:CreateDisplay()
         if GameTooltip and self.db.launcherStyle.tooltips then
             GameTooltip:SetOwner(open,"ANCHOR_TOP")
             GameTooltip:SetText("Quick Access Poisons — click to choose Main Hand or Off Hand."..
-                (self.db.dismissOnRightClick and " Right-click to dismiss; restore via Settings > Restore Dismissed or /reload." or ""))
+                " Right-click to dismiss; restore via Settings > Restore Dismissed or /reload.")
             GameTooltip:Show()
         end
     end)
