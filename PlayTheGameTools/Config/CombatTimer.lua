@@ -33,7 +33,7 @@ function widgets.ColorRow(page, timer, title, key, enabledGetter, host, options)
         if not Enabled() or not timer:CanConfigure() then return end
         if not ColorPickerFrame then C_AddOns.LoadAddOn("Blizzard_ColorPickerFrame") end
         if not ColorPickerFrame then
-            print("Play The Game Tools: Blizzard color picker is unavailable; use the RGB hex field.")
+            print(addon.InterfaceTheme.id=="mode" and "Play The Game Tools: Blizzard color picker is unavailable on this client." or "Play The Game Tools: Blizzard color picker is unavailable; use the RGB hex field.")
             return
         end
         addon:CloseTimerColorPicker()
@@ -92,6 +92,8 @@ function widgets.ColorRow(page, timer, title, key, enabledGetter, host, options)
         row.rowLabel:SetTextColor(unpack(enabled and addon.Theme.text or addon.Theme.muted))
         if not enabled and addon.timerPickerOwner == pick then addon:CloseTimerColorPicker() end
     end
+    page.settingsColors=page.settingsColors or {}
+    page.settingsColors[#page.settingsColors+1]={host=row,pick=pick,hex=hex,apply=apply,sample=sample,key=key}
     return pick, hex, apply, sample
 end
 

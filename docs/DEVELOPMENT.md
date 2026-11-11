@@ -1,5 +1,96 @@
 # Standalone Forever development
 
+November 10 closeout: the owner accepted the final layout/descriptor placement
+and authorized merging PR #26 into main, explicitly retaining Mode-only scope.
+Mode guards and other-theme regression coverage were reviewed. Current main's
+independent PR #27 Blizzard backdrop repair is preserved; its only conflict was
+the changelog, resolved by retaining both entries. Layout acceptance does not
+establish new gameplay/API validation. No universal-theme rollout is authorized.
+
+Owner clarification supersedes the broad descriptor pass below: category
+subheadings, short panel summaries, separators and minor text stay in their
+approved locations. Only explicitly tagged explanatory blocks move to the
+bottom, including Quest Automation / Merchant Automation, Visibility Help,
+Food Selection, Other Addon Suites and Rogue's reference paragraphs. Source
+statuses and brief control instructions stay inline. Rejection warnings in the
+two automation blocks temporarily restore their original parent/anchors/height
+and return to footer placement when cleared. The injected Loot Sparkles status
+sentence is removed; original status text is preserved. Mode only; `/reload` OOC.
+
+Mode descriptor refinement: optional panel summaries and selected background
+notes now use full-width bottom rows. Pages lays out controls first, then footer
+notes after the form/toggle gutter or against the viewport bottom on short pages.
+Wrapped text determines height; long notes scroll naturally and search still
+reveals their original row. Source rows and Class Training's dynamic pools are
+not reordered. Live status, modifier/repair/blocked-action guidance, food choices,
+click-through/dragging instructions and contribution placement guidance remain
+inline. Loot Sparkles retains a brief compatibility instruction by its live
+status while How It Works moves below controls. Other themes retain their
+original positions. No assets/defaults/gameplay changes; `/reload` OOC.
+
+Mode capsule refinement: all primary rows now share a centered 128×32 preferred
+size with eight-unit gaps. The existing 4:1 capsule is scaled proportionally on
+narrow rows, preserving round ends. Mode section strips have 40 units of height
+and a 38-unit scroll child, clearing the 32-unit pills; their redundant baseline
+is hidden. Standalone Options forms also omit the duplicate rule. Dungeon Loot,
+shared module rows and Campfire use the same geometry helper. No asset/default
+changes; focused geometry, alpha containment and callback checks plus build.
+
+Mode rollout correction: native screenshots exposed primary section pills
+collapsing before their anchored viewport resolved. Mode SectionTabs now anchor
+early, preserve existing widths while unresolved, and listen to viewport sizing
+and showing. Custom/Campfire bars also relayout on their own size events; custom
+bar anchors are cached to prevent resize feedback. The regression explicitly
+models zero-width initialization (the default mock previously returned 1024).
+No new files/assets or setting changes; test with `/reload` OOC.
+
+November 10 Mode rollout: the owner accepted Campfire Monitor's design and
+authorized adapting the remaining module settings. Shared Config/ModePlans.lua
+and Config/ModeLayout.lua route existing controls without gameplay or saved-data
+changes. Dynamic catalogs, guild data, diagnostics and browser navigation keep
+their original ownership. Modern/Blizzard and Global Settings stay unchanged.
+Two TOC entries add 2 Lua files (118 Lua / 220 package files). All-module native
+acceptance remains pending; [layout map and exact checks](MODE_MODULE_LAYOUTS.md).
+The older instruction below to wait before scaling is satisfied by this approval.
+
+November 10 Campfire layout pilot (PR #26): Mode-only element tabs with consistent
+Options / Text / Appearance / Position panels. Text/color and opacity/color pairs
+share responsive rows. Refinement combines General's Options/Text into one form,
+adds thin gray borders to main pills, and uses compact separator-attached sub-tabs
+for other windows (30-unit active / 22-unit tucked inactive). Descriptions are
+plain muted-gray text and left headings are now 20 units with subtle underlines.
+Mode color rows use Pick without redundant in-page hex/Apply fields. All settings,
+picker callbacks, search routing and preview cleanup are retained; no gameplay/module source or manifest changes. Other
+themes keep the original layout. All 34 regression scripts pass, including the
+new `campfire_mode_layout.py`; final focused checks cover native resize reentrancy
+and Blizzard parity. Package has 116 Lua / 217 files. Start with `/reload`
+OOC. The supplied reference informs pill tabs and wide-page section descriptions
+beside aligned forms; narrow pages fold that description above the fields.
+Native visual review is pending.
+Latest refinement: General's Text heading aligns left; headings are 20 units
+with subtle underlines. Pick-only color rows free space for sliders. Wide mixed
+panels place checkbox rows under the left heading, with an inline muted description
+after a dot separator; search follows moved/restored rows. A dedicated SVG-derived
+256×64 capsule replaces low-resolution pill art, with a matching 1.5-unit rim.
+Package now has 116 Lua / 217 files. Try `/reload` first; an undiscovered capsule
+uses existing rounded art as a fallback. No gameplay/default changes.
+Latest alignment pass: uniform one-unit, text-centered header rules fade at both
+ends; a 14-unit separator uses tighter eight-unit spacing. Sub-tabs now live in a
+clipping ScrollFrame above the separator, with inactive lower pixels hidden.
+Main pills expand/shrink evenly in one centered row inside the actual bar width.
+Package now has 116 Lua / 218 files, including a small symmetric header-rule TGA.
+Do not scale to another page/theme before the owner confirms this candidate.
+
+November 10: new Mode-only page-material experiment on
+`codex/mode-page-material-refinement`, based on public main after PR #22's Class
+Training popout fix. Dedicated #2A2A2A page tint, existing Figma base/sheens and a
+new Figma-generated abstract overlay at 18% opacity. Sidebar/control palettes,
+module logic, profiles and other themes are unchanged. One runtime TGA; missing
+art stays transparent. Start with `/reload` OOC. Native validation is pending;
+see [page-material experiment](MODE_INTERFACE_THEME.md#november-10-page-material-experiment).
+Validation: all 33 regression scripts pass; deterministic package build passes
+with 116 Lua chunks / 216 files, including one additional page-detail TGA.
+
 November 9 closeout: the owner accepted the current mode interface and global
 texture isolation, and authorized PR #24's merge into main. This is scoped visual
 acceptance; it does not establish new gameplay/module validation. Future design

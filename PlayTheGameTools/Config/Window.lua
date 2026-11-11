@@ -337,7 +337,8 @@ function addon:CreateConfig()
     window.contentLeft=sidebarWidth-10+contentGap
     body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
     if mode then
-        window.bodySurface=W.Fill(body,T.panel,"BACKGROUND",-12)
+        window.bodySurface=W.Fill(body,T.pageBackground,"BACKGROUND",-12)
+        window.bodyDetail=W.ModePageDetail(body,-12)
         window.bodySheen=W.ModeSheen(body,-12)
     end
     local moduleHeader = W.ModuleHeader(body)
@@ -383,6 +384,7 @@ function addon:CreateConfig()
             elseif id == "globalSettings" then pages[id] = self:CreateGlobalSettingsPage(pageHost)
             elseif module.CreateConfigPage then pages[id] = module:CreateConfigPage(pageHost)
             else pages[id] = GenericPage(pageHost, module) end
+            if W.ApplyModeModuleLayout and module then W.ApplyModeModuleLayout(pages[id],id) end
             pages[id].ptgMediaScope=pageHost.ptgMediaScope
             pageHost.ptgMediaScope=nil
             pages[id]:Hide()

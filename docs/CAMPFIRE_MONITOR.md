@@ -1,5 +1,112 @@
 # Gameplay Enhancements — Campfire Monitor
 
+## Mode layout pilot — November 10
+
+Owner clarification restores panel summaries, category subheadings and minor
+text to their approved inline/left-column locations. Only the Shared Style /
+Buffs TLDR explanatory blocks use full-width bottom notes. Live Campfire Status
+and contribution placement instructions remain inline. Text and controls remain
+available, with search preserved; [current checks](MODE_MODULE_LAYOUTS.md#bottom-descriptions).
+
+The owner has now accepted this flow and authorized a Mode-only rollout to the
+other modules. Campfire retains the approved layout below; the shared rollout
+coexists with it on the Loot Sparkles page. [Module map and native checklist](MODE_MODULE_LAYOUTS.md).
+
+PR #26 pilots compact rounded tabs for Campfire Monitor only in **mode**.
+The owner accepted the preceding page-material pass and requested this candidate
+before adapting other pages. The supplied PeakPlanner reference informs the
+pill tabs, left-side section descriptions and aligned right-side fields.
+Modern and Blizzard retain the long-form groups below. Gameplay, defaults,
+saved settings and live window layouts are unchanged.
+
+The element tabs are **General**, **Campfire Icon**, **Camp Buffs** and
+**Contributions**. Each window has the same **Options → Text → Appearance →
+Position** order. General combines Options followed by Text on one page, with
+larger section headings and no secondary navigation.
+The existing Loot Sparkles / Campfire Monitor feature tabs remain above them.
+Selection is session-only; each element remembers its last panel. Search opens
+the correct element/panel and scrolls to the existing control.
+
+The main pills use a dedicated 256×64 capsule, supersampled from the repository's
+SVG, instead of stretching the 32×16 toggle art. A matching gray outer silhouette
+contains the fill with a 1.5-unit inset. Other windows use compact
+rectangular sub-tabs, not a second pill strip. A ScrollFrame viewport ends at
+the separator line: 30-unit tabs rise fully above it when selected; inactive
+tabs move eight units down and their lower portion is clipped, leaving 22 units
+visible. Labels stay inside that visible area. Cyan
+label/outline and the selection line identify the active page. Descriptions use
+plain language and muted gray. Content headings are now **20 units**, with a
+subtle one-unit underline, centered on measured text with a symmetric fade at
+both ends. Every underline uses the same alpha rows and alignment helper.
+General's Options and Text headings both align to
+the left content edge; it no longer reserves the wide summary column.
+
+| Element | Options | Text | Appearance | Position |
+| --- | --- | --- | --- | --- |
+| General | Enable/combat/status, Edit Mode/Refresh, Preview/Move Windows | Shared text color | — | — |
+| Campfire Icon | Visibility, native details, guide, always-show | Status text size | Icon/window size, scale/opacity/background | Lock, X/Y, Reset Position |
+| Camp Buffs | Show benefits, joined/separate window | Compact/stat colors, size, header colors/gradient | Separate-window width/scale/opacity/background | Lock, X/Y, Reset Buff Position |
+| Contributions | Popup/content visibility, tooltips, detected kits/Refresh, Open/Preview | Font, outline/gradient, all sizes/colors/alignments | Width/padding/scale/opacity, background/border, icons/rows | Lock, X/Y, Edit Contributions/Reset Position |
+
+General's Options and Text columns above are successive sections on the same page.
+
+Seven text size/color pairs and four appearance color/opacity pairs share compact
+rows. This pilot hides the redundant in-page hex field and Apply button; **Pick**
+opens the original color picker, which still edits the same value. Other themes
+and pages retain their color controls. The saved setting and picker/cancel
+callbacks are unchanged. Freed space goes to the existing slider/numeric control.
+
+On wide panels containing both sliders and toggles, checkbox rows move under the
+left heading while sliders stay in the right-hand form. The title and smaller
+muted description share a line, separated by **·**. This applies to Buffs/Contributions
+Text and window Position panels; other panels retain their existing arrangement.
+Narrow panels restore ordinary toggle rows, and search targets follow both forms.
+The separator dot is 14 units, with eight-unit gaps on either side to keep the
+description closer to its heading. Main pills resize evenly to occupy one centered
+row within the available page width, without wrapping or overflowing its edges.
+Only group separators remain. Fonts, alignments and callbacks remain. Actions resize to fit. The old
+Jump To strip is replaced by the element tabs; internal jump routing is retained.
+No setting was removed: similar controls target distinct windows/text roles.
+Style-panel navigation retains preview; leaving Campfire/hiding the page retains
+the original cleanup. All 34 regression scripts pass; final focused checks cover
+inventory/reachability, native-size-callback reentrancy, search, callbacks,
+preview cleanup and other-theme parity. Mocks do not establish native appearance.
+
+**Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements →
+Campfire Monitor → Campfire Icon / Camp Buffs / Contributions → Text.
+**Action:** `/reload`, inspect Text, Appearance and Position for each window.
+**Required state:** OOC, Interface Theme set to mode; no setting changes needed.
+**Confirmation:** consistent control locations, all original options reachable,
+and compact picker/slider rows fit without clipping. Start with `/reload`.
+
+**Navigation:** same feature → General.
+**Action:** inspect Options and the Text section below it; then select Campfire
+Icon → Appearance, followed by Text.
+**Required state:** OOC, mode selected; no setting changes needed.
+**Confirmation:** General has one combined form with Options and Text aligned
+left, no sub-tabs, enlarged underlined headings and picker-only color controls. The other
+window's selected rectangular tab rises from the separator; inactive tabs tuck
+down with all below-line pixels hidden, but remain clickable. Main pills form
+one centered, evenly resized row and have smooth, thin gray borders. The
+larger left-side heading and muted explanations remain readable. Camp Buffs → Text
+puts its checkboxes below the left heading on a wide page, with the description
+inline after the separator icon and slider/color controls still on the right.
+
+**Navigation:** same feature → Contributions → Text → Title Text Size → Pick.
+**Action:** open and cancel the color picker; inspect the numeric field and
+confirm the in-page hex field/Apply button are absent. Then
+search **Title Color** in the header and choose the Campfire Monitor result.
+**Required state:** OOC; keep original values.
+**Confirmation:** picker/cancel still works and search reveals Contributions →
+Text with the paired Title Text Size row, including its color controls.
+
+**Navigation:** same feature → Contributions → Options → Preview Contributions.
+**Action:** preview, switch to Text/Appearance, then select Loot Sparkles.
+**Required state:** OOC; Gameplay Enhancements master, Enable Campfire Monitor
+and Show Contribution Popup enabled.
+**Confirmation:** style navigation retains preview; leaving Campfire stops it.
+User-confirmed native review is required before expanding this pilot.
+
 ## Scope and interface
 
 November 7, 2026. Questing & Leveling → Gameplay Enhancements now contains two
