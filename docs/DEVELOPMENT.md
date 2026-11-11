@@ -1,5 +1,15 @@
 # Standalone Forever development
 
+Character-panel screenshot refinement: the pilot rendered natively, but tabs
+overlapped options, stats clipped, and stock stats/ammo/chrome artwork remained.
+Reskins now reserves a dedicated tab/content boundary, uses the Mode sidebar
+material (#232323), helm-relative individual quick-stat rows, stronger quality
+borders, native-button custom faces and reversible portrait/name geometry.
+Unknown enhancements and irrelevant generic controls are removed. Existing
+pilot preferences remain stored; new presentation-specific defaults fill only
+missing fields. Current candidate is 122 Lua / 224 package files. Refined native
+acceptance remains pending; [current exact checks](CHARACTER_RESKIN.md).
+
 November 10 Reskins pilot: new branch for Character Panel only, based on public
 main after PR #28. Default off; Mode media/palette, cosmetic restoration, quick
 stats and typed enchant/imbue labels. Later Damage Meters/Chat Window pages are

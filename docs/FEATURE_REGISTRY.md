@@ -4,6 +4,9 @@ Reskins → Character Panel: opt-in Forever pilot using the accepted Mode palett
 native equipment controls, guarded enchant/imbue text and configurable quick
 stats. Damage Meters and Chat Window are planned navigation only, with no enable
 switch or runtime behavior. [Implementation and exact checks](CHARACTER_RESKIN.md).
+Screenshot refinement adds the navigation-gray material, dedicated tab spacing,
+helm-relative stat rows, rarity/ammo edges and reversible Mode control/portrait/
+name styling. Unreadable effects and irrelevant generic controls are hidden.
 
 Mode module layouts: Campfire's flow is owner-accepted and now applied across
 module settings in Mode only. Every setting and callback is retained, with

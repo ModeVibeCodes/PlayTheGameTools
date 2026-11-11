@@ -1,6 +1,9 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
 Reskins: run `tests/character_reskin.py`, `tests/mode_module_layouts.py` and smoke.
+Screenshot refinements cover dedicated pill/content spacing, individual stat
+rows beside the helm, Mode-native control faces and reversible portrait/name
+geometry, dark navigation surfaces, rarity edges and the refitted ammo slot.
 Use the [exact character-panel checks](docs/CHARACTER_RESKIN.md#native-validation)
 after OOC `/reload`. The pilot defaults off; native appearance, positioning and
 equipment interactions require owner confirmation before another reskin phase.

@@ -14,21 +14,6 @@ function M:CreateConfigPage(parent)
     local function Toggle(label,key)
         page:ToggleGrid({{label=label,get=function() return M.db[key] end,set=function(v) M:SetAppearance(key,v) end}})
     end
-    local function Select(label,key,choices)
-        local b=W.Select(page:Row(label,44),250,choices,function()
-            local v=M.db[key];for _,e in ipairs(choices()) do if e.id==v then return v,e.label end end;return v,v
-        end,function(v) M:SetAppearance(key,v) end)
-        page.refreshers[#page.refreshers+1]=function() b:Refresh() end
-    end
-    local function Choices(items) return function() local t={};for _,v in ipairs(items) do t[#t+1]={id=v,label=v} end;return t end end
-    local function Media(kind)
-        return function()
-            local list=kind=="border" and addon.Media:GetBorders() or addon.Media:GetTextures();local result={}
-            if kind=="texture" then result[1]={id="mode",label="Mode Surface"} end
-            for _,e in ipairs(list) do result[#result+1]={id=e.key,label=e.label} end
-            return result
-        end
-    end
     page:Section("Options",nil,false)
     Toggle("Show Quick Stats","quickStats");Toggle("Show Enhancements","enhancements")
     local status=W.Label(page:Row("Status",70),"",nil,0,-4,420,T.muted);status:SetWordWrap(true)
@@ -36,22 +21,31 @@ function M:CreateConfigPage(parent)
     page:Section("Text",nil,false)
     local _,refresh=W.FontDropdown(page:Row("Text Font",42),owner);page.refreshers[#page.refreshers+1]=refresh
     Slider("Font Size","fontSize");Toggle("Text Outline","outline");Toggle("Text Shadow","shadow")
-    for _,e in ipairs({{"Text Color","textColor"},{"Enchant Color","enchantColor"},{"Weapon Enhancement Color","imbueColor"},{"Unknown Enhancement Color","unknownColor"}}) do W.ColorRow(page,owner,e[1],e[2]) end
+    for _,e in ipairs({{"Text Color","textColor"},{"Enchant Color","enchantColor"},{"Weapon Enhancement Color","imbueColor"}}) do W.ColorRow(page,owner,e[1],e[2]) end
+    Slider("Character Name Size","titleSize")
     page:Section("Appearance",nil,false)
-    Select("Surface Texture","texture",Media("texture"));Slider("Background Opacity","backgroundOpacity");Slider("Foreground Opacity","foregroundOpacity")
-    for _,e in ipairs({{"Background Color","backgroundColor"},{"Foreground Color","foregroundColor"},{"Accent Color","accentColor"}}) do W.ColorRow(page,owner,e[1],e[2]) end
+    W.ColorRow(page,owner,"Panel Color","panelColor");Slider("Panel Opacity","panelOpacity")
+    Slider("Class Icon Size","portraitSize");Slider("Item Rarity Border Size","itemBorderSize")
+    W.ColorRow(page,owner,"Control Accent Color","accentColor")
     page:Section("Borders",nil,false)
-    Select("Border Media","border",Media("border"));Slider("Border Size","borderSize");Slider("Border Padding","padding")
-    Slider("Border X Offset","borderX");Slider("Border Y Offset","borderY");Slider("Border Opacity","borderOpacity");W.ColorRow(page,owner,"Border Color","borderColor")
+    Slider("Panel Border Size","borderSize");Slider("Panel Border Opacity","borderOpacity")
+    W.ColorRow(page,owner,"Panel Border Color","borderColor")
     page:Section("Position",nil,false)
-    Select("Quick Stats Anchor","statsAnchor",Choices({"TOPLEFT","TOP","TOPRIGHT"}))
-    Select("Quick Stats Alignment","statsAlign",Choices({"LEFT","CENTER","RIGHT"}))
-    Slider("Quick Stats X Offset","statsX");Slider("Quick Stats Y Offset","statsY");Slider("Quick Stats Width","statsWidth")
-    Select("Enhancement Alignment","enchantAlign",Choices({"AUTO","LEFT","CENTER","RIGHT"}))
+    Slider("Quick Stats Gap","quickStatsX");Slider("Quick Stats Y Offset","quickStatsY");Slider("Quick Stats Width","quickStatsWidth")
     Slider("Enhancement X Offset","enchantX");Slider("Enhancement Y Offset","enchantY");Slider("Enhancement Width","enchantWidth")
-    local note=W.Label(page:Row("About Character Reskins",130),"Uses the Mode palette regardless of your configuration theme. Media lists include registered SharedMedia assets, not every unregistered client file. Green: permanent enchants; lavender: weapon imbues; amber: unreadable enchant. Unrecognized effects keep a short name. Quick stats use player values outside combat; — means unavailable. Disable another addon's character skin before enabling this one. Changes apply outside combat; /reload restores a clean baseline.",nil,0,-4,420,T.muted)
+    local note=W.Label(page:Row("About Character Reskins",130),"Uses the Mode palette regardless of your configuration theme. The panel uses the same dark Mode navigation material. Green: permanent enchants; lavender: recognized weapon imbues. Unreadable enhancements are hidden. Unrecognized effects keep a short name. Quick stats use player values outside combat; a dash means unavailable. Disable another addon's character skin before enabling this one. Changes apply outside combat; /reload restores a clean baseline.",nil,0,-4,420,T.muted)
     note:SetWordWrap(true);page:FooterNote(note)
-    W.SectionTabs(page);page:Finish();return page
+    W.SectionTabs(page)
+    -- This page has no Preview layer to reserve the tab strip's height.
+    -- Keep the scroll viewport and its scrollbar entirely below the pills.
+    if page.sectionTabs then
+        page.sectionTabs:ClearAllPoints();page.sectionTabs:SetPoint("TOPLEFT");page.sectionTabs:SetPoint("TOPRIGHT",-24,0)
+        local top=page.sectionTabs:GetHeight()+12
+        page.scroll:ClearAllPoints();page.scroll:SetPoint("TOPLEFT",0,-top);page.scroll:SetPoint("BOTTOMRIGHT",-24,0)
+        page.scrollbar:ClearAllPoints();page.scrollbar:SetPoint("TOPRIGHT",-4,-top-4);page.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
+        page.tabContentTop=top
+    end
+    page:Finish();return page
 end
 for _,id in ipairs({"damageMeterReskin","chatReskin"}) do
     addon.modules[id].CreateConfigPage=function(self,parent)

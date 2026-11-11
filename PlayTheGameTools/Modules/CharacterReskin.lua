@@ -12,12 +12,18 @@ end
 local D=addon.ForeverRogueData -- shared guarded reads, independent of Rogue enable state/class
 M.defaults={quickStats=true,enhancements=true,font="game",fontMedia="",fontSize=11,outline=false,shadow=true,
     textColor={212/255,212/255,212/255},accentColor={0,240/255,1},
-    enchantColor={127/255,219/255,151/255},imbueColor={230/255,184/255,1},unknownColor={1,.72,.32},
+    enchantColor={127/255,219/255,151/255},imbueColor={230/255,184/255,1},
+    panelColor={35/255,35/255,35/255},panelOpacity=100,titleSize=15,portraitSize=28,itemBorderSize=2,
+    quickStatsX=6,quickStatsY=0,quickStatsWidth=116,
+    -- Retired pilot fields remain valid for old profiles; the UI exposes only
+    -- settings used by the current character-panel presentation.
     backgroundColor={42/255,42/255,42/255},foregroundColor={53/255,53/255,53/255},borderColor={179/255,179/255,179/255},
     backgroundOpacity=100,foregroundOpacity=80,borderOpacity=65,texture="mode",border="thin",borderSize=1,
     padding=0,borderX=0,borderY=0,statsX=140,statsY=-4,statsWidth=116,statsAlign="LEFT",statsAnchor="TOPLEFT",
     enchantX=5,enchantY=0,enchantWidth=76,enchantAlign="AUTO"}
 M.ranges={fontSize={8,22,1},backgroundOpacity={0,100,1},foregroundOpacity={0,100,1},borderOpacity={0,100,1},
+    panelOpacity={0,100,1},titleSize={12,24,1},portraitSize={20,40,1},itemBorderSize={1,4,1},
+    quickStatsX={0,120,1},quickStatsY={-150,100,1},quickStatsWidth={90,220,1},
     borderSize={1,12,1},padding={0,20,1},borderX={-30,30,1},borderY={-30,30,1},statsX={-150,250,1},
     statsY={-350,50,1},statsWidth={80,240,1},enchantX={-60,80,1},enchantY={-30,30,1},enchantWidth={40,160,1}}
 function M.Initialize(db)
@@ -42,7 +48,10 @@ function M:SetAppearance(key,value)
     return true
 end
 function M:GetFonts() return addon.Media:GetFonts() end
-function M:OnInitialize() self.Initialize(self.db);self.surfaces={};self.savedAlpha={};self.savedFonts={};self.labels={} end
+function M:OnInitialize()
+    self.Initialize(self.db);self.surfaces={};self.savedAlpha={};self.savedFonts={};self.labels={}
+    self.savedGeometry={};self.decorations={};self.buttonSkins={};self.itemBorders={}
+end
 function M:HideArt(region)
     if not region or not region.GetAlpha then return end
     if self.savedAlpha[region]==nil then self.savedAlpha[region]=region:GetAlpha() end
@@ -52,12 +61,12 @@ function M:HideTextures(host)
     if not host or not host.GetRegions then return end
     for _,r in ipairs({host:GetRegions()}) do if r:IsObjectType("Texture") then self:HideArt(r) end end
 end
-function M:Font(text,color)
+function M:Font(text,color,size)
     local db=self.db
     local path=addon.Media:GetFont(db.fontMedia) or (db.fontMedia=="" and addon.Media:GetDisplayFont(db,true))
         or addon.Media:GetFont("Expressway") or addon.Media.gameFont
-    if text:SetFont(path,db.fontSize,db.outline and "OUTLINE" or "")==false then
-        text:SetFont(addon.Media.gameFont,db.fontSize,db.outline and "OUTLINE" or "")
+    if text:SetFont(path,size or db.fontSize,db.outline and "OUTLINE" or "")==false then
+        text:SetFont(addon.Media.gameFont,size or db.fontSize,db.outline and "OUTLINE" or "")
     end
     text:SetTextColor(unpack(color or db.textColor));text:SetShadowColor(0,0,0,db.shadow and .85 or 0)
     text:SetShadowOffset(db.shadow and 1 or 0,db.shadow and -1 or 0)
@@ -68,29 +77,22 @@ function M:Surface(host,foreground)
     if not s then
         s=CreateFrame("Frame",nil,host,"BackdropTemplate");s:SetFrameLevel(math.max(0,host:GetFrameLevel()-1));s:EnableMouse(false)
         s.fill=s:CreateTexture(nil,"BACKGROUND",nil,-8);s.fill:SetAllPoints()
-        s.detail=s:CreateTexture(nil,"BACKGROUND",nil,-7);s.detail:SetAllPoints()
         s.line=s:CreateTexture(nil,"BORDER");s.line:SetPoint("TOPLEFT",1,-1);s.line:SetPoint("TOPRIGHT",-1,-1);s.line:SetHeight(1)
         self.surfaces[host]=s
     end
-    local db=self.db;local p=db.padding
+    local db=self.db;local p=0
     -- Backdrop edges are inside this expanded rectangle: inner edge begins at the host's outer edge.
-    local edge=addon.Media:GetBorder(db.border) or {kind="thin",edgeSize=1}
-    local size=db.border=="none" and 0 or db.borderSize
-    s:ClearAllPoints();s:SetPoint("TOPLEFT",host,"TOPLEFT",-p-size+db.borderX,p+size+db.borderY)
-    s:SetPoint("BOTTOMRIGHT",host,"BOTTOMRIGHT",p+size+db.borderX,-p-size+db.borderY)
+    local edge={kind="thin",edgeSize=1}
+    local size=db.borderSize
+    s:ClearAllPoints();s:SetPoint("TOPLEFT",host,"TOPLEFT",-p-size,p+size)
+    s:SetPoint("BOTTOMRIGHT",host,"BOTTOMRIGHT",p+size,-p-size)
     local ok=pcall(s.SetBackdrop,s,{edgeFile=edge.path or "Interface\\Buttons\\WHITE8X8",edgeSize=size>0 and size or 1})
     if not ok then s:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=size>0 and size or 1}) end
     s:SetBackdropBorderColor(db.borderColor[1],db.borderColor[2],db.borderColor[3],size>0 and db.borderOpacity/100 or 0)
-    if db.texture=="mode" then
-        if not addon.Media:ApplyTexture(s.fill,"ModeSurface") then s.fill:SetColorTexture(1,1,1,1) end
-        addon.Media:ApplyTexture(s.detail,"ModePageDetail")
-    else
-        if s.fill:SetTexture(addon.Media:GetSurfaceTexture(nil,db.texture))==false then s.fill:SetColorTexture(1,1,1,1) end
-        s.detail:SetColorTexture(0,0,0,0)
-    end
-    local c=foreground and db.foregroundColor or db.backgroundColor
-    s.fill:SetVertexColor(c[1],c[2],c[3],(foreground and db.foregroundOpacity or db.backgroundOpacity)/100)
-    s.detail:SetAlpha(.18);s.line:SetColorTexture(db.accentColor[1],db.accentColor[2],db.accentColor[3],.6)
+    if not addon.Media:ApplyTexture(s.fill,"ModeSurface") then s.fill:SetColorTexture(1,1,1,1) end
+    local c=db.panelColor
+    s.fill:SetVertexColor(c[1],c[2],c[3],db.panelOpacity/100)
+    s.line:SetColorTexture(db.borderColor[1],db.borderColor[2],db.borderColor[3],db.borderOpacity/100)
     s:Show()
 end
 function M:StyleNativeFonts(host)
@@ -123,6 +125,7 @@ function M:Restore()
     for r,a in pairs(self.savedAlpha) do r:SetAlpha(a) end
     for r,v in pairs(self.savedFonts) do r:SetFont(unpack(v.font));r:SetTextColor(unpack(v.color));r:SetShadowColor(unpack(v.shadow));r:SetShadowOffset(unpack(v.offset)) end
     self.savedAlpha={};self.savedFonts={}
+    self:RestoreChrome()
     for _,s in pairs(self.surfaces) do s:Hide() end
     for _,text in pairs(self.labels) do text:Hide() end
     if self.stats then self.stats:Hide() end
@@ -154,6 +157,7 @@ function M:Refresh()
     self:StyleNativeFonts(_G.PaperDollLevelInfo)
     local stats=D.Call(function() return root:GetStatsPane() end)
     if stats then
+        self:HideTextures(stats);self:Surface(stats)
         self:StyleStats(stats,0)
         if not self.statsHooked and type(stats.ScrollBoxOnUpdate)=="function" and type(hooksecurefunc)=="function" then
             hooksecurefunc(stats,"ScrollBoxOnUpdate",function()
@@ -166,8 +170,9 @@ function M:Refresh()
     if model then self:HideTextures(model) end
     for _,entry in ipairs(self.slots) do
         local slot=_G["Character"..entry[1].."Slot"]
-        if slot then self:HideTextures(slot.BorderFrame);self:Surface(slot,true) end
+        if slot then self:HideTextures(slot.BorderFrame);self:StyleItem(slot,entry[2]) end
     end
+    self:StyleChrome(root,paper,model)
     self:UpdateStats(model or paper);self:UpdateEnhancements()
     self.status="Active. Native equipment buttons and model controls retained."
 end

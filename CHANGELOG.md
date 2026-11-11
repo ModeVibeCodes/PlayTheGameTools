@@ -4,6 +4,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Refine the character reskin from native screenshots: reserve settings space
+  below the pills, anchor separate quick-stat rows beside the helm, use Mode's
+  navigation material, strengthen rarity borders and refit ammo. Add Mode faces
+  for native controls/close, shrink the portrait and center/enlarge the name.
+  Hide unreadable enhancements and remove unused generic customization controls.
+  Native behavior/geometry restoration is retained; refined native review pending.
+
 - Add opt-in Reskins → Character Panel: Mode surfaces/accenting, configurable
   SharedMedia fonts/textures/borders, enhancement labels and player quick stats.
   Restore cosmetic ownership outside combat when disabled or leaving the paper

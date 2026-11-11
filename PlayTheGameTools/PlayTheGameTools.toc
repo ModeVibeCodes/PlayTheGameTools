@@ -93,6 +93,7 @@ Modules\ForeverRogueInventory.lua
 Modules\ForeverRogueDisplay.lua
 Modules\CharacterReskin.lua
 Modules\CharacterReskinData.lua
+Modules\CharacterReskinChrome.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua

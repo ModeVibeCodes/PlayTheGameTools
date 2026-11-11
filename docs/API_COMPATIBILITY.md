@@ -13,11 +13,24 @@ stats refresh uses the inspected ScrollBoxOnUpdate method when available.
 Only ItemEnchantmentPermanent lines are read as permanent enchants;
 C_Item.GetWeaponEnchantInfo uses WeaponSlot and ItemEnchantType.Imbue.
 No assumed temporary-tooltip line enum or copied Retail enchant database.
-Missing, restricted or unrecognized values show —, Unknown or Imbue. All reads
+Missing or restricted stats show —; unreadable enhancements are hidden. All reads
 and cosmetic writes pause in combat. Alpha/font snapshots restore OOC; native
 equipment scripts/anchors remain untouched. Local mocks are not evidence of
 native support, secure interaction, localization or visual parity. See
 [pilot details and exact checks](CHARACTER_RESKIN.md).
+
+Screenshot refinement also inspects Forever's
+[model control template](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_SharedXML/ModelSceneControlFrame.xml)
+and [portrait/title mixins](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_SharedXML/PortraitFrame.lua).
+Chrome styles the existing model buttons, PaperDollSidebarTab1–4,
+RightPaneToggleButton and CloseButton without replacing native scripts or
+checked state. Portrait/title geometry is snapshotted/restored OOC. Rarity uses
+the same GetInventoryItemQuality read as PaperDollItemSlotButton_Update;
+GetItemQualityColor supplies the color, with a neutral fallback. Ammo's count,
+icon and cooldown are preserved while only its bevel/arrow decoration is faded.
+Quick stats now use separate rows in an addon-owned frame outside the model
+scene, anchored TOPLEFT to CharacterHeadSlot TOPRIGHT. This corrects the native
+single-line/clipping result that was not represented by the original mock.
 
 ## mode small-control rendering
 

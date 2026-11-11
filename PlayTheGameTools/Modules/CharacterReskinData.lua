@@ -5,7 +5,9 @@ local function Number(fn,...)
     local v=D.Call(fn,...);if D.Number(v,-1e12,1e12) then return v end
 end
 function M:UpdateStats(host)
-    if not self.stats then self.stats=host:CreateFontString(nil,"OVERLAY");self.stats:SetJustifyV("TOP");self.stats:SetWordWrap(false) end
+    if not self.stats then
+        self.stats=CreateFrame("Frame",nil,_G.PaperDollFrame or host);self.stats:EnableMouse(false);self.stats.rows={}
+    end
     local t,db=self.stats,self.db
     t:Hide();if not db.quickStats then return end
     local rows={}
@@ -30,14 +32,25 @@ function M:UpdateStats(host)
     Add("Melee Haste",Number(GetMeleeHaste),true);Add("Spell Haste",Number(UnitSpellHaste,"player"),true)
     Add("Expertise",Number(GetExpertise));Add("Dodge",Number(GetDodgeChance),true)
     Add("Parry",Number(GetParryChance),true);Add("Block",Number(GetBlockChance),true)
-    self:Font(t);t:SetWidth(db.statsWidth);t:SetHeight((db.fontSize+3)*#rows)
-    t:ClearAllPoints();t:SetPoint(db.statsAnchor,host,db.statsAnchor,db.statsX,db.statsY)
-    t:SetJustifyH(db.statsAlign);t:SetText(table.concat(rows,"\n"));t:Show()
+    local helm=_G.CharacterHeadSlot
+    if not helm then return end
+    local height=db.fontSize+3
+    t:SetFrameLevel(math.max(host:GetFrameLevel(),helm:GetFrameLevel())+5)
+    t:SetSize(db.quickStatsWidth,height*#rows)
+    t:ClearAllPoints();t:SetPoint("TOPLEFT",helm,"TOPRIGHT",db.quickStatsX,db.quickStatsY)
+    for i,value in ipairs(rows) do
+        local row=t.rows[i]
+        if not row then row=t:CreateFontString(nil,"OVERLAY");t.rows[i]=row end
+        self:Font(row);row:SetWordWrap(false);row:SetJustifyH("LEFT");row:SetJustifyV("MIDDLE")
+        row:ClearAllPoints();row:SetPoint("TOPLEFT",0,-(i-1)*height);row:SetSize(db.quickStatsWidth,height)
+        row:SetText(value);row:Show()
+    end
+    t:Show()
 end
 -- Only typed permanent-enchantment lines are summarized. Ordinary item stats
 -- must never be mistaken for enchant stats. Unknown effects retain a short name.
 function M.Summarize(text)
-    if not D.Public(text) or type(text)~="string" then return "Unknown" end
+    if not D.Public(text) or type(text)~="string" or text=="Unknown" then return end
     text=text:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r",""):gsub("|T.-|t","")
     local lower=text:lower();local found={}
     for _,e in ipairs({{"all stats","All Stats"},{"strength","Str"},{"agility","Agi"},{"stamina","Sta"},
@@ -52,7 +65,7 @@ function M.Summarize(text)
     if #found>0 then return table.concat(found," / ") end
     -- Localized or proc effects cannot be translated to an invented stat weight.
     text=text:gsub("^.-:%s*",""):gsub("[%(%)]","")
-    local a,b=text:match("(%S+)%s*(%S*)");return a and (a..(b~="" and " "..b or "")) or "Unknown"
+    local a,b=text:match("(%S+)%s*(%S*)");return a and (a..(b~="" and " "..b or "")) or nil
 end
 function M:Enhancement(slot)
     local parts={};local permanent=Enum and Enum.TooltipDataLineType and Enum.TooltipDataLineType.ItemEnchantmentPermanent
@@ -62,15 +75,10 @@ function M:Enhancement(slot)
         for i=1,100 do
             local line=D.Field(lines,i);if not line then break end
             if D.Field(line,"type")==permanent then
-                parts[#parts+1]={text=self.Summarize(D.Field(line,"leftText")),color=self.db.enchantColor}
+                local text=self.Summarize(D.Field(line,"leftText"))
+                if text then parts[#parts+1]={text=text,color=self.db.enchantColor} end
             end
         end
-    end
-    -- Item links confirm an enchant exists even when its tooltip is unavailable.
-    local link=D.Call(GetInventoryItemLink,"player",slot)
-    if #parts==0 and type(link)=="string" then
-        local id=link:match("item:%d+:(%d+)")
-        if id and id~="0" then parts[#parts+1]={text="Unknown",color=self.db.unknownColor} end
     end
     if slot==16 or slot==17 then
         local weapon=Enum and Enum.WeaponSlot and (slot==16 and Enum.WeaponSlot.MainHand or Enum.WeaponSlot.OffHand)
@@ -79,7 +87,7 @@ function M:Enhancement(slot)
         if type(enchants)=="table" and imbue then for i=1,16 do
             local e=D.Field(enchants,i);if not e then break end
             if D.Field(e,"enchantType")==imbue and D.Field(e,"hasEnchant")==true then
-                local text="Imbue";local icon=D.Field(e,"enchantIconID")
+                local text;local icon=D.Field(e,"enchantIconID")
                 -- Existing client-verified Rogue catalog supplies effect names, no spell guessing.
                 if D.Number(icon,1,2147483647) then
                     for _,id in ipairs(D.families) do
@@ -87,7 +95,7 @@ function M:Enhancement(slot)
                         if spell and spell.icon==icon then text=spell.name;break end
                     end
                 end
-                parts[#parts+1]={text=self.Summarize(text),color=self.db.imbueColor}
+                if text then parts[#parts+1]={text=self.Summarize(text),color=self.db.imbueColor} end
             end
         end end
     end
@@ -111,7 +119,7 @@ function M:UpdateEnhancements()
                 elseif e[3]=="right" then text:SetPoint("RIGHT",slot,"LEFT",-db.enchantX,db.enchantY)
                 else text:SetPoint("LEFT",slot,"RIGHT",db.enchantX,db.enchantY) end
                 text:SetJustifyH(db.enchantAlign~="AUTO" and db.enchantAlign or e[3]=="right" and "RIGHT" or e[3]=="bottom" and "CENTER" or "LEFT")
-                text:SetText(self:Enhancement(e[2]));text:Show()
+                local value=self:Enhancement(e[2]);text:SetText(value);text:SetShown(value~="")
             end
         end
     end
