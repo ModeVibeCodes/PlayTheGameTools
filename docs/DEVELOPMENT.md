@@ -1,5 +1,15 @@
 # Standalone Forever development
 
+Rogue Quick Access dismissal follow-up (2026-11-10): right-click the launcher to
+hide it and close its menu for the session. Quick Access right-click is always available;
+Settings -> Dismiss Quick Access also hides it. The Reminder toggle is separately
+labeled Right-click to Dismiss Reminders. Restore Dismissed restores both. Preview/Edit Mode
+reveals the icon without clearing dismissal. No new API, TOC or saved fields.
+Run `tests/rogue_quick_dismiss.py`, `tests/rogue_layout.py` and smoke/build.
+Owner confirmed the corrected dismissal works as expected on 2026-11-10 and
+authorized PR #28 to merge into main. Focused dismissal/layout regressions and
+smoke/build passed; no release publication or settings reset.
+
 November 10 closeout: the owner accepted the final layout/descriptor placement
 and authorized merging PR #26 into main, explicitly retaining Mode-only scope.
 Mode guards and other-theme regression coverage were reviewed. Current main's

@@ -223,7 +223,13 @@ function M:DismissReminder(hand)
     self.dismissed[hand]={weapon=state.weapon,enchant=state.enchant,missing=state.missing,unknown=state.unknown,seconds=state.seconds,charges=state.hasCharges and state.charges or nil}
     self:Render();if D.OutsideCombat() and self.page then self.page:Refresh() end;return true
 end
-function M:RestoreReminders() self.dismissed={};self:Refresh() end
+function M:DismissQuickAccess()
+    if not self.active or not D.OutsideCombat() or self.previewing or self.editing then return false end
+    self.quickDismissed=true;self.menuOpen=false
+    if GameTooltip then GameTooltip:Hide() end
+    self:Render();if self.page then self.page:Refresh() end;return true
+end
+function M:RestoreReminders() self.dismissed={};self.quickDismissed=nil;self:Refresh() end
 function M:MinimalReminder()
     if not D.OutsideCombat() then return false end
     local s=self.db.watchStyle

@@ -137,7 +137,7 @@ function M:CreateConfigPage(parent)
     Toggles({{"Use Time Threshold","timeReminder"},{"Use Charge Threshold","chargeReminder"}})
     Sliders({{"Reminder Threshold (min)","threshold"," min"},{"Charge Threshold","chargeThreshold"," charges"}})
     Note("Either enabled threshold can show a reminder. Missing poison always needs attention; poisons without readable charges use the timer.",48)
-    Toggles({{"Right-click to Dismiss","dismissOnRightClick"},{"Show Poison Charges","showPoisonCharges"}})
+    Toggles({{"Right-click to Dismiss Reminders","dismissOnRightClick"},{"Show Poison Charges","showPoisonCharges"}})
     Visible(function() return self.db.watcher end,function() IconControls("watchStyle",true) end)
     Visible(function() return self.db.flyout end,function() IconControls("launcherStyle",false) end)
     page.displayButtons=Buttons({{"Customize Reminder",function() page.customize=page.customize=="reminder" and nil or "reminder" end},{"Customize Quick Access",function() page.customize=page.customize=="quick" and nil or "quick" end}})
@@ -178,7 +178,7 @@ function M:CreateConfigPage(parent)
         local cols=width>=516 and 6 or 3;gridRow:SetHeight(math.ceil(6/cols)*88)
         for i,b in ipairs(page.poisonGrid) do b:ClearAllPoints();b:SetPoint("TOPLEFT",((i-1)%cols)*86,-6-math.floor((i-1)/cols)*88);b:SetSize(76,76);b.label:SetWidth(72) end
     end
-    page.settingsButtons=Buttons({{"Refresh Poisons",function() self:Refresh() end},{"Restore Dismissed",function() self:RestoreReminders() end}})
+    page.settingsButtons=Buttons({{"Refresh Poisons",function() self:Refresh() end},{"Restore Dismissed",function() self:RestoreReminders() end},{"Dismiss Quick Access",function() self:DismissQuickAccess() end}})
     local status=Note("",52);page.poisonStatus=status
     page:Section("Position",nil,false)
     local function Position(quick)
@@ -206,7 +206,8 @@ function M:CreateConfigPage(parent)
             local active=i==1 and self.db.quickApply=="last" or b.family and family==b.family
             b:SetBackdropBorderColor(active and 1 or 0.28,active and 0.85 or 0.32,active and 0.3 or 0.38,1)
         end
-        page.settingsButtons[2]:SetEnabled(self.active and next(self.dismissed)~=nil)
+        page.settingsButtons[2]:SetEnabled(self.active and (next(self.dismissed)~=nil or self.quickDismissed==true))
+        page.settingsButtons[3]:SetEnabled(self.active and self.db.flyout and not self.quickDismissed and not self.editing and not self.previewing)
         page.displayButtons[1]:SetEnabled(self.db.watcher);page.displayButtons[2]:SetEnabled(self.db.flyout)
         status:SetText(not self.isRogue and "Rogue characters only." or not self.active and "Enable Rogue Tools using the header switch." or (self.lastMessage or self.status or "Ready."))
         page:Layout()
