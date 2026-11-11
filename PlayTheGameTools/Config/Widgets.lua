@@ -447,7 +447,10 @@ function W.Button(parent, text, width, height, style)
     button:RegisterForClicks("LeftButtonUp")
     style = style or "button"
     button.skinStyle = style
-    if style == "toggle" or style == "checkbox" then return W.Switch(button, text, height, style) end
+    if style == "toggle" or style == "checkbox" then
+        if style=="checkbox" and parent.row then parent.row.settingsStandaloneToggle=button end
+        return W.Switch(button, text, height, style)
+    end
     -- Resolved per button: the theme is applied after this file loads.
     local recipe = (T.id == "mode" and style == "categoryHeading" and MODE_HEADING)
         or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
@@ -871,6 +874,11 @@ end
 -- Hairline track with an accent fill up to the current value and a flat
 -- rectangular thumb.
 function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeric)
+    local settingsParent=parent
+    while settingsParent do
+        if settingsParent.row then settingsParent.row.settingsHasSlider=true;break end
+        settingsParent=settingsParent:GetParent()
+    end
     local label = W.Label(parent, "", nil, 0, -8, 52, T.secondary)
     label:ClearAllPoints()
     label:SetPoint("RIGHT", 0, 0)

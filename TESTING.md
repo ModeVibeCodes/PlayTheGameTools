@@ -1,5 +1,10 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Mode module layout rollout: run `tests/mode_module_layouts.py` and the full
+regression suite. The [page-by-page native checklist](docs/MODE_MODULE_LAYOUTS.md#exact-in-game-checks)
+covers the owner-approved Campfire pattern across the remaining module settings.
+Mode only; use `/reload` OOC. Broad native acceptance is still pending.
+
 SharedMedia pack integration: run tests/shared_media.py. After OOC reload, Global
 Settings → Appearance → SharedMedia should report Ready for the installed pack;
 its fonts/textures/borders and optional MyMedia choices should have plain names.

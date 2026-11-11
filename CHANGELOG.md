@@ -4,6 +4,14 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- After owner approval of Campfire Monitor, extend the compact layout across
+  Forever module settings in Mode only: fitted bordered pills, tucked sub-tabs,
+  consistent Options/Text/Appearance/Position placement, picker-only colors,
+  paired size/color rows and responsive left checkbox columns. Preserve every
+  setting, feature gate, dynamic data view and callback. Keep Modern/Blizzard
+  layouts unchanged. Broad native validation is pending; see
+  docs/MODE_MODULE_LAYOUTS.md for the page map and exact checks.
+
 - Pilot a unified Campfire Monitor settings layout in Mode: rounded element tabs,
   consistent Options/Text/Appearance/Position panels, paired size/color and
   opacity/color rows, responsive actions and search-aware navigation. Retain all

@@ -4,6 +4,7 @@ local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 -- The same responsive scrolling and row layout is used on every page.
 function W.Page(parent, minimumWidth)
     local page = CreateFrame("Frame", nil, parent)
+    page.modePillSections=T.id=="mode" and parent.ptgMediaScope~=nil
     page:SetPoint("TOPLEFT", 0, -36)
     page:SetPoint("BOTTOMRIGHT")
     page.rows, page.refreshers, page.sections, page.searchEntries, page.cursor = {}, {}, {}, {}, 0
@@ -45,6 +46,7 @@ function W.Page(parent, minimumWidth)
             if row.layoutChildren then row:layoutChildren(width) end
             local show = row.sectionHeader or not row.section or row.section.expanded
             if self.sectionTabs then show = not row.sectionHeader and (not row.section or row.section == self.selectedSection) and (not row.section or row.section.expanded) end
+            if self.ModeRowVisible then show=self:ModeRowVisible(row,show) end
             if row.visibleWhen then show=show and row.visibleWhen() end
             row:SetShown(show)
             if show then
@@ -79,8 +81,8 @@ function W.Page(parent, minimumWidth)
         if entry.section then self:SetSectionExpanded(entry.section, true) end
         self:Layout()
         local row = entry.row
-        if row then
-            bar:SetValue(math.max(0, row.offset - 8))
+        if row and row:IsShown() then
+            bar:SetValue(math.max(0, (row.offset or 0) - 8))
             if not row.searchHighlight then row.searchHighlight = W.Fill(row, T.primary, "OVERLAY", 1, 0.08) end
             row.searchHighlight:Show()
             row.searchEpoch = (row.searchEpoch or 0) + 1
@@ -102,6 +104,7 @@ function W.Page(parent, minimumWidth)
         local section = { title = title, expanded = true, header = header }
         self.sections[#self.sections + 1] = section
         self.activeSection = section
+        self.activeGroup = nil
         header.section, header.sectionHeader = section, true
         header.gapBefore = #self.sections > 1 and sectionGap or 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, section = section, row = header, kind = "section" }
@@ -140,6 +143,8 @@ function W.Page(parent, minimumWidth)
         row.gapAfter = 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, keywords = keywords, section = self.activeSection, row = row, kind = "setting" }
         controls.row, controls.rowLabel = row, label
+        row.settingsHost,row.settingsLabel,row.settingsTitle,row.settingsGroup=controls,label,title,self.activeGroup
+        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.cursor = self.cursor + height + 4
         return controls
     end
@@ -149,6 +154,8 @@ function W.Page(parent, minimumWidth)
         row.section, row.gapBefore, row.gapAfter = self.activeSection, 12, 0
         local heading=title:gsub("(%a)([%w]*)",function(first,rest) return first:upper()..rest end)
         row.subsectionHeading=W.Heading(row, heading, T.fontSize.group, 0, -10, 360, T.secondary)
+        row.settingsGroupTitle=title;self.activeGroup=title
+        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.rows[#self.rows + 1] = row
         self.cursor = self.cursor + 42
     end
@@ -187,6 +194,7 @@ function W.Page(parent, minimumWidth)
             end
         end
         self.toggleGrids = self.toggleGrids or {}; self.toggleGrids[#self.toggleGrids+1] = cells
+        row.settingsToggles=cells
         return cells
     end
     function page:Finish()

@@ -46,6 +46,7 @@ function UI.New(page, module)
     page.slots = {}
     function pool:Reset()
         self.used = 0
+        self.modePanel=nil
         for _, slot in ipairs(page.slots) do slot.visible = false; slot.item = nil; slot.callback = nil; slot.mapKind=nil end
     end
     function pool:Row()
@@ -73,6 +74,7 @@ function UI.New(page, module)
             button:HookScript("OnLeave", function(owner) if module.tooltipOwner == owner then module:HideTooltip() end end)
         end
         slot.visible = true
+        slot.row.settingsBrowserPanel=self.modePanel
         if slot.copyButton then slot.copyButton:Hide() end
         if slot.bindingControl then slot.bindingControl:Hide() end
         for _,host in pairs(slot.settingSliders or {}) do host:Hide() end
@@ -98,7 +100,7 @@ function UI.New(page, module)
         -- not per-letter colour ramps.
         button.label:SetText(text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
-        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 16 or (options.subheader and 14 or (options.expandedItem and 14 or 12)))
+        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and (T.id=="mode" and 20 or 16) or (options.subheader and 14 or (options.expandedItem and 14 or 12)))
         button:EnableMouse(callback ~= nil or item ~= nil)
         button.fill:SetShown(callback ~= nil or item ~= nil); button.outline:SetShown(callback ~= nil or item ~= nil)
         if item or options.portrait then
@@ -108,7 +110,7 @@ function UI.New(page, module)
             slot.icon:Show()
             if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", options.compact and 60 or 86, options.compact and -10 or -24);button.label:SetPoint("TOPRIGHT", -12, options.compact and -10 or -24) end
         end
-        if options.heading or options.subheader then
+        if (options.heading or options.subheader) and T.id~="mode" then
             slot.headerGlow=slot.headerGlow or {}
             local offsets={{-1,0},{1,0},{0,-1},{0,1}}
             local face,size=button.label:GetFont()
@@ -150,6 +152,10 @@ function UI.New(page, module)
             local height = button.label:GetStringHeight() + padding
             if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 6 end
             self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (questText and (options.heading and 28 or 18) or (options.heading and 40 or (options.subtitle and 56 or 40)))), height + (item and 8 or 0)))
+            if T.id=="mode" and options.heading then
+                if not slot.modeHeadingRule then slot.modeHeadingRule,slot.alignModeHeading=W.ModeHeadingRule(button,button.label) end
+                slot.modeHeadingRule:Show();slot.alignModeHeading()
+            elseif slot.modeHeadingRule then slot.modeHeadingRule:Hide() end
         end
         return slot
     end

@@ -1,5 +1,13 @@
 # mode interface theme
 
+## Module layout rollout — November 10
+
+Campfire Monitor's design is owner-accepted. PR #26 now applies its layout pattern
+to the other module settings **within Mode only**. Existing themes, gameplay
+displays, settings and profile data remain unchanged. Global Settings retains
+its existing navigation. See the [page map and exact native checks](MODE_MODULE_LAYOUTS.md).
+Broad native acceptance is pending before considering other themes.
+
 Forever only, experimental and opt-in. Open `/ptg` → **Global Settings** →
 **Appearance** → **Interface Theme** → **mode**, then use header **Reload** OOC.
 Modern remains the default. Modern and Blizzard retain their palettes and layouts.

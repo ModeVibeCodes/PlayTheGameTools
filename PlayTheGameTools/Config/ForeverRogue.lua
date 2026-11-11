@@ -18,14 +18,17 @@ function M:CreateConfigPage(parent)
                 set=function(v) if group then self:SetStyle(group,key,v) else self:SetOption(key,v) end end}
         end
         local cells=page:ToggleGrid(items,{maxColumns=2,minimumCellWidth=190})
+        if group then cells[1].frame:GetParent().row.modeFeature=group;cells[1].frame:GetParent().row.modePanel="text" end
         if group then page.poisonStyles[group]=page.poisonStyles[group] or {} end
         for i,e in ipairs(entries) do (group and page.poisonStyles[group] or page.poisonControls)[e[2]]=cells[i] end
     end
     local function Sliders(entries,group)
         for first=1,#entries,2 do
             local c,row=FullRow("",66);local cells={}
+            if group then row.modeFeature=group;row.modePanel="appearance" end
             for i=first,math.min(first+1,#entries) do
                 local e=entries[i];local label,key,suffix=e[1],e[2],e[3];local r=group and D.styleRanges[key] or D.ranges[key]
+                if group and (key=="fontSize" or key=="labelGap" or key=="timerSize") then row.modePanel="text" end
                 local f=CreateFrame("Frame",nil,c);local text=W.Label(f,label,nil,0,-4,220,addon.Theme.secondary)
                 local control=CreateFrame("Frame",nil,f);control:SetPoint("TOPLEFT",0,-23);control:SetPoint("BOTTOMRIGHT",0,4)
                 page.refreshers[#page.refreshers+1]=W.Slider(control,r[1],r[2],r[3],function() return (group and self.db[group] or self.db)[key] end,
@@ -65,14 +68,17 @@ function M:CreateConfigPage(parent)
         return owner
     end
     local function IconControls(group,reminder)
+        local first=#page.rows+1
         page:Group(reminder and "Poison Reminder Icons" or "Quick Access Poisons Icon")
         page.iconGroups[group]=page.rows[#page.rows]
         Sliders({{"Icon Size","iconSize"},
             {reminder and "Icon Gap" or "Icon Opacity",reminder and "iconGap" or "iconOpacity",not reminder and "%" or nil},
             {"Icon Border Size","iconBorderSize"},{"Icon Border Opacity","iconBorderOpacity","%"}},group)
         W.ColorRow(page,AppearanceOwner(group),"Icon Border Color","iconBorderColor")
+        for i=first,#page.rows do page.rows[i].modeFeature=group;page.rows[i].modePanel="appearance" end
     end
     local function Style(group,launcher,reminder)
+        local first=#page.rows+1
         local owner=AppearanceOwner(group)
         if not launcher and not reminder then
             Sliders({{"Icon Size","iconSize"},{"Icon Border Size","iconBorderSize"}},group)
@@ -113,6 +119,11 @@ function M:CreateConfigPage(parent)
         W.ColorRow(page,owner,"Text Color","textColor");W.ColorRow(page,owner,"Icon Tint","iconColor")
         Sliders({{"Window Background Opacity","backgroundOpacity","%"},{"Window Border Opacity","borderOpacity","%"},{"Window Border Size","borderSize"}},group)
         W.ColorRow(page,owner,"Window Background Color","backgroundColor");W.ColorRow(page,owner,"Window Border Color","borderColor")
+        local text={ ["Text Font"]=true,["Text Color"]=true,["Timer Color"]=true,["Label Text"]=true,["Label Position"]=true,["Timer Position"]=true }
+        for i=first,#page.rows do
+            local row=page.rows[i];row.modeFeature=group
+            row.modePanel=text[row.settingsTitle] and "text" or row.modePanel or "appearance"
+        end
     end
     page:Section("Display",nil,false)
     Toggles({{"Poison Reminder","watcher"},{"Quick Access Poisons","flyout"}})
@@ -130,16 +141,20 @@ function M:CreateConfigPage(parent)
     page.displayButtons=Buttons({{"Customize Reminder",function() page.customize=page.customize=="reminder" and nil or "reminder" end},{"Customize Quick Access",function() page.customize=page.customize=="quick" and nil or "quick" end}})
     Visible(function() return page.customize=="reminder" and self.db.watcher end,function()
         page:Group("Poison Reminder Appearance");Style("watchStyle",false,true);Buttons({{"Minimal",function() self:MinimalReminder() end}})
+        page.rows[#page.rows].modeFeature="watchStyle";page.rows[#page.rows].modePanel="options"
     end)
     Visible(function() return page.customize=="quick" and self.db.flyout end,function()
         page:Group("Quick Access Appearance")
         Select("Customize",{{id="icon",label="Icon and Label"},{id="menu",label="Expanded Menu"}},function() return page.quickCustomize or "icon",page.quickCustomize=="menu" and "Expanded Menu" or "Icon and Label" end,function(v) page.quickCustomize=v;page:Refresh() end)
+        page.rows[#page.rows].modeReplacedNavigation=true
     end)
     Visible(function() return page.customize=="quick" and self.db.flyout and page.quickCustomize~="menu" end,function() Style("launcherStyle",true,false) end)
     Visible(function() return page.customize=="quick" and self.db.flyout and page.quickCustomize=="menu" end,function()
         Style("flyoutStyle",false,false)
         Select("Menu Direction",{{id="UP",label="Up"},{id="DOWN",label="Down"},{id="LEFT",label="Left"},{id="RIGHT",label="Right"}},function() return self.db.direction end,function(v) self:SetOption("direction",v) end)
+        page.rows[#page.rows].modeFeature="flyoutStyle";page.rows[#page.rows].modePanel="appearance"
         Sliders({{"Visible Menu Rows","visibleRows"}})
+        page.rows[#page.rows].modeFeature="flyoutStyle";page.rows[#page.rows].modePanel="appearance"
     end)
     page:Section("Settings",nil,false)
     Note("Choose the poison applied by the reminder buttons. Recent follows the last-used poison for each hand; unavailable types are greyed out.",48)
@@ -166,12 +181,14 @@ function M:CreateConfigPage(parent)
     page:Section("Position",nil,false)
     local function Position(quick)
         local enabled=quick and "flyout" or "watcher";local lock=quick and "flyoutLocked" or "locked"
+        local first=#page.rows+1
         Visible(function() return self.enabled and self.db[enabled] end,function()
             page:Group(quick and "Quick Access Poisons" or "Poison Reminder")
             local buttons=Buttons({{"Enter Edit Mode",function() self:EnterElementEdit(quick) end},{"Reset Position",function() self:ResetElementPosition(quick) end},{"Lock Position",function() self:SetOption(lock,not self.db[lock]) end}})
             page.positionControls[enabled]=buttons;page.refreshers[#page.refreshers+1]=function() buttons[3]:SetSelected(self.db[lock]) end
             Sliders({{"X",quick and "menuX" or "x"},{"Y",quick and "menuY" or "y"}})
         end)
+        for i=first,#page.rows do page.rows[i].modeFeature=quick and "launcherStyle" or "watchStyle";page.rows[i].modePanel="position" end
     end
     Position(false);Position(true)
     page.refreshers[#page.refreshers+1]=function()

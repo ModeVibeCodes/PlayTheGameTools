@@ -384,6 +384,7 @@ function addon:CreateConfig()
             elseif id == "globalSettings" then pages[id] = self:CreateGlobalSettingsPage(pageHost)
             elseif module.CreateConfigPage then pages[id] = module:CreateConfigPage(pageHost)
             else pages[id] = GenericPage(pageHost, module) end
+            if W.ApplyModeModuleLayout and module then W.ApplyModeModuleLayout(pages[id],id) end
             pages[id].ptgMediaScope=pageHost.ptgMediaScope
             pageHost.ptgMediaScope=nil
             pages[id]:Hide()

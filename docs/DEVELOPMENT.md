@@ -1,5 +1,14 @@
 # Standalone Forever development
 
+November 10 Mode rollout: the owner accepted Campfire Monitor's design and
+authorized adapting the remaining module settings. Shared Config/ModePlans.lua
+and Config/ModeLayout.lua route existing controls without gameplay or saved-data
+changes. Dynamic catalogs, guild data, diagnostics and browser navigation keep
+their original ownership. Modern/Blizzard and Global Settings stay unchanged.
+Two TOC entries add 2 Lua files (118 Lua / 220 package files). All-module native
+acceptance remains pending; [layout map and exact checks](MODE_MODULE_LAYOUTS.md).
+The older instruction below to wait before scaling is satisfied by this approval.
+
 November 10 Campfire layout pilot (PR #26): Mode-only element tabs with consistent
 Options / Text / Appearance / Position panels. Text/color and opacity/color pairs
 share responsive rows. Refinement combines General's Options/Text into one form,

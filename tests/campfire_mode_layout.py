@@ -110,7 +110,7 @@ ColorPickerFrame.r=.2;ColorPickerFrame.g=.3;ColorPickerFrame.b=.4;ColorPickerFra
 assert(C.db.contributionTitleColor[1]==.2)
 ColorPickerFrame.info.cancelFunc();assert(C.db.contributionTitleColor[1]==previous)
 page:SelectSectionTab(1)
-assert(not pilot.bar:IsShown() and page.scroll.points[1][5]==-40,'Loot Sparkles keeps its original viewport')
+assert(not pilot.bar:IsShown() and page.modeLayout.bar:IsShown() and page.scroll.points[1][5]==-page.modeLayout.viewportTop,'Loot Sparkles uses the shared Mode panels independently of the approved Campfire pilot')
 local clear=page.scroll.ClearAllPoints;local anchorChanges=0
 function page.scroll:ClearAllPoints() anchorChanges=anchorChanges+1;page:Layout();clear(self) end
 page:SelectCampfirePanel('general','options')

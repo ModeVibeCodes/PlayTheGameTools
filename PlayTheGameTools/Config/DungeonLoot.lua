@@ -9,9 +9,13 @@ function M:CreateConfigPage(parent)
     nav:SetPoint("TOPLEFT");nav:SetPoint("TOPRIGHT");nav:SetHeight(36)
     local buttons = {}
     local function Tab(text, callback)
-        local b=W.Button(nav,text,90,32,"underline")
-        b.underline=b:CreateTexture(nil,"OVERLAY");W.Paint(b.underline,T.primary)
-        b.underline:SetPoint("BOTTOMLEFT",10,0);b.underline:SetPoint("BOTTOMRIGHT",-10,0);b.underline:SetHeight(2);b.underline:Hide()
+        local b=W.Button(nav,text,90,32,T.id=="mode" and "roundedTab" or "underline")
+        if T.id=="mode" then b.underline=b.selectionEdge
+        else
+            b.underline=b:CreateTexture(nil,"OVERLAY");W.Paint(b.underline,T.primary)
+            b.underline:SetPoint("BOTTOMLEFT",10,0);b.underline:SetPoint("BOTTOMRIGHT",-10,0);b.underline:SetHeight(2)
+        end
+        b.underline:Hide()
         b:SetScript("OnClick",callback);buttons[#buttons+1]=b;return b
     end
     page.home=Tab("Dungeons",function() self:Navigate(nil) end)
@@ -54,6 +58,7 @@ function M:CreateConfigPage(parent)
     end
     local root,rootRows=Pane(280)
     page.rootPane=root
+    if T.id=="mode" then W.SetupModeBrowser(page,root) end
     local left,leftRows=Pane(140)
     local right,rightRows=Pane(180)
     page.listPane,page.detailPane=left,right
@@ -166,7 +171,9 @@ function M:CreateConfigPage(parent)
     function page:Layout()
         local width=self:GetWidth()
         for index,b in ipairs(buttons) do
-            b:ClearAllPoints();b:SetSize((width-12)/4,32);b:SetPoint("TOPLEFT",(index-1)*(width+4)/4,0)
+            local cell=T.id=="mode" and math.max(1,(width-48)/4) or (width-12)/4
+            b:ClearAllPoints();b:SetSize(cell,32);b:SetPoint("TOPLEFT",T.id=="mode" and 12+(index-1)*(cell+8) or (index-1)*(width+4)/4,0)
+            if T.id=="mode" then W.FitModeTab(b,cell);W.AlignTextLine(b,b.underline) end
         end
         local questTab=M.active and M.view.dungeon~=nil and M.view.tab=="quests"
         self.faction:SetShown(questTab)
@@ -183,6 +190,7 @@ function M:CreateConfigPage(parent)
             if b:IsShown() then b:ClearAllPoints();b:SetPoint("TOPLEFT",x,0);x=x+math.min(64,(width-20)/6)+4;b:SetWidth(math.min(64,(width-20)/6)) end
         end
         root:SetPoint("TOPLEFT",0,home and -110 or -84);root:SetPoint("BOTTOMRIGHT")
+        if self.LayoutModeBrowser and self:LayoutModeBrowser() then root:SetPoint("TOPLEFT",0,-132) end
         local top=(M.active and M.view.dungeon and M.view.tab~="general") and -112 or -84
         local leftWidth=math.max(160,math.min(300,width*0.37))
         left:SetPoint("TOPLEFT",0,top);left:SetPoint("BOTTOMLEFT");left:SetWidth(leftWidth)
@@ -210,16 +218,20 @@ function M:CreateConfigPage(parent)
         if not M.active then
             rootRows:Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
         elseif v.tab=="general" then
+            rootRows.modePanel="options"
             rootRows:Add("Quick Icon",nil,nil,T.secondary,nil,{heading=true})
             rootRows:Add("Show Shortcut Icon: "..(M.db.showShortcut and "On" or "Off"),function()
                 M:SetShortcutOption("showShortcut",not M.db.showShortcut);page:Refresh()
             end)
+            rootRows.modePanel="appearance"
             page.iconSize=rootRows:SettingSlider("Icon Size",24,72,2,function() return M.db.shortcutSize end,function(value) M:SetShortcutOption("shortcutSize",value) end," px")
             page.iconOpacity=rootRows:SettingSlider("Icon Opacity",25,100,5,function() return M.db.shortcutOpacity end,function(value) M:SetShortcutOption("shortcutOpacity",value) end,"%")
+            rootRows.modePanel="position"
             rootRows:Add("Edit Icon Position",function() M:EditShortcutPosition() end)
             rootRows:Add("Reset Shortcut Position",function() M:ResetShortcutPosition() end)
             rootRows:Add("This icon opens from the Quick Actions button. Move that button in Edit Mode.",nil,nil,T.muted)
             if addon.QuickActions.launcherFailure then rootRows:Add("Icon positioning unavailable: "..addon.QuickActions.launcherFailure,nil,nil,T.primary) end
+            rootRows.modePanel="options"
             rootRows:Add("Keybinding",nil,nil,T.secondary,nil,{heading=true})
             page.bindingControl=rootRows:BindingControl(M:ShortcutBindingLabel(),function() M:CaptureShortcutBinding() end)
             rootRows:Add("Clear Keybinding",function()
@@ -227,6 +239,7 @@ function M:CreateConfigPage(parent)
             end)
             if M.bindingStatus then rootRows:Add(M.bindingStatus,nil,nil,T.secondary) end
             rootRows:Add("The selected key replaces its current binding. Uses your current WoW account/character bindings.",nil,nil,T.muted)
+            rootRows.modePanel="data"
             rootRows:Add("Dungeon Data",nil,nil,T.secondary,nil,{heading=true})
             rootRows:Add(data.providerSource or data.source,nil,nil,T.muted)
             rootRows:Add("Bundled data: Lootified by Alen / CMaNGOS. GPLv3; no warranty. See CATALOG_SOURCES.md and LICENSES/GPL-3.0.txt.",nil,nil,T.muted)

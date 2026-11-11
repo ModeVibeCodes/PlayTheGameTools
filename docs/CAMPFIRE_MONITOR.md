@@ -2,6 +2,10 @@
 
 ## Mode layout pilot — November 10
 
+The owner has now accepted this flow and authorized a Mode-only rollout to the
+other modules. Campfire retains the approved layout below; the shared rollout
+coexists with it on the Loot Sparkles page. [Module map and native checklist](MODE_MODULE_LAYOUTS.md).
+
 PR #26 pilots compact rounded tabs for Campfire Monitor only in **mode**.
 The owner accepted the preceding page-material pass and requested this candidate
 before adapting other pages. The supplied PeakPlanner reference informs the

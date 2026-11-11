@@ -96,6 +96,8 @@ Core\ProfileManager.lua
 Config\Widgets.lua
 Config\Pages.lua
 Config\SectionTabs.lua
+Config\ModePlans.lua
+Config\ModeLayout.lua
 Config\Previews.lua
 Config\Search.lua
 Config\FontDropdown.lua

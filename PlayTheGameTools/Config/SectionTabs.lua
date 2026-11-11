@@ -1,9 +1,22 @@
 local _, addon = ...
 local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 
+function W.FitModeTab(button,width)
+    local available=math.max(1,width-16)
+    button.label:SetWordWrap(false);button.label:SetWidth(0)
+    addon.Media:BindInterfaceFont(button.label,GameFontHighlight,12)
+    local measured=button.label:GetStringWidth()
+    if not (issecretvalue and issecretvalue(measured)) and type(measured)=="number" and measured==measured and measured>available and measured<math.huge then
+        addon.Media:BindInterfaceFont(button.label,GameFontHighlight,math.max(8,12*available/measured))
+    end
+    button.label:SetWidth(available)
+    if button.selectionEdge then W.AlignTextLine(button,button.selectionEdge) end
+end
+
 -- Session-only presentation of existing section/row metadata, also used by search.
 function W.SectionTabs(page, order)
     if page.sectionTabs or #page.sections < 2 then return end
+    local modePills=T.id=="mode" and page.modePillSections
     local sections = {}
     if order then
         for _, title in ipairs(order) do
@@ -32,6 +45,17 @@ function W.SectionTabs(page, order)
         left:SetEnabled(offset > 0); right:SetEnabled(offset < (self.maximum or 0))
     end
     function strip:Layout()
+        if modePills then
+            local available=math.max(1,viewport:GetWidth())
+            local gap=math.min(8,available/20)
+            local width=math.max(1,(available-24-gap*(#sections-1))/#sections)
+            for i,button in ipairs(self.buttons) do
+                button:ClearAllPoints();button:SetPoint("TOPLEFT",12+(i-1)*(width+gap),0);button:SetSize(width,30)
+                W.FitModeTab(button,width)
+                button.tabX,button.tabWidth=12+(i-1)*(width+gap),width
+            end
+            content:SetWidth(available);self.maximum=0;self:Scroll(0);return
+        end
         local x = 0
         for i, section in ipairs(sections) do
             local button = self.buttons[i]
@@ -78,7 +102,7 @@ function W.SectionTabs(page, order)
         if addon.CloseFontDropdown then addon:CloseFontDropdown() end
     end
     for i, section in ipairs(sections) do
-        local button = W.Button(content, section.title, 100, 30, "underline")
+        local button = W.Button(content, section.title, 100, 30, modePills and "roundedTab" or "underline")
         if T.id=="mode" then
             button.underline=button.selectionEdge;W.AlignTextLine(button,button.underline)
         else

@@ -474,6 +474,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         if state.layingOut then return end
         state.layingOut=true
         local active=self.sectionTabs and self.selectedSection==section
+        if not active and self.modeLayout then state.viewportTop=nil end
         local wide=self.scroll:GetWidth()>=800
         local general=state.element=="general"
         local sliderCount,toggleCount=0,0
@@ -486,9 +487,11 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         local mixed=active and wide and not general and sliderCount>0 and toggleCount>0
         local compactHeader=active and not wide and not general
         state.togglesLeft=mixed
-        self.layoutInsetLeft=active and wide and not general and 188 or 0
-        self.layoutTopInset=(mixed or compactHeader) and 44 or 0
-        self.layoutMinHeight=mixed and 60+toggleCount*42 or 0
+        if active or not self.modeLayout then
+            self.layoutInsetLeft=active and wide and not general and 188 or 0
+            self.layoutTopInset=(mixed or compactHeader) and 44 or 0
+            self.layoutMinHeight=mixed and 60+toggleCount*42 or 0
+        end
         state.summary:SetShown(active and wide and not general)
         state.summaryTitle:SetShown(not mixed);state.summaryText:SetShown(not mixed);state.summaryUnderline:SetShown(not mixed)
         state.inlineHeader:SetShown(mixed or compactHeader)
@@ -508,7 +511,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         local height=general and (wide and 56 or 80) or (wide and 84 or 100)
         bar:SetHeight(height)
         local top=active and 48+height or 40
-        if state.viewportTop~=top then
+        if (active or not self.modeLayout) and state.viewportTop~=top then
             state.viewportTop=top
             self.scroll:ClearAllPoints();self.scroll:SetPoint("TOPLEFT",0,-top);self.scroll:SetPoint("BOTTOMRIGHT",-24,0)
             self.scrollbar:ClearAllPoints();self.scrollbar:SetPoint("TOPRIGHT",-4,-top-4);self.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
