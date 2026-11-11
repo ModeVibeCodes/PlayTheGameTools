@@ -91,6 +91,8 @@ Modules\ForeverRogueData.lua
 Modules\ForeverRogue.lua
 Modules\ForeverRogueInventory.lua
 Modules\ForeverRogueDisplay.lua
+Modules\CharacterReskin.lua
+Modules\CharacterReskinData.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -125,5 +127,6 @@ Config\CampfireMonitor.lua
 Config\LootSparkles.lua
 Config\EnhancedExperienceBar.lua
 Config\ForeverRogue.lua
+Config\Reskins.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua

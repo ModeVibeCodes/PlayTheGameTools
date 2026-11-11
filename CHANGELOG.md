@@ -4,6 +4,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Add opt-in Reskins → Character Panel: Mode surfaces/accenting, configurable
+  SharedMedia fonts/textures/borders, enhancement labels and player quick stats.
+  Restore cosmetic ownership outside combat when disabled or leaving the paper
+  doll. Damage Meters and Chat Window are clearly planned pages with no runtime
+  implementation. Native visual/interaction acceptance is pending.
+
 - Rogue Quick Access Poisons now always supports right-click dismissal and has a
   Settings -> Dismiss Quick Access button, independent of the Reminder toggle. Hides the launcher/menu until Restore Dismissed
   or reload; Preview/Edit Mode still reveals it. Left-click applications unchanged.

@@ -1,5 +1,24 @@
 # Forever API compatibility notes
 
+## Character-panel reskin pilot — November 10, 2026
+
+Reviewed the [Forever CharacterFrame XML](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Camelot/CharacterFrame.xml),
+[PaperDoll XML](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Camelot/PaperDollFrame.xml),
+[stats implementation](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Camelot/PaperDollFrameStats.lua),
+[typed tooltip lines](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/TooltipInfoSharedDocumentation.lua)
+and [weapon enchant API](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua).
+CharacterFrame.LeftPaneHost/RightPaneHost, PaperDollFrame.TopBackgroundStripHost
+and CharacterModelScene are Forever-specific, not Retail assumptions. Pooled
+stats refresh uses the inspected ScrollBoxOnUpdate method when available.
+Only ItemEnchantmentPermanent lines are read as permanent enchants;
+C_Item.GetWeaponEnchantInfo uses WeaponSlot and ItemEnchantType.Imbue.
+No assumed temporary-tooltip line enum or copied Retail enchant database.
+Missing, restricted or unrecognized values show —, Unknown or Imbue. All reads
+and cosmetic writes pause in combat. Alpha/font snapshots restore OOC; native
+equipment scripts/anchors remain untouched. Local mocks are not evidence of
+native support, secure interaction, localization or visual parity. See
+[pilot details and exact checks](CHARACTER_RESKIN.md).
+
 ## mode small-control rendering
 
 Owner screenshots showed square checkbox/toggle windows despite rounded source

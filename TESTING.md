@@ -1,5 +1,10 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Reskins: run `tests/character_reskin.py`, `tests/mode_module_layouts.py` and smoke.
+Use the [exact character-panel checks](docs/CHARACTER_RESKIN.md#native-validation)
+after OOC `/reload`. The pilot defaults off; native appearance, positioning and
+equipment interactions require owner confirmation before another reskin phase.
+
 Mode module layout rollout: run `tests/mode_module_layouts.py` and the full
 regression suite. The [page-by-page native checklist](docs/MODE_MODULE_LAYOUTS.md#exact-in-game-checks)
 covers the owner-approved Campfire pattern across the remaining module settings.

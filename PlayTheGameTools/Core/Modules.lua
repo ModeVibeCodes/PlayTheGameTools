@@ -21,6 +21,7 @@ function addon:RegisterModule(id, module)
 end
 
 local function Transition(module, enabled)
+    if module.planned then module.enabled=false;return end
     if module.enabled == enabled then
         return
     end
@@ -63,6 +64,7 @@ function addon:SetModuleEnabled(id, enabled)
     assert(self.initialized and self.modules[id], "Play The Game Tools: module unavailable.")
     assert(type(enabled) == "boolean", "Play The Game Tools: enabled must be boolean.")
     local module = self.modules[id]
+    if module.planned then return end
     Transition(module, enabled)
     module.db.enabled = enabled
     if self.SyncModuleDisplayModes then self:SyncModuleDisplayModes(module) end

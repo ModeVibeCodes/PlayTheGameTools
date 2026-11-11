@@ -101,7 +101,7 @@ local function Dashboard(parent)
     page.moduleRows = {}
     for _, id in ipairs(addon.moduleOrder) do
         local module = addon.modules[id]
-        if not module.developer then
+        if not module.developer and not module.planned then
         local row = CreateFrame("Frame", nil, page.content)
         row:SetPoint("TOPLEFT", 0, -page.cursor)
         row:SetSize(400, 56)

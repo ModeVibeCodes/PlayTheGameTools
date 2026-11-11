@@ -1,5 +1,14 @@
 # Standalone Forever development
 
+November 10 Reskins pilot: new branch for Character Panel only, based on public
+main after PR #28. Default off; Mode media/palette, cosmetic restoration, quick
+stats and typed enchant/imbue labels. Later Damage Meters/Chat Window pages are
+explicitly planned and cannot enable. Preserve the accepted Mode layouts and
+all existing modules. [Owning design/API limits and native checks](CHARACTER_RESKIN.md).
+User requested a new PR and local `/reload` testing; no merge or release is
+authorized. Existing live-linked public source must be checked clean before
+updating to the reviewed candidate; do not replace its junction or touch WTF.
+
 Rogue Quick Access dismissal follow-up (2026-11-10): right-click the launcher to
 hide it and close its menu for the session. Quick Access right-click is always available;
 Settings -> Dismiss Quick Access also hides it. The Reminder toggle is separately

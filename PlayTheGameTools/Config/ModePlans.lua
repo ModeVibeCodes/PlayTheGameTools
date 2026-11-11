@@ -13,6 +13,9 @@ local function Label(row)
     return table.concat(names,"|")
 end
 W.ModeLayoutPlans={
+    characterReskin={decorateOnly=true},
+    damageMeterReskin={decorateOnly=true},
+    chatReskin={decorateOnly=true},
     combatTimer={features={{"timer","Combat Timer"}},route=function(row)
         local section=row.section and row.section.title
         if section=="Positioning" then return "timer","position" end

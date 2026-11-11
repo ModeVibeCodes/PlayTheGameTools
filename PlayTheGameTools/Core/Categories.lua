@@ -17,3 +17,4 @@ if not addon.Edition or addon.Edition.name ~= "Forever" then
     addon:RegisterCategory("mythicPlus", { title = "Mythic+" })
 end
 addon:RegisterCategory("qualityOfLife", { title = "Quality of Life" })
+addon:RegisterCategory("reskins", { title = "Reskins" })

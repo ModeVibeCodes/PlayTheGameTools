@@ -1,5 +1,10 @@
 # Feature registry
 
+Reskins → Character Panel: opt-in Forever pilot using the accepted Mode palette,
+native equipment controls, guarded enchant/imbue text and configurable quick
+stats. Damage Meters and Chat Window are planned navigation only, with no enable
+switch or runtime behavior. [Implementation and exact checks](CHARACTER_RESKIN.md).
+
 Mode module layouts: Campfire's flow is owner-accepted and now applied across
 module settings in Mode only. Every setting and callback is retained, with
 feature-specific catalogs/browsers intact. Modern/Blizzard retain their layouts;
