@@ -279,3 +279,10 @@ off in Display and confirm Quick Access right-click still dismisses the launcher
 **Action:** restore the launcher, then click **Dismiss Quick Access**. **Required
 state:** OOC, Preview/Edit Mode off. **Confirmation:** icon and open menu disappear
 without poison use, even with no poisons applied; Restore Dismissed becomes enabled.
+
+### PR #28 acceptance
+
+On 2026-11-10 the owner confirmed the independent Quick Access right-click
+dismissal works as expected and authorized merging PR #28 into main. This closes
+the focused dismissal correction; prior broader poison/combat coverage limits
+remain unchanged. No release publication or SavedVariables reset.

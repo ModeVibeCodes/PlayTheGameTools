@@ -6,7 +6,9 @@ Settings -> Dismiss Quick Access also hides it. The Reminder toggle is separatel
 labeled Right-click to Dismiss Reminders. Restore Dismissed restores both. Preview/Edit Mode
 reveals the icon without clearing dismissal. No new API, TOC or saved fields.
 Run `tests/rogue_quick_dismiss.py`, `tests/rogue_layout.py` and smoke/build.
-Native right-click acceptance remains pending.
+Owner confirmed the corrected dismissal works as expected on 2026-11-10 and
+authorized PR #28 to merge into main. Focused dismissal/layout regressions and
+smoke/build passed; no release publication or settings reset.
 
 November 10 closeout: the owner accepted the final layout/descriptor placement
 and authorized merging PR #26 into main, explicitly retaining Mode-only scope.
