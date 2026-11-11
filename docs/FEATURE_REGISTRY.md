@@ -10,6 +10,10 @@ name styling. Unreadable effects and irrelevant generic controls are hidden.
 Latest refinement: quiet unified framing, circular portrait crop, Mode scrollbar,
 independent Quick Stats pill with per-stat choices, and toggleable gold/equipped
 durability footer rows. Native refinement validation remains pending.
+Reload correction assigns fonts before title/footer text, covers enabled-module
+startup with an already-open sheet, fades the native divider early and aligns
+the name to the level/class model-pane center. Current saved profiles validate
+read-only; the separate Campfire report remains unreplicated.
 
 Mode module layouts: Campfire's flow is owner-accepted and now applied across
 module settings in Mode only. Every setting and callback is retained, with

@@ -1,5 +1,13 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Reload regression: `tests/character_reskin.py` now rejects SetText on an
+unfonted owned FontString and starts an enabled module with an already-open
+character panel and an empty native title. In game, OOC `/reload` with Character
+Info open, reopen it, and confirm no fresh font/profile errors, complete Mode
+styling, removed native divider and name centered with the level/class heading.
+The supplied Campfire range report was not reproduced in detached read-only
+validation of either current saved profile; do not reset settings to address it.
+
 Reskins: run `tests/character_reskin.py`, `tests/mode_module_layouts.py` and smoke.
 Screenshot refinements cover dedicated pill/content spacing, individual stat
 rows beside the helm, Mode-native control faces and reversible portrait/name

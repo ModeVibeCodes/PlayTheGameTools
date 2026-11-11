@@ -2,6 +2,14 @@
 
 ## Character-panel reskin pilot — November 10, 2026
 
+Reload regression: newly created FontStrings without an inherited FontObject
+require SetFont before even an empty SetText. The owned title and footer
+violated that order; strict font/open-panel startup fixtures now cover it.
+The supplied native UpdatePortrait stack calls styling before native title text
+exists, so the empty-title path is intentional. Divider art is now removed
+earlier in Refresh, independent of title construction. Name bounds reference
+LeftPaneHost, sharing the horizontal center of PaperDollLevelInfo's strip.
+
 Latest framing uses owned portrait/title copies: original spec/class texture
 coordinates are retained and a TempPortraitAlphaMask crops one pixel inside the
 ModeThumb circular rim; originals restore by alpha. Native title/portrait

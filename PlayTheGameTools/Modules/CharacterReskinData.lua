@@ -66,14 +66,15 @@ function M:UpdateFooter(root,paper,model)
         text:SetSize(125,db.fontSize+4);text:SetWordWrap(false);text:SetJustifyH("LEFT");text:Show()
     end
     if db.showGold then
+        Row(view.gold,0,{.83,.73,.48})
         local copper=Number(GetMoney)
         if copper and copper>=0 then
             copper=math.floor(copper)
             view.gold:SetText(string.format("%dg %02ds %02dc",math.floor(copper/10000),math.floor(copper/100)%100,copper%100))
         else view.gold:SetText("Gold: —") end
-        Row(view.gold,0,{.83,.73,.48})
     end
     if db.showDurability then
+        Row(view.durability,db.showGold and db.fontSize+5 or 0,db.textColor)
         local total,maximum,unknown=0,0,type(GetInventoryItemDurability)~="function"
         if not unknown then for slot=1,18 do
             local ok,current,limit=pcall(GetInventoryItemDurability,slot)
@@ -85,7 +86,6 @@ function M:UpdateFooter(root,paper,model)
         end end
         local percent=not unknown and maximum>0 and math.floor(100*total/maximum+.5)
         view.durability:SetText("Durability: "..(percent and percent.."%" or "—"))
-        Row(view.durability,db.showGold and db.fontSize+5 or 0,db.textColor)
     end
     view:Show()
 end

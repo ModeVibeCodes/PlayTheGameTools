@@ -135,9 +135,14 @@ function M:StyleChrome(root,paper,model)
             view.text=view:CreateFontString(nil,"OVERLAY");view.text:SetAllPoints();view.text:SetJustifyH("CENTER");view.text:SetJustifyV("MIDDLE")
             self.headerTitle=view;self.decorations[view]=view
         end
-        view:ClearAllPoints();view:SetPoint("TOPLEFT",root,"TOPLEFT",52,-5);view:SetPoint("TOPRIGHT",root,"TOPRIGHT",-52,-5);view:SetHeight(28)
+        -- Share the level/class heading's model-pane center, including when
+        -- the stats pane is expanded. The native left host starts at y=-20.
+        local host=root.LeftPaneHost or root
+        local y=root.LeftPaneHost and 15 or -5
+        view:ClearAllPoints();view:SetPoint("TOPLEFT",host,"TOPLEFT",48,y);view:SetPoint("TOPRIGHT",host,"TOPRIGHT",-48,y);view:SetHeight(28)
+        self:Font(view.text,self.db.textColor,self.db.titleSize)
         local title=D.Call(name.GetText,name);view.text:SetText(type(title)=="string" and title or "")
-        self:Font(view.text,self.db.textColor,self.db.titleSize);self:HideArt(name);view:Show()
+        self:HideArt(name);view:Show()
     end
     if root.CloseButton then
         self:RememberGeometry(root.CloseButton);root.CloseButton:ClearAllPoints();root.CloseButton:SetSize(26,26)
@@ -163,6 +168,8 @@ function M:StyleChrome(root,paper,model)
         end
         self:StyleItem(ammo,0)
     end
+end
+function M:HidePaneDivider(root)
     local host=root.RightPaneHost
     if host then for _,child in ipairs({host:GetChildren()}) do for _,region in ipairs({child:GetRegions()}) do
         if D.Call(region.GetAtlas,region)=="common-framedivider" then self:HideArt(region) end

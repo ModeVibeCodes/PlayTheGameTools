@@ -181,6 +181,7 @@ function M:Refresh()
     for _,host in pairs({root.LeftPaneHost,root.RightPaneHost,paper.TopBackgroundStripHost}) do
         self:HideTextures(host);self:Surface(host);self:StyleNativeFonts(host)
     end
+    self:HidePaneDivider(root)
     self:StyleNativeFonts(root.TitleContainer)
     self:StyleNativeFonts(_G.PaperDollLevelInfo)
     local stats=D.Call(function() return root:GetStatsPane() end)

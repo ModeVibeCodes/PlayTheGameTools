@@ -4,6 +4,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Fix character-reskin first-show/reload construction: assign fonts before
+  setting name, gold and durability text. Cover native empty-title/open-panel
+  startup with strict font fixtures. Hide the native model/stats divider early
+  and center the name over the model pane alongside the level/class heading.
+  Both current saved profiles validate read-only; the reported Campfire range
+  failure was not reproduced. Profile/settings validation is unchanged.
+
 - Unify character-panel framing with a subdued outer edge, borderless nested
   canvases, circular cropped portrait, centered name copy and Mode scrollbar.
   Give Quick Stats its own pill, per-stat choices and independent text styling.

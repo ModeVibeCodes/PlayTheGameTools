@@ -1,5 +1,21 @@
 # Standalone Forever development
 
+Reload error investigation: 094c9de's owned title called SetText before SetFont;
+the gold/durability rows had the same latent ordering problem. Native font
+errors interrupted styling, leaving native chrome/divider visible and could
+abort module initialization when the sheet was already open. Corrected order
+and a strict first-show/open-panel startup fixture cover all three readouts.
+The name now follows the model-pane center used by the level/class heading;
+the exact native common-framedivider artwork is faded earlier and restored on
+disable. Native visual/reload acceptance remains pending.
+Campfire/profile investigation: CampfireMonitor.lua and ProfileManager.lua are
+unchanged from pre-reskin public main. The fractional-position normalization
+dates to a427bc2 (November 7). Read-only validation of both current saved profiles
+passes; contribution coordinates are valid integers. Detached validation and
+file hashes confirm no settings edits. The supplied Campfire failure cannot be
+reproduced from the current source/settings; no defaults reset, broad validation
+relaxation or direct SavedVariables write was made. [Checks](CHARACTER_RESKIN.md).
+
 Latest character-panel refinement removes nested model/title rectangles, uses
 one dark outer frame, circular masked portrait/name copies and slim Mode scroll
 art over the native controller. Quick Stats now owns a pill, all stat choices,

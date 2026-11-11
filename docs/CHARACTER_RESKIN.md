@@ -6,6 +6,30 @@ The pilot is opt-in, works under every configuration theme and preserves setting
 
 ## Unified framing and independent displays
 
+### Reload investigation and correction
+
+The owner reported FontString:SetText(): Font not set at the owned title's
+first creation, called through native UpdatePortrait before title text existed.
+The new title wrote text before assigning its font. Gold and durability also
+had that latent ordering error. These were regressions in this pilot. A strict
+fixture reproduces the original title error, then passes after assigning each
+font before SetText (including empty text). An enabled-profile/open-character-
+panel startup fixture now completes with an empty native title and both footer
+rows enabled, then mirrors the subsequently populated title.
+
+The native divider cleanup now runs earlier than title/chrome construction,
+fading only common-framedivider inside RightPaneHost. The owned name uses equal
+48-unit model-pane margins, sharing the level/class heading's horizontal center
+in both expanded and collapsed layouts. Native originals remain recoverable.
+
+The separate Campfire contributionX range error was investigated against
+history and both current on-disk profiles. Campfire/profile-loader source is
+unchanged from pre-reskin main, and the older fractional-coordinate migration
+is already present. Both profiles validate using detached copies; coordinates
+are valid integers, and file hashes remain unchanged. That report is not
+reproduced with current source/settings. No profile reset or validator weakening
+is included. A fresh repeat remains an unresolved data/state observation.
+
 The next owner screenshot showed doubled bright lines around nested panes and
 an awkward square portrait/name header. The current framing uses one subdued
 outer edge (#424242 at 70% by default). Nested canvases and stat heading plates
@@ -16,7 +40,7 @@ edges remain separate, because they communicate item quality.
 The portrait is an addon-owned copy of the native spec/class texture and its
 texture coordinates, masked one pixel inside a circular ModeThumb rim. Its
 native texture and geometry remain intact underneath. The name also uses an
-owned, centered text region with equal 52-unit margins and a shared vertical
+owned, centered text region with equal model-pane margins and a shared vertical
 center with portrait/close controls. The hidden originals restore on disable;
 secure post-hooks mirror native title/portrait updates outside combat.
 
@@ -161,6 +185,13 @@ lines are summarized; base gear stats are excluded. Unknowns stay hidden.
     portrait has a circular crop/rim, name is centered, and no bright crossbar
     cuts through the portrait or the model. Disable the module to check full
     native artwork/scrollbar restoration.
+
+12. **Navigation:** `/ptg` → Reskins → Character Panel → header toggle; WoW
+    Character Info → Character. **Action:** enable the pilot, leave the sheet
+    open, `/reload`, reopen Character Info and `/ptg` if needed.
+    **Required state:** OOC. **Confirmation:** no new Font not set/profile
+    initialization errors, full chrome/footer styling, no hard native divider,
+    and the name centered above level/class. Existing module pages still open.
 
 ## Validation limits
 

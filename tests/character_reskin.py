@@ -2,8 +2,19 @@
 from smoke import load
 
 lua, _ = load()
-lua.execute(r'''
+CASES = r'''
     local methods=getmetatable(UIParent).__index
+    local createFont=methods.CreateFontString
+    function methods:CreateFontString(name,layer,inherits)
+        local text=createFont(self,name,layer,inherits)
+        if inherits then text.font={GameFontHighlight:GetFont()} end
+        text.strictFont=true;return text
+    end
+    local setText=methods.SetText
+    function methods:SetText(value)
+        assert(not self.strictFont or self.font,'FontString:SetText(): Font not set')
+        return setText(self,value)
+    end
     function methods:IsObjectType(kind) return self.kind==kind end
     function methods:GetJustifyH() return self.justifyH or 'LEFT' end
     function methods:GetJustifyV() return self.justifyV or 'TOP' end
@@ -63,6 +74,9 @@ lua.execute(r'''
     arrowArt.atlas='UI-Character-Info-GearSlot-Arrow';arrow.fixtureRegions={arrowArt};CharacterAmmoSlot.fixtureChildren={arrow}
     local pane=CreateFrame('Frame',nil,CharacterFrame.RightPaneHost)
     local race=pane:CreateTexture(nil,'BACKGROUND');pane.fixtureRegions={race}
+    local divider=CreateFrame('Frame',nil,CharacterFrame.RightPaneHost)
+    local dividerArt=divider:CreateTexture(nil,'OVERLAY');dividerArt.atlas='common-framedivider';dividerArt:SetAlpha(.65)
+    divider.fixtureRegions={dividerArt};CharacterFrame.RightPaneHost.fixtureChildren={divider}
     pane.ScrollBar=CreateFrame('Frame',nil,pane)
     pane.ScrollBar.Track=CreateFrame('Frame',nil,pane.ScrollBar)
     pane.ScrollBar.Track.Thumb=Button(pane.ScrollBar.Track)
@@ -99,7 +113,9 @@ lua.execute(r'''
     assert(M.portraitView.icon.mask==M.portraitView.mask and M.portraitView.mask.points[1][4]==1,'circular mask crops one pixel inside rim')
     assert(M.portraitView.icon.texture=='FixtureSpecIcon' and M.portraitView.icon.texCoord[1]==.1,'native spec/class texture coordinates retained')
     assert(name:GetAlpha()==0 and M.headerTitle.text.font[2]==15 and M.headerTitle.text.justifyV=='MIDDLE' and M.headerTitle.text.justifyH=='CENTER')
-    assert(M.headerTitle.height==28 and M.headerTitle.points[1][4]==52 and M.headerTitle.points[2][4]==-52,'equal name margins')
+    assert(M.headerTitle.height==28 and M.headerTitle.points[1][2]==CharacterFrame.LeftPaneHost and M.headerTitle.points[2][2]==CharacterFrame.LeftPaneHost,'name shares level/class model pane center')
+    assert(M.headerTitle.points[1][4]==48 and M.headerTitle.points[2][4]==-48,'equal model-pane name margins')
+    assert(dividerArt:GetAlpha()==0,'native model/stats divider removed')
     assert(not M.surfaces[CharacterFrame.LeftPaneHost].backdrop and not M.surfaces[CharacterFrame.RightPaneHost].backdrop and not M.surfaces[CharacterFrame].line:IsShown(),'no nested frame crossbars')
     assert(M.surfaces[CharacterFrame].borderColor[1]==66/255,'subtle unified outer frame')
     assert(pane.ScrollBar.Track.Begin:GetAlpha()==0 and M.scrollViews[pane.ScrollBar].thumb.line.width==2,'slim Mode scroll thumb replaces stock artwork')
@@ -141,6 +157,7 @@ lua.execute(r'''
     assert(art:GetAlpha()==0 and M.pending,'restoration deferred during combat')
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
     assert(art:GetAlpha()==.75 and name.font[1]=='Original' and name.font[2]==17)
+    assert(dividerArt:GetAlpha()==.65,'native divider restored on disable')
     assert(portrait:GetWidth()==62 and portrait.points[1][4]==-5 and name.points[1][4]==0 and name.points[1][5]==-5,'native geometry restored')
     assert(portrait:GetAlpha()==1 and name:GetAlpha()==1 and pane.ScrollBar.Track.Begin:GetAlpha()==1 and not M.portraitView:IsShown() and not M.headerTitle:IsShown() and not M.footer:IsShown(),'custom chrome/footer fully restored')
     assert(arrowArt:GetAlpha()==1 and CharacterFrame.CloseButton.normalTexture:GetAlpha()==1)
@@ -192,7 +209,8 @@ lua.execute(r'''
     assert(page.tabContentTop>=page.sectionTabs:GetHeight()+12 and page.scroll.points[1][5]==-page.tabContentTop,'scroll viewport below tabs')
     for _,row in ipairs(page.rows) do assert(row.settingsTitle~='Unknown Enhancement Color' and row.settingsTitle~='Border X Offset' and row.settingsTitle~='Surface Texture','irrelevant options removed') end
     assert(not addon.configWindow.pages.dashboard.moduleRows.damageMeterReskin,'planned page has no dashboard toggle')
-''')
+'''
+lua.execute(CASES)
 saved = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored, _ = load(saved)
 restored.execute('''
@@ -201,5 +219,21 @@ restored.execute('''
     local copy=addon.ProfileCodec.Copy(addon.db)
     copy.modules.characterReskin.borderSize=100
     assert(not addon.ProfileValidation:Validate(copy))
+''')
+# Model the real reload ordering: an enabled profile, already-open character
+# panel and UpdatePortrait occurring before the native title text is populated.
+setup = CASES.split('    local M=addon.CharacterReskin', 1)[0]
+boot, _ = load(saved, before=setup + r'''
+    PTGToolsDB.profiles.Default.modules.characterReskin.showGold=true
+    PTGToolsDB.profiles.Default.modules.characterReskin.showDurability=true
+    CharacterFrame.TitleContainer.TitleText:SetText(nil)
+''')
+boot.execute(r'''
+    assert(addon.initialized and addon.CharacterReskin.active,'open-panel startup must complete')
+    local M=addon.CharacterReskin
+    assert(M.headerTitle.text:GetText()=='' and M.headerTitle.text.font,'font assigned even before native name exists')
+    assert(M.footer.gold.font and M.footer.durability.font and M.footer.gold:GetText()=='12g 34s 56c')
+    CharacterFrame.TitleContainer.TitleText:SetText('Fixture Player')
+    M:Refresh();assert(M.headerTitle.text:GetText()=='Fixture Player')
 ''')
 print('PASS character reskin ownership/restoration, combat deferral, typed enhancements, missing/restricted data, config and profiles')
