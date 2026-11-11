@@ -1,5 +1,32 @@
 # Play The Game Tools 0.2.0-beta.1 candidate testing
 
+Final character-panel polish: confirm native rarity glow, independent Stat Name
+Color / Stat Number Color, live Panel Border Size, centered modifier-cell Width,
+default portrait above helm and default cyan enchants. Positioning groups every
+placement control; disabling a feature immediately hides its dependent rows.
+See the current exact checklist in docs/CHARACTER_RESKIN.md. Prior owner feedback
+confirmed the font-order correction rendered without errors; this polish still
+requires a new native review. Static checks do not extend that acceptance.
+
+Reload regression: `tests/character_reskin.py` now rejects SetText on an
+unfonted owned FontString and starts an enabled module with an already-open
+character panel and an empty native title. In game, OOC `/reload` with Character
+Info open, reopen it, and confirm no fresh font/profile errors, complete Mode
+styling, removed native divider and name centered with the level/class heading.
+The supplied Campfire range report was not reproduced in detached read-only
+validation of either current saved profile; do not reset settings to address it.
+
+Reskins: run `tests/character_reskin.py`, `tests/mode_module_layouts.py` and smoke.
+Screenshot refinements cover dedicated pill/content spacing, individual stat
+rows beside the helm, Mode-native control faces and reversible portrait/name
+geometry, dark navigation surfaces, rarity edges and the refitted ammo slot.
+Current checks also cover unified subtle framing, circular portrait crop, Mode
+scroll artwork, Quick Stats per-stat/style independence and optional gold/
+weighted durability footer updates. Use the Quick Stats pill for its controls.
+Use the [exact character-panel checks](docs/CHARACTER_RESKIN.md#native-validation)
+after OOC `/reload`. The pilot defaults off; native appearance, positioning and
+equipment interactions require owner confirmation before another reskin phase.
+
 Mode module layout rollout: run `tests/mode_module_layouts.py` and the full
 regression suite. The [page-by-page native checklist](docs/MODE_MODULE_LAYOUTS.md#exact-in-game-checks)
 covers the owner-approved Campfire pattern across the remaining module settings.

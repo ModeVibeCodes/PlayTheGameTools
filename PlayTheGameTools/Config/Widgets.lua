@@ -788,7 +788,7 @@ function W.ModuleHeader(parent)
         if header.module then addon:SetModuleEnabled(header.module.id, not header.module.enabled) end
     end)
     function header:Refresh()
-        local gameplay = self.module ~= nil and not self.module.developer
+        local gameplay = self.module ~= nil and not self.module.developer and not self.module.planned
         toggle:SetShown(gameplay)
         state:SetShown(gameplay)
         if self.module then

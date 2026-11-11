@@ -34,6 +34,7 @@ function V:Normalize(source)
     end
     if addon.DungeonLoot then addon.DungeonLoot.InitializeShortcutSettings(profile.modules.dungeonLoot) end
     if addon.LootSparkles then addon.LootSparkles.Initialize(profile.modules.lootSparkles) end
+    if addon.CharacterReskin then addon.CharacterReskin.Initialize(profile.modules.characterReskin) end
     Colors(profile.modules)
     local display=addon.modules.battleRez and profile.modules.battleRez.display
     if type(display)=="table" then

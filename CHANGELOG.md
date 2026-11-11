@@ -4,6 +4,41 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Finish character-panel controls: native C_Item rarity colors with subtle
+  static halos, separate stat-name/number colors, working 1–4 unit outer border,
+  centered modifier text cells with effective width, cyan enchant default and
+  class portrait aligned above the helm. Rename Enchants & Equipment Modifiers
+  and Positioning; group all placement controls there. Hide disabled features'
+  dependent rows immediately. Prior no-error native feedback is recorded;
+  this final refinement awaits native confirmation.
+
+- Fix character-reskin first-show/reload construction: assign fonts before
+  setting name, gold and durability text. Cover native empty-title/open-panel
+  startup with strict font fixtures. Hide the native model/stats divider early
+  and center the name over the model pane alongside the level/class heading.
+  Both current saved profiles validate read-only; the reported Campfire range
+  failure was not reproduced. Profile/settings validation is unchanged.
+
+- Unify character-panel framing with a subdued outer edge, borderless nested
+  canvases, circular cropped portrait, centered name copy and Mode scrollbar.
+  Give Quick Stats its own pill, per-stat choices and independent text styling.
+  Add separate default-on gold and weighted equipped-durability footer toggles.
+  Preserve native interactions, old preferences and OOC restoration; native
+  visual confirmation of this refinement remains pending.
+
+- Refine the character reskin from native screenshots: reserve settings space
+  below the pills, anchor separate quick-stat rows beside the helm, use Mode's
+  navigation material, strengthen rarity borders and refit ammo. Add Mode faces
+  for native controls/close, shrink the portrait and center/enlarge the name.
+  Hide unreadable enhancements and remove unused generic customization controls.
+  Native behavior/geometry restoration is retained; refined native review pending.
+
+- Add opt-in Reskins → Character Panel: Mode surfaces/accenting, configurable
+  SharedMedia fonts/textures/borders, enhancement labels and player quick stats.
+  Restore cosmetic ownership outside combat when disabled or leaving the paper
+  doll. Damage Meters and Chat Window are clearly planned pages with no runtime
+  implementation. Native visual/interaction acceptance is pending.
+
 - Rogue Quick Access Poisons now always supports right-click dismissal and has a
   Settings -> Dismiss Quick Access button, independent of the Reminder toggle. Hides the launcher/menu until Restore Dismissed
   or reload; Preview/Edit Mode still reveals it. Left-click applications unchanged.

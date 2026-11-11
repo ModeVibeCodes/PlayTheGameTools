@@ -1,5 +1,60 @@
 # Standalone Forever development
 
+Owner confirmed 31a1f57 looks better with no errors. Final requested refinement:
+use documented C_Item.GetItemQualityColor plus static rarity halos; split quick
+stat name/number colors; draw the outer border as an inside-fit high-layer frame
+with responsive 1–4 unit thickness and non-overlapping corners; center modifier
+text within its width. Defaults put the portrait above helm and enchants at
+#04B5DB (migrate the old green default once, retain custom colors). Positioning
+owns labeled sections for every placement control. Disabled feature controls
+hide via row predicates and immediate relayout. Existing keys/preferences and
+font-before-text construction remain intact. Current refinement is not yet
+native-accepted; 122 Lua / 224 files, no new media or client restart expected.
+
+Reload error investigation: 094c9de's owned title called SetText before SetFont;
+the gold/durability rows had the same latent ordering problem. Native font
+errors interrupted styling, leaving native chrome/divider visible and could
+abort module initialization when the sheet was already open. Corrected order
+and a strict first-show/open-panel startup fixture cover all three readouts.
+The name now follows the model-pane center used by the level/class heading;
+the exact native common-framedivider artwork is faded earlier and restored on
+disable. Native visual/reload acceptance remains pending.
+Campfire/profile investigation: CampfireMonitor.lua and ProfileManager.lua are
+unchanged from pre-reskin public main. The fractional-position normalization
+dates to a427bc2 (November 7). Read-only validation of both current saved profiles
+passes; contribution coordinates are valid integers. Detached validation and
+file hashes confirm no settings edits. The supplied Campfire failure cannot be
+reproduced from the current source/settings; no defaults reset, broad validation
+relaxation or direct SavedVariables write was made. [Checks](CHARACTER_RESKIN.md).
+
+Latest character-panel refinement removes nested model/title rectangles, uses
+one dark outer frame, circular masked portrait/name copies and slim Mode scroll
+art over the native controller. Quick Stats now owns a pill, all stat choices,
+font/color/placement and enable state. Gold/durability are separate Options
+toggles; durability aggregates current/max over durable equipped slots. Legacy
+shared quick-stat styling migrates once; subsequent panel edits stay separate.
+No new files/media, 122 Lua / 224 package files; native appearance/interaction
+review remains pending. [Current labels and checks](CHARACTER_RESKIN.md).
+
+Character-panel screenshot refinement: the pilot rendered natively, but tabs
+overlapped options, stats clipped, and stock stats/ammo/chrome artwork remained.
+Reskins now reserves a dedicated tab/content boundary, uses the Mode sidebar
+material (#232323), helm-relative individual quick-stat rows, stronger quality
+borders, native-button custom faces and reversible portrait/name geometry.
+Unknown enhancements and irrelevant generic controls are removed. Existing
+pilot preferences remain stored; new presentation-specific defaults fill only
+missing fields. Current candidate is 122 Lua / 224 package files. Refined native
+acceptance remains pending; [current exact checks](CHARACTER_RESKIN.md).
+
+November 10 Reskins pilot: new branch for Character Panel only, based on public
+main after PR #28. Default off; Mode media/palette, cosmetic restoration, quick
+stats and typed enchant/imbue labels. Later Damage Meters/Chat Window pages are
+explicitly planned and cannot enable. Preserve the accepted Mode layouts and
+all existing modules. [Owning design/API limits and native checks](CHARACTER_RESKIN.md).
+User requested a new PR and local `/reload` testing; no merge or release is
+authorized. Existing live-linked public source must be checked clean before
+updating to the reviewed candidate; do not replace its junction or touch WTF.
+
 Rogue Quick Access dismissal follow-up (2026-11-10): right-click the launcher to
 hide it and close its menu for the session. Quick Access right-click is always available;
 Settings -> Dismiss Quick Access also hides it. The Reminder toggle is separately
