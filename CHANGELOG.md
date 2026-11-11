@@ -4,6 +4,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Guild Tools -> Roster now has Members and Analytics tabs. Members adds a search
+  box (name, class, race, zone, rank, notes, or a level such as 60 or 40-59),
+  Class and Status filters, levels beside names, an online marker and a hover
+  tooltip with rank, zone or last online, and notes. Analytics keeps the Class
+  Summary and adds Online Now plus bar breakdowns by level, rank, race, last
+  online and zone. Still read-only and session-only; native validation is pending.
+
 - Rogue Quick Access Poisons now always supports right-click dismissal and has a
   Settings -> Dismiss Quick Access button, independent of the Reminder toggle. Hides the launcher/menu until Restore Dismissed
   or reload; Preview/Edit Mode still reveals it. Left-click applications unchanged.

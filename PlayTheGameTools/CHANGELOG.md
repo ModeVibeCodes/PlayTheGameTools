@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Guild Tools -> Roster now has Members and Analytics tabs. Members adds a search
+  box (name, class, race, zone, rank, notes, or a level such as 60 or 40-59),
+  Class and Status filters, levels beside names, an online marker and a hover
+  tooltip with rank, zone or last online, and notes. Analytics keeps the Class
+  Summary and adds Online Now plus bar breakdowns by level, rank, race, last
+  online and zone. Still read-only and session-only; native validation is pending.
+
 - Added Guild Tools -> Roster: an opt-in page that lists every guild member under
   their class and totals each class in a Class Summary. Read-only; nothing about
   the roster is saved. Native validation is pending.
