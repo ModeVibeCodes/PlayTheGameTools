@@ -67,6 +67,12 @@ local function Paint(texture, color, alpha)
             texture:SetVertexColor(color[1], color[2], color[3], alpha or color[4] or 1)
             return
         end
+        if texture.modeAsset=="ModePillSurface" then
+            if addon.Media:ApplyTexture(texture,"ModeToggleSurface",color) then
+                texture:SetVertexColor(color[1],color[2],color[3],alpha or color[4] or 1)
+            else texture:SetColorTexture(0,0,0,0) end
+            return
+        end
         if texture.modeAsset=="ModeCheckSurface" or texture.modeAsset=="ModeCheckMark" or texture.modeAsset=="ModeToggleSurface" then
             -- The already bundled circular thumb remains a rounded fallback
             -- while a new small-control file is unavailable to this client.
@@ -95,6 +101,19 @@ function W.ModeSheen(frame,inset)
     return texture
 end
 
+-- Fixed abstract material below page controls and the existing sheen. Missing
+-- artwork stays transparent so the darker base remains usable after /reload.
+function W.ModePageDetail(frame,inset)
+    local texture=frame:CreateTexture(nil,"BACKGROUND",nil,1)
+    inset=inset or 0
+    texture:SetPoint("TOPLEFT",inset,-inset);texture:SetPoint("BOTTOMRIGHT",-inset,inset)
+    texture.modeAsset="ModePageDetail"
+    if addon.Media:ApplyTexture(texture,"ModePageDetail") then
+        texture:SetVertexColor(1,1,1,0.18)
+    else texture:SetColorTexture(0,0,0,0) end
+    return texture
+end
+
 function W.Fill(frame, color, layer, inset, alpha)
     color = InterfaceColor(color)
     local texture = frame:CreateTexture(nil, layer or "BACKGROUND")
@@ -105,7 +124,7 @@ function W.Fill(frame, color, layer, inset, alpha)
     if T.id=="mode" and color==T.line then
         texture.modeAsset="ModeDivider";Paint(texture,color,alpha)
     end
-    if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background then
+    if color==T.panel or color==T.surface or color==T.sidebar or color==T.field or color==T.background or color==T.pageBackground then
         -- Configuration surfaces belong to the interface theme. Global Texture
         -- is reserved for module displays, never the settings window or popups.
         if T.id == "mode" then
@@ -231,13 +250,15 @@ function W.BlizzardBackdrop(frame, kind)
         if frame.OnBackdropSizeChanged then frame:HookScript("OnSizeChanged", frame.OnBackdropSizeChanged) end
     end
     local dialog = kind == "dialog"
-    local ok = pcall(addon.Media.ApplyBackdrop, addon.Media, frame, {
+    -- Theme artwork is set directly: Global Border/Texture belong to module
+    -- displays and would replace the stock dialog and tooltip edges here.
+    local ok = pcall(frame.SetBackdrop, frame, {
         -- The dialog owner draws its own opaque canvas and stone (Window.lua).
         bgFile = not dialog and ART.tooltipBackground or nil,
         edgeFile = dialog and ART.dialogBorder or ART.tooltipBorder,
-        tile = true, tileSize = dialog and 32 or 16, edgeSize = 1,
+        tile = true, tileSize = dialog and 32 or 16, edgeSize = dialog and 32 or 16,
         insets = dialog and { left = 11, right = 12, top = 12, bottom = 11 } or { left = 4, right = 4, top = 4, bottom = 4 },
-    }, nil, true)
+    })
     if not ok then return false end
     if dialog then
         frame:SetBackdropColor(1, 1, 1, 1)
@@ -428,18 +449,23 @@ function W.Button(parent, text, width, height, style)
     button:RegisterForClicks("LeftButtonUp")
     style = style or "button"
     button.skinStyle = style
-    if style == "toggle" or style == "checkbox" then return W.Switch(button, text, height, style) end
+    if style == "toggle" or style == "checkbox" then
+        if style=="checkbox" and parent.row then parent.row.settingsStandaloneToggle=button end
+        return W.Switch(button, text, height, style)
+    end
     -- Resolved per button: the theme is applied after this file loads.
     local recipe = (T.id == "mode" and style == "categoryHeading" and MODE_HEADING)
         or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
-    button.fill = W.Fill(button, T.surface, "BACKGROUND")
+    button.fill = W.Fill(button, T.surface, T.id=="mode" and style=="roundedTab" and "ARTWORK" or "BACKGROUND")
     if T.id=="mode" then
-        button.modeBorderAsset="ModeControlBorder"
+        button.modeBorderAsset=style=="roundedTab" and "ModePillSurface" or "ModeControlBorder"
+        if style=="roundedTab" or style=="subTab" then button.modeFixedSprite=true end
         button.fill:ClearAllPoints()
-        button.fill:SetPoint("TOPLEFT",1,-1);button.fill:SetPoint("BOTTOMRIGHT",-1,1)
-        button.fill.modeAsset="ModeControlSurface";Paint(button.fill,T.surface)
+        local inset=style=="roundedTab" and 1.5 or 1
+        button.fill:SetPoint("TOPLEFT",inset,-inset);button.fill:SetPoint("BOTTOMRIGHT",-inset,inset)
+        button.fill.modeAsset=style=="roundedTab" and "ModePillSurface" or "ModeControlSurface";Paint(button.fill,T.surface)
     end
-    button.outline = W.Outline(button, T.line, "BORDER")
+    button.outline = W.Outline(button, T.line, T.id=="mode" and style=="roundedTab" and "BACKGROUND" or "BORDER")
     -- Kept for consumers that tint the selected state directly.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0.08)
     button.activeGlow:Hide()
@@ -537,6 +563,15 @@ function W.Button(parent, text, width, height, style)
             Paint(self.fill, plain and T.background or T.surface, plain and 0 or 1)
             self.outline:SetShown(not plain)
             if not plain then self.outline:SetColor(T.line,0.8) end
+            if style=="roundedTab" then
+                -- Same solid backing / inset interior construction as switches.
+                Paint(self.fill,T.surface)
+                self.outline:SetColor(T.line,1);self.outline:SetShown(true)
+            elseif style=="subTab" then
+                Paint(self.fill,selected and T.panel or T.background)
+                self.outline:SetColor(selected and T.primary or T.line,selected and 0.55 or 1)
+                self.outline:SetShown(true)
+            end
             self.activeGlow:Hide()
             local modeColor=self.labelColor or (style=="categoryHeading" and T.heading or T.secondary)
             if not available then modeColor=T.unavailable
@@ -841,6 +876,11 @@ end
 -- Hairline track with an accent fill up to the current value and a flat
 -- rectangular thumb.
 function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeric)
+    local settingsParent=parent
+    while settingsParent do
+        if settingsParent.row then settingsParent.row.settingsHasSlider=true;break end
+        settingsParent=settingsParent:GetParent()
+    end
     local label = W.Label(parent, "", nil, 0, -8, 52, T.secondary)
     label:ClearAllPoints()
     label:SetPoint("RIGHT", 0, 0)

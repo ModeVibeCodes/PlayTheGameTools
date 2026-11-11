@@ -84,6 +84,7 @@ local MODE = {
     highlight = RGB(212, 212, 212), ink = RGB(24, 24, 24),
     sidebar = RGB(35, 35, 35), field = RGB(37, 37, 37),
     background = RGB(43, 43, 43), panel = RGB(48, 48, 48),
+    pageBackground = RGB(42, 42, 42), -- Mode page area; sidebar remains #232323.
     surface = RGB(53, 53, 53), hover = RGB(53, 53, 53),
     line = RGB(66, 66, 66), lineStrong = RGB(179, 179, 179),
     text = RGB(212, 212, 212), heading = RGB(212, 212, 212),

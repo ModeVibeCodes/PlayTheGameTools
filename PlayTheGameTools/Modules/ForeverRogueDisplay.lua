@@ -121,8 +121,11 @@ function M:CreateDisplay()
     self.launcher=Surface(UIParent);self:DragHandle(self.launcher,"menuX","menuY","flyoutLocked")
     local open=CreateFrame("Button",nil,self.launcher);self.openButton=open
     CreateIcon(open);open:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-    open:SetScript("OnClick",function()
+    open:RegisterForClicks("LeftButtonUp","RightButtonUp")
+    open:SetScript("OnClick",function(_,button)
         if self.editing and D.OutsideCombat() then addon.PositionManager:SelectElement(self.launcher.elementId);return end
+        if button=="RightButton" then self:DismissQuickAccess();return end
+        if button~="LeftButton" then return end
         if D.OutsideCombat() and self.active and self.db.flyout and self.db.flyoutLocked and not self.previewing and not self.editing then
             if #self.choices==0 then
                 self.lastMessage="No usable poison found. Carry poison items, then click Refresh Poisons."
@@ -136,7 +139,12 @@ function M:CreateDisplay()
     open:SetScript("OnDragStop",function() self:StopElementDrag(self.launcher) end)
     open.label=Label(open);open.count=Label(open)
     open:SetScript("OnEnter",function()
-        if GameTooltip and self.db.launcherStyle.tooltips then GameTooltip:SetOwner(open,"ANCHOR_TOP");GameTooltip:SetText("Quick Access Poisons — click to choose Main Hand or Off Hand.");GameTooltip:Show() end
+        if GameTooltip and self.db.launcherStyle.tooltips then
+            GameTooltip:SetOwner(open,"ANCHOR_TOP")
+            GameTooltip:SetText("Quick Access Poisons — click to choose Main Hand or Off Hand."..
+                " Right-click to dismiss; restore via Settings > Restore Dismissed or /reload.")
+            GameTooltip:Show()
+        end
     end)
     open:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
     self.menu=Surface(UIParent);self.menu:SetFrameStrata("DIALOG");self.menu:SetClampedToScreen(true)
@@ -255,7 +263,7 @@ function M:Render()
         b:SetShown(show and true or false)
     end
     self.watcher:SetShown(any)
-    local launcher=ooc and db.flyout and (due or db.alwaysShow or preview or not db.flyoutLocked)
+    local launcher=ooc and db.flyout and (preview or not self.quickDismissed) and (due or db.alwaysShow or preview or not db.flyoutLocked)
     self.launcher:SetShown(launcher);self.openButton:SetEnabled(ooc)
     local count=0;for _,p in ipairs(self.choices) do if p.kind=="item" then count=count+p.count end end
     self.openButton.count:SetText(tostring(count));self.openButton.count:SetShown(db.launcherStyle.showCounts)

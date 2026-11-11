@@ -4,6 +4,7 @@ local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 -- The same responsive scrolling and row layout is used on every page.
 function W.Page(parent, minimumWidth)
     local page = CreateFrame("Frame", nil, parent)
+    page.modePillSections=T.id=="mode" and parent.ptgMediaScope~=nil
     page:SetPoint("TOPLEFT", 0, -36)
     page:SetPoint("BOTTOMRIGHT")
     page.rows, page.refreshers, page.sections, page.searchEntries, page.cursor = {}, {}, {}, {}, 0
@@ -37,25 +38,66 @@ function W.Page(parent, minimumWidth)
     function page:Layout()
         local width = math.max(minimumWidth or 320, scroll:GetWidth() - 4)
         content:SetWidth(width)
-        width=math.max(1,width-self.contentInset*2)
-        local cursor = 0
-        for _, row in ipairs(self.rows) do
-            row:SetWidth(width)
-            if row.layoutChildren then row:layoutChildren(width) end
+        local leftInset=self.contentInset+(self.layoutInsetLeft or 0)
+        width=math.max(1,width-leftInset-self.contentInset)
+        local cursor = self.layoutTopInset or 0
+        local footers={}
+        local function Prepare(row,footer)
+            if not footer and row.settingsFooterMoved and row.settingsFooterRestore then
+                row.settingsFooterRestore();row.settingsFooterMoved=false
+            end
+            local rowWidth=footer and math.max(1,content:GetWidth()-self.contentInset*2) or width
+            row:SetWidth(rowWidth)
+            if row.layoutChildren then row:layoutChildren(rowWidth) end
+            if footer then
+                row.settingsFooterMoved=true
+                local note=row.settingsFooterNote
+                if note:GetParent()~=row then note:SetParent(row) end
+                local title=row.settingsLabel
+                local titled=title and row.settingsTitle and row.settingsTitle~=""
+                if titled then
+                    title:Show();title:ClearAllPoints();title:SetPoint("TOPLEFT",0,0);title:SetWidth(rowWidth)
+                    title:SetTextColor(unpack(T.muted))
+                end
+                note:ClearAllPoints();note:SetPoint("TOPLEFT",0,titled and -20 or 0);note:SetWidth(math.max(1,rowWidth-8));note:SetWordWrap(true)
+                note:SetTextColor(unpack(T.muted))
+                local height=note:GetStringHeight()
+                if (issecretvalue and issecretvalue(height)) or type(height)~="number" or height~=height or height<0 or height==math.huge then height=32 end
+                row:SetHeight(math.max(14,height)+(titled and 20 or 0)+12)
+                if row.divider then row.divider:Hide() end
+            end
             local show = row.sectionHeader or not row.section or row.section.expanded
             if self.sectionTabs then show = not row.sectionHeader and (not row.section or row.section == self.selectedSection) and (not row.section or row.section.expanded) end
+            if self.ModeRowVisible then show=self:ModeRowVisible(row,show) end
             if row.visibleWhen then show=show and row.visibleWhen() end
             row:SetShown(show)
-            if show then
+            return show
+        end
+        for _, row in ipairs(self.rows) do
+            if self.modeFooterLayout and row.settingsFooterNote and (not row.settingsFooterInlineWhen or not row.settingsFooterInlineWhen()) then footers[#footers+1]=row
+            elseif Prepare(row,false) then
                 cursor = cursor + (row.gapBefore or 0)
                 row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", self.contentInset, -cursor)
+                row:SetPoint("TOPLEFT", leftInset, -cursor)
                 row.offset = cursor
                 cursor = cursor + row:GetHeight() + (row.gapAfter or 4)
             end
         end
+        local visibleFooters,footerHeight={},0
+        for _,row in ipairs(footers) do
+            if Prepare(row,true) then visibleFooters[#visibleFooters+1]=row;footerHeight=footerHeight+row:GetHeight()+8 end
+        end
+        if #visibleFooters>0 then
+            -- Short pages rest their notes at the bottom; long pages scroll
+            -- naturally past controls. Never overlay fields or the toggle gutter.
+            cursor=math.max(cursor+12,self.layoutMinHeight or 0,scroll:GetHeight()-footerHeight-12)
+            for _,row in ipairs(visibleFooters) do
+                row:ClearAllPoints();row:SetPoint("TOPLEFT",self.contentInset,-cursor);row.offset=cursor
+                cursor=cursor+row:GetHeight()+8
+            end
+        end
         self.cursor = cursor
-        content:SetHeight(cursor + 12)
+        content:SetHeight(math.max(cursor + 12,self.layoutMinHeight or 0))
         local maximum = math.max(0, content:GetHeight() - scroll:GetHeight())
         bar:SetMinMaxValues(0, maximum)
         bar:SetValue(math.min(bar:GetValue(), maximum))
@@ -64,6 +106,27 @@ function W.Page(parent, minimumWidth)
     scroll:SetScript("OnSizeChanged", function() page:Layout() end)
     function page:Refresh()
         for _, refresh in ipairs(self.refreshers) do refresh() end
+    end
+    function page:FooterNote(note,inlineWhen)
+        local row=note:GetParent().row
+        assert(row,"Play The Game Tools: footer notes must belong to a settings row.")
+        row.settingsFooterNote=note
+        row.settingsFooterInlineWhen=inlineWhen
+        if inlineWhen then
+            local function Points(region)
+                local out={};for i=1,region:GetNumPoints() do out[i]={region:GetPoint(i)} end;return out
+            end
+            local host,height,noteWidth=note:GetParent(),row:GetHeight(),note:GetWidth()
+            local notePoints,labelPoints=Points(note),Points(row.settingsLabel)
+            local labelWidth=row.settingsLabel:GetWidth()
+            row.settingsFooterRestore=function()
+                note:SetParent(host);note:ClearAllPoints();note:SetWidth(noteWidth)
+                for _,point in ipairs(notePoints) do note:SetPoint(unpack(point)) end
+                local label=row.settingsLabel;label:ClearAllPoints();label:SetWidth(labelWidth);label:SetTextColor(unpack(T.text))
+                for _,point in ipairs(labelPoints) do label:SetPoint(unpack(point)) end
+                row:SetHeight(height)
+            end
+        end
     end
     function page:SetSectionExpanded(section, expanded)
         section.expanded = expanded
@@ -78,8 +141,8 @@ function W.Page(parent, minimumWidth)
         if entry.section then self:SetSectionExpanded(entry.section, true) end
         self:Layout()
         local row = entry.row
-        if row then
-            bar:SetValue(math.max(0, row.offset - 8))
+        if row and row:IsShown() then
+            bar:SetValue(math.max(0, (row.offset or 0) - 8))
             if not row.searchHighlight then row.searchHighlight = W.Fill(row, T.primary, "OVERLAY", 1, 0.08) end
             row.searchHighlight:Show()
             row.searchEpoch = (row.searchEpoch or 0) + 1
@@ -101,6 +164,7 @@ function W.Page(parent, minimumWidth)
         local section = { title = title, expanded = true, header = header }
         self.sections[#self.sections + 1] = section
         self.activeSection = section
+        self.activeGroup = nil
         header.section, header.sectionHeader = section, true
         header.gapBefore = #self.sections > 1 and sectionGap or 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, section = section, row = header, kind = "section" }
@@ -139,6 +203,8 @@ function W.Page(parent, minimumWidth)
         row.gapAfter = 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, keywords = keywords, section = self.activeSection, row = row, kind = "setting" }
         controls.row, controls.rowLabel = row, label
+        row.settingsHost,row.settingsLabel,row.settingsTitle,row.settingsGroup=controls,label,title,self.activeGroup
+        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.cursor = self.cursor + height + 4
         return controls
     end
@@ -148,6 +214,8 @@ function W.Page(parent, minimumWidth)
         row.section, row.gapBefore, row.gapAfter = self.activeSection, 12, 0
         local heading=title:gsub("(%a)([%w]*)",function(first,rest) return first:upper()..rest end)
         row.subsectionHeading=W.Heading(row, heading, T.fontSize.group, 0, -10, 360, T.secondary)
+        row.settingsGroupTitle=title;self.activeGroup=title
+        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.rows[#self.rows + 1] = row
         self.cursor = self.cursor + 42
     end
@@ -186,6 +254,7 @@ function W.Page(parent, minimumWidth)
             end
         end
         self.toggleGrids = self.toggleGrids or {}; self.toggleGrids[#self.toggleGrids+1] = cells
+        row.settingsToggles=cells
         return cells
     end
     function page:Finish()

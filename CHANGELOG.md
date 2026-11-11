@@ -11,6 +11,69 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   Summary and adds Online Now plus bar breakdowns by level, rank, race, last
   online and zone. Still read-only and session-only; native validation is pending.
 
+- Rogue Quick Access Poisons now always supports right-click dismissal and has a
+  Settings -> Dismiss Quick Access button, independent of the Reminder toggle. Hides the launcher/menu until Restore Dismissed
+  or reload; Preview/Edit Mode still reveals it. Left-click applications unchanged.
+
+- Owner accepted the final module layout and requested PR #26's merge to main.
+  Keep all new layout/material behavior native to Mode; Modern and Blizzard
+  retain their existing layouts. This acceptance does not expand gameplay/API
+  validation. Current main's independent Blizzard border repair is preserved.
+
+- Correct the description scope: retain category subheadings, panel summaries and
+  minor labels in their original positions. Move the long explanatory blocks,
+  including Quest Automation and Merchant Automation, to Mode page bottoms.
+  Active automation rejection warnings return inline until cleared. Preserve
+  all settings and original-theme layouts.
+
+- Move optional Mode panel summaries and general explanatory notes to full-width
+  page footers. Short pages place them at the bottom; long/wrapped notes scroll
+  after controls without overlap. Keep live status and essential operational
+  instructions inline. Preserve all note text, settings, search and other themes.
+
+- Standardize Mode primary pills at 128×32 and center their group across module
+  pages instead of stretching short rows into long ovals. Narrow rows scale all
+  capsules proportionally. Give section viewports vertical clearance and remove
+  redundant baselines touching the borders; tucked secondary tabs are unchanged.
+
+- Fix Mode primary pills collapsing into one-pixel, unusable targets when their
+  anchored viewport has not resolved its width. Wait for a usable viewport,
+  relayout on the viewport's own size/show events, and retain safe widths for
+  other Mode pill bars. Settings and module behavior are unchanged; `/reload` OOC.
+
+- After owner approval of Campfire Monitor, extend the compact layout across
+  Forever module settings in Mode only: fitted bordered pills, tucked sub-tabs,
+  consistent Options/Text/Appearance/Position placement, picker-only colors,
+  paired size/color rows and responsive left checkbox columns. Preserve every
+  setting, feature gate, dynamic data view and callback. Keep Modern/Blizzard
+  layouts unchanged. Broad native validation is pending; see
+  docs/MODE_MODULE_LAYOUTS.md for the page map and exact checks.
+
+- Pilot a unified Campfire Monitor settings layout in Mode: rounded element tabs,
+  consistent Options/Text/Appearance/Position panels, paired size/color and
+  opacity/color rows, responsive actions and search-aware navigation. Retain all
+  settings and callbacks; Modern/Blizzard and gameplay behavior are unchanged.
+  The background pass received positive owner feedback; this pilot awaits native review.
+  Refinement: border the main pills, combine General's Options/Text, replace
+  secondary pills with raised/tucked separator tabs, simplify muted descriptions,
+  and slightly enlarge left headings. All settings/callbacks remain.
+  Follow-up: replace low-resolution pill art with a dedicated smooth capsule,
+  align General headers left, use underlined 20-unit headings and picker-only
+  color rows. On wide mixed panels put toggles below the left header, keep sliders
+  right and move the muted description inline. Search and all settings remain.
+  Alignment pass: consistent text-centered thin header rules fading at both ends,
+  a slightly larger separator with tighter spacing, truly clipped tucked tabs,
+  and one centered row of equally resized main pills constrained to page width.
+
+- Start the next Mode page-refinement experiment: darken only the page area from
+  #303030 to #2A2A2A and overlay faint Figma-generated abstract planes/grain at
+  18% opacity over the existing Figma material. Other themes, sidebar/control
+  colors, module behavior and global-texture isolation are preserved. Native
+  visual review is pending; use Reload OOC first.
+- Fix the Blizzard theme's settings window and popups losing their stock dialog
+  and tooltip borders: Global Border no longer replaces configuration edges and
+  applies to module displays only. The saved selection is preserved. Reload OOC.
+
 - Owner accepted the current mode cosmetic refresh and Global Texture isolation,
   and authorized PR #24's merge into main on 2026-11-09. Future interface changes
   will use a new PR; this acceptance does not expand module/gameplay validation.

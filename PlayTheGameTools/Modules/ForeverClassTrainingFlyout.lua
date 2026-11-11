@@ -136,6 +136,12 @@ function M:UpdateFlyoutMoney()
     self.trainingFlyout.wallet:SetText("Money  "..(ok and G:Integer(money,0,1e12) and self:MoneyText(money,true) or "Unavailable"))
 end
 
+function M:ApplyFlyoutOpacity(f)
+    local T,alpha=addon.InterfaceTheme,self:FlyoutOpacity()/100
+    if f.blizzardSkin then f:SetBackdropColor(T.panel[1],T.panel[2],T.panel[3],alpha)
+    elseif f.background then addon.Media:PaintSurface(f.background,T.panel,alpha,"foreverClassTraining") end
+end
+
 function M:CreateTrainingFlyout()
     if self.trainingFlyout then return end
     local W,T=addon.ConfigWidgets,addon.Theme
@@ -143,11 +149,18 @@ function M:CreateTrainingFlyout()
     f.ptgMediaScope="foreverClassTraining"
     f:SetFrameStrata("DIALOG");f:SetClampedToScreen(true);f:EnableMouse(true)
     f:SetResizable(true)
-    local background=f:CreateTexture(nil,"BACKGROUND");background:SetPoint("TOPLEFT",1,-1);background:SetPoint("BOTTOMRIGHT",-1,1)
-    addon.Media:PaintSurface(background,{0.03,0.04,0.05},self:FlyoutOpacity()/100,"foreverClassTraining");f.background=background
-    -- A native edge fits the actual frame; stretching the square artwork inset its visible border.
-    addon.Media:ApplyBackdrop(f,{edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverClassTraining")
-    f:SetBackdropBorderColor(0.45,0.52,0.58,0.85)
+    -- Follow the selected interface theme: the stock tooltip backdrop under Blizzard,
+    -- otherwise a flat fill with a native 1px edge (stretched artwork inset the border).
+    local I=addon.InterfaceTheme
+    if I.blizzardArt and W.BlizzardBackdrop(f,"tooltip") then
+        f.blizzardSkin=true
+    else
+        local background=f:CreateTexture(nil,"BACKGROUND");background:SetPoint("TOPLEFT",1,-1);background:SetPoint("BOTTOMRIGHT",-1,1)
+        f.background=background
+        addon.Media:ApplyBackdrop(f,{edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverClassTraining")
+        f:SetBackdropBorderColor(I.lineStrong[1],I.lineStrong[2],I.lineStrong[3],0.85)
+    end
+    self:ApplyFlyoutOpacity(f)
     f.title=W.Heading(f,"Class Training",16,12,-12,220,T.primary)
     local minimize=W.Button(f,"Minimize",72,24,"secondary");minimize:SetPoint("TOPRIGHT",-10,-8)
     minimize:SetScript("OnClick",function() self:CloseTrainingFlyout() end)
@@ -209,7 +222,7 @@ function M:RenderTrainingFlyout()
     local f=self.trainingFlyout;local W,T=addon.ConfigWidgets,addon.Theme
     f.content:SetWidth(f:GetWidth()-28)
     f.title:SetWidth(f:GetWidth()-110);f.subtitle:SetWidth(f:GetWidth()-24);f.wallet:SetWidth(f:GetWidth()-24)
-    addon.Media:PaintSurface(f.background,{0.03,0.04,0.05},self:FlyoutOpacity()/100,"foreverClassTraining")
+    self:ApplyFlyoutOpacity(f)
     f.subtitle:SetText(self.message or "No class data")
     f.trainingTotal:SetText("Training total  "..self:MoneyText(P.TrainingTotal(self.rows or {})))
     for _,item in ipairs(f.entries) do item.frame:Hide() end

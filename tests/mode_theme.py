@@ -25,6 +25,14 @@ mode.execute(r'''
     addon:ToggleConfig()
     local w=addon.configWindow
     assert(w.canvas.texture==addon.Media:GetTexture('ModeSurface') and w.bodySurface.texture==addon.Media:GetTexture('ModeSurface'),'custom global texture cannot replace mode materials on reload')
+    assert(T.pageBackground[1]==42/255 and T.pageBackground[2]==42/255 and T.pageBackground[3]==42/255,'Mode module-page shade is neutral #2A2A2A')
+    assert(w.bodySurface.vertexColor[1]==42/255 and T.sidebar[1]==35/255 and T.panel[1]==48/255,'only the module-page area darkens; sidebar and existing panels retain their shades')
+    assert(w.bodyDetail.texture==addon.Media:GetTexture('ModePageDetail') and w.bodyDetail.vertexColor[4]==0.18,'Figma abstract page detail stays faint')
+    assert(w.bodyDetail:GetParent()==w.bodySurface:GetParent() and w.bodyDetail.layer=='BACKGROUND' and not w.bodyDetail.slice,'static full-frame detail stays below page controls')
+    testMissingTextures={[addon.Media:GetTexture('ModePageDetail')]=true}
+    local missing=addon.ConfigWidgets.ModePageDetail(w,-12)
+    assert(missing.color[4]==0,'undiscovered detail stays transparent without replacing the base material')
+    testMissingTextures=nil
     local popup=addon.ConfigWidgets.Popup(w.reloadButton,180,60)
     local surface=addon.ConfigWidgets.Fill(popup,T.panel)
     assert(surface.texture==addon.Media:GetTexture('ModeSurface'),'detached configuration popups keep mode material')
@@ -123,7 +131,7 @@ mode.execute(r'''
     b.label:SetText(oldText);b:SetWidth(oldWidth);b:FitNavigationText()
     local page=w.pages.combatTimer
     assert(page.contentInset==12)
-    for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12,'visible page rows clear left borders') end end
+    for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12+(page.layoutInsetLeft or 0),'visible rows preserve border padding after the optional heading/checkbox gutter') end end
     assert(page.scrollbar.thumbTexture:GetWidth()==2,'thin thumb preserves scrollbar target')
     local check=addon.ConfigWidgets.Button(UIParent,'',18,18,'checkbox')
     assert(check.fill.modeAsset=='ModeCheckSurface' and check.switchOutline.rounded)
@@ -207,10 +215,12 @@ back.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('combatTimer')
     local w=addon.configWindow
     assert(addon.InterfaceTheme.id=='blizzard' and w.categoryNavigation:IsShown())
+    assert(not w.bodyDetail and not w.bodySurface,'Blizzard retains its original page material')
     assert(w.sidebarModuleButtons.combatTimer.label:GetText()=='Combat Timer')
     local popup=CreateFrame('Frame',nil,UIParent)
     assert(addon.ConfigWidgets.BlizzardBackdrop(popup,'tooltip'))
     assert(popup.backdrop.bgFile==[[Interface\\Tooltips\\UI-Tooltip-Background]],'Blizzard popup retains native theme background with a custom global texture')
+    assert(popup.backdrop.edgeFile==addon.ConfigWidgets.BlizzardArt.tooltipBorder and popup.backdrop.edgeSize==16,'Blizzard popup retains the stock tooltip edge')
     addon:SetInterfaceTheme('modern')
 ''')
 modern, _ = load(back.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
@@ -218,6 +228,7 @@ modern.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('combatTimer')
     local w=addon.configWindow
     assert(addon.InterfaceTheme.id=='modern' and w.categoryNavigation:IsShown())
+    assert(not w.bodyDetail and not w.bodySurface,'Modern retains its original page material')
     assert(w.navigationButtons.timers.skinStyle=='tab')
     assert(addon.db.globalMedia.texture=='background:PTG Graphite' and not w.canvas.texture,'Modern retains flat canvas without resetting global selection')
     local fill=addon.ConfigWidgets.Fill(w,addon.InterfaceTheme.panel)

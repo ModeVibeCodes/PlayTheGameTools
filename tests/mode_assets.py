@@ -10,7 +10,7 @@ files, _, _ = payload()
 sizes={'Surface':(128,128),'Border':(128,128),'Selection':(128,4),
        'ControlSurface':(64,32),'ControlBorder':(64,32),'CheckSurfaceRound':(32,32),
        'CheckBorderRound':(32,32),'ToggleSurfacePill':(32,16),'ToggleBorderPill':(32,16),
-       'Thumb':(32,32),'ScrollThumb':(4,64),'Divider':(256,4),'Logo':(128,128)}
+       'Thumb':(32,32),'ScrollThumb':(4,64),'Divider':(256,4),'Logo':(128,128),'PillSurface':(256,64)}
 for name, size in sizes.items():
     data = files['Media/Textures/Mode/' + name + '.tga']
     h = struct.unpack('<BBBHHBHHHHBB', data[:18])
@@ -34,6 +34,19 @@ for name, size in sizes.items():
         assert pixels[0][3]==0 and pixels[16*32+16][3]==255,'circular thumb silhouette'
     elif name=='Logo':
         assert pixels[0][3]==0 and any(a>200 for _,_,_,a in pixels),'transparent owner logo'
+detail=files['Media/Textures/Mode/PageAbstract.tga']
+header=struct.unpack('<BBBHHBHHHHBB',detail[:18])
+assert header[2]==2 and header[10]==32 and header[8:10]==(512,512),'power-of-two RGBA page detail'
+pixels=[tuple(detail[i:i+4]) for i in range(18,18+512*512*4,4)]
+assert all(a==255 and max(b,g,r)-min(b,g,r)<=3 for b,g,r,a in pixels),'opaque near-neutral source is blended at low runtime opacity'
+values=[r for b,g,r,a in pixels]
+assert 32<=min(values)<max(values)<=70 and max(values)-min(values)>=8,'restrained but non-flat abstract detail'
+rule=files['Media/Textures/Mode/HeaderLine.tga']
+assert struct.unpack_from('<HH',rule,12)==(256,4)
+rows=[rule[18+y*256*4:18+(y+1)*256*4] for y in range(4)]
+assert all(row==rows[0] for row in rows),'no vertical alpha variation can change apparent rule thickness'
+alpha=list(rows[0][3::4])
+assert alpha==alpha[::-1] and alpha[0]==0 and alpha[127]==255 and alpha[16]<alpha[32]<alpha[48],'header rule fades equally at both ends'
 for name in ('Lato-Regular.ttf', 'Lato-Bold.ttf'):
     assert files['Media/Fonts/' + name][:4] == b'\x00\x01\x00\x00'
 assert b'SIL OPEN FONT LICENSE' in files['LICENSES/Lato-OFL.txt']
@@ -49,13 +62,13 @@ def alpha_at(data, x, y):
         return data[18+(min(py,h-1)*w+min(px,w-1))*4+3]/255
     return (a(ix,iy)*(1-fx)+a(ix+1,iy)*fx)*(1-fy)+(a(ix,iy+1)*(1-fx)+a(ix+1,iy+1)*fx)*fy
 
-for name,w,h in [('CheckSurfaceRound',18,18),('ToggleSurfacePill',34,18)]:
+for name,w,h,inset in [('CheckSurfaceRound',18,18,1),('ToggleSurfacePill',34,18,1),('PillSurface',128,32,1.5),('PillSurface',108,27,1.5)]:
     data=files['Media/Textures/Mode/'+name+'.tga']
-    for iy in range((h-2)*8):
-        for ix in range((w-2)*8):
+    for iy in range(int((h-2*inset)*8)):
+        for ix in range(int((w-2*inset)*8)):
             x=(ix+.5)/8;y=(iy+.5)/8
-            fill=alpha_at(data,x/(w-2),y/(h-2))
-            outer=alpha_at(data,(x+1)/w,(y+1)/h)
+            fill=alpha_at(data,x/(w-2*inset),y/(h-2*inset))
+            outer=alpha_at(data,(x+inset)/w,(y+inset)/h)
             # Allow one 8-bit alpha level for independent bilinear resampling.
             assert outer+1/255>=fill,'colored interior must stay within the solid outer silhouette'
 print('PASS rounded Figma controls, circular thumb, neutral sheen, fading/beveled lines, transparent logo and font license')

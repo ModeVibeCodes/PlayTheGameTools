@@ -31,6 +31,7 @@ function M:CreateConfigPage(parent)
     local note=W.Label(page:Row("How It Works",200),
         "Highlights the one nearby object selected by the game's Interact Key system, not every node. Enabling turns on Interact Key and object icons; you can change them afterwards. Custom sparkles pause in combat. Gold is in reach; dim is out of reach or unknown; grey means unavailable. A native nameplate may also appear. Disable Forever Loot Sparkles and Lueur before using this module. Turning this module off restores settings it still owns. Quest sparkle removal may require a full game restart, not /reload.",nil,0,-4,440,T.muted)
     note:SetWordWrap(true)
+    page:FooterNote(note)
     local campSection=page:Section("Campfire Monitor",nil,false)
     addon.CampfireMonitor:AddConfig(page)
     W.SectionTabs(page)
