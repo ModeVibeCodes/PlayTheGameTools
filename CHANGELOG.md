@@ -4,6 +4,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Owner accepted the final module layout and requested PR #26's merge to main.
+  Keep all new layout/material behavior native to Mode; Modern and Blizzard
+  retain their existing layouts. This acceptance does not expand gameplay/API
+  validation. Current main's independent Blizzard border repair is preserved.
+
 - Correct the description scope: retain category subheadings, panel summaries and
   minor labels in their original positions. Move the long explanatory blocks,
   including Quest Automation and Merchant Automation, to Mode page bottoms.
@@ -54,6 +59,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   18% opacity over the existing Figma material. Other themes, sidebar/control
   colors, module behavior and global-texture isolation are preserved. Native
   visual review is pending; use Reload OOC first.
+- Fix the Blizzard theme's settings window and popups losing their stock dialog
+  and tooltip borders: Global Border no longer replaces configuration edges and
+  applies to module displays only. The saved selection is preserved. Reload OOC.
 
 - Owner accepted the current mode cosmetic refresh and Global Texture isolation,
   and authorized PR #24's merge into main on 2026-11-09. Future interface changes

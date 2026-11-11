@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+November 10 closeout: the owner accepted the final layout/descriptor placement
+and authorized merging PR #26 into main, explicitly retaining Mode-only scope.
+Mode guards and other-theme regression coverage were reviewed. Current main's
+independent PR #27 Blizzard backdrop repair is preserved; its only conflict was
+the changelog, resolved by retaining both entries. Layout acceptance does not
+establish new gameplay/API validation. No universal-theme rollout is authorized.
+
 Owner clarification supersedes the broad descriptor pass below: category
 subheadings, short panel summaries, separators and minor text stay in their
 approved locations. Only explicitly tagged explanatory blocks move to the

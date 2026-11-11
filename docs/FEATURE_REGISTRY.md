@@ -3,7 +3,8 @@
 Mode module layouts: Campfire's flow is owner-accepted and now applied across
 module settings in Mode only. Every setting and callback is retained, with
 feature-specific catalogs/browsers intact. Modern/Blizzard retain their layouts;
-broad native testing is pending. [Coverage map and exact checks](MODE_MODULE_LAYOUTS.md).
+the owner accepted the final layout and authorized PR #26's merge, retaining
+Mode-only scope. Gameplay validation is unchanged. [Coverage and checks](MODE_MODULE_LAYOUTS.md).
 
 Mode explanatory blocks use full-width page footers. Category subheadings,
 short summaries and minor labels retain their approved positions. Live status

@@ -2,8 +2,10 @@
 
 The owner accepted Campfire Monitor's flow and authorized applying the pattern
 to the other module settings pages in PR #26. This rollout is **Mode only**.
-Modern and Blizzard keep their existing page layouts. Broad native acceptance
-is pending; the owner will review all modules before considering other themes.
+Modern and Blizzard keep their existing page layouts. The owner accepted the
+final layout and descriptor placement and authorized PR #26's merge into main.
+This remains Mode-only; applying the layout universally requires a future
+request. Layout acceptance does not establish additional gameplay/API validation.
 
 Native correction: the initial rollout could condense primary pills into a
 one-pixel target during unresolved viewport sizing. The follow-up preserves
