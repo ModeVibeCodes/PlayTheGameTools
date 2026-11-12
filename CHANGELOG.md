@@ -4,6 +4,12 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Dungeon Loot now marks off completed quests: a green check beside a dimmed
+  title in the Quests list, the same check on the Completed status line, and a
+  check on each finished chain Stage button. Titles stay aligned in one check
+  column. Read from the character's completion history only; nothing is saved.
+  Native validation is pending; see docs/DUNGEON_LOOT.md.
+
 - Guild Tools -> Roster now has Members and Analytics tabs. Members adds a search
   box (name, class, race, zone, rank, notes, or a level such as 60 or 40-59),
   Class and Status filters, levels beside names, an online marker and a hover

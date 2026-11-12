@@ -3,6 +3,18 @@ local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 local UI = {}
 addon.DungeonLootWidgets = UI
 local FACTIONS = { Alliance = "Interface\\TargetingFrame\\UI-PVP-Alliance", Horde = "Interface\\TargetingFrame\\UI-PVP-Horde" }
+-- Forever's own quest log draws its title check with this file at 16x16.
+-- Desaturated and tinted to the existing Completed green (#79D98C).
+local CHECK, DONE, CHECK_GUTTER = "Interface\\Buttons\\UI-CheckBox-Check", { 0.475, 0.851, 0.549, 1 }, 20
+
+-- Returns true only when the client accepted the file, so a refused texture
+-- never leaves an empty marker beside a completed quest.
+function UI.Check(texture, size)
+    if texture:SetTexture(CHECK) == false then texture:Hide(); return false end
+    texture:SetDesaturated(true); texture:SetVertexColor(DONE[1], DONE[2], DONE[3], DONE[4])
+    texture:SetSize(size, size)
+    return true
+end
 
 function UI.Factions(host, faction)
     host.factionIcons = host.factionIcons or {}
@@ -83,6 +95,7 @@ function UI.New(page, module)
         for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
         for _, cell in ipairs(slot.cells) do cell:Hide() end
         if slot.questProgress then slot.questProgress:Hide() end
+        if slot.check then slot.check:Hide() end
         if slot.headingLine then slot.headingLine:Hide() end
         if slot.art then slot.art:Hide(); slot.topBand:Hide(); slot.bottomBand:Hide() end
         return slot
@@ -93,7 +106,16 @@ function UI.New(page, module)
         slot.callback, slot.item, slot.expandedItem = callback, item, options.expandedItem == true
         local button = slot.button
         button.label:SetJustifyH("LEFT");button.label:SetJustifyV("TOP");button.label:SetWordWrap(true)
-        button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", item and 48 or 12, item and -10 or -12)
+        -- options.check: nil = no column, false = keep the column so titles
+        -- stay aligned, true = completed quest, marked off with a check.
+        local gutter = options.check ~= nil and not item and not options.portrait and CHECK_GUTTER or 0
+        button.label:ClearAllPoints(); button.label:SetPoint("TOPLEFT", (item and 48 or 12) + gutter, item and -10 or -12)
+        if options.check == true and gutter > 0 then
+            slot.check = slot.check or button:CreateTexture(nil, "OVERLAY")
+            if UI.Check(slot.check, 16) then
+                slot.check:ClearAllPoints(); slot.check:SetPoint("TOPRIGHT", button.label, "TOPLEFT", -4, 2); slot.check:Show()
+            end
+        end
         local factionWidth = UI.Factions(button, options.faction)
         button.label:SetPoint("TOPRIGHT", -12-factionWidth, item and -10 or -12)
         -- Solid theme colours throughout: hierarchy comes from size and weight,
@@ -136,7 +158,7 @@ function UI.New(page, module)
             for index,texture in ipairs(button.factionIcons or {}) do
                 texture:ClearAllPoints();texture:SetPoint("TOPRIGHT",-10-(index-1)*28,-4)
             end
-            button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT",12,-4);button.label:SetPoint("TOPRIGHT",-12-factionWidth,-4)
+            button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT",12+gutter,-4);button.label:SetPoint("TOPRIGHT",-12-factionWidth,-4)
         end
         if options.underline then
             slot.headingLine=slot.headingLine or button:CreateTexture(nil,"OVERLAY")
@@ -147,7 +169,7 @@ function UI.New(page, module)
         slot.subtitle:ClearAllPoints(); slot.subtitle:SetPoint("TOPLEFT", button.label, "BOTTOMLEFT", 0, -6);slot.subtitle:SetPoint("TOPRIGHT", button.label, "BOTTOMRIGHT", 0, -6)
         slot.subtitle:SetShown(options.subtitle ~= nil)
         function slot.row:layoutChildren(width)
-            button.label:SetWidth(math.max(80, width - (options.portrait and (options.compact and 76 or 104) or (item and 64 or 28)) - factionWidth))
+            button.label:SetWidth(math.max(80, width - (options.portrait and (options.compact and 76 or 104) or (item and 64 or 28)) - factionWidth - gutter))
             local padding=questText and (options.subheader and 8 or 6) or 32
             local height = button.label:GetStringHeight() + padding
             if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 6 end
@@ -215,15 +237,21 @@ function UI.New(page, module)
         slot.button:Hide()
         for index,stage in ipairs(stages) do
             local id=stage.id
-            local b=slot.cells[index] or W.Button(slot.control,"",72,26)
+            local b=slot.cells[index] or W.Button(slot.control,"",84,26)
             slot.cells[index]=b;b.label:SetText("Stage "..index);b:SetSelected(id==selected)
+            -- A completed chain stage is marked off; the check and label centre together.
+            b.check=b.check or b:CreateTexture(nil,"OVERLAY")
+            local done=stage.completed==true and UI.Check(b.check,14)
+            b.label:ClearAllPoints();b.label:SetPoint("CENTER",done and 8 or 0,0)
+            if done then b.check:ClearAllPoints();b.check:SetPoint("RIGHT",b.label,"LEFT",-3,0) end
+            b.check:SetShown(done)
             b:SetScript("OnClick",function() if module.active then callback(id) end end);b:Show()
         end
         function slot.row:layoutChildren(width)
-            local columns=math.max(1,math.floor((width-24)/78))
+            local columns=math.max(1,math.floor((width-24)/90))
             for index=1,#stages do
-                local b=slot.cells[index];b:ClearAllPoints();b:SetSize(72,26)
-                b:SetPoint("TOPLEFT",12+((index-1)%columns)*78,-2-math.floor((index-1)/columns)*30)
+                local b=slot.cells[index];b:ClearAllPoints();b:SetSize(84,26)
+                b:SetPoint("TOPLEFT",12+((index-1)%columns)*90,-2-math.floor((index-1)/columns)*30)
             end
             self:SetHeight(math.ceil(#stages/columns)*30+4)
         end

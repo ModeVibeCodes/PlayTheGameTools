@@ -118,6 +118,12 @@ function P:UpdateQuestState(data)
         end
         if not q.currentStage and q.stages and #q.stages>0 then q.currentStage=q.stages[#q.stages] end
         if previousStage~=(q.currentStage and q.currentStage.id) then changed=true end
+        -- Only a confirmed character completion flag marks a stage done.
+        for _,stage in ipairs(q.stages or {}) do
+            local done=QuestFlag(stage.id,completionCache,"IsQuestFlaggedCompleted")==true
+            if stage.completed~=done then changed=true end
+            stage.completed=done
+        end
     end
     return changed
 end

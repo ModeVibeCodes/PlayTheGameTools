@@ -120,6 +120,11 @@ function M:CreateConfigPage(parent)
         if q.startItem then Item(q.startItem,"Starts quest: ") end
         MapButtons(q.pickupTargets,"pickup")
     end
+    -- True only when the client's completion flags confirm the quest's final stage.
+    local function Completed(q)
+        local state=M.data.questStates and M.data.questStates[q.id]
+        return state~=nil and state.completed==true
+    end
     local function Status(q)
         local state=M.data.questStates and M.data.questStates[q.id]
         if not state then return "" end
@@ -131,7 +136,7 @@ function M:CreateConfigPage(parent)
         local q=record.currentStage or record
         for _,stage in ipairs(record.stages or {}) do if stage.id==M.view.stageID then q=stage end end
         Add(q.name,nil,nil,T.text,nil,{heading=true,faction=q.faction})
-        Add(Status(record),nil,nil,T.secondary)
+        Add(Status(record),nil,nil,T.secondary,nil,{check=Completed(record) or nil})
         if #record.stages>1 then
             rightRows:Stages(record.stages,q.id,function(id) M.view.stageID=id;page:Refresh() end)
         end
@@ -303,10 +308,12 @@ function M:CreateConfigPage(parent)
                     options.portrait=entry
                     options.subtitle=entry.rare and "Rare encounter" or (#entry.items.." items")
                 else
+                    -- Every quest row keeps the check column; completed ones are marked off and dimmed.
+                    options.check=Completed(entry)
                     options.faction=entry.faction
                     options.subtitle=Status(entry).." · "..(entry.requires and ("Level "..entry.requires.."+") or "Level unknown")..((entry.classOnly or #entry.classes>0) and (" · "..addon.DungeonLootWidgets.ClassesText(entry)) or "")..((#entry.chain>0 or #entry.stages>1) and " · Chain" or "")
                 end
-                leftRows:Add(entry.name,function() M:SelectEntry(key,index) end,nil,T.text,nil,options)
+                leftRows:Add(entry.name,function() M:SelectEntry(key,index) end,nil,options.check and T.muted or T.text,nil,options)
             end
             if not selected then
                 local message

@@ -221,6 +221,49 @@ Native follow-up regression checks (owner confirmed intended behavior on 2026-11
    together, progress sits at bottom right in larger type, footer columns/stack
    do not overlap, and the title's subtle glow aligns with the text.
 
+## Completed quests marked off (native review pending)
+
+Requested on 2026-11-11. The Quests list marks off every completed dungeon
+task: a green check sits in a fixed column left of the title, and the title dims
+to the theme's muted text. Every quest row keeps that 20px column, so titles line
+up whether or not they are checked. The written **Completed** label stays in the
+subtitle. In the detail pane the **Completed** status line carries the same check;
+**In your log** and **Not in your log** have none. Chain stage buttons mark each
+completed stage, so **Stage 1** can be checked while the task itself is still
+open. Stage buttons are 84px wide (previously 72px) to fit the check. Boss rows,
+dungeon cards and prerequisite lists are unchanged.
+
+The check is the file Forever's own quest log uses for its title check
+(`Interface\Buttons\UI-CheckBox-Check` at 16x16 in
+[QuestLogFrame.xml](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UIPanels_Game/Vanilla/QuestLogFrame.xml)),
+desaturated with `SetDesaturated` and tinted the existing Completed green (#79D98C).
+If the client refuses the file, no marker is drawn and titles stay aligned.
+
+Marking is automatic and read-only. A task is checked only when
+`C_QuestLog.IsQuestFlaggedCompleted` confirms its final listed stage; a stage
+button only when that stage is confirmed. Unknown or restricted history checks
+nothing. There is no manual checkbox, nothing is saved, and no settings change.
+Lua-only: `/reload` applies it.
+
+Native checks:
+
+1. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> Dungeons ->
+   a dungeon whose quests this character has turned in -> Quests. **Action:**
+   compare the list with the character's finished quests, then select a checked
+   and an unchecked entry. **Required state:** Forever, OOC, Dungeon Loot enabled.
+   **Confirmation:** finished quests show a green check left of a dimmed title,
+   other titles line up with them, the detail status reads Completed with the
+   same check, and in-log quests read In your log without a check.
+2. **Navigation:** Dungeons -> Ruins of Lordaeron -> Quests -> Unending Torment.
+   **Action:** inspect the Stage 1 / Stage 2 / Stage 3 buttons part-way through
+   the chain. **Required state:** OOC, Horde character with Stage 1 turned in.
+   **Confirmation:** finished stages show a check before the label, each label
+   fits inside its button, and the list entry is checked only after Stage 3.
+3. **Navigation:** the same Quests pane. **Action:** turn in a recorded dungeon
+   quest, then return to the page (close and reopen it if the check has not
+   appeared). **Required state:** OOC. **Confirmation:** the quest is checked
+   without using General -> Refresh.
+
 ## Browser and appearance
 
 Cards retain the 180px minimum scene, title, territory emblem, boss/rare totals,
@@ -347,6 +390,7 @@ python tests/dungeon_loot_catalog.py
 python tests/dungeon_loot_standalone.py
 python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
+python tests/dungeon_loot_quest_checks.py
 python tools/build_release.py
 ```
 

@@ -246,6 +246,7 @@ python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
 python tests/dungeon_loot_shortcut.py
 python tests/dungeon_loot_quick_icon.py
+python tests/dungeon_loot_quest_checks.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -271,6 +272,11 @@ anchors and bracket jumps. The owner confirmed the revised behavior in-game;
 exact regression paths remain in docs/DUNGEON_LOOT.md. This does not establish
 every catalog fact or server availability.
 Screenshots: pending.
+Quest-check revision: dungeon_loot_quest_checks.py verifies the shared check
+column, checked and dimmed completed titles, the detail status check, per-stage
+checks that never mark the whole chain early, recycled rows, restricted history
+and a refused check file. Lua-only; `/reload` applies it. Native review pending;
+exact paths are in [Completed quests marked off](docs/DUNGEON_LOOT.md#completed-quests-marked-off-native-review-pending).
 
 ## Gameplay Enhancements / Campfire Monitor
 
