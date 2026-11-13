@@ -13,7 +13,8 @@ approval. Merges, branches and pull requests never publish anything.
 2. Create a CurseForge API token at
    <https://authors.curseforge.com/#/settings/api-tokens>.
 3. In GitHub: Settings → Secrets and variables → Actions:
-   - **Secrets** tab → New repository secret `CF_API_KEY` = the API token.
+   - **Secrets** tab → New repository secret `curseforge` = the API token
+     (already added).
    - **Variables** tab → New repository variable `CURSEFORGE_PROJECT_ID` = the
      Project ID.
 
