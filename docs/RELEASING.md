@@ -7,16 +7,14 @@ approval. Merges, branches and pull requests never publish anything.
 
 ## One-time setup
 
-1. Create the CurseForge project (World of Warcraft → Addons) and note the
-   numeric **Project ID** from its "About Project" box. Wait for CurseForge to
-   approve the project before the first tagged release.
-2. Create a CurseForge API token at
-   <https://authors.curseforge.com/#/settings/api-tokens>.
-3. In GitHub: Settings → Secrets and variables → Actions:
-   - **Secrets** tab → New repository secret `curseforge` = the API token
-     (already added).
-   - **Variables** tab → New repository variable `CURSEFORGE_PROJECT_ID` = the
-     Project ID.
+Both pieces are already in place:
+
+- The CurseForge project ID, `1790980`, is `## X-Curse-Project-ID` in
+  `PlayTheGameTools/PlayTheGameTools.toc`. The packager reads it from there.
+- The CurseForge API token
+  (<https://authors.curseforge.com/#/settings/api-tokens>) is the GitHub
+  repository secret `curseforge` (Settings → Secrets and variables → Actions).
+  To rotate it, replace that secret's value.
 
 The GitHub release uses the built-in `GITHUB_TOKEN`; no extra secret is needed.
 The workflow requests `contents: write` itself. If a run reports "Resource not

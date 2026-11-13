@@ -7,11 +7,10 @@ name: Release
 # Running the workflow manually (Actions -> Release -> Run workflow) builds the
 # same zip without uploading anything and keeps it as a workflow artifact.
 #
-# Repository setup (Settings -> Secrets and variables -> Actions):
-#   Secret   curseforge             CurseForge API token
-#                                   (https://authors.curseforge.com/#/settings/api-tokens)
-#   Variable CURSEFORGE_PROJECT_ID  numeric project ID from the CurseForge
-#                                   project page ("About Project" box)
+# Setup: the CurseForge project ID is "## X-Curse-Project-ID" in
+# PlayTheGameTools/PlayTheGameTools.toc, and the CurseForge API token
+# (https://authors.curseforge.com/#/settings/api-tokens) is the repository
+# secret "curseforge" (Settings -> Secrets and variables -> Actions).
 
 on:
   push:
@@ -32,7 +31,6 @@ jobs:
     env:
       CF_API_TOKEN: ${{ secrets.curseforge }}
       GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      CF_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
       PUBLISH: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
 
     steps:
@@ -49,8 +47,8 @@ jobs:
             echo "::error::Repository secret curseforge (CurseForge API token) is not set."
             missing=1
           fi
-          if ! [[ "$CF_PROJECT_ID" =~ ^[0-9]+$ ]]; then
-            echo "::error::Repository variable CURSEFORGE_PROJECT_ID must be the numeric CurseForge project ID."
+          if ! grep -Eq '^## X-Curse-Project-ID: *[0-9]+' PlayTheGameTools/PlayTheGameTools.toc; then
+            echo "::error::PlayTheGameTools.toc needs '## X-Curse-Project-ID: <numeric id>'."
             missing=1
           fi
           exit $missing
@@ -85,18 +83,10 @@ jobs:
           done
           exit $failed
 
-      - name: Resolve packager arguments
-        id: packager
-        run: |
-          args=""
-          [ -n "$CF_PROJECT_ID" ] && args="-p $CF_PROJECT_ID"
-          [ "$PUBLISH" != "true" ] && args="$args -d"
-          echo "args=${args}" >> "$GITHUB_OUTPUT"
-
       - name: Package and publish
         uses: BigWigsMods/packager@v2
         with:
-          args: ${{ steps.packager.outputs.args }}
+          args: ${{ env.PUBLISH != 'true' && '-d' || '' }} # -d: package only, no uploads
           pandoc: "false" # only needed for WoWInterface uploads
 
       - name: Keep package as workflow artifact
