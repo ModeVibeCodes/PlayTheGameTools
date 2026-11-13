@@ -1,0 +1,31 @@
+# BigWigsMods/packager configuration (used by .github/workflows/release.yml).
+# The addon lives in the PlayTheGameTools/ subfolder, so the packager copies the
+# repository into .release/PlayTheGameTools/, then lifts the inner addon folder
+# up one level. Everything else at the repository root is ignored below except
+# the documents and licenses tools/build_release.py also ships.
+package-as: PlayTheGameTools
+
+move-folders:
+  PlayTheGameTools/PlayTheGameTools: PlayTheGameTools
+
+# Ship the curated changelog (and show it on CurseForge) instead of letting the
+# packager replace CHANGELOG.md with a generated commit list.
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - AGENTS.md
+  - CONTRIBUTING.md
+  - design
+  - dist
+  - docs
+  - tests
+  - tools
+  # Older duplicates inside the addon folder would overwrite the current root
+  # copies when the folder is lifted; ship the root copies like the builder.
+  - PlayTheGameTools/CHANGELOG.md
+  - PlayTheGameTools/LICENSE
+  - PlayTheGameTools/README.md
+  - PlayTheGameTools/TESTING.md
+  - PlayTheGameTools/THIRD_PARTY_NOTICES.md

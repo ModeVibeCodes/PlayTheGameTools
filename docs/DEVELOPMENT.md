@@ -264,6 +264,8 @@ identity and dependency paths, excludes developer files/settings, and creates a
 deterministic installable ZIP and SHA-256 checksum under ignored `dist/`.
 It has no network, live installation or publication step. When the same version's
 output differs, retain the previous artifact elsewhere or bump the TOC version.
+Publishing to CurseForge and GitHub Releases is a separate, tag-triggered GitHub
+Actions workflow; see [RELEASING.md](RELEASING.md).
 
 The smoke test compiles and executes the actual Lua under the Lua 5.1 WoW mock,
 constructs all module pages, exercises profile serialization/restoration and the

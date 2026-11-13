@@ -1,0 +1,107 @@
+name: Release
+
+# Pushing a version tag (for example v0.2.0-beta.2) runs the tests, packages the
+# addon with BigWigsMods/packager, uploads it to CurseForge and attaches it to a
+# GitHub release. Tags containing "beta" or "alpha" publish as that release type.
+#
+# Running the workflow manually (Actions -> Release -> Run workflow) builds the
+# same zip without uploading anything and keeps it as a workflow artifact.
+#
+# Repository setup (Settings -> Secrets and variables -> Actions):
+#   Secret   CF_API_KEY             CurseForge API token
+#                                   (https://authors.curseforge.com/#/settings/api-tokens)
+#   Variable CURSEFORGE_PROJECT_ID  numeric project ID from the CurseForge
+#                                   project page ("About Project" box)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write # the packager creates the GitHub release
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CF_API_KEY }}
+      GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CF_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+      PUBLISH: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history and tags for the packager changelog
+
+      - name: Check publishing configuration
+        if: env.PUBLISH == 'true'
+        run: |
+          missing=0
+          if [ -z "$CF_API_TOKEN" ]; then
+            echo "::error::Repository secret CF_API_KEY is not set."
+            missing=1
+          fi
+          if ! [[ "$CF_PROJECT_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::Repository variable CURSEFORGE_PROJECT_ID must be the numeric CurseForge project ID."
+            missing=1
+          fi
+          exit $missing
+
+      - name: Check tag matches TOC version
+        if: env.PUBLISH == 'true'
+        run: |
+          toc_version=$(sed -n 's/^## Version: *\([^[:space:]]*\).*/\1/p' PlayTheGameTools/PlayTheGameTools.toc | tr -d '\r')
+          tag="${GITHUB_REF_NAME}"
+          if [ "$tag" != "v${toc_version}" ]; then
+            echo "::error::Tag ${tag} does not match '## Version: ${toc_version}' in PlayTheGameTools.toc. Bump the TOC version and tag v${toc_version}."
+            exit 1
+          fi
+          echo "Releasing ${tag}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate package inventory
+        run: python tools/build_release.py
+
+      - name: Run tests
+        run: |
+          python -m pip install --quiet "lupa==2.8"
+          failed=0
+          for test in tests/*.py; do
+            echo "::group::${test}"
+            python "$test" || { echo "::error file=${test}::${test} failed"; failed=1; }
+            echo "::endgroup::"
+          done
+          exit $failed
+
+      - name: Resolve packager arguments
+        id: packager
+        run: |
+          args=""
+          [ -n "$CF_PROJECT_ID" ] && args="-p $CF_PROJECT_ID"
+          [ "$PUBLISH" != "true" ] && args="$args -d"
+          echo "args=${args}" >> "$GITHUB_OUTPUT"
+
+      - name: Package and publish
+        uses: BigWigsMods/packager@v2
+        with:
+          args: ${{ steps.packager.outputs.args }}
+          pandoc: "false" # only needed for WoWInterface uploads
+
+      - name: Keep package as workflow artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: PlayTheGameTools-package-${{ github.run_number }}
+          path: .release/*.zip
+          if-no-files-found: error
