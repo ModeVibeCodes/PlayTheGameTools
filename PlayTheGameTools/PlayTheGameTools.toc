@@ -2,7 +2,7 @@
 ## Title: Play The Game Tools
 ## Notes: Modular combat timer, automation and class training tools for WoW Forever.
 ## Author: Mode
-## Version: 0.2.0-beta.1
+## Version: 0.2.0-beta.2
 ## SavedVariables: PTGToolsDB, ModeToolsDB
 ## OptionalDeps: QuestieDB, Questie, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
 ## X-PlayTheGameTools-Edition: Forever

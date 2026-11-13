@@ -1,4 +1,4 @@
-# Play The Game Tools 0.2.0-beta.1 candidate testing
+# Play The Game Tools 0.2.0-beta.2 candidate testing
 
 Mode module layout rollout: run `tests/mode_module_layouts.py` and the full
 regression suite. The [page-by-page native checklist](docs/MODE_MODULE_LAYOUTS.md#exact-in-game-checks)
@@ -25,7 +25,7 @@ time; start with A. Stop and report startup/errors/settings loss before continui
 
 ## A. Package and first startup
 
-Use the attached `PlayTheGameTools-0.2.0-beta.1-forever.zip`, not GitHub's source archive.
+Use the attached `PlayTheGameTools-0.2.0-beta.2-forever.zip`, not GitHub's source archive.
 Installation is a filesystem step, not a Play The Game Tools UI control. Close WoW, back up
 your existing Play The Game Tools addon folder and your own settings separately, and extract
 the ZIP into an isolated Forever test installation if available. Keep one
@@ -39,7 +39,7 @@ installation procedure instead of changing it manually.
    **Action:** Enable the candidate and log in; open `/ptg`.
    **Required state:** Candidate installed with game closed, fresh client start.
    **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and version
-   0.2.0-beta.1; configuration opens without a Lua error or wrong-edition message.
+   0.2.0-beta.2; configuration opens without a Lua error or wrong-edition message.
 2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut.
    **Action:** Record its current value, change it, reload using `/reload`, then
    reopen the same page. Restore your preferred value afterward.

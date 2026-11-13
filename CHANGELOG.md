@@ -2,7 +2,7 @@
 
 Global Settings now groups Appearance, account-wide Profiles, Optimizations and Class Colors. Bundled LibSharedMedia plus licensed PTG media populate the dropdowns. Standard game UI fonts inherit; module overrides stay in their own controls. Added account-wide profile selection/import/export, Auto Loot/Fast Loot, camera zoom, detected UI scale and red-error suppression. Prior page-only native feedback is retained; these additions await in-game confirmation. See docs/GLOBAL_SETTINGS.md.
 
-## Unreleased
+## 0.2.0-beta.2 — first CurseForge release
 
 - Tagged releases (`v<version>`) now publish automatically to CurseForge and
   GitHub Releases through BigWigsMods/packager, after the release builder
