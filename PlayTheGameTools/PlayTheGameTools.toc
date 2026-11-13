@@ -7,6 +7,7 @@
 ## OptionalDeps: QuestieDB, Questie, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
 ## X-PlayTheGameTools-Edition: Forever
 ## X-License: GPL-3.0-only (bundled distribution; original MIT grants retained)
+## X-Curse-Project-ID: 1790980
 
 Core\Edition.lua
 Core\Libs\LibStub.lua

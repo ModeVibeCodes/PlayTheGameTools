@@ -17,7 +17,8 @@ changes do not automatically synchronize with another repository or a live game.
    Git checkout into a live AddOns directory.
 6. Open a pull request to `ModeVibeCodes/PlayTheGameTools:main`. Describe the
    problem, change, static results, actual native results and remaining unknowns.
-   A maintainer reviews and merges it. Do not publish releases automatically.
+   A maintainer reviews and merges it. Only the maintainer publishes releases,
+   by pushing a version tag; see docs/RELEASING.md.
 
 Forks and pull requests work without write access. Direct push access requires
 the owner to invite your GitHub username separately. No collaborator credentials

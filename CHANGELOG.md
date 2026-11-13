@@ -4,6 +4,10 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Tagged releases (`v<version>`) now publish automatically to CurseForge and
+  GitHub Releases through BigWigsMods/packager, after the release builder
+  guards and all tests pass. See docs/RELEASING.md. No addon behavior changed.
+
 - Guild Tools -> Roster now has Members and Analytics tabs. Members adds a search
   box (name, class, race, zone, rank, notes, or a level such as 60 or 40-59),
   Class and Status filters, levels beside names, an online marker and a hover
