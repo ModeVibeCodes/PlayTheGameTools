@@ -77,6 +77,9 @@ Left();assert(config:IsShown())
     'combat ends the mode without reopening settings': r'''
 local closed=0
 local module=addon.modules.combatTimer
+-- Edit Mode styles the timer from its page. Creating a page hides it, which
+-- can run its close cleanup; create it first so only suspension is counted.
+addon:EnsureConfigPage('combatTimer')
 local original=module.OnConfigClosed
 module.OnConfigClosed=function(self) closed=closed+1;if original then original(self) end end
 Enter()

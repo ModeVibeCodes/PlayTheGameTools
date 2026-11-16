@@ -142,7 +142,7 @@ function M:CreateConfigPage(parent)
     page.displayButtons=Buttons({{"Customize Reminder",function() page.customize=page.customize=="reminder" and nil or "reminder" end},{"Customize Quick Access",function() page.customize=page.customize=="quick" and nil or "quick" end}})
     Visible(function() return page.customize=="reminder" and self.db.watcher end,function()
         page:Group("Poison Reminder Appearance");Style("watchStyle",false,true);Buttons({{"Minimal",function() self:MinimalReminder() end}})
-        page.rows[#page.rows].modeFeature="watchStyle";page.rows[#page.rows].modePanel="options"
+        page.rows[#page.rows].modeFeature="watchStyle";page.rows[#page.rows].modePanel="appearance"
     end)
     Visible(function() return page.customize=="quick" and self.db.flyout end,function()
         page:Group("Quick Access Appearance")

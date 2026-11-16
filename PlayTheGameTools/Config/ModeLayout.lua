@@ -114,6 +114,9 @@ function W.ApplyModeModuleLayout(page,id)
     CompactColors(page)
     local state={plan=plan,features=plan.features or {},routes={},buttons={},panels={},groups={},last={}}
     page.modeLayout=state
+    -- Styling of a placeable display lives in Edit Mode, not in these panels.
+    local owned=W.EditOwnedFeatures and W.EditOwnedFeatures(id) or {}
+    state.editOwned=owned
     if plan.decorateOnly then
         for _,row in ipairs(page.rows) do
             local heading=row.subsectionHeading or (row.sectionHeader and row.heading)
@@ -135,6 +138,7 @@ function W.ApplyModeModuleLayout(page,id)
         if plan.route then feature,panel=plan.route(row) end
         if feature then
             row.modeRoute={feature=feature,panel=panel or "options"};state.routes[row]=row.modeRoute
+            if owned[feature] and W.EditAppearancePanels[row.modeRoute.panel] then row.editAppearance=row.modeRoute end
             if row.divider then row.divider:Hide() end
             row.gapBefore=0;row.gapAfter=2
             if row.settingsStandaloneToggle and not row.settingsToggles then
@@ -173,11 +177,21 @@ function W.ApplyModeModuleLayout(page,id)
     state.underline,state.alignUnderline=W.ModeHeadingRule(header,state.heading)
     local function Available(feature,panel)
         for row,route in pairs(state.routes) do
-            if route.feature==feature and route.panel==panel and not row.sectionHeader and not row.subsectionHeading then return true end
+            if route.feature==feature and route.panel==panel and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading then return true end
         end
         return false
     end
     state.available=Available
+    -- A display feature whose every row moved to Edit Mode keeps no pill here.
+    if not plan.preserveSections then
+        local kept={}
+        for _,entry in ipairs(state.features) do
+            for _,panel in ipairs(panels) do
+                if Available(entry[1],panel[1]) then kept[#kept+1]=entry;break end
+            end
+        end
+        state.features=kept;state.feature=kept[1] and kept[1][1]
+    end
     function page:SelectModePanel(feature,panel)
         feature=feature or state.feature
         state.last[state.feature]=state.panel
@@ -205,9 +219,10 @@ function W.ApplyModeModuleLayout(page,id)
         end
     end
     if id=="foreverRogue" then
+        -- Customize opens the display itself in Edit Mode, where its styling lives.
         for i,button in ipairs(page.displayButtons) do
-            local feature=i==1 and "watchStyle" or "launcherStyle"
-            button:HookScript("OnClick",function() if button:IsEnabled() then page:SelectModePanel(feature,"appearance") end end)
+            local element=i==1 and "roguePoisonReminder" or "rogueQuickPoisons"
+            button:HookScript("OnClick",function() if button:IsEnabled() then addon:EditElementAppearance(element) end end)
         end
     end
     for _,entry in ipairs(panels) do
@@ -219,7 +234,7 @@ function W.ApplyModeModuleLayout(page,id)
     function page:ModeRowVisible(row,original)
         local route=row.modeRoute
         if route then
-            return not row.sectionHeader and not row.subsectionHeading and not row.modeSide and not row.modeReplacedNavigation and not row.modePaired and route.feature==state.feature and route.panel==state.panel
+            return not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeSide and not row.modeReplacedNavigation and not row.modePaired and route.feature==state.feature and route.panel==state.panel
         end
         if originalVisible then return originalVisible(self,row,original) end
         return original
@@ -227,7 +242,7 @@ function W.ApplyModeModuleLayout(page,id)
     -- Search continues to reveal the original setting and runs existing gates.
     for _,entry in ipairs(page.searchEntries) do
         local route=entry.row.modeRoute
-        if route then
+        if route and not entry.row.editAppearance then
             local reveal=entry.onReveal
             entry.onReveal=function()
                 if reveal then reveal() end
@@ -339,6 +354,7 @@ function W.ApplyModeModuleLayout(page,id)
         if dataHeader then title=state.feature end
         state.heading:SetText(title);state.heading:SetWidth(Measure(state.heading));state.alignUnderline()
         local descriptionText=W.ModePanelDescriptions[state.panel] or ""
+        if descriptionText=="" and state.panel=="options" and state.editOwned[state.feature] then descriptionText="Text and appearance are styled in Edit Mode." end
         state.separator:SetShown(wide and not summary and descriptionText~="")
         state.description:ClearAllPoints()
         if summary then state.description:SetPoint("TOPLEFT",state.heading,"BOTTOMLEFT",0,-12)

@@ -75,7 +75,9 @@ function W.Page(parent, minimumWidth)
             return show
         end
         for _, row in ipairs(self.rows) do
-            if self.modeFooterLayout and row.settingsFooterNote and (not row.settingsFooterInlineWhen or not row.settingsFooterInlineWhen()) then footers[#footers+1]=row
+            -- Rows on loan to the Edit Mode window belong to its layout until returned.
+            if row.editBorrowed then
+            elseif self.modeFooterLayout and row.settingsFooterNote and (not row.settingsFooterInlineWhen or not row.settingsFooterInlineWhen()) then footers[#footers+1]=row
             elseif Prepare(row,false) then
                 cursor = cursor + (row.gapBefore or 0)
                 row:ClearAllPoints()
@@ -107,6 +109,8 @@ function W.Page(parent, minimumWidth)
     scroll:SetScript("OnSizeChanged", function() page:Layout() end)
     function page:Refresh()
         for _, refresh in ipairs(self.refreshers) do refresh() end
+        -- Settings shown on loan in Edit Mode can change which rows apply.
+        if self.editRefreshed then self:editRefreshed() end
     end
     function page:FooterNote(note,inlineWhen)
         local row=note:GetParent().row
