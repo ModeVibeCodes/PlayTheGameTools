@@ -84,7 +84,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## City Labels location data
+## Points of Interest Labels location data
 
 Modules/CityLabelsData.lua: Data from Efficient Games (https://efficient.games),
 licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), from
@@ -92,7 +92,7 @@ https://github.com/JIVESCORP/eg-link-output-wowf at commit
 6ff5612b54191f297eb77ca8eda81de029d9d6f0. Positions were condensed to one point
 per service and roles mapped to label categories; see the file header.
 
-## City Labels Classic spawn positions
+## Points of Interest Labels Classic spawn positions
 
 Modules/CityLabelsClassicData.lua: Classic spawn positions from
 CMaNGOS classic-db (https://github.com/cmangos/classic-db) at commit

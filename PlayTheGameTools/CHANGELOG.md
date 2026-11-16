@@ -9,7 +9,7 @@
   window, dialog or dropdown first, one per press, before the game menu opens.
   The level-up popup and the reload prompt still appear on their own without
   closing anything.
-- Added City Labels (Quality of Life, off by default): icons with optional names
+- Added Points of Interest Labels (Quality of Life, off by default): icons with optional names
   on the world map for class and profession trainers, weapon masters, banks,
   auction houses, inns, flight masters, guild masters and transmogrifiers, plus
   opt-in stable masters, mailboxes, repair and other vendors. Class Trainers and

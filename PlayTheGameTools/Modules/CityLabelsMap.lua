@@ -122,7 +122,7 @@ function Map:RefreshAllData()
     local ok,reason=pcall(self.Render,self)
     if ok then self.lastError=nil;return true end
     if self.map then pcall(self.map.RemoveAllPinsByTemplate,self.map,TEMPLATE) end
-    local message="City Labels could not draw on this map: "..(Public(reason) and tostring(reason):sub(1,200) or "unknown error")
+    local message="Points of Interest Labels could not draw on this map: "..(Public(reason) and tostring(reason):sub(1,200) or "unknown error")
     if self.lastError~=message then print("Play The Game Tools: "..message) end
     self.lastError=message
     return false

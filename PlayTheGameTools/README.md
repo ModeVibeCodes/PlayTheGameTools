@@ -25,7 +25,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   selection and optional bandages with existing native click/combat guards.
 - **Threat Meter:** opt-in threat list for your current target with class-colored
   bars and percentages; pets are optional and off by default.
-- **City Labels:** opt-in under Quality of Life; icons and names on the world map
+- **Points of Interest Labels:** opt-in under Quality of Life; icons and names on the world map
   for your class's and professions' trainers (or all, or none), banks, auction
   houses, inns, flight masters and more, with faction, size and name options.
   Locations: Efficient Games data (CC BY 4.0), with Classic positions from CMaNGOS
@@ -106,6 +106,6 @@ additional reporting option.
 
 Play The Game Tools original code is open source under [MIT](LICENSE). See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for training-catalog attribution
-and artwork ownership, including the City Labels location data from Efficient
+and artwork ownership, including the Points of Interest Labels location data from Efficient
 Games (CC BY 4.0) and CMaNGOS classic-db (GPL-3.0). WoW and Blizzard assets remain the property of Blizzard
 Entertainment. Play The Game Tools is an independent community addon.

@@ -1,6 +1,6 @@
-# City Labels
+# Points of Interest Labels
 
-Quality of Life -> City Labels puts small icons, with optional names, on the
+Quality of Life -> Points of Interest Labels puts small icons, with optional names, on the
 world map for trainers and town services: class and profession trainers, weapon
 masters, banks, auction houses, inns, flight masters, guild masters and
 transmogrifiers, and optionally stable masters, mailboxes, repair vendors and

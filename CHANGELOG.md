@@ -12,7 +12,8 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   The level-up popup and the reload prompt still appear on their own without
   closing anything.
 
-- City Labels now uses icons instead of dots (Icon Size replaces Dot Size).
+- City Labels is now called Points of Interest Labels and uses icons instead of
+  dots (Icon Size replaces Dot Size).
   Class Trainers and Profession Trainers each choose Mine (your class / your
   learned professions, detected automatically), All or Off; Mine is the default.
   Trainers and services Efficient Games has not recorded yet, such as the

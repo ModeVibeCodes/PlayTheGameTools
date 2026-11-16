@@ -6,7 +6,7 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 -- positions (CityLabelsClassicData.lua) where Efficient Games has none yet.
 -- Nothing is recorded or saved besides these display preferences. Drawing
 -- lives in CityLabelsMap.lua.
-local M={title="City Labels",category="qualityOfLife",defaultEnabled=false,
+local M={title="Points of Interest Labels",category="qualityOfLife",defaultEnabled=false,
     configDescription="Trainers, banks, inns, flight masters and other services labeled on your world map."}
 addon.CityLabels=M
 addon:RegisterModule("cityLabels",M)
@@ -74,18 +74,18 @@ function M.Initialize(db)
         db.professionTrainerMode=db.professionTrainers==false and "off" or "mine"
     end
     for _,mode in ipairs(M.MODES) do
-        assert(type(db[mode.key])=="string" and MODE_VALUES[db[mode.key]],"Invalid City Labels setting: "..mode.key)
+        assert(type(db[mode.key])=="string" and MODE_VALUES[db[mode.key]],"Invalid Points of Interest Labels setting: "..mode.key)
     end
     for _,group in ipairs({M.CATEGORIES,M.FILTERS}) do
         for _,entry in ipairs(group) do
             if db[entry.key]==nil then db[entry.key]=entry.default end
-            assert(type(db[entry.key])=="boolean","Invalid City Labels setting: "..entry.key)
+            assert(type(db[entry.key])=="boolean","Invalid Points of Interest Labels setting: "..entry.key)
         end
     end
     for key,range in pairs(M.ranges) do
         if db[key]==nil then db[key]=DEFAULT_SIZES[key] end
         local v=db[key]
-        assert(type(v)=="number" and v>=range[1] and v<=range[2] and v%range[3]==0,"Invalid City Labels setting: "..key)
+        assert(type(v)=="number" and v>=range[1] and v<=range[2] and v%range[3]==0,"Invalid Points of Interest Labels setting: "..key)
     end
 end
 
