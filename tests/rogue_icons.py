@@ -1,4 +1,4 @@
-"""Icon controls are visible without Customize; real per-icon geometry is styled.
+"""Icon controls show in Edit Mode without Customize; real per-icon geometry is styled.
 Static UI mocks do not establish in-game rendering or native action acceptance.
 """
 from rogue_poisons import SETUP
@@ -14,12 +14,14 @@ local function Visible(frame)
  while frame do if not frame:IsShown() then return false end;frame=frame:GetParent() end
  return true
 end
-p:SelectModePanel('watchStyle','appearance')
+-- Icon styling lives in Edit Mode's column for the selected display.
+assert(addon:SetEditMode(true) and addon.PositionManager:SelectElement('roguePoisonReminder'))
 assert(Visible(p.poisonSliders['watchStyle:iconSize']) and Visible(p.poisonSliders['watchStyle:iconGap']),'icon controls need no Customize step')
 assert(not p.poisonSliders['watchStyle:iconPadding'] and not p.poisonSliders['launcherStyle:iconPadding'] and not p.poisonSliders['flyoutStyle:iconPadding'])
 assert(not p.poisonSliders['watchStyle:spacing'] and not p.poisonSliders['watchStyle:cellWidth'])
-p:SelectModePanel('launcherStyle','appearance')
+assert(addon.PositionManager:SelectElement('rogueQuickPoisons'))
 assert(Visible(p.poisonSliders['launcherStyle:iconBorderSize']))
+addon:SetEditMode(false)
 assert(not M.watchButtons[1].globalIconBorder.iconBorder:IsShown() and not M.watchButtons[1].iconBackground:IsShown(),'Default reminder remains bare')
 local a,b=M.watchButtons[1],M.watchButtons[2]
 local input=p.poisonSliders['watchStyle:iconGap'].numericInput

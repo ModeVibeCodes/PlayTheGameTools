@@ -29,36 +29,38 @@ function Keys(t) local out={} for k in pairs(t) do out[#out+1]=k end table.sort(
 assert(Keys(page.campfireControls)==controlKeys and Keys(page.campfireSliders)==sliderKeys and Keys(page.campfireColors)==colorKeys,'all original options retained')
 local saved=addon.ProfileCodec.Encode(PTGToolsDB)
 local foundControls,foundSliders,foundColors={},{},{}
+-- Settings show each element's Options; Text and Appearance are styled in
+-- Edit Mode on the matching display (edit_mode_appearance.py).
 for _,element in ipairs({'general','monitor','buffs','contributions'}) do
- for _,panel in ipairs(element=='general' and {'options'} or {'options','text','appearance'}) do
+ for _,panel in ipairs({'options','text','appearance'}) do
   page:SelectCampfirePanel(element,panel)
-  assert(pilot.element==element and pilot.panel==panel and pilot.buttons[element].selected and pilot.panels[panel].selected)
+  assert(pilot.element==element and pilot.panel=='options' and pilot.buttons[element].selected)
   assert(pilot.buttons[element].outline.rounded and not pilot.buttons[element].activeGlow:IsShown(),'rounded tabs keep text-only hover/selection')
   assert(pilot.buttons[element].modeFixedSprite,'a custom global border cannot square the pilot tabs')
   local rim=pilot.buttons[element].outline.edges[1]
   assert(rim.modeAsset=='ModePillSurface' and rim.layer=='BACKGROUND' and pilot.buttons[element].fill.layer=='ARTWORK','high-resolution pill border backs the same smooth fill shape')
   assert(pilot.buttons[element].outline.shown and pilot.buttons[element].fill.points[1][4]==1.5,'main pill fill stays inside the outer border')
   if element=='general' then
-   assert(page.campfireColors.textColor.host.row:IsShown() and page.campfireControls.enabled.frame:GetParent().row:IsShown(),'General combines Options and Text')
-   for _,tab in pairs(pilot.panels) do assert(not tab:IsShown(),'General has no subpage tabs') end
-  else
-   for id,tab in pairs(pilot.panels) do
-    local top=-tab.points[1][5]
-    assert(tab.skinStyle=='subTab' and tab:GetHeight()==30 and top==(id==panel and 4 or 12),'full subtab moves upward when selected')
-    assert(tab:GetParent()==pilot.panelContent and pilot.panelContent:GetParent()==pilot.panelViewport and pilot.panelViewport:GetHeight()==34,'subtabs render inside a clipping ScrollFrame ending at the separator')
-    assert(math.min(top+30,34)-top==(id==panel and 30 or 22),'inactive lower eight units are clipped below the separator')
-   end
+   assert(page.campfireControls.enabled.frame:GetParent().row:IsShown(),'General shows its options')
+   local text=page.campfireColors.textColor.host.row
+   assert(text.editAppearance and not text:IsShown(),'shared text color is styled in Edit Mode')
   end
+  for _,tab in pairs(pilot.panels) do assert(not tab:IsShown(),'no Text/Appearance subpage tabs in settings') end
+  assert(not pilot.panelViewport:IsShown())
   for key,cell in pairs(page.campfireControls) do if cell.frame:GetParent().row:IsShown() then foundControls[key]=true end end
   for key,host in pairs(page.campfireSliders) do if host.row:IsShown() then foundSliders[key]=true end end
   for key,color in pairs(page.campfireColors) do if color.host.row:IsShown() then foundColors[key]=true end end
  end
 end
-assert(Keys(foundControls)==controlKeys and Keys(foundSliders)==sliderKeys and Keys(foundColors)==colorKeys,'every control is reachable through visible pilot panels')
+-- Everything not shown here is owned by Edit Mode, never lost.
+for key,cell in pairs(page.campfireControls) do if cell.frame:GetParent().row.editAppearance then assert(not foundControls[key]);foundControls[key]=true end end
+for key,host in pairs(page.campfireSliders) do if host.row.editAppearance then assert(not foundSliders[key]);foundSliders[key]=true end end
+for key,color in pairs(page.campfireColors) do if color.host.row.editAppearance then assert(not foundColors[key]);foundColors[key]=true end end
+assert(Keys(foundControls)==controlKeys and Keys(foundSliders)==sliderKeys and Keys(foundColors)==colorKeys,'every control is reachable in settings or Edit Mode')
 assert(addon.ProfileCodec.Encode(PTGToolsDB)==saved,'tab changes never write saved options')
 page:SelectCampfirePanel('general','text')
-assert(pilot.panel=='options' and page.campfireColors.textColor.host.row:IsShown(),'legacy General Text links reveal the combined page')
-assert(pilot.textHeader.points[1][4]==page.contentInset and page.layoutInsetLeft==0,'General Text heading aligns with the left page edge')
+assert(pilot.panel=='options' and not page.campfireColors.textColor.host.row:IsShown(),'legacy General Text links land on Options')
+assert(page.layoutInsetLeft==0,'General aligns with the left page edge')
 assert(pilot.textHeader.subsectionHeading.font[2]==20 and pilot.textHeader.campfireUnderline:GetHeight()==1,'prominent content header has a subtle underline')
 assert(pilot.summaryTitle.font[2]==20 and pilot.summaryText.color[1]==addon.InterfaceTheme.muted[1],'larger heading and muted description')
 assert(pilot.inlineSeparator.font[2]==14 and pilot.inlineText.points[1][4]==8,'larger separator and tighter description gap')
@@ -74,9 +76,9 @@ local fallback=addon.ConfigWidgets.Button(UIParent,'Pill',156,30,'roundedTab')
 assert(fallback.fill.texture==addon.Media:GetTexture('ModeToggleSurface') and fallback.outline.edges[1].texture==addon.Media:GetTexture('ModeToggleSurface'),'an undiscovered capsule uses matching rounded fallback art for border and fill')
 testMissingTextures=nil
 page:SelectCampfirePanel('monitor','text')
-assert(page.campfireSliders.fontSize.row:IsShown() and not page.campfireSliders.x,'placement lives in Edit Mode')
+assert(page.campfireSliders.fontSize.row.editAppearance and not page.campfireSliders.fontSize.row:IsShown() and not page.campfireSliders.x,'placement and styling live in Edit Mode')
 page:SelectCampfirePanel('buffs','text')
-assert(page.campfireSliders.benefitsFontSize.row:IsShown() and page.campfireColors.headerColor.host.row:IsShown())
+assert(page.campfireSliders.benefitsFontSize.row.editAppearance and page.campfireColors.headerColor.host.row.editAppearance)
 page:SelectCampfirePanel('contributions','text')
 local size=page.campfireSliders.contributionTitleSize
 local color=page.campfireColors.contributionTitleColor
@@ -90,10 +92,10 @@ for _,width in ipairs({1000,840,480}) do
  assert(size.row:GetHeight()==46,'picker-only paired row fits even at the narrow supported width')
  assert(size:GetWidth()>100 and color.host:GetWidth()==80,'removed hex/Apply space goes to the slider')
  assert(pilot.summary:IsShown()==(width~=480) and page.layoutInsetLeft==(width~=480 and 188 or 0),'reference-style left column collapses on narrow pages')
- assert(pilot.togglesLeft==(width~=480) and pilot.inlineHeader:IsShown() and pilot.inlineText:IsShown()==(width~=480),'category subheadings retain their approved inline placement')
+ -- Options here are checkboxes only, so no left checkbox column is needed.
+ assert(not pilot.togglesLeft and pilot.inlineHeader:IsShown()==(width==480) and not pilot.inlineText:IsShown(),'compact header only on narrow pages')
  local cell=page.campfireControls.contributionUseInterfaceFont
  assert((cell.frame:GetParent()~=page.campfireControls.enabled.frame:GetParent()) and cell.frame:GetWidth()>0)
- if width~=480 then assert(cell.frame:GetWidth()==172 and size.row.points[1][4]==page.contentInset+188,'toggles sit under the left header while sliders stay in the right column') end
  assert(not size.row.divider:IsShown(),'pilot uses group separators instead of per-field lines')
  local first,last=pilot.buttons.general,pilot.buttons.contributions
  local left=first.points[1][4];local right=last.points[1][4]+last:GetWidth()
@@ -117,27 +119,26 @@ function page.scroll:ClearAllPoints() anchorChanges=anchorChanges+1;page:Layout(
 page:SelectCampfirePanel('general','options')
 assert(anchorChanges==1 and not pilot.layingOut,'native size callbacks cannot recurse through viewport layout')
 page.scroll.ClearAllPoints=clear
-page.scroll:SetWidth(1000);page:SelectCampfirePanel('buffs','text')
-local toggleEntry
-for _,entry in ipairs(page.searchEntries) do if entry.label=='Compact Buff Text' then toggleEntry=entry;break end end
-assert(toggleEntry and toggleEntry.row~=toggleEntry.campfireBaseRow and toggleEntry.row:IsShown(),'left-column toggle search targets its actual visible host')
-page:SelectCampfirePanel('monitor','appearance');page:Reveal(toggleEntry)
-assert(pilot.element=='buffs' and pilot.panel=='text' and toggleEntry.row:IsShown(),'search retains routing after toggle reparenting')
-page.scroll:SetWidth(480);page:Layout()
-assert(toggleEntry.row==toggleEntry.campfireBaseRow and toggleEntry.row:IsShown(),'narrow layout restores normal toggle rows and search targets')
+page.scroll:SetWidth(1000)
+for _,query in ipairs({'Compact Buff Text','Title Color','Kit Name Size'}) do
+ for _,result in ipairs(addon:SearchSettings(query)) do
+  local row=result.entry and (result.entry.campfireBaseRow or result.entry.row)
+  assert(not (row and row.editAppearance),'settings search does not offer Edit Mode styling: '..result.label)
+ end
+end
 page:SelectSectionTab(1)
 local target
-for _,entry in ipairs(page.searchEntries) do if entry.label=='Title Color' then target=entry;break end end
-assert(target and target.row==size.row)
+for _,entry in ipairs(page.searchEntries) do if entry.label=='Show Kit Icons' then target=entry;break end end
+assert(target)
 page:Reveal(target)
-assert(page.selectedSection==page.sections[2] and pilot.element=='contributions' and pilot.panel=='text' and size.row:IsShown(),'search reveals the correct element and panel')
+assert(page.selectedSection==page.sections[2] and pilot.element=='contributions' and pilot.panel=='options' and target.row:IsShown(),'search reveals the correct element')
 for _,id in ipairs({'monitor','buffs','contributions'}) do
  page.campfireJumps[id].scripts.OnClick()
  assert(pilot.element==id and pilot.panel=='options','existing jump callers retain routing')
 end
 page:SelectCampfirePanel('monitor','appearance')
 page:SelectCampfirePanel('buffs','text');page:SelectCampfirePanel('monitor')
-assert(pilot.panel=='appearance','each element remembers its last panel in this session')
+assert(pilot.panel=='options','settings always show Options')
 page.contributionPreview.scripts.OnClick();assert(A.previewing)
 page:SelectCampfirePanel('contributions','text');assert(A.previewing,'editing style does not stop preview')
 page:SelectSectionTab(1);assert(not A.previewing,'leaving Campfire retains preview cleanup')

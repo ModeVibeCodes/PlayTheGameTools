@@ -42,6 +42,8 @@ W.ModeLayoutPlans={
             return "session",(label=="Session Scope" or label=="Session Tracking") and "options" or "text"
         end
         if section=="Bar Text" then return "bar","text" end
+        -- Hiding the bar at maximum level is behavior, not styling.
+        if Label(row)=="Hide at Maximum Level" then return "bar","options" end
         if section=="Layout" or section=="Bar Appearance" or section=="Colors" then return "bar","appearance" end
         return "bar","options"
     end},
@@ -77,3 +79,35 @@ W.ModeLayoutPlans={
 
 -- Panel tabs name the panel; no generic sentence is repeated on every page.
 W.ModePanelDescriptions={}
+
+-- Edit Mode owns the Text and Appearance panels of every placeable display:
+-- selecting a display there shows these features' styling rows. Settings
+-- pages keep only Options for them. Keys are Position Manager element ids;
+-- features are the page routes (modeRoute or the Campfire element tags).
+-- A third entry is an optional predicate for features that may not apply.
+-- Camp buffs style from the icon unless their own window can be selected.
+local function CampBuffsShared()
+    local buffs=addon.PositionManager.elements.campfireBuffs
+    return not addon.CampfireMonitor.db.separateBenefits or not (buffs and buffs.editMode and buffs.module.enabled)
+end
+W.EditAppearance={
+    combatTimer={page="combatTimer",features={{"timer","Combat Timer"}}},
+    foreverQuickAccess={page="foreverQuickAccess",features={{"professions","Profession Bar"}}},
+    foreverFoodBar={page="foreverQuickAccess",features={{"food","Food Bar"}}},
+    enhancedExperienceBar={page="enhancedExperienceBar",features={{"bar","XP Bar"},{"session","Session Text"}}},
+    roguePoisonReminder={page="foreverRogue",features={{"watchStyle","Poison Reminder"}}},
+    rogueQuickPoisons={page="foreverRogue",features={{"launcherStyle","Quick Icon"},{"flyoutStyle","Expanded Menu"}}},
+    -- Camp buffs share the icon window unless they are split into their own.
+    campfireMonitor={page="lootSparkles",features={{"monitor","Campfire Icon"},{"buffs","Camp Buffs",CampBuffsShared},{"general","Shared Text"}}},
+    campfireBuffs={page="lootSparkles",features={{"buffs","Camp Buffs"},{"general","Shared Text"}}},
+    campfireContributions={page="lootSparkles",features={{"contributions","Contributions"}}},
+}
+-- The Text/Appearance panels are the styling Edit Mode takes over.
+W.EditAppearancePanels={text=true,appearance=true}
+function W.EditOwnedFeatures(pageId)
+    local owned={}
+    for _,entry in pairs(W.EditAppearance) do
+        if entry.page==pageId then for _,feature in ipairs(entry.features) do owned[feature[1]]=true end end
+    end
+    return owned
+end

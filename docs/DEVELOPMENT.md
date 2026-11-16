@@ -1,5 +1,18 @@
 # Standalone Forever development
 
+Edit Mode styling (branch `t3/5b8d8061`): Text/Appearance panels of every
+placeable display moved from settings pages into a styling column of the Edit
+Mode window (`Config/EditMode.lua`). `W.EditAppearance` in `Config/ModePlans.lua`
+maps each Position Manager element to its settings page and features; rows on
+those features' Text/Appearance panels are tagged `editAppearance` (by
+`ModeLayout` and the Campfire pilot) and hidden from settings and search. The
+column borrows those same row frames while the element is selected
+(`row.editBorrowed`, skipped by `page:Layout`) and returns them on selection
+change, exit or combat, so controls, callbacks and saved keys are unchanged.
+Non-display styling (Loot Sparkles, Class Training, Dungeon Loot) stays put. No
+new files in the TOC; no SavedVariables changes. `tests/edit_mode_appearance.py`
+guards the contract. Native confirmation is pending; `/reload` OOC.
+
 Declutter / unified Edit Mode (branch `t3/declutter-ui-unify-edit-mode`):
 placement lives only in Edit Mode (`Config/EditMode.lua`), and every display
 is a Position Manager element. Quick Access, Food Bar and Threat Meter join

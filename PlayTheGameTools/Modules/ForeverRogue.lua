@@ -109,7 +109,8 @@ function M:Refresh()
     if not self.active or not self.isRogue then return end
     if D.OutsideCombat() then self:Discover();self:CreateDisplay();self:Layout() end
     self:Render()
-    if D.OutsideCombat() then self:SyncEditElements();if self.page and self.page:IsShown() then self.page:Refresh() end end
+    -- Styling rows on loan to Edit Mode refresh while their page is hidden.
+    if D.OutsideCombat() then self:SyncEditElements();if self.page and (self.page:IsShown() or self.page.editRefreshed) then self.page:Refresh() end end
 end
 function M:OnEnable()
     self.active=true

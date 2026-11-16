@@ -4,6 +4,17 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Display styling moved into Edit Mode. Selecting a display (click it, or pick
+  it under Element) now shows its Text and Appearance settings in a styling
+  column on the right of the Edit Mode panel: Combat Timer, Profession Bar, Food
+  Bar, XP Bar (XP Bar / Session Text tabs), Rogue Poison Reminder and Quick
+  Poisons (Quick Icon / Expanded Menu tabs), and the Campfire Icon, Camp Buffs
+  and Contributions windows. These are the same controls and saved settings as
+  before; settings pages now show only Options for these displays, and settings
+  search no longer lists them. Rogue's Customize buttons open the display in
+  Edit Mode. Loot Sparkles, Class Training and Dungeon Loot have no Edit Mode
+  display, so their appearance settings stay on their pages. Hide at Maximum
+  Level (XP Bar) is behavior and stays in settings.
 - Declutter and unify the interface. Edit Mode is now the only place to move
   displays: one standard panel (Element, Anchor To, Attach, X/Y Offset, Reset
   Position, Settings, Exit) works for every display. Quick Access, Food Bar and

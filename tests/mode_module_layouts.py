@@ -77,7 +77,8 @@ for _,id in ipairs(addon.moduleOrder) do
     for _,panel in ipairs(panels) do
      p:SelectModePanel(feature[1],panel);p:Refresh();p:Layout()
      for row,route in pairs(s.routes) do
-      if route.feature==s.feature and route.panel==s.panel and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation and not row.modePaired and (not row.visibleWhen or row.visibleWhen()) then
+      -- Display styling (editAppearance) is reached in Edit Mode: edit_mode_appearance.py.
+      if route.feature==s.feature and route.panel==s.panel and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation and not row.modePaired and (not row.visibleWhen or row.visibleWhen()) then
        assert(row:IsShown() or row.modeSide,'unreachable route '..id..' '..(row.settingsTitle or 'toggle'))
       end
      end
@@ -97,7 +98,7 @@ for _,id in ipairs(addon.moduleOrder) do
   assert(addon.ProfileCodec.Encode(PTGToolsDB)==saved,'navigation must not edit saved settings '..id)
   for _,entry in ipairs(p.searchEntries) do
    local row=entry.modeBaseRow or entry.row
-   if row.modeRoute and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation then
+   if row.modeRoute and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation then
     p:Reveal(entry)
     if row.modeRoute.feature==s.feature and (not row.visibleWhen or row.visibleWhen()) then assert(entry.row:IsShown(),'search target not visible '..id..' '..entry.label) end
    end
@@ -124,12 +125,11 @@ assert(questRow:IsShown() and automation.questStatusLabel:GetText():find('Unavai
 A.questBlocked=nil;automation:Refresh();assert(not questRow:IsShown())
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
+assert(timer.modeLayout.panel=='options','timer styling is edited in Edit Mode')
 assert(timer.layoutInsetLeft==188 and timer.layoutTopInset==0,'wide plain forms keep the heading beside the fields')
-timer:SelectModePanel('timer','text')
-assert(timer.modeLayout.mixed,'the standalone outline checkbox joins the wide checkbox column')
 local paired
 for _,color in ipairs(timer.settingsColors) do
- if color.key=='textColor' then paired=color;assert(color.host.row==timer.fontSizeSlider:GetParent().row and color.host.row:IsShown(),'text size and picker share the original slider row') end
+ if color.key=='textColor' then paired=color;assert(color.host.row==timer.fontSizeSlider:GetParent().row and color.host.row.editAppearance,'text size and picker share the original slider row') end
 end
 assert(paired)
 local clear=timer.scroll.ClearAllPoints
@@ -154,7 +154,7 @@ for _,feature in ipairs({'watchStyle','launcherStyle','flyoutStyle'}) do
  for _,panel in ipairs(panels) do
   p:SelectModePanel(feature,panel);p:Refresh()
   for row,route in pairs(p.modeLayout.routes) do
-   if route.feature==feature and route.panel==p.modeLayout.panel and not row.subsectionHeading and (not row.visibleWhen or row.visibleWhen()) then assert(row:IsShown() or row.modeSide) end
+   if route.feature==feature and route.panel==p.modeLayout.panel and not row.editAppearance and not row.subsectionHeading and (not row.visibleWhen or row.visibleWhen()) then assert(row:IsShown() or row.modeSide) end
   end
  end
 end
@@ -163,7 +163,7 @@ local slider=p.poisonSliders['watchStyle:fontSize'].slider
 slider:SetValue(19);assert(R.db.watchStyle.fontSize==19,'original slider callback retained')
 local outline=p.poisonStyles.watchStyle.outline
 local old=R.db.watchStyle.outline;outline.button.scripts.OnClick();assert(R.db.watchStyle.outline~=old,'original checkbox callback retained')
-p.scroll:SetWidth(1000);p:Layout()
+p:SelectModePanel('general','options');p.scroll:SetWidth(1000);p:Layout()
 assert(p.modeLayout.mixed and p.layoutInsetLeft==188,'wide mixed settings use the approved left checkbox gutter')
 for _,group in ipairs(p.modeLayout.groups) do
  if group.row.modeSide then

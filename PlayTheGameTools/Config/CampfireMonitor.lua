@@ -295,8 +295,13 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         if (row.subsectionHeading and not row.campfireSectionHeader) or (entry and (entry.label=="Jump To" or entry.label=="Module Elements")) then row.campfireHidden=true end
         row.campfireElement=row.campfireElement or "general";row.campfirePanel=row.campfirePanel or "options"
         local previous=row.visibleWhen
+        -- Text and Appearance rows are styled in Edit Mode on the matching
+        -- display; it keeps the row's own visibility rule, not this page's.
+        if W.EditAppearancePanels[row.campfirePanel] then
+            row.editAppearance={feature=row.campfireElement,panel=row.campfirePanel,campfire=true,visible=previous}
+        end
         row.visibleWhen=function()
-            return not row.campfireHidden and not row.campfireSide and row.campfireElement==state.element and (state.element=="general" or row.campfirePanel==state.panel) and (not previous or previous())
+            return not row.editAppearance and not row.campfireHidden and not row.campfireSide and row.campfireElement==state.element and (state.element=="general" or row.campfirePanel==state.panel) and (not previous or previous())
         end
         -- Shorter form rhythm; preserve the underlying row/setting labels.
         row.gapBefore=0;row.gapAfter=2
@@ -396,7 +401,8 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         if element~="general" and element~="monitor" and element~="buffs" and element~="contributions" then return end
         panel=panel or state.last[element] or "options"
         if panel~="options" and panel~="text" and panel~="appearance" then return end
-        if element=="general" then panel="options" end
+        -- Text and Appearance are styled in Edit Mode; settings show Options.
+        panel="options"
         state.element,state.panel,state.last[element]=element,panel,panel
         self.scrollbar:SetValue(0)
         if self.sectionTabs and self.selectedSection~=section then self:SelectSectionTab(section) else self:Layout() end
@@ -419,8 +425,12 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         local button=W.Button(state.panelContent,entry[2],104,30,"subTab")
         button:SetScript("OnClick",function() page:SelectCampfirePanel(state.element,id) end);state.panels[id]=button
     end
-    -- Tabs and headings name each panel; no per-panel sentence is repeated.
-    local captions=setmetatable({},{__index=function() return setmetatable({},{__index=function() return "" end}) end})
+    -- Tabs and headings name each panel. Display windows say once where their
+    -- styling went; General has none of its own.
+    local hint="Text and appearance are styled in Edit Mode."
+    local captions=setmetatable({},{__index=function(_,element)
+        return setmetatable({},{__index=function() return element~="general" and hint or "" end})
+    end})
     local layout=page.Layout
     function page:Layout()
         if state.layingOut then return end
@@ -460,7 +470,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         end
         state.caption:SetShown(not wide)
         bar:SetShown(active)
-        local height=general and (wide and 56 or 80) or (wide and 84 or 100)
+        local height=wide and 56 or 80
         bar:SetHeight(height)
         local top=active and 48+height or 40
         if (active or not self.modeLayout) and state.viewportTop~=top then
@@ -498,7 +508,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
             local cell=W.LayoutModePills(state.pillButtons,available) or 128
             state.panelContent:SetWidth(usable)
             state.panelViewport:SetVerticalScroll(0)
-            state.panelViewport:SetShown(not general)
+            state.panelViewport:SetShown(false)
             for i,entry in ipairs(elements) do
                 local button=state.buttons[entry[1]]
                 button:SetSelected(state.element==entry[1])
@@ -511,10 +521,10 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
                 button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(tabWidth+6),selected and -4 or -12);button:SetSize(tabWidth,30)
                 button.label:ClearAllPoints();button.label:SetPoint("CENTER",0,selected and 0 or 4)
                 button.label:SetWidth(tabWidth-16);button.label:SetWordWrap(false);button:SetSelected(selected)
-                button:SetShown(not general)
+                button:SetShown(false)
             end
-            rule:ClearAllPoints();rule:SetPoint("TOPLEFT",0,general and -48 or -72);rule:SetPoint("TOPRIGHT",0,general and -48 or -72)
-            state.caption:ClearAllPoints();state.caption:SetPoint("TOPLEFT",4,general and -56 or -80);state.caption:SetPoint("TOPRIGHT",-8,general and -56 or -80)
+            rule:ClearAllPoints();rule:SetPoint("TOPLEFT",0,-48);rule:SetPoint("TOPRIGHT",0,-48)
+            state.caption:ClearAllPoints();state.caption:SetPoint("TOPLEFT",4,-56);state.caption:SetPoint("TOPRIGHT",-8,-56)
             state.caption:SetText(captions[state.element][state.panel])
             local title
             for _,entry in ipairs(panels) do if entry[1]==state.panel then title=entry[2] end end

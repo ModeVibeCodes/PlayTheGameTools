@@ -31,19 +31,23 @@ function addon:SearchSettings(query)
         if score == nil and Match(moduleText, query) then score = 3 end
         if score then results[#results + 1] = { module = module, label = (category and category.title .. " > " or "") .. module.title, score = score, kind = "module" } end
         for _, entry in ipairs(page and page.searchEntries or {}) do
-            local rank = Match(entry.label, query)
-            for _, alias in ipairs(entry.keywords or {}) do
-                local aliasRank = Match(alias, query)
-                if aliasRank then rank = math.min(rank or 99, aliasRank + 1) end
-            end
-            if rank == nil then
-                local context = moduleText .. " " .. (entry.section and entry.section.title or "")
-                if Match(context, query) then rank = 4 end
-            end
-            if rank then
-                local label = (category and category.title .. " > " or "") .. module.title .. " > "
-                if entry.kind == "setting" and entry.section then label = label .. entry.section.title .. " > " end
-                results[#results + 1] = { module = module, entry = entry, label = label .. entry.label, score = rank, kind = entry.kind }
+            -- Display styling is edited in Edit Mode, not on this page.
+            local base = entry.modeBaseRow or entry.campfireBaseRow or entry.row
+            if not (base and base.editAppearance) then
+                local rank = Match(entry.label, query)
+                for _, alias in ipairs(entry.keywords or {}) do
+                    local aliasRank = Match(alias, query)
+                    if aliasRank then rank = math.min(rank or 99, aliasRank + 1) end
+                end
+                if rank == nil then
+                    local context = moduleText .. " " .. (entry.section and entry.section.title or "")
+                    if Match(context, query) then rank = 4 end
+                end
+                if rank then
+                    local label = (category and category.title .. " > " or "") .. module.title .. " > "
+                    if entry.kind == "setting" and entry.section then label = label .. entry.section.title .. " > " end
+                    results[#results + 1] = { module = module, entry = entry, label = label .. entry.label, score = rank, kind = entry.kind }
+                end
             end
         end
     end
