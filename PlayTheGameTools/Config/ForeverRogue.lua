@@ -136,7 +136,6 @@ function M:CreateConfigPage(parent)
     end,function(v) self:SetOption("alwaysShow",v=="always") end)
     Toggles({{"Use Time Threshold","timeReminder"},{"Use Charge Threshold","chargeReminder"}})
     Sliders({{"Reminder Threshold (min)","threshold"," min"},{"Charge Threshold","chargeThreshold"," charges"}})
-    Note("Either enabled threshold can show a reminder. Missing poison always needs attention; poisons without readable charges use the timer.",48)
     Toggles({{"Right-click to Dismiss Reminders","dismissOnRightClick"},{"Show Poison Charges","showPoisonCharges"}})
     Visible(function() return self.db.watcher end,function() IconControls("watchStyle",true) end)
     Visible(function() return self.db.flyout end,function() IconControls("launcherStyle",false) end)
@@ -159,7 +158,6 @@ function M:CreateConfigPage(parent)
         page.rows[#page.rows].modeFeature="flyoutStyle";page.rows[#page.rows].modePanel="appearance"
     end)
     page:Section("Settings",nil,false)
-    Note("Choose the poison applied by the reminder buttons. Recent follows the last-used poison for each hand; unavailable types are greyed out.",48)
     local c,gridRow=FullRow("Poison Refresh Quick Apply",92)
     for i=1,6 do
         local family=i>1 and D.families[i-1] or nil
@@ -180,19 +178,6 @@ function M:CreateConfigPage(parent)
     end
     page.settingsButtons=Buttons({{"Refresh Poisons",function() self:Refresh() end},{"Restore Dismissed",function() self:RestoreReminders() end},{"Dismiss Quick Access",function() self:DismissQuickAccess() end}})
     local status=Note("",52);page.poisonStatus=status
-    page:Section("Position",nil,false)
-    local function Position(quick)
-        local enabled=quick and "flyout" or "watcher";local lock=quick and "flyoutLocked" or "locked"
-        local first=#page.rows+1
-        Visible(function() return self.enabled and self.db[enabled] end,function()
-            page:Group(quick and "Quick Access Poisons" or "Poison Reminder")
-            local buttons=Buttons({{"Enter Edit Mode",function() self:EnterElementEdit(quick) end},{"Reset Position",function() self:ResetElementPosition(quick) end},{"Lock Position",function() self:SetOption(lock,not self.db[lock]) end}})
-            page.positionControls[enabled]=buttons;page.refreshers[#page.refreshers+1]=function() buttons[3]:SetSelected(self.db[lock]) end
-            Sliders({{"X",quick and "menuX" or "x"},{"Y",quick and "menuY" or "y"}})
-        end)
-        for i=first,#page.rows do page.rows[i].modeFeature=quick and "launcherStyle" or "watchStyle";page.rows[i].modePanel="position" end
-    end
-    Position(false);Position(true)
     page.refreshers[#page.refreshers+1]=function()
         local selected=self.byKey[self.db.quickApply];local family=selected and selected.family or D.FamilyForKey(self.db.quickApply)
         for i,b in ipairs(page.poisonGrid) do

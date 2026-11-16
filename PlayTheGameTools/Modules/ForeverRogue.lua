@@ -137,8 +137,8 @@ end
 function M:SetPreviewMode(v) self.previewing=v;self:Refresh() end
 function M:SetEditMode(v) self:StopDrag();self.editing=v;if v then self.menuOpen=false end;self:Refresh() end
 
--- Position Manager owns saved coordinates and Edit Mode decorations. Explicit
--- unlocked dragging outside Edit Mode forwards to the same position storage.
+-- Position Manager owns saved coordinates, dragging and Edit Mode decorations;
+-- the displays move only in Edit Mode, like every other element.
 function M:RegisterPositions()
     local PM=addon.PositionManager
     for _,f in ipairs({self.watcher,self.launcher}) do
@@ -157,7 +157,7 @@ function M:RegisterPositions()
                     if not element.dragging and not self.layingOut then self:Layout() end
                 end,
                 onHighlight=function()
-                    if not addon.editMode then f:EnableMouse(D.OutsideCombat() and not self.db[f.lockKey]) end
+                    if not addon.editMode then f:EnableMouse(false) end
                 end})
             assert(ok,"Play The Game Tools: Rogue position registration failed: "..tostring(registered))
             e=registered;e.label=f.enableKey=="watcher" and "Rogue: Poison Reminder" or "Rogue: Quick Access Poisons"

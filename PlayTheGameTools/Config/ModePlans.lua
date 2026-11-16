@@ -15,7 +15,6 @@ end
 W.ModeLayoutPlans={
     combatTimer={features={{"timer","Combat Timer"}},route=function(row)
         local section=row.section and row.section.title
-        if section=="Positioning" then return "timer","position" end
         local label=Label(row)
         if textLabels[label] then return "timer","text" end
         if section=="Display" and label~="Timer format" then return "timer","appearance" end
@@ -28,7 +27,6 @@ W.ModeLayoutPlans={
         local section=row.section and row.section.title or ""
         local food=section:sub(1,4)=="Food"
         local feature=food and "food" or "professions"
-        if section=="Positioning" or section=="Food Positioning" then return feature,"position" end
         if textLabels[Label(row)] then return feature,"text" end
         if section=="Layout" or section=="Food Layout" or section=="Appearance" or section=="Food Appearance" then
             if Label(row)=="Show Tooltips" or Label(row)=="Food Tooltips" then return feature,"options" end
@@ -36,16 +34,13 @@ W.ModeLayoutPlans={
         end
         return feature,"options"
     end},
-    threatMeter={features={{"meter","Threat Meter"}},route=function(row)
-        return "meter",(row.settingsGroupTitle or row.settingsGroup)=="Position" and "position" or "options"
-    end},
+    threatMeter={features={{"meter","Threat Meter"}},route=function() return "meter","options" end},
     enhancedExperienceBar={features={{"bar","XP Bar"},{"session","Session Text"}},route=function(row)
         local section=row.section and row.section.title
         if section=="Session Text" then
             local label=Label(row)
             return "session",(label=="Session Scope" or label=="Session Tracking") and "options" or "text"
         end
-        if section=="Position" then return "bar","position" end
         if section=="Bar Text" then return "bar","text" end
         if section=="Layout" or section=="Bar Appearance" or section=="Colors" then return "bar","appearance" end
         return "bar","options"
@@ -80,5 +75,5 @@ W.ModeLayoutPlans={
         end},
 }
 
-W.ModePanelDescriptions={options="Choose what this display shows and when it appears.",text="Set the font, size, color and placement of text.",
-    appearance="Adjust the size, spacing, colors and opacity.",position="Move, anchor or lock this display."}
+-- Panel tabs name the panel; no generic sentence is repeated on every page.
+W.ModePanelDescriptions={}

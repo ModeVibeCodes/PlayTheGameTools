@@ -1,6 +1,7 @@
 local _,addon=...
 local W,T=addon.ConfigWidgets,addon.InterfaceTheme
-local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"},{"position","Position"}}
+-- Placement is never a settings panel: every display is positioned in Edit Mode.
+local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"}}
 
 local function Measure(label)
     local width=label:GetStringWidth()
@@ -23,8 +24,8 @@ function W.SetupModeBrowser(page,root)
     separator:ClearAllPoints();separator:SetPoint("LEFT",heading,"RIGHT",8,0)
     local description=W.Label(header,"",nil,0,0,300,T.muted);description:ClearAllPoints();description:SetPoint("LEFT",separator,"RIGHT",8,0)
     local _,align=W.ModeHeadingRule(header,heading)
-    local choices={{"options","Options","Show the shortcut icon or choose its keybinding."},{"appearance","Appearance","Adjust the shortcut icon size and opacity."},
-        {"position","Position","Move or reset the shortcut icon."},{"data","Data","Review and refresh the bundled dungeon data."}}
+    local choices={{"options","Options"},{"appearance","Appearance"},{"data","Data"}}
+    separator:Hide()
     function page:SelectModeBrowserPanel(panel) state.panel=panel;root.scrollbar:SetValue(0);self:Layout() end
     for _,entry in ipairs(choices) do
         local panel=entry[1];local button=W.Button(content,entry[2],112,30,"subTab");state.buttons[#state.buttons+1]=button
@@ -37,12 +38,12 @@ function W.SetupModeBrowser(page,root)
         local active=addon.DungeonLoot.active and addon.DungeonLoot.view.tab=="general"
         strip:SetShown(active);rule:SetShown(active);header:SetShown(active)
         local width=math.max(1,self:GetWidth());content:SetWidth(width)
-        local cell=math.min(112,math.max(1,(width-18)/4))
+        local cell=math.min(112,math.max(1,(width-6*(#choices-1))/#choices))
         for i,entry in ipairs(choices) do
             local button=state.buttons[i];local selected=state.panel==entry[1]
             button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(cell+6),selected and -4 or -12);button:SetSize(cell,30);button:SetSelected(selected)
             button.label:ClearAllPoints();button.label:SetPoint("CENTER",0,selected and 0 or 4);button.label:SetWidth(math.max(1,cell-16));button.label:SetWordWrap(false)
-            if selected then heading:SetText(entry[2]);description:SetText(entry[3]) end
+            if selected then heading:SetText(entry[2]);description:SetText("") end
         end
         heading:SetWidth(Measure(heading));align();description:SetWidth(math.max(1,width-heading:GetWidth()-56))
         return active
@@ -106,7 +107,7 @@ end
 -- Existing rows, controls, callbacks, search entries and visibility predicates
 -- remain the owners of their behavior. This layer only routes and lays them out.
 function W.ApplyModeModuleLayout(page,id)
-    if T.id~="mode" or page.modeLayout then return end
+    if page.modeLayout then return end
     local plan=W.ModeLayoutPlans[id]
     if not plan then return end
     page.modeFooterLayout=true
@@ -337,13 +338,14 @@ function W.ApplyModeModuleLayout(page,id)
         local title="Options";for _,entry in ipairs(panels) do if entry[1]==state.panel then title=entry[2] end end
         if dataHeader then title=state.feature end
         state.heading:SetText(title);state.heading:SetWidth(Measure(state.heading));state.alignUnderline()
-        state.separator:SetShown(wide and not summary)
+        local descriptionText=W.ModePanelDescriptions[state.panel] or ""
+        state.separator:SetShown(wide and not summary and descriptionText~="")
         state.description:ClearAllPoints()
         if summary then state.description:SetPoint("TOPLEFT",state.heading,"BOTTOMLEFT",0,-12)
         elseif wide then state.description:SetPoint("LEFT",state.separator,"RIGHT",8,0)
         else state.description:SetPoint("TOPLEFT",0,-30) end
         state.description:SetWidth(math.max(1,header:GetWidth()-((wide and not summary) and state.heading:GetWidth()+32 or 0)))
-        state.description:SetText(dataHeader and "Browse the current information below." or W.ModePanelDescriptions[state.panel]);state.mixed=mixed
+        state.description:SetText(dataHeader and "" or descriptionText);state.mixed=mixed
         layout(self)
         for _,group in ipairs(state.groups) do
             if group.row.modeSide then

@@ -54,7 +54,7 @@ local function Restore(record)
     return ok
 end
 function M:OtherBarsStatus()
-    return self.otherBarsStatus or "Choose which XP bar to use. Other bars are unchanged until you opt in."
+    return self.otherBarsStatus or "Other XP bars stay under their owners' control until you hide them here."
 end
 local function Watch(self)
     if not self.otherBarEvents then

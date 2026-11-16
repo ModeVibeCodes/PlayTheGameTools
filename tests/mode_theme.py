@@ -42,7 +42,7 @@ mode.execute(r'''
     local moduleFrame=CreateFrame('Frame',nil,UIParent)
     addon.Media:ApplyBackdrop(moduleFrame,{bgFile='original'},'lootSparkles')
     assert(moduleFrame.backdrop.bgFile==display.texture,'module backdrop still inherits global texture')
-    assert(w.title:GetText()=='PTG Tools' and w.sidebarWidth==240)
+    assert(w.title:GetText()=='Play The Game Tools' and w.sidebarWidth==240,'one brand text in every theme')
     assert(w.title.color[1]==0 and w.title.color[2]==240/255 and w.title.color[3]==1,'cyan branding')
     assert(w.brandLogo and not w.headerArt:IsShown() and not w.columnEdge:IsShown())
     assert(w.brandLogo.points[1][5]==0,'logo centers inside the header without overlapping navigation')
@@ -70,7 +70,7 @@ mode.execute(r'''
     w.profileButton.scripts.OnClick()
     assert(w.selectedPage=='globalSettings' and w.pages.globalSettings.selectedSection.title=='Profiles','existing profile page shortcut')
     addon:SelectConfigPage('dashboard')
-    assert(not w.categoryNavigation:IsShown(),'no duplicate module strip')
+    assert(w.categoryNavigation==nil,'no duplicate module strip')
     local function VisibleRows()
         local result={};for _,row in ipairs(w.navigation.rows) do result[row]=true end;return result
     end
@@ -97,7 +97,7 @@ mode.execute(r'''
     end
     for _,id in ipairs(addon.moduleOrder) do
         addon:SelectConfigPage(id)
-        assert(w.selectedPage==id and w.pages[id]:IsShown() and not w.categoryNavigation:IsShown(),id)
+        assert(w.selectedPage==id and w.pages[id]:IsShown(),id)
         assert(w.moduleHeader.title:GetText()==addon.modules[id].title,id)
         if addon.modules[id].category then assert(w.sidebarModuleButtons[id].selected,id) end
     end
@@ -132,7 +132,7 @@ mode.execute(r'''
     local page=w.pages.combatTimer
     assert(page.contentInset==12)
     for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12+(page.layoutInsetLeft or 0),'visible rows preserve border padding after the optional heading/checkbox gutter') end end
-    assert(page.scrollbar.thumbTexture:GetWidth()==2,'thin thumb preserves scrollbar target')
+    assert(page.scrollbar.thumbTexture:GetWidth()==4,'one scroll thumb size in every theme')
     local check=addon.ConfigWidgets.Button(UIParent,'',18,18,'checkbox')
     assert(check.fill.modeAsset=='ModeCheckSurface' and check.switchOutline.rounded)
     local button=addon.ConfigWidgets.Button(UIParent,'Refresh',100,28)
@@ -209,14 +209,14 @@ mode.execute(r'''
     testCombat=true;w.reloadButton.scripts.OnClick();assert(reloads==1,'combat reload remains blocked');testCombat=false
     page.themeButtons[2].scripts.OnClick()
 ''')
-# Switching back restores the original navigation, rather than modifying it.
+# Other themes share the same layout/behavior; only colors, borders and textures differ.
 back, _ = load(mode.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
 back.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('combatTimer')
     local w=addon.configWindow
-    assert(addon.InterfaceTheme.id=='blizzard' and w.categoryNavigation:IsShown())
-    assert(not w.bodyDetail and not w.bodySurface,'Blizzard retains its original page material')
-    assert(w.sidebarModuleButtons.combatTimer.label:GetText()=='Combat Timer')
+    assert(addon.InterfaceTheme.id=='blizzard' and w.categoryNavigation==nil and w.profileButton and w.searchInput:GetParent()==w.headerBar,'same navigation, header and search')
+    assert(not w.bodyDetail and not w.bodySurface,'Blizzard keeps its own page material')
+    assert(w.sidebarModuleButtons.combatTimer:IsShown() and w.pages.combatTimer.modeLayout,'same sidebar and page layout')
     local popup=CreateFrame('Frame',nil,UIParent)
     assert(addon.ConfigWidgets.BlizzardBackdrop(popup,'tooltip'))
     assert(popup.backdrop.bgFile==[[Interface\\Tooltips\\UI-Tooltip-Background]],'Blizzard popup retains native theme background with a custom global texture')
@@ -227,12 +227,12 @@ modern, _ = load(back.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
 modern.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('combatTimer')
     local w=addon.configWindow
-    assert(addon.InterfaceTheme.id=='modern' and w.categoryNavigation:IsShown())
-    assert(not w.bodyDetail and not w.bodySurface,'Modern retains its original page material')
-    assert(w.navigationButtons.timers.skinStyle=='tab')
+    assert(addon.InterfaceTheme.id=='modern' and w.categoryNavigation==nil and w.profileButton,'same navigation and header')
+    assert(not w.bodyDetail and not w.bodySurface,'Modern keeps its own page material')
+    assert(w.navigationButtons.timers.skinStyle=='categoryHeading','same collapsible categories')
     assert(addon.db.globalMedia.texture=='background:PTG Graphite' and not w.canvas.texture,'Modern retains flat canvas without resetting global selection')
     local fill=addon.ConfigWidgets.Fill(w,addon.InterfaceTheme.panel)
     assert(not fill.texture,'Modern settings panels ignore global texture')
-    assert(w.sidebarModuleButtons.combatTimer.label.font[2]==addon.InterfaceTheme.fontSize.small)
+    assert(w.sidebarModuleButtons.combatTimer.label.font[2]<=addon.InterfaceTheme.fontSize.body)
 ''')
-print('PASS mode palette/materials/font, text-only hover, profile/header search, all pages, collapse/reload, persistence and existing themes')
+print('PASS mode palette/materials/font, text-only hover, profile/header search, all pages, collapse/reload, persistence and identical layout across themes')

@@ -17,9 +17,6 @@ function addon:CreateGlobalSettingsPage(parent)
         page.refreshers[#page.refreshers+1]=function() button:Refresh() end
         page.mediaControls=page.mediaControls or {};page.mediaControls["global:"..kind]=button
     end
-    local function Note(title,text,height)
-        local note=W.Label(page:Row(title,height or 80),text,nil,0,-4,360,T.muted);note:SetWordWrap(true)
-    end
     page:Section("Appearance",nil,false)
     Media("font","Global Font");Media("texture","Global Texture");Media("border","Global Border")
     -- Frames keep the theme they were drawn with, so a change applies on reload.
@@ -32,7 +29,6 @@ function addon:CreateGlobalSettingsPage(parent)
     page.refreshers[#page.refreshers + 1] = refreshTheme
 
     page:Section("Profiles",nil,false)
-    Note("Account-wide Profiles","Profiles and the selected profile are shared by every character on this account. Changes save automatically: module settings, enabled modules, Edit Mode positions, global appearance and optimizations. Create copies the current setup; select a profile and Reload to apply it.",100)
     self:CreateProfileHub(page)
 
     page:Section("Optimizations",nil,false)
@@ -49,20 +45,21 @@ function addon:CreateGlobalSettingsPage(parent)
     page.refreshers[#page.refreshers+1]=W.Slider(scale,40,115,1,function() return G.db.autoScale and G:RecommendedScale() or G.db.uiScale end,
         function(v) G:SetOption("uiScale",v) end,"%",true)
     page.uiScaleSlider=scale.slider
-    local detected=W.Label(page:Row("Detected Resolution",54),"",nil,0,-4,360,T.muted)
-    local automatic=W.Button(page:Row("Automatic UI Scale",48),"Use Detected Scale",180,30);automatic:SetPoint("LEFT")
+    -- One button applies the scale recommended for the detected resolution.
+    local automatic=W.Button(page:Row("Automatic UI Scale",48),"Use Detected Scale",220,30);automatic:SetPoint("LEFT")
     automatic:SetScript("OnClick",function() G:SetOption("autoScale",true);page:Refresh() end)
     page.autoScaleButton=automatic
-    local status=W.Label(page:Row("Applied Settings",90),"",nil,0,-4,360,T.muted);status:SetWordWrap(true)
+    -- Shown only when the client rejected Fast Loot this session.
+    local blocked=W.Label(page:Row("Fast Loot",40),"Stopped after the client rejected it; loot manually.",nil,0,-4,360,T.primary)
+    blocked:GetParent().row.visibleWhen=function() return G.lootBlocked==true end
     page.refreshers[#page.refreshers+1]=function()
-        local width,height=G:Resolution()
-        detected:SetText(width and (width.." x "..height.."  |  Recommended "..string.format("%.2f",G:RecommendedScale()).."%") or "Resolution unavailable.")
+        local width=G:Resolution()
+        automatic.label:SetText(width and ("Use Detected Scale ("..string.format("%.0f",G:RecommendedScale()).."%)") or "Use Detected Scale")
         automatic:SetSelected(G.db.autoScale)
-        status:SetText("Camera: "..(G.status.cameraDistanceMaxZoomFactor or "Not applied.").."\nUI Scale: "..(G.status.uiScale or "Not applied.").."\nAuto Loot: "..(G.status.autoLootDefault or "Current game setting retained.")..(G.lootBlocked and "\nFast Loot stopped after a native rejection; loot manually." or ""))
+        page:Layout()
     end
 
     page:Section("Class Colors",nil,false)
-    Note("Custom Class Colors","Click a class to choose its color. Reset restores that class's native color. Changes apply to class-colored elements across the addon after Reload.",70)
     local host=page:Row("",180);host.rowLabel:Hide();host:ClearAllPoints()
     host:SetPoint("TOPLEFT",host.row,"TOPLEFT",12,-14)
     host:SetPoint("BOTTOMRIGHT",host.row,"BOTTOMRIGHT",-12,14)

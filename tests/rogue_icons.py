@@ -9,14 +9,16 @@ lua.execute(r'''
 local M=addon.ForeverRogue
 addon:SetModuleEnabled('foreverRogue',true);M:SetOption('flyout',true)
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue');local p=M.page
-assert(not p.customize and p.iconGroups.watchStyle:IsShown() and p.iconGroups.launcherStyle:IsShown())
+assert(not p.customize and p.iconGroups.watchStyle and p.iconGroups.launcherStyle)
 local function Visible(frame)
  while frame do if not frame:IsShown() then return false end;frame=frame:GetParent() end
  return true
 end
-assert(Visible(p.poisonSliders['watchStyle:iconSize']) and Visible(p.poisonSliders['watchStyle:iconGap']))
+p:SelectModePanel('watchStyle','appearance')
+assert(Visible(p.poisonSliders['watchStyle:iconSize']) and Visible(p.poisonSliders['watchStyle:iconGap']),'icon controls need no Customize step')
 assert(not p.poisonSliders['watchStyle:iconPadding'] and not p.poisonSliders['launcherStyle:iconPadding'] and not p.poisonSliders['flyoutStyle:iconPadding'])
 assert(not p.poisonSliders['watchStyle:spacing'] and not p.poisonSliders['watchStyle:cellWidth'])
+p:SelectModePanel('launcherStyle','appearance')
 assert(Visible(p.poisonSliders['launcherStyle:iconBorderSize']))
 assert(not M.watchButtons[1].globalIconBorder.iconBorder:IsShown() and not M.watchButtons[1].iconBackground:IsShown(),'Default reminder remains bare')
 local a,b=M.watchButtons[1],M.watchButtons[2]

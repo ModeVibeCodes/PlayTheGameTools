@@ -108,21 +108,28 @@ local p=pm:GetPosition(id)
 assert(p.target=='player' and p.x==30 and p.y==-20)
 assert(p.point=='TOP' and p.relativePoint=='BOTTOM')
 ''',
-    'reset offset only resets offsets': r'''
-Enter()
-Pick(panel.targetDropdown,'player')
-assert(pm:SetOffsets(id,30,-20) and pm:SetAttachment(id,'TOP','BOTTOM'))
-Click(panel.resetOffset)
-local p=pm:GetPosition(id)
-assert(p.x==0 and p.y==0 and p.target=='player')
-assert(p.point=='TOP' and p.relativePoint=='BOTTOM')
-''',
-    'reset offset restores the placement gap': r'''
+    'reset position restores the default placement for every element': r'''
 Enter()
 Pick(panel.targetDropdown,'player');Pick(panel.placementDropdown,'below')
-assert(pm:SetOffsets(id,44,44))
-Click(panel.resetOffset)
-local p=pm:GetPosition(id);assert(p.x==0 and p.y==-8 and p.placement=='below')
+assert(pm:SetOffsets(id,44,44) and pm:SetAttachment(id,'TOP','BOTTOM'))
+Click(panel.resetPosition)
+local p,d=pm:GetPosition(id),pm.elements[id].defaults
+assert(p.target==d.target and p.placement==d.placement and p.x==d.x and p.y==d.y)
+assert(p.point==nil and p.relativePoint==nil)
+''',
+    'header Edit Mode starts on the current module page element': r'''
+addon:SelectConfigPage('combatTimer')
+Click(config.editButton)
+assert(addon.editMode and E:Selected().id==id)
+''',
+    'element dropdown selects any enabled display': r'''
+Enter()
+Click(panel.elementDropdown)
+local seen=false
+for _,row in ipairs(panel.elementDropdown.rows) do if row:IsShown() and row.choice.id==id then seen=true end end
+assert(seen,'combat timer listed')
+Pick(panel.elementDropdown,id)
+assert(E:Selected().id==id)
 ''',
     'placement dropdown applies the preset and keeps nudges': r'''
 Enter()

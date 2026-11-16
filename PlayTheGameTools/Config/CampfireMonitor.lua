@@ -6,13 +6,11 @@ local routes={
     enabled={"general","options"},showInCombat={"general","options"},textColor={"general","text"},
     headerGradient={"buffs","text"},headerColor={"buffs","text"},headerEndColor={"buffs","text"},
     showIcon={"monitor","options"},showText={"monitor","options"},showNearbyDetails={"monitor","options"},
-    showProfessionGuide={"monitor","options"},alwaysShow={"monitor","options"},locked={"monitor","position"},
-    fontSize={"monitor","text"},x={"monitor","position"},y={"monitor","position"},
+    showProfessionGuide={"monitor","options"},alwaysShow={"monitor","options"},
+    fontSize={"monitor","text"},
     showBenefits={"buffs","options"},separateBenefits={"buffs","options"},compactBenefits={"buffs","text"},
-    colorStats={"buffs","text"},benefitsLocked={"buffs","position"},benefitsX={"buffs","position"},
-    benefitsY={"buffs","position"},benefitsFontSize={"buffs","text"},
-    showContributionPopup={"contributions","options"},contributionLocked={"contributions","position"},
-    contributionX={"contributions","position"},contributionY={"contributions","position"},
+    colorStats={"buffs","text"},benefitsFontSize={"buffs","text"},
+    showContributionPopup={"contributions","options"},
     contributionUseInterfaceFont={"contributions","text"},contributionOutline={"contributions","text"},
     contributionHeaderGradient={"contributions","text"},
 }
@@ -30,7 +28,7 @@ local function Route(key)
     return key:find("^benefits") and "buffs" or "monitor","appearance"
 end
 function C:AddConfig(page)
-    local pilot=T.id=="mode"
+    local pilot=true -- the element/panel layout is shared by every theme
     local firstRow,section=#page.rows+1,page.activeSection
     local function Tag(row,key)
         if pilot then row.campfireElement,row.campfirePanel=Route(key) end
@@ -87,7 +85,6 @@ function C:AddConfig(page)
         local host=page:Row(label,height or 52)
         local text=W.Label(host,text,nil,0,-4,440,T.muted);text:SetWordWrap(true)
         if pilot then host.row.campfireNote=text;host.row.campfireNoteHost=host end
-        if label=="Shared Style" or label=="Buffs TLDR" then page:FooterNote(text) end
         return text
     end
     local targets={};page.campfireJumpTargets=targets;page.campfireJumps={}
@@ -105,7 +102,6 @@ function C:AddConfig(page)
             local button=page.campfireJumps[id];button:SetWidth(cell);button:ClearAllPoints();button:SetPoint("LEFT",(i-1)*(cell+8),0)
         end
     end
-    Note("Module Elements","Nearby-fire monitor, earned Camp Buffs, and profession contributions.",42)
     local function WindowGroup(id,title)
         page:Group(title);local row=page.rows[#page.rows]
         targets[id]={section=row.section,row=row}
@@ -114,20 +110,12 @@ function C:AddConfig(page)
     Toggles({{"Enable Campfire Monitor","enabled"},{"Show In Combat","showInCombat"}})
     local status=Note("Campfire Status","",42);page.campfireStatus=status
     local tools=page:Row("Tools",34)
-    page.campfireEdit=Button(tools,"Open Edit Mode",0,function()
-        if self.active and addon.LootSparkles:OutsideCombat() then
-            addon:SetEditMode(true);addon.PositionManager:SelectElement("campfireMonitor")
-        end
-    end)
+    page.campfirePreview=Button(tools,"Preview",0,function() self:TogglePreview() end)
     page.campfireRefresh=Button(tools,"Refresh Status",190,function()
         if addon.LootSparkles:OutsideCombat() then self:StopPreview();self:Refresh() end
     end)
-    local placement=page:Row("Preview & Placement",34)
-    page.campfirePreview=Button(placement,"Preview",0,function() self:TogglePreview() end)
-    page.campfireMove=Button(placement,"Move Windows",190,function() self:SetPlacementMode(not self.placing) end)
     Toggles({{"Header Gradient","headerGradient"}})
     Color("Text Color","textColor");Color("Header Color","headerColor");Color("Header Gradient End","headerEndColor")
-    Note("Shared Style","Text Color is shared by status and untyped stats. Header colors apply to Camp Buffs; Contributions has its own style. Pick opens the color wheel.")
     page.refreshers[#page.refreshers+1]=function()
         local s=self.snapshot or {}
         status:SetText(self.previewing and "Preview only." or
@@ -135,30 +123,20 @@ function C:AddConfig(page)
             (not self.db.enabled and "Campfire Monitor disabled." or
             (s.nearby and "Campfire Nearby" or (s.known and "No Nearby Campfire" or "Campfire status unavailable.")))))
         page.campfirePreview.label:SetText(self.previewing and "Stop Preview" or "Preview")
-        page.campfireMove.label:SetText(self.placing and "Finish Moving" or "Move Windows")
     end
     WindowGroup("monitor","Campfire Icon")
     Toggles({{"Show Campfire Icon","showIcon"},{"Show Status Text","showText"},
         {"Show Nearby Native Details","showNearbyDetails"},{"Show Profession Guide","showProfessionGuide"},
-        {"Always Show Monitor","alwaysShow"},{"Lock Campfire Monitor","locked"}})
+        {"Always Show Monitor","alwaysShow"}})
     Slider("Icon Size","iconSize");Slider("Status Text Size","fontSize");Slider("Icon Window Width","width")
     Slider("Icon Window Scale","scale","%");Slider("Icon Window Opacity","opacity","%")
     Slider("Icon Background Opacity","backgroundOpacity","%")
-    Slider("Icon Horizontal Offset","x");Slider("Icon Vertical Offset","y")
-    page.campfireReset=Button(page:Row("Icon Position",34),"Reset Position",0,function()
-        if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(false) end
-    end)
     WindowGroup("buffs","Camp Buffs")
     Toggles({{"Show Your Camp Benefits","showBenefits"},{"Compact Buff Text","compactBenefits"},
-        {"Separate Buff Window","separateBenefits"},{"Lock Buff Window","benefitsLocked"},{"Color Stats by Type","colorStats"}})
+        {"Separate Buff Window","separateBenefits"},{"Color Stats by Type","colorStats"}})
     Slider("Buff Text Size","benefitsFontSize");Slider("Buff Window Width","benefitsWidth")
     Slider("Buff Window Scale","benefitsScale","%");Slider("Buff Window Opacity","benefitsOpacity","%")
     Slider("Buff Background Opacity","benefitsBackgroundOpacity","%")
-    Slider("Buff Horizontal Offset","benefitsX");Slider("Buff Vertical Offset","benefitsY")
-    page.campfireBuffReset=Button(page:Row("Buff Position",34),"Reset Buff Position",0,function()
-        if addon.LootSparkles:OutsideCombat() then self:ResetWindowPosition(true) end
-    end)
-    Note("Buffs TLDR","Detach for independent size, background and position. Joined buffs share the icon window. Duration comes from the native tooltip; no added countdown.")
     WindowGroup("contributions","Camp Contributions")
     Toggles({{"Show Contribution Popup","showContributionPopup"}})
     local detected=page:Row("Detected Kits",64)
@@ -167,29 +145,14 @@ function C:AddConfig(page)
     local window=page:Row("Contribution Window",34)
     page.contributionOpen=Button(window,"Open Contributions",0,function() A:Open() end)
     page.contributionPreview=Button(window,"Preview Contributions",190,function() A:TogglePreview() end)
-    local position=page:Row("Contribution Position",34)
-    page.contributionEdit=Button(position,"Edit Contributions",0,function()
-        if A.active and addon.LootSparkles:OutsideCombat() then
-            addon:SetEditMode(true);addon.PositionManager:SelectElement("campfireContributions")
-        end
-    end)
-    page.contributionReset=Button(position,"Reset Position",190,function()
-        if addon.LootSparkles:OutsideCombat() then
-            if addon.PositionManager.elements.campfireContributions then
-                addon.PositionManager:SetPosition("campfireContributions",{target="screen",placement="center",x=0,y=120})
-            else self.db.contributionX=0;self.db.contributionY=120 end
-            A.positionFailure=nil;A:OnSnapshot(self.snapshot)
-        end
-    end)
     Slider("Contribution Scale","contributionScale","%");Slider("Contribution Opacity","contributionOpacity","%")
     Slider("Contribution Background","contributionBackgroundOpacity","%")
     page:Group("Contribution Window Style")
-    Toggles({{"Lock Contribution Window","contributionLocked"},{"Show Contribution Title","contributionShowTitle"},
+    Toggles({{"Show Contribution Title","contributionShowTitle"},
         {"Show Contribution Hint","contributionShowHint"},{"Show Contribution Footer","contributionShowFooter"}})
     Slider("Contribution Width","contributionWidth");Slider("Contribution Padding","contributionPadding")
     Slider("Contribution Border Size","contributionBorderSize");Slider("Contribution Border Opacity","contributionBorderOpacity","%")
     Color("Contribution Background Color","contributionBackgroundColor");Color("Contribution Border Color","contributionBorderColor")
-    Slider("Contribution Horizontal Offset","contributionX");Slider("Contribution Vertical Offset","contributionY")
     page:Group("Contribution Text")
     Toggles({{"Use Interface Font","contributionUseInterfaceFont"},{"Contribution Text Outline","contributionOutline"},
         {"Contribution Title Gradient","contributionHeaderGradient"}})
@@ -231,7 +194,6 @@ function C:AddConfig(page)
         page.contributionStatus:SetText(A:Summary())
         page.contributionPreview.label:SetText(A.previewing and "Stop Preview" or "Preview Contributions")
     end
-    Note("Contributions TLDR","Ready bag kits appear at a fire. Click Place, then finish native targeting. Preview works anywhere. Drag the header or use Edit Contributions; Reset Position brings it back.",64)
     if pilot then self:ApplyModeConfigLayout(page,firstRow,section) end
 end
 
@@ -262,16 +224,12 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         return line
     end
     local elements={{"general","General"},{"monitor","Campfire Icon"},{"buffs","Camp Buffs"},{"contributions","Contributions"}}
-    local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"},{"position","Position"}}
+    local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"}}
     local labels={
-        ["Module Elements"]={"general","options"},["Campfire Status"]={"general","options"},
-        ["Tools"]={"general","options"},["Preview & Placement"]={"general","options"},
-        ["Shared Style"]={"general","text"},["Icon Position"]={"monitor","position"},
-        ["Buff Position"]={"buffs","position"},["Buffs TLDR"]={"buffs","options"},
+        ["Campfire Status"]={"general","options"},["Tools"]={"general","options"},
         ["Detected Kits"]={"contributions","options"},["Contribution Window"]={"contributions","options"},
-        ["Contribution Position"]={"contributions","position"},["Contribution Font"]={"contributions","text"},
+        ["Contribution Font"]={"contributions","text"},
         ["Title Alignment"]={"contributions","text"},["Row Text Alignment"]={"contributions","text"},
-        ["Contributions TLDR"]={"contributions","options"},
     }
     local entries={}
     for _,entry in ipairs(page.searchEntries) do
@@ -371,12 +329,6 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
                 local host=row.campfireNoteHost
                 host.rowLabel:Hide();host:ClearAllPoints();host:SetAllPoints(row)
                 note:ClearAllPoints();note:SetPoint("TOPLEFT",0,-4);note:SetPoint("TOPRIGHT",-4,-4)
-                local descriptions={
-                    ["Shared Style"]="Changes the monitor's text and buff text when stat colors are off. Contributions has its own text colors.",
-                    ["Buffs TLDR"]="Keep buffs with the monitor or use a separate window with its own size, background and position. Buff duration comes from the game.",
-                    ["Contributions TLDR"]="Shows ready kits from your bags. Preview works anywhere. Use Place at a campfire, then choose where to put the kit.",
-                }
-                if descriptions[entry.label] then note:SetText(descriptions[entry.label]) end
                 note:SetTextColor(unpack(T.muted))
             end
         end
@@ -443,7 +395,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
     function page:SelectCampfirePanel(element,panel)
         if element~="general" and element~="monitor" and element~="buffs" and element~="contributions" then return end
         panel=panel or state.last[element] or "options"
-        if panel~="options" and panel~="text" and panel~="appearance" and panel~="position" then return end
+        if panel~="options" and panel~="text" and panel~="appearance" then return end
         if element=="general" then panel="options" end
         state.element,state.panel,state.last[element]=element,panel,panel
         self.scrollbar:SetValue(0)
@@ -467,12 +419,8 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         local button=W.Button(state.panelContent,entry[2],104,30,"subTab")
         button:SetScript("OnClick",function() page:SelectCampfirePanel(state.element,id) end);state.panels[id]=button
     end
-    local captions={
-        general={options="Turn on the monitor, preview its windows and choose the shared text color."},
-        monitor={options="Choose the icon and information to show.",text="Set the status text size. Change its color in General.",appearance="Change the icon size and the window's size and transparency.",position="Lock the window or move it on screen."},
-        buffs={options="Show buffs with the monitor or in a separate window.",text="Change buff text size, stat colors and the title's colors.",appearance="Change the separate buff window's size and transparency.",position="Lock the buff window or move it on screen."},
-        contributions={options="Choose what to show and preview the contribution window.",text="Change fonts, text sizes, colors and alignment.",appearance="Change the window, border, kit icons and row spacing.",position="Lock or move the contribution window."},
-    }
+    -- Tabs and headings name each panel; no per-panel sentence is repeated.
+    local captions=setmetatable({},{__index=function() return setmetatable({},{__index=function() return "" end}) end})
     local layout=page.Layout
     function page:Layout()
         if state.layingOut then return end
@@ -499,7 +447,7 @@ function C:ApplyModeConfigLayout(page,firstRow,section)
         state.summary:SetShown(active and wide and not general)
         state.summaryTitle:SetShown(not mixed);state.summaryText:SetShown(not mixed);state.summaryUnderline:SetShown(not mixed)
         state.inlineHeader:SetShown(mixed or compactHeader)
-        state.inlineSeparator:SetShown(mixed);state.inlineText:SetShown(mixed)
+        state.inlineSeparator:SetShown(false);state.inlineText:SetShown(mixed)
         state.inlineHeader:SetWidth(math.max(456,self.scroll:GetWidth()-4-self.contentInset*2))
         for _,group in ipairs(state.toggleGroups) do
             local move=mixed and group.row.campfireElement==state.element and group.row.campfirePanel==state.panel

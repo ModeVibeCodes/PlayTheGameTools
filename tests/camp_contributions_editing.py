@@ -25,7 +25,7 @@ scale:SetValue(75);assert(C.db.contributionScale==75 and A.window:GetScale()==0.
 assert(Numeric('contributionScale','83')=='85' and A.window:GetScale()==0.85,'numeric edits snap to supported step')
 assert(Numeric('contributionOpacity','63')=='65' and A.window:GetAlpha()==0.65)
 assert(Numeric('contributionBackgroundOpacity','52')=='50' and A.window.backdropColor[4]==0.5)
-page.contributionEdit.scripts.OnClick()
+assert(addon:SetEditMode(true) and addon.PositionManager:SelectElement('campfireContributions'))
 assert(addon.editMode and A.window.strata=='MEDIUM' and addon.editWindow.strata=='DIALOG','workspace is above the editable panel')
 local pm=addon.PositionManager;local e=pm.elements.campfireContributions
 assert(pm.selected==e.id and e.decoration.handle:IsShown())
@@ -47,9 +47,11 @@ local legacy=addon.ProfileCodec.Copy(M.db);legacy.campfire.contributionX=52.5;le
 C.Initialize(legacy);assert(legacy.campfire.contributionX==53 and legacy.campfire.contributionY==-43)
 addon.editWindow.exitButton.scripts.OnClick()
 assert(not addon.editMode and A.window.strata=='DIALOG')
--- Reopen preview after Exit; reset is the actual settings button.
+-- Reset Position is the Edit Mode panel's standard action.
+assert(addon:SetEditMode(true) and pm:SelectElement(e.id))
+addon.editWindow.resetPosition.scripts.OnClick()
+addon.editWindow.exitButton.scripts.OnClick()
 if not A.previewing then page.contributionPreview.scripts.OnClick() end
-page.contributionReset.scripts.OnClick()
 assert(C.db.contributionX==0 and C.db.contributionY==120)
 assert(pm:GetPosition(e.id).x==0 and pm:GetPosition(e.id).y==120)
 assert(A.window:GetScale()==0.85 and A.window:GetAlpha()==0.65)

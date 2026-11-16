@@ -54,7 +54,6 @@ end
 function M:StartElementDrag(f)
     if not self.active or not self.db[f.enableKey] or not D.OutsideCombat() then return end
     if addon.editMode then return addon.PositionManager:StartDragging(f.elementId) end
-    if not self.db[f.lockKey] then self.dragging=f;f:StartMoving() end
 end
 function M:StopElementDrag(f)
     if addon.PositionManager.elements[f.elementId] then addon.PositionManager:StopDragging(f.elementId) end
@@ -109,7 +108,7 @@ function M:Bind(b,p,allow,reason,locked)
     b.action=allow and p or nil;b:EnableMouse(true)
     b.description=allow and (p.name.." — "..(b.hand==1 and "Main Hand" or "Off Hand")..". Click outside combat to apply.") or
         (not b.nativeReady and "Native out-of-combat action template unavailable." or
-        (not locked or self.previewing or self.editing) and "Positioning / preview: application is disabled. Relock and finish preview to apply." or
+        (not locked or self.previewing or self.editing) and "Edit Mode / preview: application is disabled until you finish." or
         (p and not self:Available(p)) and "This poison is out of stock or its carried stacks are locked." or reason or "No poison available. Choose a poison in Settings or use Quick Access Poisons.")
     if b.styleKey=="watchStyle" and self.db.dismissOnRightClick then b.description=b.description.." Right-click to dismiss this reminder." end
     b.baseDescription=b.description
@@ -126,7 +125,7 @@ function M:CreateDisplay()
         if self.editing and D.OutsideCombat() then addon.PositionManager:SelectElement(self.launcher.elementId);return end
         if button=="RightButton" then self:DismissQuickAccess();return end
         if button~="LeftButton" then return end
-        if D.OutsideCombat() and self.active and self.db.flyout and self.db.flyoutLocked and not self.previewing and not self.editing then
+        if D.OutsideCombat() and self.active and self.db.flyout and not self.previewing and not self.editing then
             if #self.choices==0 then
                 self.lastMessage="No usable poison found. Carry poison items, then click Refresh Poisons."
                 print("Play The Game Tools: "..self.lastMessage);if self.page then self.page:Refresh() end;return
@@ -241,7 +240,7 @@ function M:Render()
     for hand,b in ipairs(self.watchButtons) do
         local state=states[hand];local p,reason=self:QuickPoison(hand,state);local s=db.watchStyle
         local needs,chargeDue=self:ReminderNeeds(state);due=due or needs
-        local placement=ooc and (preview or not db.locked)
+        local placement=ooc and preview
         local dismissed=self:IsDismissed(hand,state)
         local visibility=db.reminderVisibility
         local combat=visibility=="needed" or visibility=="always"
@@ -257,18 +256,18 @@ function M:Render()
         end
         b.poisonCharges:SetShown(show and db.showPoisonCharges and state.hasCharges or false)
         self:Bind(b,p,show and not state.empty and not state.unknown,
-            state.unknown and "Weapon poison information is unavailable or restricted." or reason,db.locked)
+            state.unknown and "Weapon poison information is unavailable or restricted." or reason,true)
         b.description=b.baseDescription or b.description
         if state.hasCharges then b.description=(b.description or "Poison Reminder").."\nPoison charges: "..state.charges..(chargeDue and (" (at/below "..db.chargeThreshold.." reminder threshold).") or ".") end
         b:SetShown(show and true or false)
     end
     self.watcher:SetShown(any)
-    local launcher=ooc and db.flyout and (preview or not self.quickDismissed) and (due or db.alwaysShow or preview or not db.flyoutLocked)
+    local launcher=ooc and db.flyout and (preview or not self.quickDismissed) and (due or db.alwaysShow or preview)
     self.launcher:SetShown(launcher);self.openButton:SetEnabled(ooc)
     local count=0;for _,p in ipairs(self.choices) do if p.kind=="item" then count=count+p.count end end
     self.openButton.count:SetText(tostring(count));self.openButton.count:SetShown(db.launcherStyle.showCounts)
     if not launcher then self.menuOpen=false end
-    local menu=launcher and not self.editing and (self.menuOpen or self.previewing or not db.flyoutLocked)
+    local menu=launcher and not self.editing and (self.menuOpen or self.previewing)
     for i,row in ipairs(self.menuRows) do
         local p=self.choices[i];local s=db.flyoutStyle
         row.name:SetText(p and (p.name..(p.kind=="spell" and " (learned)" or "")) or "");row.name:SetShown(menu and p~=nil and s.showNames)
@@ -277,7 +276,7 @@ function M:Render()
             if p then b.icon:SetTexture(p.icon);b.count:SetText(p.count and tostring(p.count) or "") end
             b.timer:Hide();b.name:Hide();b.count:SetShown(s.showCounts and p~=nil and p.count~=nil)
             self:Bind(b,p,menu and not state.empty and state.weapon~=nil,
-                "No equipped melee weapon in this hand.",db.flyoutLocked)
+                "No equipped melee weapon in this hand.",true)
             b:SetShown(menu and p~=nil)
         end
     end

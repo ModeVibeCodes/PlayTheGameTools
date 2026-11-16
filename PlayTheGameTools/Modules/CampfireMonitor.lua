@@ -269,7 +269,7 @@ function C:MonitorStatus()
     local s=self.snapshot or {}
     if self.previewing then return "Preview: Campfire Nearby" end
     if s.nearby then return "Campfire Nearby" end
-    if s.known or self.editing or self.placing then return "No Nearby Campfire" end
+    if s.known or self.editing then return "No Nearby Campfire" end
     return "Campfire Status Unavailable"
 end
 function C:StyledText(text,first,last,gradient)
@@ -284,7 +284,6 @@ function C:BuildBenefitsText()
     local s=self.snapshot or {}
     if self:IsBuffSample() then return "2% Crit\n8% Stats" end
     if not s.benefits then
-        if self.placing then return "No active buffs" end
         return s.complete and "No Camp Benefits detected." or "Camp Benefits unavailable."
     end
     local lines=self:TooltipLines(s.benefits)
@@ -331,14 +330,14 @@ function C:SetOption(key,value)
     return true
 end
 function C:Refresh()
-    if not self.active and not self.previewing and not self.placing then
+    if not self.active and not self.previewing then
         self:HideDisplays()
         if addon.CampContributions then addon.CampContributions:OnSnapshot(self.snapshot) end
         return
     end
     local combat=not P:OutsideCombat()
-    if combat and (not self.db.showInCombat or self.previewing or self.placing) then
-        self.previewing=false;self.placing=false;self.snapshot={known=false,message="Paused during combat."}
+    if combat and (not self.db.showInCombat or self.previewing) then
+        self.previewing=false;self.snapshot={known=false,message="Paused during combat."}
         self:StopDrag();self:HideDisplays()
     else
         self.snapshot=self.active and self:Scan() or {known=false}
@@ -357,23 +356,18 @@ function C:SyncEnabled()
         self.events:RegisterEvent("PLAYER_ENTERING_WORLD")
         self.events:RegisterEvent("PLAYER_REGEN_ENABLED")
     end
-    if self.active or self.previewing or self.placing then self.events:RegisterEvent("PLAYER_REGEN_DISABLED") end
+    if self.active or self.previewing then self.events:RegisterEvent("PLAYER_REGEN_DISABLED") end
     self.events:SetScript("OnEvent",function(_,event,unit)
         if event=="UNIT_AURA" and (not Public(unit) or unit~="player") then return end
         if event=="PLAYER_REGEN_DISABLED" then
             if addon.CampContributions then addon.CampContributions.previewing=false end
-            self:StopDrag();self.previewing=false;self.placing=false;self:SyncEnabled();return
+            self:StopDrag();self.previewing=false;self:SyncEnabled();return
         end
         self:Refresh()
     end)
     if addon.CampContributions then addon.CampContributions:SyncEnabled(self) end
     self:SyncEditDisplays()
     self:Refresh()
-end
-function C:SetPlacementMode(enabled)
-    if enabled and not P:OutsideCombat() then return false end
-    if not enabled then self:StopDrag() end
-    self.placing=enabled==true;self:SyncEnabled();return true
 end
 function C:TogglePreview()
     if not P:OutsideCombat() then return false end

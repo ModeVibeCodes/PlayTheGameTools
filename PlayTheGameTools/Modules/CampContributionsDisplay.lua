@@ -2,16 +2,10 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local A,D=addon.CampContributions,addon.ForeverQuickAccessData
 local PM=addon.PositionManager
+-- The header is only a handle: the Position Manager owns the drag, selection,
+-- live offsets and combat handling, exactly as for every other display.
 function A:StopDrag()
-    local f=self.window
-    if not f or not f.dragging then return end
-    f:StopMovingOrSizing();f.dragging=nil
-    if not D.OutsideCombat() then return end
-    local e=PM.elements.campfireContributions
-    if e then
-        local x,y=addon.Positioning:ReadFrame(e.subject)
-        PM:SetOffsets(e.id,x,y)
-    end
+    if PM.elements.campfireContributions then PM:StopDragging("campfireContributions") end
 end
 function A:RegisterWindow()
     if not self.window or not self.window:IsShown() or not D.OutsideCombat() then return false,"layout-pending" end
@@ -35,6 +29,7 @@ function A:RegisterWindow()
         e=value
     end
     e.label="Camp Contributions";e.editMode=self.active==true
+    e.defaults={target="screen",placement="center",x=0,y=120}
     e.position.x=math.max(-10000,math.min(10000,math.floor(e.position.x+0.5)))
     e.position.y=math.max(-10000,math.min(10000,math.floor(e.position.y+0.5)))
     self.db.contributionX,self.db.contributionY=e.position.x,e.position.y
@@ -77,7 +72,8 @@ function A:CreateWindow()
     header:SetPoint("TOPLEFT",8,-6);header:SetPoint("TOPRIGHT",-78,-6);header:SetHeight(30)
     header:EnableMouse(true);header:RegisterForDrag("LeftButton")
     header:SetScript("OnDragStart",function()
-        if D.OutsideCombat() and (self.camp.editing or self.previewing or not self.db.contributionLocked) then f:StartMoving();f.dragging=true end
+        -- Like every display, the window moves only in Edit Mode.
+        if self.camp.editing and PM.elements.campfireContributions then PM:StartDragging("campfireContributions") end
     end)
     header:SetScript("OnDragStop",function() self:StopDrag() end)
     f:SetScript("OnHide",function() self:StopDrag() end)
@@ -133,7 +129,7 @@ function A:CreateButton(index)
 end
 function A:Render()
     if not self.active or not D.OutsideCombat() or self.dismissed or self.blocked or self.positionFailure or
-        not self.camp.snapshot or self.camp.snapshot.nearby~=true or self.camp.previewing or self.camp.editing or self.camp.placing then
+        not self.camp.snapshot or self.camp.snapshot.nearby~=true or self.camp.previewing or self.camp.editing then
         self:Hide(false);return
     end
     if #self.items==0 then self:Hide(false);return end
@@ -259,7 +255,7 @@ function A:RenderPreview()
         row.action:SetPoint("RIGHT",-8,0)
     end
     f.sample:Show();f.title:SetText(self.camp:HeaderText("Camp Contributions"))
-    f.hint:SetText("Preview only. Drag the header or use Edit Mode.")
+    f.hint:SetText(self.camp.editing and "Drag to move." or "Preview only.")
     self:Layout(1,"Sample kit; no profession, item or nearby fire required.")
     PM:RefreshSelection()
 end

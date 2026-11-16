@@ -1,4 +1,4 @@
-"""Mode-only Campfire layout: reachability, search, callbacks and theme parity."""
+"""Shared Campfire layout: reachability, search, callbacks and theme parity."""
 from camp_contributions import EXTRA
 from campfire_monitor import FIXTURE
 from smoke import load
@@ -7,8 +7,8 @@ baseline,_=load(before=FIXTURE+EXTRA)
 baseline.execute('''
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
 function Keys(t) local out={} for k in pairs(t) do out[#out+1]=k end table.sort(out);return table.concat(out,'|') end
-assert(not M.page.campfirePilot,'Modern retains existing grouped page')
-assert(M.page.campfireColors.textColor.hex:IsShown() and M.page.campfireColors.textColor.apply:IsShown(),'other themes retain their color editors')
+assert(M.page.campfirePilot,'Modern uses the same element/panel layout')
+assert(not M.page.campfireColors.textColor.hex:IsShown(),'same picker-only color rows in every theme')
 addon.db.window.theme='mode'
 addon.db.globalMedia.border='media:PTG Clean'
 ''')
@@ -30,7 +30,7 @@ assert(Keys(page.campfireControls)==controlKeys and Keys(page.campfireSliders)==
 local saved=addon.ProfileCodec.Encode(PTGToolsDB)
 local foundControls,foundSliders,foundColors={},{},{}
 for _,element in ipairs({'general','monitor','buffs','contributions'}) do
- for _,panel in ipairs(element=='general' and {'options'} or {'options','text','appearance','position'}) do
+ for _,panel in ipairs(element=='general' and {'options'} or {'options','text','appearance'}) do
   page:SelectCampfirePanel(element,panel)
   assert(pilot.element==element and pilot.panel==panel and pilot.buttons[element].selected and pilot.panels[panel].selected)
   assert(pilot.buttons[element].outline.rounded and not pilot.buttons[element].activeGlow:IsShown(),'rounded tabs keep text-only hover/selection')
@@ -74,7 +74,7 @@ local fallback=addon.ConfigWidgets.Button(UIParent,'Pill',156,30,'roundedTab')
 assert(fallback.fill.texture==addon.Media:GetTexture('ModeToggleSurface') and fallback.outline.edges[1].texture==addon.Media:GetTexture('ModeToggleSurface'),'an undiscovered capsule uses matching rounded fallback art for border and fill')
 testMissingTextures=nil
 page:SelectCampfirePanel('monitor','text')
-assert(page.campfireSliders.fontSize.row:IsShown() and not page.campfireSliders.x.row:IsShown())
+assert(page.campfireSliders.fontSize.row:IsShown() and not page.campfireSliders.x,'placement lives in Edit Mode')
 page:SelectCampfirePanel('buffs','text')
 assert(page.campfireSliders.benefitsFontSize.row:IsShown() and page.campfireColors.headerColor.host.row:IsShown())
 page:SelectCampfirePanel('contributions','text')
@@ -135,9 +135,9 @@ for _,id in ipairs({'monitor','buffs','contributions'}) do
  page.campfireJumps[id].scripts.OnClick()
  assert(pilot.element==id and pilot.panel=='options','existing jump callers retain routing')
 end
-page:SelectCampfirePanel('monitor','position')
-page:SelectCampfirePanel('buffs','appearance');page:SelectCampfirePanel('monitor')
-assert(pilot.panel=='position','each element remembers its last panel in this session')
+page:SelectCampfirePanel('monitor','appearance')
+page:SelectCampfirePanel('buffs','text');page:SelectCampfirePanel('monitor')
+assert(pilot.panel=='appearance','each element remembers its last panel in this session')
 page.contributionPreview.scripts.OnClick();assert(A.previewing)
 page:SelectCampfirePanel('contributions','text');assert(A.previewing,'editing style does not stop preview')
 page:SelectSectionTab(1);assert(not A.previewing,'leaving Campfire retains preview cleanup')
@@ -151,6 +151,6 @@ restored.globals().controlKeys=controls
 restored.execute('''
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
 local out={} for key in pairs(M.page.campfireControls) do out[#out+1]=key end table.sort(out)
-assert(not M.page.campfirePilot and table.concat(out,'|')==controlKeys,'Blizzard retains original controls and layout')
+assert(M.page.campfirePilot and table.concat(out,'|')==controlKeys,'Blizzard uses the same controls and layout')
 ''')
-print('PASS Mode-only rounded Campfire panels, complete control parity/reachability, paired text layout, search, callbacks and preview cleanup (mock only)')
+print('PASS shared rounded Campfire panels, complete control parity/reachability, paired text layout, search, callbacks and preview cleanup (mock only)')

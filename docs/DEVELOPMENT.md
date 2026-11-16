@@ -1,5 +1,19 @@
 # Standalone Forever development
 
+Declutter / unified Edit Mode (branch `t3/declutter-ui-unify-edit-mode`):
+placement lives only in Edit Mode (`Config/EditMode.lua`), and every display
+is a Position Manager element. Quick Access, Food Bar and Threat Meter join
+through `PM:RegisterModuleDisplay` (seeds legacy module x/y once, mirrors plain
+screen offsets, one next-frame retry); the others keep their existing
+`RegisterElement` calls. Settings pages carry no
+position/lock rows; the layout panels are Options / Text / Appearance only.
+`Config/Window.lua` uses one layout for all themes (`art` only gates mode
+textures); `Config/Categories.lua` was removed and `Config/PositionControls.lua`
+became `Config/Select.lua` (117 Lua chunks). Lock flags stay in SavedVariables
+but are unused. `tests/edit_mode_standard.py` guards the standard. Run
+`tests/smoke.py`, the full `tests/` suite and
+`tools/build_release.py`. Native confirmation is pending; `/reload` OOC.
+
 Rogue Quick Access dismissal follow-up (2026-11-10): right-click the launcher to
 hide it and close its menu for the session. Quick Access right-click is always available;
 Settings -> Dismiss Quick Access also hides it. The Reminder toggle is separately

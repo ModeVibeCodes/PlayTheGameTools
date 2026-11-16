@@ -57,9 +57,9 @@ function addon:SearchSettings(query)
 end
 
 function addon:CreateSettingsSearch(sidebar)
-    local mode=T.id=="mode"
-    local input = CreateFrame("EditBox", nil, mode and self.configWindow.headerBar or sidebar)
-    if mode then
+    -- The search field sits in the header above the page, in every theme.
+    local input = CreateFrame("EditBox", nil, self.configWindow.headerBar)
+    do
         input:SetPoint("TOPLEFT",self.configWindow,"TOPLEFT",self.configWindow.contentLeft,-13)
         input:SetWidth(200)
         -- The drag strip ends before this left-aligned input. Keep a visible
@@ -68,9 +68,6 @@ function addon:CreateSettingsSearch(sidebar)
         self.configWindow.header:ClearAllPoints()
         self.configWindow.header:SetPoint("TOPLEFT")
         self.configWindow.header:SetPoint("BOTTOMRIGHT",input,"BOTTOMLEFT",-16,-14)
-    else
-        input:SetPoint("TOPLEFT", 0, 0)
-        input:SetPoint("TOPRIGHT", 0, 0)
     end
     input:SetHeight(30)
     input:SetAutoFocus(false)
