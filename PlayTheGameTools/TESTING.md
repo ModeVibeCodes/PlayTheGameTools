@@ -19,7 +19,7 @@ installation procedure instead of changing it manually.
 1. **Navigation:** Forever character selection → AddOns → Play The Game Tools.
    **Action:** Enable the candidate and log in; open `/ptg`.
    **Required state:** Candidate installed with game closed, fresh client start.
-   **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and version
+   **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and Prox, and version
    0.2.0-beta.1; configuration opens without a Lua error or wrong-edition message.
 2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut.
    **Action:** Record its current value, change it, reload using `/reload`, then

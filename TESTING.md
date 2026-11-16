@@ -38,7 +38,7 @@ installation procedure instead of changing it manually.
 1. **Navigation:** Forever character selection → AddOns → Play The Game Tools.
    **Action:** Enable the candidate and log in; open `/ptg`.
    **Required state:** Candidate installed with game closed, fresh client start.
-   **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and version
+   **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and Prox, and version
    0.2.0-beta.2; configuration opens without a Lua error or wrong-edition message.
 2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut.
    **Action:** Record its current value, change it, reload using `/reload`, then
@@ -198,6 +198,22 @@ these checks need the game client. The page has two tabs, **Members** and
 | R8 Filters | `/ptg` → Guild Tools → Roster → **Members** | Choose a class in **All Classes**, then **Online** and **Offline** in **All Members**; return both to **All Classes** and **All Members** | R1 done | Only that class is listed; **Online** shows only marked names and matches the native online count for that class; **Offline** shows the rest |
 | R9 Breakdowns | `/ptg` → Guild Tools → Roster → **Analytics** | Scroll through **Level**, **Rank**, **Race**, **Last Online** and **Online By Zone** | R1 done | Each line shows a bar and **count (share%)**; the longest bar is the largest count; **Rank** follows the guild's rank order; **Last Online** starts with **Online Now** equal to **Online Now** above; **Online By Zone** counts only online members, or reads **Nobody is online right now.** |
 | R10 Nothing saved | `/ptg` → Guild Tools → Roster → **Members** | Type a search and choose a class filter, then `/reload` and reopen the page | R1 done | The search box is empty and the filters read **All Classes** and **All Members** |
+
+## City Labels
+
+Run `python tests/city_labels.py`. Mocks model the inspected Forever map canvas
+but do not establish native rendering. City Labels adds new TOC files: restart the
+client once. Data, coverage and limits: [docs/CITY_LABELS.md](docs/CITY_LABELS.md).
+
+| Check | Navigation | Action | Required state | Confirmation |
+| --- | --- | --- | --- | --- |
+| L1 Turn on | `/ptg` → Quality of Life → City Labels | Click the switch at the top right of the page, then open the world map (M) on your capital (Stormwind, Orgrimmar, Thunder Bluff or Undercity) | Out of combat | Switch reads **Enabled**; colored dots with names mark **Bank**, **Auction House**, **Flight Master**, your class's trainer and profession trainers; no Lua error |
+| L2 Tooltip | World map on your capital | Hover the **Bank** dot | L1 done | Tooltip lists the bankers and **Guild Vault**, then **Approximate: where players stood to use it.** and **Locations: Efficient Games (CC BY 4.0)** |
+| L3 Clicks pass through | World map zoomed into your capital | Left-click a dot, then right-click it | L1 done | The map zooms in and out as if the dot were not there |
+| L4 Filters | `/ptg` → Quality of Life → City Labels | Under **Labels** tick **Mailboxes**; under **Filters** tick **All Classes** and **Other Faction**; reopen the map, then untick all three | Out of combat | Mailbox dots without names, other classes' trainers and the other faction's labels appear, then disappear again |
+| L5 Appearance | `/ptg` → Quality of Life → City Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Dot Size** to 20 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Filters** | Out of combat | Dots and names are larger; with **Show Names** off only dots remain |
+| L6 Turn off | `/ptg` → Quality of Life → City Labels | Click the switch at the top right of the page; open the map | L1 done | Switch reads **Disabled**; no City Labels dots on any map |
+| L7 Combat start | Log in with City Labels enabled | Enter combat before opening the map for the first time, open the map after combat ends | Combat, then out of combat | Labels appear once combat has ended; no Lua error |
 
 ## F. Reporting and release gate
 

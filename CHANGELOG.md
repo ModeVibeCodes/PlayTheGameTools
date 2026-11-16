@@ -4,6 +4,15 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Added City Labels (Quality of Life, off by default): colored dots with optional
+  names on the world map for class and profession trainers, weapon masters,
+  banks, auction houses, inns, flight masters, guild masters and transmogrifiers,
+  plus opt-in stable masters, mailboxes, repair and other vendors. Your class's
+  trainers and your faction by default; All Classes, Other Faction, Show Names,
+  Dot Size and Name Size options. Hover a dot for the NPCs there. Locations are
+  Data from Efficient Games (https://efficient.games), CC BY 4.0, condensed for
+  the map; see THIRD_PARTY_NOTICES.md.
+- Credits now read Mode and Prox.
 - Display styling moved into Edit Mode. Selecting a display (click it, or pick
   it under Element) now shows its Text and Appearance settings in a styling
   column on the right of the Edit Mode panel: Combat Timer, Profession Bar, Food
