@@ -10,6 +10,7 @@ addon.CityLabelsMap=Map
 local TEMPLATE="PlayTheGameToolsCityLabelsMapPinTemplate"
 local FLAT="Interface\\Buttons\\WHITE8X8"
 local CREDIT="Locations: Efficient Games (CC BY 4.0)"
+local CLASSIC_CREDIT="Location: CMaNGOS classic-db (GPL-3.0)"
 local COLORS={
     classTrainer={1,.82,0}, professionTrainer={.45,.75,1}, weaponMaster={.86,.6,.35},
     bank={1,.86,.3}, auctionHouse={1,.55,.2}, inn={.45,.85,.45}, flightMaster={.3,.9,.9},
@@ -32,6 +33,13 @@ end
 local Pin={}
 _G.PlayTheGameToolsCityLabelsMapPinMixin=Pin
 function Pin:OnLoad()
+    -- Icon inside a one-pixel edge in the service color; a colored dot instead
+    -- when none of the entry's icons exists on this client.
+    self.edge=self:CreateTexture(nil,"BORDER")
+    self.edge:SetAllPoints(self);self.edge:SetTexture(FLAT)
+    self.icon=self:CreateTexture(nil,"ARTWORK")
+    self.icon:SetPoint("TOPLEFT",1,-1);self.icon:SetPoint("BOTTOMRIGHT",-1,1)
+    self.icon:SetTexCoord(.08,.92,.08,.92)
     self.dot=self:CreateTexture(nil,"ARTWORK")
     self.dot:SetAllPoints(self)
     local path=addon.Media:GetTexture("RoundMarker")
@@ -54,6 +62,14 @@ function Pin:OnAcquired(entry,style)
         local c=RAID_CLASS_COLORS[entry.class];color={c.r,c.g,c.b}
     end
     self.dot:SetVertexColor(color[1],color[2],color[3],1)
+    self.edge:SetVertexColor(color[1],color[2],color[3],1)
+    local hasIcon=false
+    for _,icon in ipairs(entry.icons or {}) do
+        if self.icon:SetTexture(icon)~=false then hasIcon=true;break end
+    end
+    -- Trim the icons' built-in border; reapplied after each texture change.
+    self.icon:SetTexCoord(.08,.92,.08,.92)
+    self.icon:SetShown(hasIcon);self.edge:SetShown(hasIcon);self.dot:SetShown(not hasIcon)
     local base=GameFontHighlightSmall or GameFontHighlight
     local font,_,flags
     if base then font,_,flags=base:GetFont() end
@@ -73,8 +89,13 @@ function Pin:OnMouseEnter()
     GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
     GameTooltip:SetText(entry.label)
     for name in tostring(entry.names or ""):gmatch("[^\n]+") do GameTooltip:AddLine(name,1,1,1) end
-    GameTooltip:AddLine("Approximate: where players stood to use it.",.6,.6,.6,true)
-    GameTooltip:AddLine(CREDIT,.5,.5,.5)
+    if entry.classic then
+        GameTooltip:AddLine("Classic position: may differ where Forever moved an NPC.",.6,.6,.6,true)
+        GameTooltip:AddLine(CLASSIC_CREDIT,.5,.5,.5)
+    else
+        GameTooltip:AddLine("Approximate: where players stood to use it.",.6,.6,.6,true)
+        GameTooltip:AddLine(CREDIT,.5,.5,.5)
+    end
     GameTooltip:Show()
 end
 function Pin:OnMouseLeave() if GameTooltip then GameTooltip:Hide() end end
@@ -101,7 +122,7 @@ function Map:RefreshAllData()
     local ok,reason=pcall(self.Render,self)
     if ok then self.lastError=nil;return true end
     if self.map then pcall(self.map.RemoveAllPinsByTemplate,self.map,TEMPLATE) end
-    local message="City Labels could not draw on this map: "..(Public(reason) and tostring(reason):sub(1,200) or "unknown error")
+    local message="Points of Interest Labels could not draw on this map: "..(Public(reason) and tostring(reason):sub(1,200) or "unknown error")
     if self.lastError~=message then print("Play The Game Tools: "..message) end
     self.lastError=message
     return false

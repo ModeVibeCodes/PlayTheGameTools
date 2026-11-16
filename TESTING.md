@@ -199,21 +199,23 @@ these checks need the game client. The page has two tabs, **Members** and
 | R9 Breakdowns | `/ptg` → Guild Tools → Roster → **Analytics** | Scroll through **Level**, **Rank**, **Race**, **Last Online** and **Online By Zone** | R1 done | Each line shows a bar and **count (share%)**; the longest bar is the largest count; **Rank** follows the guild's rank order; **Last Online** starts with **Online Now** equal to **Online Now** above; **Online By Zone** counts only online members, or reads **Nobody is online right now.** |
 | R10 Nothing saved | `/ptg` → Guild Tools → Roster → **Members** | Type a search and choose a class filter, then `/reload` and reopen the page | R1 done | The search box is empty and the filters read **All Classes** and **All Members** |
 
-## City Labels
+## Points of Interest Labels
 
 Run `python tests/city_labels.py`. Mocks model the inspected Forever map canvas
-but do not establish native rendering. City Labels adds new TOC files: restart the
-client once. Data, coverage and limits: [docs/CITY_LABELS.md](docs/CITY_LABELS.md).
+but do not establish native rendering, icon files or profession reading. City
+Labels adds new TOC files: restart the client once. Data, coverage and limits:
+[docs/CITY_LABELS.md](docs/CITY_LABELS.md).
 
 | Check | Navigation | Action | Required state | Confirmation |
 | --- | --- | --- | --- | --- |
-| L1 Turn on | `/ptg` → Quality of Life → City Labels | Click the switch at the top right of the page, then open the world map (M) on your capital (Stormwind, Orgrimmar, Thunder Bluff or Undercity) | Out of combat | Switch reads **Enabled**; colored dots with names mark **Bank**, **Auction House**, **Flight Master**, your class's trainer and profession trainers; no Lua error |
-| L2 Tooltip | World map on your capital | Hover the **Bank** dot | L1 done | Tooltip lists the bankers and **Guild Vault**, then **Approximate: where players stood to use it.** and **Locations: Efficient Games (CC BY 4.0)** |
-| L3 Clicks pass through | World map zoomed into your capital | Left-click a dot, then right-click it | L1 done | The map zooms in and out as if the dot were not there |
-| L4 Filters | `/ptg` → Quality of Life → City Labels | Under **Labels** tick **Mailboxes**; under **Filters** tick **All Classes** and **Other Faction**; reopen the map, then untick all three | Out of combat | Mailbox dots without names, other classes' trainers and the other faction's labels appear, then disappear again |
-| L5 Appearance | `/ptg` → Quality of Life → City Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Dot Size** to 20 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Filters** | Out of combat | Dots and names are larger; with **Show Names** off only dots remain |
-| L6 Turn off | `/ptg` → Quality of Life → City Labels | Click the switch at the top right of the page; open the map | L1 done | Switch reads **Disabled**; no City Labels dots on any map |
-| L7 Combat start | Log in with City Labels enabled | Enter combat before opening the map for the first time, open the map after combat ends | Combat, then out of combat | Labels appear once combat has ended; no Lua error |
+| L1 Turn on | `/ptg` → Quality of Life → Points of Interest Labels | Click the switch at the top right of the page, then open the world map (M) on your capital (Stormwind, Orgrimmar, Thunder Bluff or Undercity) | Out of combat | Switch reads **Enabled**; **Class Trainers** and **Profession Trainers** both read **Mine**; icons with names mark **Bank**, **Auction House**, **Flight Master**, **Inn**, your class's trainer and trainers for professions you know only; no Lua error |
+| L2 Icons | World map on your capital, zoomed in | Look at each label | L1 done | Each label is a game icon in a thin colored edge: your class icon on your class trainer, your profession's icon on its trainer, a bag on **Bank**, coins on **Auction House**, a hearthstone on **Inn**; a plain colored dot appears only if an icon file is missing |
+| L3 Undercity gaps | World map on Undercity (Horde, or **Other Faction** ticked) | Set **Profession Trainers** to **All**, then find **Alchemy**; set **Class Trainers** to **All**, then find **Warlock Trainer** | Out of combat | **Alchemy** labels near 47, 75 and 51, 75; **Warlock Trainer** near 87, 16 in the Rogues' Quarter, whose tooltip reads **Classic position: may differ where Forever moved an NPC.** and **Location: CMaNGOS classic-db (GPL-3.0)** |
+| L4 Tooltip | World map on your capital | Hover the **Bank** icon | L1 done | Tooltip lists the bankers and **Guild Vault**, then **Approximate: where players stood to use it.** and **Locations: Efficient Games (CC BY 4.0)** |
+| L5 Clicks pass through | World map zoomed into your capital | Left-click an icon, then right-click it | L1 done | The map zooms in and out as if the icon were not there |
+| L6 Trainer modes and filters | `/ptg` → Quality of Life → Points of Interest Labels | Set **Class Trainers** and **Profession Trainers** to **All**, then **Off**, then back to **Mine**; under **Labels** tick **Mailboxes**; under **Filters** tick **Other Faction**; reopen the map each time | Out of combat | **All** adds every class's and profession's trainers, **Off** removes them, **Mine** restores yours; mailbox icons without names and the other faction's labels appear while ticked |
+| L7 Appearance | `/ptg` → Quality of Life → Points of Interest Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Icon Size** to 24 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Filters** | Out of combat | Icons and names are larger; with **Show Names** off only icons remain |
+| L8 Turn off and combat start | `/ptg` → Quality of Life → Points of Interest Labels; later a fresh login | Click the switch at the top right of the page and open the map; switch it back on, log in again, enter combat before first opening the map, and open it after combat | Combat, then out of combat | Switch reads **Disabled** and no Points of Interest Labels icons show; after re-enabling, labels appear once combat has ended; no Lua error |
 
 ## F. Reporting and release gate
 

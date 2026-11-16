@@ -9,14 +9,16 @@
   window, dialog or dropdown first, one per press, before the game menu opens.
   The level-up popup and the reload prompt still appear on their own without
   closing anything.
-- Added City Labels (Quality of Life, off by default): colored dots with optional
-  names on the world map for class and profession trainers, weapon masters,
-  banks, auction houses, inns, flight masters, guild masters and transmogrifiers,
-  plus opt-in stable masters, mailboxes, repair and other vendors. Your class's
-  trainers and your faction by default; All Classes, Other Faction, Show Names,
-  Dot Size and Name Size options. Hover a dot for the NPCs there. Locations are
-  Data from Efficient Games (https://efficient.games), CC BY 4.0, condensed for
-  the map; see THIRD_PARTY_NOTICES.md.
+- Added Points of Interest Labels (Quality of Life, off by default): icons with optional names
+  on the world map for class and profession trainers, weapon masters, banks,
+  auction houses, inns, flight masters, guild masters and transmogrifiers, plus
+  opt-in stable masters, mailboxes, repair and other vendors. Class Trainers and
+  Profession Trainers each choose Mine (your class / your learned professions,
+  detected automatically), All or Off; Mine is the default. Other Faction, Show
+  Names, Icon Size and Name Size options. Hover an icon for the NPCs there.
+  Locations are Data from Efficient Games (https://efficient.games), CC BY 4.0,
+  with Classic spawn positions from CMaNGOS classic-db (GPL-3.0) where Efficient
+  Games has none yet (marked in the tooltip); see THIRD_PARTY_NOTICES.md.
 - Credits now read Mode and Prox.
 - Display styling moved into Edit Mode. Selecting a display (click it, or pick
   it under Element) now shows its Text and Appearance settings in a styling

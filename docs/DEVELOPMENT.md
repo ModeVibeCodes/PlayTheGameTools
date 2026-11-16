@@ -13,13 +13,13 @@ something is open and closes the newest entry per press. Register after any
 menus and Camp Contributions are not registered. `tests/dialogs.py` guards it.
 Native confirmation is pending; `/reload` OOC (new TOC file: restart client).
 
-City Labels (Quality of Life, thirteenth module): Modules/CityLabelsData.lua
-(generated), CityLabels.lua, CityLabelsMap.lua + CityLabelsMapPins.xml and
-Config/CityLabels.lua (121 Lua chunks). One native map data provider on
+Points of Interest Labels (Quality of Life, thirteenth module): Modules/CityLabelsData.lua and
+CityLabelsClassicData.lua (generated), CityLabels.lua, CityLabelsMap.lua +
+CityLabelsMapPins.xml and Config/CityLabels.lua (123 Lua chunks). One native map data provider on
 WorldMapFrame, attached after the map addon loads and outside combat; never
 force-loaded. The builder now validates both map pin templates. Regenerate data
-with tools/build_city_labels.py from a pinned EG Link dataset commit (CC BY 4.0;
-see [City Labels](CITY_LABELS.md)). Run tests/city_labels.py with smoke/build.
+with tools/build_city_labels.py from a pinned EG Link dataset commit (CC BY 4.0)
+and classic-db dump (GPL-3.0); see [Points of Interest Labels](CITY_LABELS.md). Run tests/city_labels.py with smoke/build.
 New TOC files need one client restart. Native confirmation is pending.
 
 Edit Mode styling (branch `t3/5b8d8061`): Text/Appearance panels of every
