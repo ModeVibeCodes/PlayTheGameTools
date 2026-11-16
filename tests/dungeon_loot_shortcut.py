@@ -44,7 +44,8 @@ lua.execute(r'''
     end
     local launcher=addon.PositionManager.elements.quickActionsLauncher
     assert(addon.PositionManager:SetOffsets(launcher.id,12,34))
-    Click('Reset Shortcut Position');assert(launcher.position.x==-180 and launcher.position.y==-140)
+    assert(M:ResetShortcutPosition() and launcher.position.x==-180 and launcher.position.y==-140,'module API resets; the page leaves placement to Edit Mode')
+    for _,slot in ipairs(M.page.rootPane.slots) do assert(not (slot.visible and slot.button.label:GetText():find('Position',1,true)),'no page position rows') end
     M.db.shortcutPosition={x=70,y=-90};M.db.shortcutLocked=true
     addon:SetModuleEnabled('dungeonLoot',false)
     assert(not b:IsShown() and next(M.shortcutEvents.events)==nil)

@@ -22,17 +22,15 @@ function C:RegisterDisplay(f,separate)
                 if not element.dragging and not self.rendering and not self.hiding and not self.syncingEdit then self:Render() end
             end,
             onHighlight=function()
-                -- The manager owns Edit Mode input. Preserve existing explicit
-                -- preview/placement input outside that mode.
-                if not addon.editMode then
-                    f:EnableMouse(P:OutsideCombat() and (self.placing or self.previewing or not self.db[f.lockKey]))
-                end
+                -- The manager owns Edit Mode input; outside it the display is click-through.
+                if not addon.editMode then f:EnableMouse(false) end
             end,
         })
         assert(ok,"Play The Game Tools: campfire position registration failed: "..tostring(registered))
         e=registered
     end
     e.label=separate and "Camp Buffs" or "Campfire Monitor"
+    e.defaults={target="screen",placement="center",x=separate and 260 or 0,y=-240}
     e.editMode=self.active and (not separate or (self.db.separateBenefits and self.db.showBenefits)) or false
     self.db[f.xKey],self.db[f.yKey]=math.floor(e.position.x+0.5),math.floor(e.position.y+0.5)
 end
@@ -61,21 +59,6 @@ function C:SyncPositionOption(key)
         if saved and PM:ValidatePosition(saved,true) then saved.x=x;saved.y=y end
     end
 end
-function C:ResetWindowPosition(separate)
-    self:StopDrag()
-    local f=separate and self.benefitsFrame or self.frame
-    local id=separate and "campfireBuffs" or "campfireMonitor"
-    local x,y=separate and 260 or 0,-240
-    local reset={target="screen",placement="center",x=x,y=y}
-    if f and Element(f) then PM:SetPosition(id,reset)
-    else
-        self.db[separate and "benefitsX" or "x"]=x;self.db[separate and "benefitsY" or "y"]=y
-        if addon.db.positions and addon.db.positions[id] and PM:ValidatePosition(addon.db.positions[id],true) then
-            addon.db.positions[id]=reset
-        end
-    end
-    self:Refresh()
-end
 function C:SetEditMode(enabled)
     self:StopDrag()
     self.editing=enabled and self.active and P:OutsideCombat() or false
@@ -88,14 +71,7 @@ function C:StopDrag(f)
         return
     end
     local e=Element(f)
-    if e and e.dragging then PM:StopDragging(f.elementId);return end
-    if not f.dragging then return end
-    f:StopMovingOrSizing();f.dragging=nil
-    if not P:OutsideCombat() then return end
-    if e then
-        local x,y=addon.Positioning:ReadFrame(e.subject)
-        PM:SetOffsets(f.elementId,x,y)
-    end
+    if e and e.dragging then PM:StopDragging(f.elementId) end
 end
 function C:HideDisplays()
     self.hiding=true
@@ -108,7 +84,6 @@ function C:CreateDisplay(separate)
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self[key]=f
     f.elementId=separate and "campfireBuffs" or "campfireMonitor"
     f.xKey=separate and "benefitsX" or "x";f.yKey=separate and "benefitsY" or "y"
-    f.lockKey=separate and "benefitsLocked" or "locked"
     f:SetSize(separate and self.db.benefitsWidth or self.db.width,80)
     f:SetScale((separate and self.db.benefitsScale or self.db.scale)/100)
     f:SetPoint("CENTER",UIParent,"CENTER",self.db[f.xKey]/f:GetScale(),self.db[f.yKey]/f:GetScale())
@@ -116,23 +91,13 @@ function C:CreateDisplay(separate)
     addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"lootSparkles")
     f:Hide()
     f.icon=f:CreateTexture(nil,"ARTWORK");f.icon:SetTexCoord(0.06,0.94,0.06,0.94)
-    for _,name in ipairs({"text","caption","buffTitle","details","moveLabel"}) do
+    for _,name in ipairs({"text","caption","buffTitle","details"}) do
         f[name]=f:CreateFontString(nil,"OVERLAY","GameFontHighlight")
         f[name]:SetJustifyH("CENTER");f[name]:SetWordWrap(true)
     end
     self:RegisterDisplay(f,separate)
-    f:RegisterForDrag("LeftButton")
-    f:HookScript("OnDragStart",function()
-        if not addon.editMode and P:OutsideCombat() and (self.placing or self.previewing or not self.db[f.lockKey]) then
-            f:StartMoving();f.dragging=true
-        end
-    end)
-    f:HookScript("OnDragStop",function() self:StopDrag(f);self:Render() end)
-    f:HookScript("OnMouseUp",function(_,button)
-        if button=="RightButton" and self.placing then self:SetPlacementMode(false) end
-    end)
-    f:HookScript("OnHide",function() self:StopDrag(f) end)
-    addon.Media:RegisterFontListener(f,function() if self.active or self.previewing or self.placing then self:Render() end end)
+    f:HookScript("OnDragStop",function() self:Render() end)
+    addon.Media:RegisterFontListener(f,function() if self.active or self.previewing then self:Render() end end)
     return f
 end
 local function SetFont(label,path,size)
@@ -145,7 +110,7 @@ local function Height(label,size)
 end
 function C:PaintDisplay(f,separate)
     local e=Element(f)
-    if f.dragging or (e and e.dragging) then return end
+    if e and e.dragging then return end
     local db=self.db
     local scale=(separate and db.benefitsScale or db.scale)/100
     local width=separate and db.benefitsWidth or db.width
@@ -154,9 +119,9 @@ function C:PaintDisplay(f,separate)
     local opacity=separate and db.benefitsOpacity or db.opacity
     local font=addon.Media:GetInterfaceFont(nil,"lootSparkles")
     f:SetScale(scale);f:SetWidth(width)
-    f:EnableMouse(P:OutsideCombat() and (self.editing or self.placing or self.previewing or not db[f.lockKey]))
+    f:EnableMouse(P:OutsideCombat() and self.editing==true)
     f:SetBackdropColor(0.035,0.045,0.06,background/100)
-    f:SetBackdropBorderColor(0.32,0.6,0.7,self.placing and 1 or (background>0 and 0.6 or 0))
+    f:SetBackdropBorderColor(0.32,0.6,0.7,background>0 and 0.6 or 0)
     f:SetAlpha(opacity/100)
     local cursor=10
     local function Row(label,text,fontSize)
@@ -164,8 +129,6 @@ function C:PaintDisplay(f,separate)
         label:SetPoint("TOPLEFT",10,-cursor);label:SetText(text);label:Show()
         cursor=cursor+Height(label,fontSize)+5
     end
-    if self.placing then Row(f.moveLabel,(separate and "Drag buffs" or "Drag monitor").." (right-click to finish)",12)
-    else f.moveLabel:Hide() end
     local s=self.snapshot or {};local icon=s.near and s.near.icon
     if not P.Public(icon) or (type(icon)~="number" and type(icon)~="string") then icon=135805 end
     if not separate and db.showIcon then
@@ -176,7 +139,7 @@ function C:PaintDisplay(f,separate)
     if not separate and (db.showText or not db.showIcon) then
         f.caption:SetTextColor(unpack(db.textColor));Row(f.caption,self:MonitorStatus(),size)
     else f.caption:Hide() end
-    if db.showBenefits and (separate or not db.separateBenefits) and (s.benefits or self:IsBuffSample() or self.placing) then
+    if db.showBenefits and (separate or not db.separateBenefits) and (s.benefits or self:IsBuffSample()) then
         Row(f.buffTitle,self:HeaderText("Camp Buffs"),db.benefitsFontSize+3)
         Row(f.text,self:ColorBuffText(self:BuildBenefitsText()),db.benefitsFontSize)
     else f.buffTitle:Hide();f.text:Hide() end
@@ -193,13 +156,13 @@ function C:Render()
     self.rendering=true
     local s,db=self.snapshot or {},self.db
     if not P:OutsideCombat() and not db.showInCombat then self:HideDisplays();self.rendering=nil;return end
-    local enabled=self.active or self.previewing or self.placing or self.editing
+    local enabled=self.active or self.previewing or self.editing
     local earned=db.showBenefits and s.benefits~=nil
-    local show=enabled and (self.editing or self.placing or self.previewing or db.alwaysShow or not db.locked or
+    local show=enabled and (self.editing or self.previewing or db.alwaysShow or
         s.nearby==true or (earned and not db.separateBenefits))
     if show then self:PaintDisplay(self:CreateDisplay(false),false)
     elseif self.frame then self.frame:Hide() end
-    local showBuffs=enabled and db.showBenefits and db.separateBenefits and (earned or self.editing or self.previewing or self.placing)
+    local showBuffs=enabled and db.showBenefits and db.separateBenefits and (earned or self.editing or self.previewing)
     if showBuffs then self:PaintDisplay(self:CreateDisplay(true),true)
     elseif self.benefitsFrame then self.benefitsFrame:Hide() end
     self.rendering=nil

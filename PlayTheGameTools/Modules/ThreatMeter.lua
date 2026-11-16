@@ -44,38 +44,33 @@ end
 
 function M:Available() return type(UnitDetailedThreatSituation)=="function" end
 
+-- Placement belongs to Edit Mode; the saved lock flag is kept but no longer read.
 function M:SetOption(key,value)
-    if key~="showPets" and key~="locked" and key~="hideOutOfCombat" then return false end
+    if key~="showPets" and key~="hideOutOfCombat" then return false end
     if type(value)~="boolean" then return false end
     self.db[key]=value
-    if key=="locked" then self:StopDrag() end
     self:Update()
     if addon.RefreshConfig then addon:RefreshConfig() end
     return true
 end
 
-function M:ResetPosition()
-    self:StopDrag()
-    self.db.x,self.db.y=320,-120
-    self:ApplyPosition()
-end
-
 function M:ApplyPosition()
     if not self.frame then return end
+    local PM=addon.PositionManager
+    if PM.elements.threatMeter then PM:ApplyPosition("threatMeter");return end
     self.frame:ClearAllPoints()
     self.frame:SetPoint("CENTER",UIParent,"CENTER",self.db.x,self.db.y)
 end
 
+function M:RegisterPosition()
+    local ok,element=addon.PositionManager:RegisterModuleDisplay("threatMeter",self.frame,self,{
+        label="Threat Meter",defaultX=320,defaultY=-120,canDrag=function() return self.active==true end,
+        onRegistered=function(registered) registered.editMode=self.active==true;self:Update();addon.PositionManager:RefreshSelection() end})
+    if ok then element.editMode=self.active==true end
+end
+
 function M:StopDrag()
-    local f=self.frame
-    if not f or not f.dragging then return end
-    f:StopMovingOrSizing();f.dragging=nil
-    local x,y=f:GetCenter();local cx,cy=UIParent:GetCenter()
-    if Number(x,-100000,100000) and Number(y,-100000,100000) and Number(cx,-100000,100000) and Number(cy,-100000,100000) then
-        self.db.x=math.floor(math.max(-4000,math.min(4000,x-cx))+0.5)
-        self.db.y=math.floor(math.max(-4000,math.min(4000,y-cy))+0.5)
-    end
-    self:ApplyPosition()
+    if addon.PositionManager.elements.threatMeter then addon.PositionManager:StopDragging("threatMeter") end
 end
 
 local function Paint(texture,color,alpha) texture:SetColorTexture(color[1],color[2],color[3],alpha or 1) end
@@ -107,15 +102,8 @@ function M:CreateFrame()
     local f=CreateFrame("Frame","PlayTheGameToolsThreatMeterFrame",UIParent)
     self.frame=f
     f:Hide();f:SetSize(WIDTH,HEADER+1+PAD*2+ROW);f:SetFrameStrata("MEDIUM");f:SetClampedToScreen(true)
-    f:SetMovable(true);f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart",function()
-        if self.active and not self.db.locked then f:StartMoving();f.dragging=true end
-    end)
-    f:SetScript("OnDragStop",function() self:StopDrag() end)
-    f:SetScript("OnHide",function() self:StopDrag() end)
-    -- The border brightens under the pointer while the meter can be dragged.
-    f:SetScript("OnEnter",function() if not self.db.locked then f.border:SetColor(T.secondary) end end)
-    f:SetScript("OnLeave",function() f.border:SetColor(T.lineStrong) end)
+    -- Position Manager owns dragging; the meter itself never takes the mouse.
+    f:EnableMouse(false)
 
     local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();addon.Media:PaintSurface(bg,T.panel,0.94,"threatMeter")
     f.border=addon.ConfigWidgets.Outline(f,T.lineStrong,nil,nil,nil,"threatMeter");f.border:SetColor(T.lineStrong)
@@ -124,9 +112,7 @@ function M:CreateFrame()
     local rule=f:CreateTexture(nil,"BORDER")
     rule:SetPoint("TOPLEFT",1,-1-HEADER);rule:SetPoint("TOPRIGHT",-1,-1-HEADER);rule:SetHeight(1);Paint(rule,T.line)
     f.title=Text(f,12,T.text)
-    f.title:SetPoint("TOPLEFT",PAD+5,-1);f.title:SetSize(WIDTH-PAD*2-90,HEADER)
-    f.hint=Text(f,10,T.muted,"RIGHT")
-    f.hint:SetPoint("TOPRIGHT",-PAD-5,-1);f.hint:SetSize(80,HEADER);f.hint:SetText("Drag to move")
+    f.title:SetPoint("TOPLEFT",PAD+5,-1);f.title:SetSize(WIDTH-PAD*2-10,HEADER)
     f.empty=Text(f,11,T.muted)
     f.empty:SetPoint("TOPLEFT",PAD+5,-(HEADER+1+PAD));f.empty:SetSize(WIDTH-PAD*2-10,ROW)
 
@@ -151,13 +137,23 @@ function M:CreateFrame()
     end
     self.elapsed=0
     -- Threat events fire in bursts and miss some group members, so the list is
-    -- refreshed on a fixed interval while shown instead of per threat event.
-    f:SetScript("OnUpdate",function(_,elapsed)
+    -- refreshed on a fixed interval, but only while a target is being shown.
+    -- A separate driver keeps the meter's own OnUpdate free for dragging.
+    self.driver=CreateFrame("Frame",nil,f)
+    self.poll=function(_,elapsed)
         self.elapsed=self.elapsed+elapsed
         if self.elapsed>=self.UPDATE_INTERVAL then self.elapsed=0;self:Update() end
-    end)
+    end
     f:SetScript("OnEvent",function() self:Update() end)
     self:ApplyPosition()
+end
+
+function M:SetPolling(enabled)
+    local driver=self.driver
+    if not driver then return end
+    local current=driver:GetScript("OnUpdate")
+    if enabled and not current then self.elapsed=0;driver:SetScript("OnUpdate",self.poll)
+    elseif not enabled and current then driver:SetScript("OnUpdate",nil) end
 end
 
 -- Forever can return secret values field by field. A secret is never compared
@@ -286,9 +282,12 @@ function M:Update()
     local f=self.frame
     if not f then return end
     local hasTarget=self:HasTarget()
-    -- Unlocked frames stay visible so they can be placed.
-    local show=self.active and (not self.db.locked or not self.db.hideOutOfCombat or self:InCombat())
-    f:EnableMouse(self.active and not self.db.locked or false)
+    -- Registration needs out-of-combat geometry; retry after a combat start.
+    if self.active and not addon.PositionManager.elements.threatMeter and not self:InCombat() then self:RegisterPosition() end
+    -- Edit Mode and Preview reveal the meter so it can be placed.
+    local placing=self.editing or self.previewing
+    local show=self.active and (placing or not self.db.hideOutOfCombat or self:InCombat())
+    self:SetPolling(show and hasTarget and self:Available())
     if not show then self.entries={};f:Hide();return end
     local entries,message={},nil
     if not self:Available() then
@@ -301,7 +300,6 @@ function M:Update()
     end
     self.entries=entries
     f.title:SetText(hasTarget and self:Available() and Name("target") or "Threat")
-    f.hint:SetShown(not self.db.locked)
     f.empty:SetText(message or "");f.empty:SetShown(message~=nil)
     local T=addon.InterfaceTheme
     local shown=math.min(#entries,self.MAX_ROWS)
@@ -342,12 +340,23 @@ function M:OnEnable()
     -- Tolerate events the Forever client may not define.
     for _,event in ipairs(EVENTS) do pcall(self.frame.RegisterEvent,self.frame,event) end
     self:Update()
+    self:RegisterPosition()
 end
 
+function M:SetEditMode(enabled)
+    self.editing=enabled and self.active or false
+    local element=addon.PositionManager.elements.threatMeter
+    if element then element.editMode=self.active==true end
+    self:Update()
+end
+function M:SetPreviewMode(enabled) self.previewing=enabled and self.active or false;self:Update() end
+
 function M:OnDisable()
-    self.active=false
+    self.active,self.editing,self.previewing=false,false,false
     if not self.frame then return end
     self:StopDrag()
     self.frame:UnregisterAllEvents()
+    local element=addon.PositionManager.elements.threatMeter
+    if element then element.editMode=false end
     self:Update()
 end

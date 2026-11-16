@@ -150,7 +150,7 @@ assert(M.db.sessionFont=='chat' and M.db.font=='game' and M.db.sessionOpacity==6
 assert(M.db.restedOverlayColor[1]==0.9 and M.db.questColor[2]==0.8,'overlay colors survive reload')
 local p=addon.PositionManager:GetPosition(M.id);assert(p.x==125 and p.y==-210)
 SlashCmdList.PLAYTHEGAMETOOLS();addon:SelectConfigPage(M.id)
-assert(M.page and M.page.resetPositionButton and M.page.xPositionInput)
+assert(M.page and not M.page.resetPositionButton and not M.page.xPositionInput,'placement lives in Edit Mode')
 ''')
 legacy, _ = load(before=SETUP)
 legacy.execute('''

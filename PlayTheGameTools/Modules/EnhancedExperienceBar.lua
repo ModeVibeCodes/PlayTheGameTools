@@ -87,6 +87,7 @@ function M:SetOption(key, value)
     if key == "barChoice" or key == "hideBlizzardXP" or key == "hideEllesmereXP" then
         self:SyncOtherBars(); addon.EditMode:RefreshElements()
     end
+    if key == "showSession" or key == "showRate" then self:SyncSessionTicker() end
     self:ApplyAppearance(); if self.page then self.page:Refresh() end
     return true
 end
@@ -188,6 +189,9 @@ function M:ScanQuests(force)
 end
 function M:OnInitialize()
     self.Initialize(self.db)
+    -- "Use Existing Bar" was a second off switch. Keep its visible result
+    -- (PTG bar hidden, other bars untouched) with the one module switch.
+    if self.db.barChoice == "existing" then self.db.barChoice, self.db.enabled = "ptg", false end
     self.sessionXP, self.questXP, self.questKnown = 0, 0, false
     self.positionElementId = self.id
     self:CreateDisplay()
@@ -218,9 +222,18 @@ function M:OnEnable()
         end
         self:Render()
     end)
-    -- Only clock text ticks; XP/log data are read on events, never polled.
-    self.tick = C_Timer.NewTicker(1, function() if self.active then self:RenderSession() end end)
+    self:SyncSessionTicker()
     self:Refresh()
+end
+-- Only clock text ticks; XP/log data are read on events, never polled. The
+-- ticker exists only while the module is on and session text is shown.
+function M:SyncSessionTicker()
+    local wanted = self.active and (self.db.showSession or self.db.showRate) or false
+    if wanted and not self.tick then
+        self.tick = C_Timer.NewTicker(1, function() if self.active then self:RenderSession() end end)
+    elseif not wanted and self.tick then
+        self.tick:Cancel(); self.tick = nil
+    end
 end
 function M:OnDisable()
     self.active, self.editing, self.preview = false, false, false

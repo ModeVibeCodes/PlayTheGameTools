@@ -100,7 +100,7 @@ function UI.New(page, module)
         -- not per-letter colour ramps.
         button.label:SetText(text); button:SetLabelColor(color or T.text)
         button:SetSelected(options.selected == true)
-        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and (T.id=="mode" and 20 or 16) or (options.subheader and 14 or (options.expandedItem and 14 or 12)))
+        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, options.heading and 20 or (options.subheader and 14 or (options.expandedItem and 14 or 12)))
         button:EnableMouse(callback ~= nil or item ~= nil)
         button.fill:SetShown(callback ~= nil or item ~= nil); button.outline:SetShown(callback ~= nil or item ~= nil)
         if item or options.portrait then
@@ -110,23 +110,10 @@ function UI.New(page, module)
             slot.icon:Show()
             if options.portrait then button.label:ClearAllPoints();button.label:SetPoint("TOPLEFT", options.compact and 60 or 86, options.compact and -10 or -24);button.label:SetPoint("TOPRIGHT", -12, options.compact and -10 or -24) end
         end
-        if (options.heading or options.subheader) and T.id~="mode" then
-            slot.headerGlow=slot.headerGlow or {}
-            local offsets={{-1,0},{1,0},{0,-1},{0,1}}
-            local face,size=button.label:GetFont()
-            for index,offset in ipairs(offsets) do
-                local glow=slot.headerGlow[index] or button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
-                slot.headerGlow[index]=glow
-                glow:SetFont(addon.Media:GetInterfaceFont(face),size,"OUTLINE");glow:SetAlpha(.12);glow:SetJustifyH("LEFT");glow:SetJustifyV("TOP");glow:SetWordWrap(true)
-                glow:ClearAllPoints();glow:SetPoint("TOPLEFT",button.label,"TOPLEFT",offset[1],offset[2]);glow:SetPoint("TOPRIGHT",button.label,"TOPRIGHT",offset[1],offset[2])
-                glow:SetText(button.label:GetText());glow:Show()
-            end
-        end
         -- Modest line leading with tighter surrounding padding in quest detail.
         local questDetail=module.view.tab=="quests" and page==module.page.detailPane
         button.label:SetSpacing(questDetail and 4 or 0)
         slot.subtitle:SetSpacing(questDetail and 4 or 0)
-        for _,glow in ipairs(slot.headerGlow or {}) do glow:SetSpacing(questDetail and 4 or 0) end
         slot.row.gapAfter=questDetail and 2 or 4
         local questText=questDetail and not item and not options.portrait
         slot.control:ClearAllPoints()
@@ -152,7 +139,7 @@ function UI.New(page, module)
             local height = button.label:GetStringHeight() + padding
             if options.subtitle then height = height + slot.subtitle:GetStringHeight() + 6 end
             self:SetHeight(math.max(options.portrait and (options.compact and 68 or 90) or (item and 54 or (questText and (options.heading and 28 or 18) or (options.heading and 40 or (options.subtitle and 56 or 40)))), height + (item and 8 or 0)))
-            if T.id=="mode" and options.heading then
+            if options.heading then
                 if not slot.modeHeadingRule then slot.modeHeadingRule,slot.alignModeHeading=W.ModeHeadingRule(button,button.label) end
                 slot.modeHeadingRule:Show();slot.alignModeHeading()
             elseif slot.modeHeadingRule then slot.modeHeadingRule:Hide() end

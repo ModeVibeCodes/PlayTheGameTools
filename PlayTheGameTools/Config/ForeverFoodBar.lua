@@ -14,10 +14,6 @@ function F:AddConfig(page)
     local text=W.Label(page:Row("Food Bar Status",100),"",nil,0,-4,280,addon.Theme.muted);text:SetWordWrap(true)
     local refresh=W.Button(page:Row("Carried Items",48),"Refresh Bags",180,28);refresh:SetPoint("LEFT")
     refresh:SetScript("OnClick",function() if D.OutsideCombat() then self:Scan();self:Render();page:Refresh() end end)
-    local help=W.Label(page:Row("Food Selection",112),"Select your food below. Native food/drink candidates include drinks; leave those unselected. Include Bandages adds carried bandages. The bar is manual and out of combat only. Its Hide button turns off Show Food Bar; return here to show it again.",nil,0,-4,280,addon.Theme.muted)
-    help:SetWordWrap(true)
-    if addon.InterfaceTheme.id=="mode" then help:SetText(help:GetText():gsub("Select your food below%.","Select your food from the list.")) end
-    page:FooterNote(help)
     page.foodCells={}
     for i=1,self.limit do
         local cell=page:ToggleGrid({{label="Food item "..i,
@@ -52,11 +48,4 @@ function F:AddConfig(page)
     W.ColorRow(page,owner,"Food Background Color","backgroundColor");Slider("Food Background Opacity","backgroundOpacity","%")
     W.ColorRow(page,owner,"Food Border Color","borderColor");Slider("Food Border Opacity","borderOpacity","%")
     W.ColorRow(page,owner,"Food Text Color","textColor")
-    page:Section("Food Positioning")
-    Toggle("Lock Food Bar","locked")
-    Slider("Food Horizontal Offset","x");Slider("Food Vertical Offset","y")
-    local reset=W.Button(page:Row("Food Screen Position",48),"Reset Food Position",180,28);reset:SetPoint("LEFT")
-    reset:SetScript("OnClick",function()
-        if D.OutsideCombat() then self.db.x=0;self.db.y=-260;self:Render();page:Refresh() end
-    end)
 end

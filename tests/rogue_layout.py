@@ -38,13 +38,9 @@ M:SetOption('reminderVisibility','always');testCombat=true;testLockdown=true;Fir
 testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED');M:SetOption('reminderVisibility','needed')
 -- Settings presentation, class branding and family actions.
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue');local p=M.page
-assert(#p.sections==3 and p.sections[1].title=='Display' and p.sections[2].title=='Settings' and p.sections[3].title=='Position')
+assert(#p.sections==2 and p.sections[1].title=='Display' and p.sections[2].title=='Settings','placement lives in Edit Mode')
 local h=addon.configWindow.moduleHeader
 assert(h.classIcon==nil and not h.title:IsShown(),'No duplicate class icon below the tab')
-local classTab=addon.configWindow.navigationButtons.foreverRogue
-assert(classTab.classIcon.texture==M.classIcon and classTab:GetWidth()<120)
-local point,relative,relativePoint,gap=classTab.status:GetPoint(1)
-assert(point=='LEFT' and relative==classTab.label and relativePoint=='RIGHT' and gap==8,'On status follows the Rogue label closely')
 assert(addon.configWindow.sidebarModuleButtons.foreverRogue.classIcon.texture==M.classIcon,'Class icon appears in the left subcategory')
 assert(p.poisonGrid[1].label:GetText()=='Recent' and p.poisonGrid[4].label:GetText()=='Crippling')
 assert(p.poisonGrid[2].available and p.poisonGrid[4].icon.desaturated and not p.poisonGrid[4]:IsEnabled())
@@ -58,10 +54,7 @@ M:SetStyle('launcherStyle','showNames',true);p.launcherLabelInput:SetText('Poiso
 assert(M.openButton.label:GetText()=='Poison Kit' and M.openButton.label:IsShown())
 assert(not M:SetStyle('launcherStyle','labelText','bad|text'))
 M:SetStyle('launcherStyle','labelPosition','TOP');assert(M.db.launcherStyle.labelPosition=='TOP')
--- Paired controls cap their widths and wrap on narrower settings canvases.
-p.scroll.width=650;p:Layout();local x=p.poisonSliders['root:x'];local y=p.poisonSliders['root:y']
-assert(x:GetParent():GetWidth()<=260 and y:GetParent():GetWidth()<=260)
-assert(x:GetParent():GetPoint(1)=='TOPLEFT' and y:GetParent().points[1][4]>0)
+assert(not p.poisonSliders['root:x'] and not p.poisonSliders['root:y'],'no page-level position sliders')
 -- Shared Edit Mode highlights and active selection, not a parallel local mover.
 assert(M:EnterElementEdit(false));assert(addon.editMode and PM.selected=='roguePoisonReminder')
 local a,b=PM.elements.roguePoisonReminder,PM.elements.rogueQuickPoisons
@@ -81,10 +74,12 @@ addon:SetEditMode(false);assert(not a.decoration.frame:IsShown() and not b.decor
 M:SetOption('watcher',true);M:SetOption('x',45);M:SetOption('y',-50)
 assert(PM:GetPosition(a.id).x==45 and PM:GetPosition(a.id).y==-50)
 M:ResetElementPosition(false);assert(M.db.x==0 and M.db.y==-140)
-M:SetOption('flyoutLocked',false);M.launcher.centerX=580;M.launcher.centerY=430
+M:SetOption('flyoutLocked',false);M.openButton.scripts.OnDragStart();assert(not M.launcher.moving,'saved unlock no longer moves outside Edit Mode')
+M.openButton.scripts.OnDragStop()
+assert(M:EnterElementEdit(true));M.launcher.centerX=580;M.launcher.centerY=430
 M.openButton.scripts.OnDragStart();assert(M.launcher.moving)
 M.openButton.scripts.OnDragStop();assert(M.db.menuX==80 and M.db.menuY==30)
-M:SetOption('flyoutLocked',true)
+addon:SetEditMode(false);M:SetOption('flyoutLocked',true)
 addon:SelectConfigPage('combatTimer');assert(h.title:IsShown() and h.classIcon==nil,'Non-class header restored')
 M:SetStyle('watchStyle','backgroundOpacity',50);M:SetStyle('watchStyle','borderSize',3);M:MinimalReminder()
 assert(M.db.watchStyle.backgroundOpacity==0 and M.db.watchStyle.borderSize==0 and not M.db.watchStyle.showTimers)
@@ -102,4 +97,4 @@ local custom={watchStyle={backgroundOpacity=45,borderSize=3,showTimers=true,cust
 M.Initialize(custom);assert(custom.watchStyle.backgroundOpacity==45 and custom.watchStyle.borderSize==3 and custom.watchStyle.showTimers and custom.watchStyle.custom=='preserve')
 assert(not M:SetOption('quickApply','family:9999') and not M:SetOption('reminderVisibility','bad'))
 ''')
-print('PASS Rogue layout: dismissal/rearm/combat, three-section UI, family grid, minimal migration, labels, paired controls, class branding, shared Edit Mode highlights/drag/coordinates, persistence')
+print('PASS Rogue layout: dismissal/rearm/combat, two-section UI, family grid, minimal migration, labels, paired controls, class branding, shared Edit Mode highlights/drag/coordinates, persistence')

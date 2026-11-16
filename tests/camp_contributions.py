@@ -114,10 +114,13 @@ local saved=GetProfessionInfo
 GetProfessionInfo=function(index) if index==11 then return 'Herbalism',135805,300,300,1,0,182 end;return saved(index) end
 FireEvent('SKILL_LINES_CHANGED');assert(#A.items==0 and not A.window:IsShown(),'profession loss')
 GetProfessionInfo=saved;FireEvent('SKILL_LINES_CHANGED');assert(A.window:IsShown())
-A.window.centerX=550;A.window.centerY=450
-A.window.header.scripts.OnDragStart();assert(A.window.dragging)
+A.window.header.scripts.OnDragStart();assert(not (addon.PositionManager.elements.campfireContributions or {}).dragging,'never moves outside Edit Mode')
 local anchor=A.window.anchor;FireEvent('BAG_UPDATE_DELAYED');assert(A.window.anchor==anchor)
+A.window.header.scripts.OnDragStop()
+assert(addon:SetEditMode(true));A.window.centerX=550;A.window.centerY=450
+A.window.header.scripts.OnDragStart();assert((addon.PositionManager.elements.campfireContributions or {}).dragging)
 A.window.header.scripts.OnDragStop();assert(C.db.contributionX==50 and C.db.contributionY==50)
+addon:SetEditMode(false)
 C:SetOption('showContributionPopup',false)
 assert(C.active and not A.active and not next(A.events.events) and not A.window:IsShown())
 C:SetOption('showContributionPopup',true);assert(A.active and A.window:IsShown())

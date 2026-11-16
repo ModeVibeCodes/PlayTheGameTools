@@ -18,29 +18,26 @@ function F:Select(id,value)
     if not pcall(F.Initialize,candidate) then return false end
     self.db.selected[id]=value;self:Render();return true
 end
+-- Edit Mode owns placement: the bar and its buttons forward drags to it.
+local ELEMENT="foreverFoodBar"
 function F:StopDrag()
-    local f=self.bar;if not f or not f.dragging then return end
-    f:StopMovingOrSizing();f.dragging=nil
-    local x,y=f:GetCenter();local cx,cy=UIParent:GetCenter();local scale=f:GetScale()
-    if D.Number(x,-100000,100000) and D.Number(y,-100000,100000) and
-        D.Number(cx,-100000,100000) and D.Number(cy,-100000,100000) then
-        self.db.x=math.floor(x*scale-cx+0.5);self.db.y=math.floor(y*scale-cy+0.5)
-    end
+    if addon.PositionManager.elements[ELEMENT] then addon.PositionManager:StopDragging(ELEMENT) end
+end
+function F:RegisterPosition()
+    local ok,element=addon.PositionManager:RegisterModuleDisplay(ELEMENT,self.bar,self.owner,{
+        db=self.db,label="Food Bar",defaultX=0,defaultY=-260,
+        canDrag=function() return self.active==true end,
+        onRegistered=function() self:Render();addon.PositionManager:RefreshSelection() end})
+    if ok then element.editMode=self.active and self.db.enabled and self.db.shown and self.bar:IsShown() or false end
 end
 function F:CreateBar()
     if self.bar or not D.OutsideCombat() then return end
     local bar=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.bar=bar
-    bar:Hide();bar:SetMovable(true);bar:SetClampedToScreen(true);bar:EnableMouse(true)
-    bar:RegisterForDrag("LeftButton");bar:SetFrameStrata("MEDIUM")
+    bar:Hide();bar:SetClampedToScreen(true);bar:EnableMouse(true)
+    bar:SetFrameStrata("MEDIUM")
     addon.Media:ApplyBackdrop(bar,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverQuickAccess")
-    local function start()
-        if self.active and D.OutsideCombat() and (not self.db.locked or self.owner.editing) then
-            bar:StartMoving();bar.dragging=true
-        end
-    end
+    local function start() addon.PositionManager:StartDragging(ELEMENT) end
     local function stop() self:StopDrag() end
-    bar:SetScript("OnDragStart",start);bar:SetScript("OnDragStop",stop)
-    bar:SetScript("OnHide",stop)
     self.buttons={}
     for i=1,self.limit do
         -- Native template owns item-use dispatch and enforces its OOC guard.
@@ -72,6 +69,8 @@ end
 function F:Render()
     if not self.active or not self.db.enabled or not self.db.shown or not D.OutsideCombat() then
         if self.bar then self.bar:Hide() end
+        local element=addon.PositionManager.elements[ELEMENT]
+        if element and D.OutsideCombat() then element.editMode=false;addon.PositionManager:RefreshSelection() end
         return
     end
     if not C_Macro or type(C_Macro.RunMacroText)~="function" then
@@ -80,8 +79,10 @@ function F:Render()
     self:CreateBar();if self.blocked or not self.bar then return end
     local items=self:VisibleItems();local bar,db=self.bar,self.db
     local w,h,columns,cellHeight=D.Geometry(#items,db)
-    bar:SetSize(w,h);bar:SetScale(db.scale/100);bar:ClearAllPoints()
-    bar:SetPoint("CENTER",UIParent,"CENTER",db.x/(db.scale/100),db.y/(db.scale/100))
+    bar:SetSize(w,h);bar:SetScale(db.scale/100)
+    if not addon.PositionManager.elements[ELEMENT] then
+        bar:ClearAllPoints();bar:SetPoint("CENTER",UIParent,"CENTER",db.x/(db.scale/100),db.y/(db.scale/100))
+    end
     bar:SetBackdropColor(db.backgroundColor[1],db.backgroundColor[2],db.backgroundColor[3],db.backgroundOpacity/100)
     bar:SetBackdropBorderColor(db.borderColor[1],db.borderColor[2],db.borderColor[3],db.borderOpacity/100)
     for i,b in ipairs(self.buttons) do
@@ -100,13 +101,22 @@ function F:Render()
             end
             b.label:SetWidth(db.iconSize);b.label:SetText(p.name);b.label:SetShown(db.showNames)
             b.count:SetText(tostring(p.count))
-            if db.locked and not self.owner.editing and not self.owner.previewing then
+            if not self.owner.editing and not self.owner.previewing then
                 b:SetAttribute("macrotext1","/stopmacro [combat]\n/use [nocombat,@player] item:"..p.id)
                 b:SetAttribute("type1","macro")
             end
         end
     end
-    bar:SetShown(#items>0)
+    -- Edit Mode shows an empty bar as a labeled placeholder so it can be placed.
+    local placeholder=#items==0 and self.owner.editing==true
+    if not bar.placeholder then
+        bar.placeholder=bar:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        bar.placeholder:SetPoint("CENTER");bar.placeholder:SetText("Food")
+    end
+    bar.placeholder:SetShown(placeholder)
+    bar:SetShown(#items>0 or placeholder)
+    self:RegisterPosition()
+    if addon.PositionManager.elements[ELEMENT] then addon.PositionManager:ApplyPosition(ELEMENT) end
 end
 function F:Refresh()
     if not self.active then return end

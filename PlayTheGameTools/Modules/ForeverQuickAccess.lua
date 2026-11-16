@@ -54,31 +54,31 @@ function M:RefreshProfessions()
     self:Render()
     if self.page then self.page:Refresh() end
 end
+-- Edit Mode owns placement: icons forward drags to the Position Manager.
+local ELEMENT="foreverQuickAccess"
 function M:StopDrag()
-    local f=self.bar
-    if not f or not f.dragging then return end
-    f:StopMovingOrSizing();f.dragging=nil
-    local x,y=f:GetCenter();local cx,cy=UIParent:GetCenter()
-    local scale=f:GetScale()
-    if D.Number(x,-100000,100000) and D.Number(y,-100000,100000) and
-        D.Number(cx,-100000,100000) and D.Number(cy,-100000,100000) then
-        self.db.x=math.floor(x*scale-cx+0.5);self.db.y=math.floor(y*scale-cy+0.5)
-    end
+    if addon.PositionManager.elements[ELEMENT] then addon.PositionManager:StopDragging(ELEMENT) end
+end
+function M:RegisterPosition()
+    local ok,element=addon.PositionManager:RegisterModuleDisplay(ELEMENT,self.bar,self,{
+        label="Profession Bar",defaultX=0,defaultY=-180,
+        canDrag=function() return self.active==true end,
+        onHighlight=function() self:UpdateVisibility() end,
+        onRegistered=function() self:Render();addon.PositionManager:RefreshSelection() end})
+    if ok then element.editMode=self.active and self.db.showProfessionBar and ((self.visibleCount or 0)>0 or self.editing==true) or false end
 end
 function M:CreateBar()
     if self.bar then return end
     local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate");self.bar=f
-    f:SetMovable(true);f:SetClampedToScreen(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
+    f:SetClampedToScreen(true);f:EnableMouse(true)
     f:SetFrameStrata("MEDIUM");f.buttons={}
+    f.placeholder=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+    f.placeholder:SetPoint("CENTER");f.placeholder:SetText("Professions");f.placeholder:Hide()
     addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverQuickAccess")
-    local function start()
-        if self.active and D.OutsideCombat() and (not self.db.locked or self.editing) then
-            f:StartMoving();f.dragging=true
-        end
-    end
+    local function start() addon.PositionManager:StartDragging(ELEMENT) end
     local function stop() self:StopDrag() end
-    f:SetScript("OnDragStart",start);f:SetScript("OnDragStop",stop)
-    f:SetScript("OnHide",function() stop();f:SetScript("OnUpdate",nil) end)
+    f.fader=CreateFrame("Frame",nil,f)
+    f:SetScript("OnHide",function() f.fader:SetScript("OnUpdate",nil) end)
     local function enter() self.hover=true;self:UpdateVisibility() end
     local function leave() self.hover=false;self:UpdateVisibility() end
     f:SetScript("OnEnter",enter);f:SetScript("OnLeave",leave)
@@ -92,7 +92,7 @@ function M:CreateBar()
         button.label=button:CreateFontString(nil,"OVERLAY","GameFontHighlight")
         button.label:SetPoint("TOP",button,"BOTTOM",0,-3)
         button:SetScript("OnClick",function()
-            if self.db.locked and not self.editing and button.profession then self:OpenProfession(button.profession.id) end
+            if not self.editing and button.profession then self:OpenProfession(button.profession.id) end
         end)
         button:SetScript("OnEnter",function()
             enter()
@@ -101,7 +101,7 @@ function M:CreateBar()
                 GameTooltip:SetOwner(button,"ANCHOR_TOP");GameTooltip:SetText(p.name)
                 if p.rank and p.maxRank then GameTooltip:AddLine(p.rank.." / "..p.maxRank,0.7,0.8,0.9) end
                 GameTooltip:AddLine(not D.OutsideCombat() and "Unavailable in combat" or
-                    ((not self.db.locked or self.editing) and "Drag to move; lock to open professions" or "Click to open profession"),0.7,0.8,0.9)
+                    (self.editing and "Drag to move" or "Click to open profession"),0.7,0.8,0.9)
                 GameTooltip:Show()
             end
         end)
@@ -116,8 +116,10 @@ function M:Render()
     for _,p in ipairs(self.professions) do if not db.hidden[p.id] then visible[#visible+1]=p end end
     self.visibleCount=#visible
     local w,h,columns,cellHeight=D.Geometry(#visible,db)
-    f:SetScale(db.scale/100);f:SetSize(w,h);f:ClearAllPoints()
-    f:SetPoint("CENTER",UIParent,"CENTER",db.x/(db.scale/100),db.y/(db.scale/100))
+    f:SetScale(db.scale/100);f:SetSize(w,h)
+    if not addon.PositionManager.elements[ELEMENT] then
+        f:ClearAllPoints();f:SetPoint("CENTER",UIParent,"CENTER",db.x/(db.scale/100),db.y/(db.scale/100))
+    end
     f:SetBackdropColor(db.backgroundColor[1],db.backgroundColor[2],db.backgroundColor[3],db.backgroundOpacity/100)
     f:SetBackdropBorderColor(db.borderColor[1],db.borderColor[2],db.borderColor[3],db.borderOpacity/100)
     for i,button in ipairs(f.buttons) do
@@ -135,31 +137,41 @@ function M:Render()
             button.label:SetTextColor(unpack(db.textColor));button.label:SetShown(db.showNames)
         end
     end
+    if D.OutsideCombat() then
+        self:RegisterPosition()
+        if addon.PositionManager.elements[ELEMENT] then addon.PositionManager:ApplyPosition(ELEMENT) end
+    end
     self:UpdateVisibility()
 end
 function M:UpdateVisibility()
     local f=self.bar;if not f then return end
+    local element=addon.PositionManager.elements[ELEMENT]
+    if element and element.dragging then return end
     local outside=D.OutsideCombat()
     local target=outside and self.db.outOpacity/100 or self.db.combatOpacity/100
-    if outside and (not self.db.locked or self.editing or self.previewing or (self.hover and self.db.hoverReveal)) then target=1 end
-    local shown=self.active and self.db.showProfessionBar and (self.visibleCount or 0)>0
+    if outside and (self.editing or self.previewing or (self.hover and self.db.hoverReveal)) then target=1 end
+    -- Edit Mode shows an empty bar as a labeled placeholder so it can be placed.
+    local shown=self.active and self.db.showProfessionBar and ((self.visibleCount or 0)>0 or self.editing==true)
+    if f.placeholder then f.placeholder:SetShown(shown and (self.visibleCount or 0)==0) end
     f:SetShown(shown)
     if not shown then return end
     -- Fully invisible bars pass clicks through. Visible combat icons cannot open pages.
     f:EnableMouse(target>0)
     for _,button in ipairs(f.buttons) do button:EnableMouse(target>0) end
-    f:SetScript("OnUpdate",nil)
+    local fader=f.fader
+    fader:SetScript("OnUpdate",nil)
     local from=f:GetAlpha();local duration=self.db.fadeDuration
     if duration==0 or math.abs(from-target)<0.001 then f:SetAlpha(target);return end
     local elapsed=0
-    f:SetScript("OnUpdate",function(_,dt)
+    fader:SetScript("OnUpdate",function(_,dt)
         elapsed=elapsed+dt;local t=math.min(1,elapsed/duration)
         f:SetAlpha(from+(target-from)*t)
-        if t==1 then f:SetScript("OnUpdate",nil) end
+        if t==1 then fader:SetScript("OnUpdate",nil) end
     end)
 end
 function M:SetEditMode(value)
-    self.editing=value;self:UpdateVisibility()
+    self.editing=value
+    if self.active then self:Render() else self:UpdateVisibility() end
     if addon.ForeverFoodBar then addon.ForeverFoodBar:Render() end
 end
 function M:SetPreviewMode(value)

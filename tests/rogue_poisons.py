@@ -134,14 +134,13 @@ testCombat=false;testLockdown=false;Poison(0,301);FireEvent('PLAYER_REGEN_ENABLE
 assert(not M.watchButtons[1]:IsShown());Poison(0,299)
 testCombat=true;testLockdown=true;FireEvent('PLAYER_REGEN_DISABLED');assert(M.watchButtons[1]:IsShown(),'Threshold crossed during combat')
 testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED')
--- Watcher and flyout are independent; unlocking and preview keep use inert.
+-- Watcher and flyout are independent; preview and Edit Mode keep use inert.
 M:SetOption('watcher',false);assert(not M.watcher:IsShown() and M.launcher:IsShown())
 Click(M.openButton);assert(M.menu:IsShown());n=#applications
-M:SetOption('flyoutLocked',false);Click(deadly[1]);assert(#applications==n)
-M:SetOption('flyoutLocked',true);M:SetOption('watcher',true);M:SetPreviewMode(true)
+M:SetOption('watcher',true);M:SetPreviewMode(true)
 Click(M.watchButtons[1]);assert(#applications==n and M.menu:IsShown(),'Expanded preview is inert')
-M:SetPreviewMode(false);M:SetOption('locked',false);Click(M.watchButtons[1]);assert(#applications==n)
-M:SetOption('locked',true)
+M:SetPreviewMode(false);addon:SetEditMode(true);Click(M.watchButtons[1]);assert(#applications==n,'Edit Mode is inert')
+addon:SetEditMode(false)
 -- Independent geometry, colors, font, label and timer controls apply immediately.
 local menuSize=M.db.flyoutStyle.iconSize
 assert(M:SetStyle('watchStyle','iconSize',60) and M.db.flyoutStyle.iconSize==menuSize)

@@ -102,10 +102,9 @@ Config\ModeLayout.lua
 Config\Previews.lua
 Config\Search.lua
 Config\FontDropdown.lua
-Config\PositionControls.lua
+Config\Select.lua
 Config\GlowControls.lua
 Config\Developer.lua
-Config\Categories.lua
 Config\Profiles.lua
 Config\GlobalSettings.lua
 Config\Reload.lua

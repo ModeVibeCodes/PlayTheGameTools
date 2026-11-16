@@ -384,6 +384,16 @@ local BUTTON = {
     underline = {
         label = "muted", hoverLabel = "text", selectedLabel = "text",
     },
+    -- Navigation pills and panel sub-tabs exist in every theme; only colors,
+    -- borders and textures differ.
+    roundedTab = {
+        fill = "surface", line = "line", label = "secondary",
+        hoverFill = "hover", hoverLabel = "text", selectedLine = "primary", selectedLabel = "primary",
+    },
+    subTab = {
+        line = "line", label = "muted", hoverLabel = "text",
+        selectedFill = "surface", selectedLine = "primary", selectedLabel = "primary",
+    },
 }
 -- List rows draw exactly like plain buttons in Modern; in Blizzard they are
 -- stock list rows rather than push buttons.
@@ -413,6 +423,14 @@ local MODERN_BUTTON = {
     },
     underline = {
         label = "secondary", hoverLabel = "text", selectedLabel = "text",
+    },
+    roundedTab = {
+        fill = "surface", line = "lineStrong", label = "secondary",
+        hoverFill = "hover", hoverLabel = "text", selectedLine = "primary", selectedLabel = "primary",
+    },
+    subTab = {
+        line = "line", label = "secondary", hoverFill = "hover", hoverLabel = "text",
+        selectedFill = "surface", selectedLine = "primary", selectedLabel = "primary",
     },
 }
 MODERN_BUTTON.row = MODERN_BUTTON.button
@@ -454,7 +472,7 @@ function W.Button(parent, text, width, height, style)
         return W.Switch(button, text, height, style)
     end
     -- Resolved per button: the theme is applied after this file loads.
-    local recipe = (T.id == "mode" and style == "categoryHeading" and MODE_HEADING)
+    local recipe = (style == "categoryHeading" and MODE_HEADING)
         or (not T.blizzardArt and MODERN_BUTTON[style]) or BUTTON[style] or BUTTON.button
     button.fill = W.Fill(button, T.surface, T.id=="mode" and style=="roundedTab" and "ARTWORK" or "BACKGROUND")
     if T.id=="mode" then
@@ -469,9 +487,9 @@ function W.Button(parent, text, width, height, style)
     -- Kept for consumers that tint the selected state directly.
     button.activeGlow = W.Fill(button, T.primary, "ARTWORK", 0, 0.08)
     button.activeGlow:Hide()
-    if recipe.edge or T.id == "mode" then
-        -- Selected navigation rows carry an accent bar on the leading edge
-        -- (3px in Modern, where it is the main "you are here" marker).
+    if recipe.edge or T.id == "mode" or style == "roundedTab" or style == "subTab" or style == "categoryHeading" then
+        -- One selection marker for every theme: an accent line under the
+        -- visible label. Its color/texture come from the theme.
         button.selectionEdge = W.Fill(button, T.primary, "OVERLAY")
         button.selectionEdge:ClearAllPoints()
         button.selectionEdge:SetPoint("TOPLEFT"); button.selectionEdge:SetPoint("BOTTOMLEFT")
@@ -581,7 +599,7 @@ function W.Button(parent, text, width, height, style)
             self.label:SetShadowOffset(0, -1)
         end
         if self.selectionEdge then
-            if T.id=="mode" then W.AlignTextLine(self,self.selectionEdge) end
+            W.AlignTextLine(self,self.selectionEdge)
             self.selectionEdge:SetShown(selected)
         end
         if self.blizzardHighlight then
@@ -610,7 +628,7 @@ function W.Button(parent, text, width, height, style)
     button:HookScript("OnMouseDown",function(self) self.pressed=true;self:RefreshAppearance() end)
     button:HookScript("OnMouseUp",function(self) self.pressed=false;self:RefreshAppearance() end)
     button:HookScript("OnHide",function(self) self.hovered=false;self.pressed=false;self:RefreshAppearance() end)
-    if T.id=="mode" then
+    if button.selectionEdge then
         addon.Media:RegisterFontListener(button,function(owner) W.AlignTextLine(owner,owner.selectionEdge) end)
         button:HookScript("OnSizeChanged",function(owner) W.AlignTextLine(owner,owner.selectionEdge) end)
     end
@@ -681,14 +699,16 @@ function W.Switch(button, text, height, style)
         -- a separate frame can leave bright fill pixels visible past its edge.
         frame.modeBorderAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
     end
-    local outline = W.Outline(frame, T.lineStrong, T.id=="mode" and "BACKGROUND" or "BORDER")
-    local track = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "ARTWORK" or "BACKGROUND")
+    -- One construction for every theme: the frame owns rim, track and mark.
+    local outline = W.Outline(frame, T.lineStrong, "BACKGROUND")
+    local track = frame:CreateTexture(nil, "ARTWORK")
     track:SetPoint("CENTER",frame,"CENTER",0,0); track:SetSize(w, h)
     if T.id=="mode" then
+        -- The mode sprite carries its own rim, so its interior sits 1 unit in.
         track:SetSize(w-2,h-2)
         track.modeAsset=toggle and "ModeToggleSurface" or "ModeCheckSurface"
     end
-    local mark = (T.id=="mode" and frame or button):CreateTexture(nil, T.id=="mode" and "OVERLAY" or "ARTWORK")
+    local mark = frame:CreateTexture(nil, "OVERLAY")
     if T.id=="mode" then mark.modeAsset=toggle and "ModeThumb" or "ModeCheckMark" end
     mark:SetSize(toggle and 12 or 10, toggle and 12 or 10)
     button.fill, button.knob, button.switchOutline = track, mark, outline
@@ -821,8 +841,8 @@ function W.NumericInput(parent, getter, setter, minimum, maximum, width, decimal
     input:SetAutoFocus(false)
     input:SetMaxLetters(9)
     input:SetFontObject(GameFontHighlight)
-    input:SetTextInsets(T.id=="mode" and 4 or 8,T.id=="mode" and 4 or 8,0,0)
-    if T.id=="mode" then input:SetJustifyH("CENTER") end
+    input:SetTextInsets(4,4,0,0)
+    input:SetJustifyH("CENTER")
     addon.Media:BindInterfaceFont(input, GameFontHighlight)
     W.CrispText(input)
     W.Texture(input, "InputField")
@@ -865,7 +885,7 @@ function W.ScrollThumb(bar, height)
     local thumb = W.Texture(bar, "ScrollThumb", "OVERLAY")
     thumb:ClearAllPoints()
     if T.id=="mode" then thumb.modeAsset="ModeScrollThumb";Paint(thumb,T.lineStrong) end
-    thumb:SetSize(T.id=="mode" and 2 or 4, height)
+    thumb:SetSize(4, height)
     thumb:SetVertexColor(unpack(T.lineStrong))
     bar:SetThumbTexture(thumb)
     bar:HookScript("OnEnter", function() thumb:SetVertexColor(unpack(T.muted)) end)
@@ -884,7 +904,7 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     local label = W.Label(parent, "", nil, 0, -8, 52, T.secondary)
     label:ClearAllPoints()
     label:SetPoint("RIGHT", 0, 0)
-    label:SetJustifyH(T.id=="mode" and "CENTER" or "RIGHT")
+    label:SetJustifyH("CENTER")
     local slider = CreateFrame("Slider", nil, parent)
     slider:SetPoint("LEFT", 0, 0)
     slider:SetPoint("RIGHT", -62, 0)
@@ -893,10 +913,10 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     slider:SetMinMaxValues(minimum, maximum)
     slider:SetValueStep(step)
     slider:SetObeyStepOnDrag(true)
-    -- Modern draws a thicker track at control-edge contrast and a larger thumb
-    -- so the slider reads as draggable; Blizzard keeps its hairline.
+    -- Same track and thumb geometry in every theme; Blizzard only swaps in
+    -- its stock track/knob art.
     local modern = not T.blizzardArt
-    local trackHeight = modern and 4 or 2
+    local trackHeight = 4
     local track = W.Texture(slider, "SliderTrack")
     track:ClearAllPoints()
     track:SetPoint("LEFT", 0, 0); track:SetPoint("RIGHT", 0, 0); track:SetHeight(trackHeight)
@@ -906,7 +926,7 @@ function W.Slider(parent, minimum, maximum, step, getter, setter, suffix, numeri
     progress:SetPoint("LEFT", 0, 0); progress:SetHeight(trackHeight); progress:SetWidth(1)
     local thumb = W.Texture(slider, "SliderThumb", "OVERLAY")
     thumb:ClearAllPoints()
-    thumb:SetSize(modern and 10 or 8, modern and 20 or 16)
+    thumb:SetSize(10, 20)
     if T.id=="mode" then thumb.modeAsset="ModeSliderThumb";Paint(thumb,T.text) end
     thumb:SetVertexColor(unpack(T.text))
     -- Blizzard: the stock slider knob, untinted.

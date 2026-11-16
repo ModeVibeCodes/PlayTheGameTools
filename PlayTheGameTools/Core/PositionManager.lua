@@ -124,6 +124,61 @@ function PM:RegisterElement(id, frame, options)
     if not element.legacy then self:ApplyPosition(id) end
     return true, element
 end
+-- Shared registration for module displays that saved screen offsets in their
+-- own settings before Edit Mode owned placement. The first registration seeds
+-- the managed position from those keys; afterwards the keys only mirror plain
+-- screen-centre offsets, so older profiles and exports keep working. Dragging
+-- and offsets are then identical to every other Edit Mode element.
+function PM:RegisterModuleDisplay(id, frame, module, options)
+    local element = Lookup(self, id)
+    if element and element.position ~= (addon.db.positions and addon.db.positions[id]) then
+        self:UnregisterElement(id); element = nil
+    end
+    if element then return true, element end
+    if Combat() then return false, "combat" end
+    -- options.db: a nested settings table that holds the legacy keys.
+    local db, xKey, yKey = options.db or module.db, options.xKey or "x", options.yKey or "y"
+    if addon.db.positions ~= nil and type(addon.db.positions) ~= "table" then return false, "invalid-storage" end
+    addon.db.positions = addon.db.positions or {}
+    if addon.db.positions[id] == nil and Number(db[xKey]) and Number(db[yKey]) then
+        addon.db.positions[id] = { target = "screen", placement = "center", x = db[xKey], y = db[yKey] }
+    end
+    -- Native rectangles exist only for shown frames; restore visibility after.
+    local shown = frame:IsShown()
+    frame:Show()
+    local ok, value = self:RegisterElement(id, frame, { moduleId = module.id,
+        defaultPosition = { target = "screen", placement = "center", x = options.defaultX or 0, y = options.defaultY or 0 },
+        canDrag = options.canDrag, onHighlight = options.onHighlight,
+        onPositionChanged = function(changed, position)
+            if position.target == "screen" and position.placement == "center" and not position.point then
+                db[xKey], db[yKey] = math.floor(position.x + 0.5), math.floor(position.y + 0.5)
+            end
+            if options.onPositionChanged then options.onPositionChanged(changed, position) end
+        end })
+    if not ok and value == "invalid-frame" and not options.retried then
+        -- A frame shown this frame may not have a rectangle until the next
+        -- layout pass. Keep it shown and retry once; never loop.
+        self.layoutRetries = self.layoutRetries or {}
+        self.layoutRetries[id] = { frame = frame, module = module, options = options, shown = shown }
+        self.layoutDriver = self.layoutDriver or CreateFrame("Frame")
+        self.layoutDriver:SetScript("OnUpdate", function(driver)
+            driver:SetScript("OnUpdate", nil)
+            local queue = self.layoutRetries; self.layoutRetries = {}
+            for retryId, entry in pairs(queue) do
+                local retryOptions = setmetatable({ retried = true }, { __index = entry.options })
+                local registered, element = false, nil
+                if not Combat() then registered, element = self:RegisterModuleDisplay(retryId, entry.frame, entry.module, retryOptions) end
+                if not entry.shown then entry.frame:Hide() end
+                if registered and entry.options.onRegistered then entry.options.onRegistered(element) end
+            end
+        end)
+        return false, "layout-pending"
+    end
+    if not shown then frame:Hide() end
+    if ok then value.label = options.label end
+    return ok, value
+end
+
 function PM:SetOriginPoint(id,point)
     local element=Lookup(self,id)
     if not element then return false,"unknown-element" end

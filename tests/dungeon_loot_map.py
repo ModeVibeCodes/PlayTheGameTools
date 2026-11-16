@@ -141,7 +141,7 @@ lua.execute('''
         assert(slot.mapKind~='objective','objective actions removed')
         if text=='Fixture Patrol' or text=='Patrol target' then
             assert(not slot.button.label:GetText():find('|c',1,true),'NPC subheader is solid text')
-            assert(slot.headerGlow[1]:IsShown())
+            assert(not slot.headerGlow,'no theme-specific glow text')
         end
         assert(slot.button.label.spacing==4 or slot.mapKind,'moderate line leading')
         assert(not text:lower():find('approx',1,true))
@@ -159,14 +159,11 @@ lua.execute('''
     assert(page.quests.underline.gradient==nil and page.quests.underline.color[2]==accent[2],'solid accent tab underline')
     mapButton:GetScript('OnClick')(mapButton)
     assert(Map.target and #Map.target.paths==1,'actual map action callback')
-    local hasGlow=false
+    local hasRule=false
     for _,slot in ipairs(page.detailPane.slots) do
-        if slot.visible and slot.headerGlow then
-            assert(#slot.headerGlow==4 and slot.headerGlow[1]:IsShown() and slot.headerGlow[1].alpha==.12)
-            hasGlow=true;break
-        end
+        if slot.visible and slot.modeHeadingRule and slot.modeHeadingRule:IsShown() then hasRule=true;break end
     end
-    assert(hasGlow)
+    assert(hasRule,'headings use the shared heading rule in every theme')
     assert(addon.DungeonLootWidgets.Gradient==nil,'no per-letter gradient text')
     LibQuestieDB=nil;QuestieLoader=nil
     assert(#L:Targets(100002,'turnin')==0)

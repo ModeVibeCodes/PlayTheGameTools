@@ -1,63 +1,31 @@
 local _, addon = ...
 local W, T = addon.ConfigWidgets, addon.InterfaceTheme
-local HEIGHT = 434
+-- Edit Mode is the single home for placement. Every registered display uses
+-- the same panel: choose the element, its anchor, its offsets, reset or exit.
+local WIDTH, PAD, LABEL = 340, 20, 84
+local CONTROL = WIDTH - PAD * 2 - LABEL
+local ROW = 38
+local TOP = 56
+local HEIGHT = TOP + ROW * 5 + 150
 
--- Small owned dropdown; options are rebuilt on open, never polled.
-local function Dropdown(parent, width, choices, getter, setter)
-    local button = W.Button(parent, "", width, 30)
-    local menu = CreateFrame("Frame", nil, button)
-    menu:Hide()
-    menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -4)
-    menu:SetWidth(width)
-    menu:SetFrameStrata("TOOLTIP")
-    menu:SetFrameLevel(button:GetFrameLevel() + 30)
-    menu:SetClampedToScreen(true)
-    W.Texture(menu, "Window")
-    local rows = {}
-    function button:Refresh()
-        local id, text = getter()
-        self.label:SetText(text)
-        self.label:SetJustifyH("CENTER")
-        if not menu:IsShown() then return end
-        local items = choices()
-        menu:SetHeight(12 + #items * 30)
-        for index, item in ipairs(items) do
-            local row = rows[index]
-            if not row then
-                row = W.Button(menu, "", width - 12, 28, "tab")
-                row:SetPoint("TOPLEFT", 6, -6 - (index - 1) * 30)
-                rows[index] = row
-                row:SetScript("OnClick", function() menu:Hide(); setter(row.choice.id); self:Refresh() end)
-            end
-            row.choice = item
-            row.label:SetText(item.label)
-            row:SetSelected(item.id == id)
-            row:Show()
-        end
-        for index = #items + 1, #rows do rows[index]:Hide() end
-    end
-    button:SetScript("OnClick", function()
-        if InCombatLockdown() or UnitAffectingCombat("player") then return end
-        if parent.anchorMenu and parent.anchorMenu ~= menu then parent.anchorMenu:Hide() end
-        parent.anchorMenu = menu
-        menu:SetShown(not menu:IsShown()); button:Refresh()
-    end)
-    button.menu, button.rows = menu, rows
-    return button
-end
+local function InCombat() return InCombatLockdown() or UnitAffectingCombat("player") end
 
 function addon:UpdateEditWindowBounds()
     local window = self.editWindow
-    if not window or InCombatLockdown() or UnitAffectingCombat("player") then return end
-    window:SetScale(math.max(0.1, math.min(1, (UIParent:GetWidth() - 24) / 340, (UIParent:GetHeight() - 24) / HEIGHT)))
+    if not window or InCombat() then return end
+    window:SetScale(math.max(0.1, math.min(1, (UIParent:GetWidth() - 24) / WIDTH, (UIParent:GetHeight() - 24) / HEIGHT)))
 end
 
+-- Labels that read the same everywhere a target is offered.
+local TARGET_LABELS = { screen = "Screen", player = "Player Frame", target = "Target Frame",
+    party = "Party Frames", focus = "Focus Frame", minimap = "Minimap" }
+
 function addon:CreateEditWindow()
-    local E = self.EditMode
+    local E, PM, P = self.EditMode, self.PositionManager, self.Positioning
     local window = CreateFrame("Frame", "PlayTheGameToolsEditWindow", UIParent)
     window:Hide()
     self.editWindow = window
-    window:SetSize(340, HEIGHT)
+    window:SetSize(WIDTH, HEIGHT)
     window:SetPoint("TOP", UIParent, "TOP", 0, -48)
     window:SetFrameStrata("DIALOG")
     window:SetFrameLevel(80)
@@ -73,131 +41,176 @@ function addon:CreateEditWindow()
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
     drag:SetScript("OnDragStart", function()
-        if InCombatLockdown() or UnitAffectingCombat("player") then return end
+        if InCombat() then return end
         window.moving = true; window:StartMoving()
     end)
     drag:SetScript("OnDragStop", function() window:StopMovingOrSizing(); window.moving = false end)
-    W.Heading(drag, "Play The Game Tools Edit Mode", T.fontSize.section, 12, -8, 280, T.text)
-    local selected = W.Label(window, "", nil, 20, -52, 300, T.secondary)
+    window.title = W.Heading(drag, "Edit Mode", T.fontSize.section, 12, -8, 280, T.text)
     local refreshing
-    W.Label(window, "X Position", nil, 20, -80, 300)
-    W.Label(window, "Y Position", nil, 20, -138, 300)
-    local function Coordinate(axis, top)
-        local function Get()
-            local element = E:Selected()
-            if not element then return 0 end
-            local px, py = self.PositionManager:GetOffsets(element.id)
-            return axis == "x" and px or py
+
+    local function Selected() return E:Selected() end
+    local function Row(index, text)
+        local top = -TOP - (index - 1) * ROW
+        local label = W.Label(window, text, nil, PAD, top - 8, LABEL - 8, T.secondary)
+        local host = CreateFrame("Frame", nil, window)
+        host:SetPoint("TOPLEFT", PAD + LABEL, top)
+        host:SetSize(CONTROL, 30)
+        return host, label
+    end
+    local function Dropdown(index, text, choices, getter, setter)
+        local host, label = Row(index, text)
+        local button = W.Select(host, CONTROL, choices, getter, setter)
+        button:ClearAllPoints(); button:SetPoint("TOPLEFT")
+        return button, label
+    end
+
+    -- Element: every enabled display that can be placed, in registration order.
+    local elements = Dropdown(1, "Element", function()
+        local items = {}
+        for _, id in ipairs(PM.order) do
+            local element = PM.elements[id]
+            if element.editMode and element.module.enabled then
+                items[#items + 1] = { id = id, label = element.label or element.module.title }
+            end
         end
+        return items
+    end, function()
+        local element = Selected()
+        if not element then return nil, "No movable element" end
+        return element.id, element.label or element.module.title
+    end, function(id) PM:SelectElement(id) end)
+
+    local function Position()
+        local element = Selected()
+        return element and PM:GetPosition(element.id)
+    end
+    local targets, targetLabel = Dropdown(2, "Anchor To", function()
+        local element, items = Selected(), {}
+        if not element then return items end
+        for _, item in ipairs(PM:GetAllowedTargets(element.id)) do
+            items[#items + 1] = { id = item.id, label = TARGET_LABELS[item.id] or item.label }
+        end
+        if element.supportsAnchoring and element.allowedTargets.selected and type(GetMouseFoci) == "function" then
+            items[#items + 1] = { id = "picker", label = "Select Frame..." }
+        end
+        return items
+    end, function()
+        local position = Position()
+        local id = position and position.target or "screen"
+        local label = TARGET_LABELS[id] or (addon.FrameAnchors:ValidID(id) and id:sub(7)) or id
+        if not P:Resolve(id) then label = label .. " (unavailable)" end
+        return id, label
+    end, function(id)
+        local element = Selected()
+        if not element then return end
+        if id == "picker" then addon.FrameAnchors:Start(element.id) else E:SetTarget(id) end
+    end)
+    local placements, placementLabel = Dropdown(3, "Attach", function() return P.placements end, function()
+        local p = Position()
+        local placement = P:Placement(p and p.placement)
+        return placement.id, placement.label
+    end, function(id) E:SetPlacement(id) end)
+
+    local function Coordinate(index, axis)
+        local host = Row(index, axis == "x" and "X Offset" or "Y Offset")
         local function Limits()
-            local element = E:Selected()
+            local element = Selected()
             if not element then return 0, 0 end
             local lx, hx, ly, hy = E:CoordinateBounds(element)
             if axis == "x" then return lx, hx end
             return ly, hy
         end
-        local holder = CreateFrame("Frame", nil, window)
-        holder:SetPoint("TOPLEFT", 20, top)
-        holder:SetSize(300, 30)
+        local function Get()
+            local element = Selected()
+            if not element then return 0 end
+            local x, y = PM:GetOffsets(element.id)
+            return axis == "x" and x or y
+        end
         local low, high = Limits()
-        local function Set(value) if not refreshing then E:SetCoordinate(axis, value) end end
-        local refresh = W.Slider(holder, low, high, 5, Get, Set, "", {
+        local refresh = W.Slider(host, low, high, 1, Get, function(value)
+            if not refreshing then E:SetCoordinate(axis, value) end
+        end, "", {
             minimum = function() local l = Limits(); return l end,
             maximum = function() local _, h = Limits(); return h end,
         })
-        local input, slider = holder.numericInput, holder.slider
-        input:SetWidth(88)
-        slider:SetPoint("RIGHT", -100, 0)
+        local input, slider = host.numericInput, host.slider
+        input:SetWidth(64)
+        slider:SetPoint("RIGHT", -72, 0)
         return input, slider, function()
             local l, h = Limits()
             slider:SetMinMaxValues(l, h)
             refresh()
         end
     end
-    local xInput, xSlider, refreshX = Coordinate("x", -104)
-    local yInput, ySlider, refreshY = Coordinate("y", -162)
-    W.Heading(window, "Snap To UI Element", T.fontSize.group, 20, -204, 300, T.text)
-    local P = self.Positioning
-    local function Position()
-        local element = E:Selected()
-        return element and self.PositionManager:GetPosition(element.id)
-    end
-    local targets = Dropdown(window, 300, function()
-        local element = E:Selected()
-        return self.PositionManager:GetAllowedTargets(element and element.id)
-    end, function()
-        local position = Position()
-        local id = position and position.target or "screen"
-        if addon.FrameAnchors:ValidID(id) then return id,id:sub(7)..(P:Resolve(id) and "" or " (unavailable)") end
-        for _, target in ipairs(P.targets) do
-            if target.id == id then return id, target.label .. (P:Resolve(id) and "" or " (unavailable)") end
-        end
-        return id, "Saved target unavailable"
-    end, function(id) E:SetTarget(id) end)
-    targets:SetPoint("TOPLEFT", 20, -228)
-    local placements = Dropdown(window, 188, function() return P.placements end, function()
-        local p = Position()
-        local placement = P:Placement(p and p.placement)
-        return placement.id, placement.label
-    end, function(id) E:SetPlacement(id) end)
-    placements:SetPoint("TOPLEFT", 20, -266)
-    local reset = W.Button(window, "Reset Offset", 104, 30, "secondary")
-    reset:SetPoint("TOPLEFT", 216, -266)
-    reset:SetScript("OnClick", function() E:ResetOffset() end)
+    local xInput, xSlider, refreshX = Coordinate(4, "x")
+    local yInput, ySlider, refreshY = Coordinate(5, "y")
+
+    local footer = -TOP - ROW * 5 - 6
+    local rule = W.Fill(window, T.line, "ARTWORK")
+    rule:ClearAllPoints(); rule:SetPoint("TOPLEFT", PAD, footer); rule:SetPoint("TOPRIGHT", -PAD, footer); rule:SetHeight(1)
     local highlights = W.Button(window, "", 30, 30, "checkbox")
-    highlights:SetPoint("TOPLEFT", 20, -310)
+    highlights:SetPoint("TOPLEFT", PAD - 6, footer - 10)
     highlights:SetScript("OnClick", function() E:SetHighlights(not E.highlights) end)
-    W.Label(window, "Show Highlights", nil, 60, -317, 220)
-    local settings = W.Button(window, "Open Module Settings", 300, 30)
-    settings:SetPoint("TOPLEFT", 20, -348)
+    local highlightLabel = W.Label(window, "Show Highlights", nil, PAD + 30, footer - 17, 200)
+    local half = (WIDTH - PAD * 2 - 8) / 2
+    local reset = W.Button(window, "Reset Position", half, 30, "secondary")
+    reset:SetPoint("TOPLEFT", PAD, footer - 48)
+    reset:SetScript("OnClick", function()
+        local element = Selected()
+        if element and not InCombat() then PM:ResetPosition(element.id) end
+    end)
+    local settings = W.Button(window, "Settings", half, 30, "secondary")
+    settings:SetPoint("TOPLEFT", PAD + half + 8, footer - 48)
     settings:SetScript("OnClick", function()
-        if InCombatLockdown() or UnitAffectingCombat("player") then
-            print("Play The Game Tools: open element settings outside combat.")
-            return
-        end
-        local element = E:Selected()
+        if InCombat() then return end
+        local element = Selected()
         if not element or not self.modules[element.module.id] then return end
         local id = element.module.id
         self:SetEditMode(false)
         self:SelectConfigPage(id)
     end)
-    local exit = W.Button(window, "Exit", 300, 32)
-    exit:SetPoint("TOPLEFT", 20, -386)
+    local exit = W.Button(window, "Exit", WIDTH - PAD * 2, 32)
+    exit:SetPoint("TOPLEFT", PAD, footer - 88)
     exit:SetSelected(true)
     exit:SetScript("OnClick", function() self:SetEditMode(false) end)
+
     function self:RefreshEditWindow()
         if refreshing then return end
         refreshing = true
-        local element = E:Selected()
-        selected:SetText(element and (element.label or element.module.title) or "No enabled movable element")
-        settings:SetEnabled(element ~= nil and self.modules[element.module.id] ~= nil)
+        local element = Selected()
         local anchoring = element ~= nil and element.supportsAnchoring == true
-        local available = element ~= nil and (not anchoring or P:Resolve(element.position.target or "screen") ~= nil)
-        xInput:SetEnabled(available)
-        yInput:SetEnabled(available)
+        local available = element ~= nil and P:Resolve(element.position.target or "screen") ~= nil
+        elements:SetEnabled(element ~= nil)
+        settings:SetEnabled(element ~= nil and self.modules[element.module.id] ~= nil)
+        reset:SetEnabled(element ~= nil)
+        xInput:SetEnabled(available); yInput:SetEnabled(available)
         xSlider:SetEnabled(available); ySlider:SetEnabled(available)
         refreshX(); refreshY()
-        targets:SetEnabled(anchoring); placements:SetEnabled(anchoring and available); reset:SetEnabled(anchoring and available)
-        targets:Refresh(); placements:Refresh()
+        -- Screen-only displays keep the rows so the panel never changes shape.
+        targets:SetEnabled(anchoring); placements:SetEnabled(anchoring and available)
+        targetLabel:SetTextColor(unpack(anchoring and T.secondary or T.unavailable))
+        placementLabel:SetTextColor(unpack(anchoring and T.secondary or T.unavailable))
+        elements:Refresh(); targets:Refresh(); placements:Refresh()
         highlights:SetSelected(E.highlights)
         refreshing = false
     end
     -- Clearing focus runs the numeric input's normal apply.
     function self:CommitEditInputs() xInput:ClearFocus(); yInput:ClearFocus() end
+    window.elementDropdown = elements
     window.xInput, window.yInput = xInput, yInput
     window.xSlider, window.ySlider = xSlider, ySlider
-    window.targetDropdown, window.placementDropdown, window.resetOffset = targets, placements, reset
+    window.targetDropdown, window.placementDropdown, window.resetPosition = targets, placements, reset
     window.settingsButton, window.exitButton, window.highlightButton = settings, exit, highlights
-    window.selectedLabel = selected
+    window.highlightLabel = highlightLabel
     window:EnableKeyboard(true)
     window:SetPropagateKeyboardInput(true)
     window:SetScript("OnKeyDown", function(_, key)
-        if InCombatLockdown() or UnitAffectingCombat("player") then return end
+        if InCombat() then return end
         window:SetPropagateKeyboardInput(key ~= "ESCAPE")
         if key == "ESCAPE" then self:SetEditMode(false) end
     end)
     window:SetScript("OnHide", function()
-        targets.menu:Hide(); placements.menu:Hide()
+        for _, dropdown in ipairs({ elements, targets, placements }) do dropdown.menu:Hide() end
         window:StopMovingOrSizing(); window.moving = false
         if self.editMode and not window.ending then self:SetEditMode(false) end
     end)
@@ -223,7 +236,7 @@ function addon:FinishEditWorkspace()
     window.ending = false
     self.configWindow.editSuspended = false
     -- Never put the settings window over a pull; suspending skipped its close cleanup.
-    if InCombatLockdown() or UnitAffectingCombat("player") then
+    if InCombat() then
         self:NotifyConfigClosed()
     else
         self.configWindow:Show()

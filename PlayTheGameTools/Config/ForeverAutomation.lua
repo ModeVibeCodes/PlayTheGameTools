@@ -17,15 +17,12 @@ function M:CreateConfigPage(parent)
         function() return self.db.bypassModifier, ({shift="Shift",ctrl="Ctrl",alt="Alt"})[self.db.bypassModifier] end,
         function(value) self:SetModifier(value) end)
     page.modifierDropdown = select
-    local questStatus = W.Label(page:Row("Quest Automation", 80), "", nil, 0, -4, 440, T.muted)
+    -- Status rows appear only when the client rejected an action this session.
+    local questStatus = W.Label(page:Row("Quest Automation", 48), "Unavailable this session: the client rejected a quest action. Quests stay manual.", nil, 0, -4, 440, T.primary)
     questStatus:SetWordWrap(true)
     page.questStatusLabel = questStatus
-    page:FooterNote(questStatus,function() return self.questBlocked end)
-    page.refreshers[#page.refreshers + 1] = function()
-        select:Refresh()
-        questStatus:SetText(self.questBlocked and "Unavailable this session: native quest action rejected. Leave quests manual and review before retrying." or
-            "Hold the selected key while opening an NPC interaction to keep it manual. Repeatables, payments, required items/currencies and multiple reward choices stay manual. Native acceptance pending.")
-    end
+    questStatus:GetParent().row.visibleWhen = function() return self.questBlocked == true end
+    page.refreshers[#page.refreshers + 1] = function() select:Refresh() end
     page:Group("Merchant")
     local merchant = page:ToggleGrid({
         { label = "Auto Sell Junk", get = function() return self.db.sellJunk == true end,
@@ -41,16 +38,14 @@ function M:CreateConfigPage(parent)
     page.refreshers[#page.refreshers + 1] = W.Slider(thresholdRow, 5, 100, 5,
         function() return self.db.maxRepairCostPercent end, function(value) self:SetRepairThreshold(value) end, "%")
     page.repairThresholdSlider = thresholdRow.slider
-    local merchantStatus = W.Label(page:Row("Merchant Automation", 80), "", nil, 0, -4, 440, T.muted)
+    local merchantStatus = W.Label(page:Row("Merchant Automation", 48), "", nil, 0, -4, 440, T.primary)
     merchantStatus:SetWordWrap(true); page.merchantStatusLabel = merchantStatus
-    page:FooterNote(merchantStatus,function()
-        local blocked=self.merchantBlocked or {};return blocked.sellJunk or blocked.repair
-    end)
+    merchantStatus:GetParent().row.visibleWhen = function()
+        local blocked = self.merchantBlocked or {}; return (blocked.sellJunk or blocked.repair) and true or false
+    end
     page.refreshers[#page.refreshers + 1] = function()
         local blocked = self.merchantBlocked or {}
-        merchantStatus:SetText((blocked.sellJunk or blocked.repair) and
-            ("Unavailable this session after rejection: " .. (blocked.sellJunk and "Auto Sell Junk " or "") .. (blocked.repair and "Auto Repair" or "") .. ". Leave affected actions manual and review.") or
-            "Gray equipment requires its separate opt-in. Repair uses personal funds once per visit, within the selected percentage of your balance. Changes apply on the next visit. Native acceptance pending.")
+        merchantStatus:SetText("Unavailable this session: " .. (blocked.sellJunk and "Auto Sell Junk " or "") .. (blocked.repair and "Auto Repair" or "") .. " was rejected by the client.")
     end
     page:Group("Dialogue")
     local gossip = page:ToggleGrid({{
@@ -58,14 +53,16 @@ function M:CreateConfigPage(parent)
         set = function(value) self:SetOption("autoGossip", value) end,
     }})
     page.automationControls.autoGossip = gossip[1]
-    local gossipStatus = W.Label(page:Row("Auto Gossip Availability", 80), "", nil, 0, -4, 440, T.muted)
+    local gossipStatus = W.Label(page:Row("Auto Gossip Availability", 48), "", nil, 0, -4, 440, T.muted)
     gossipStatus:SetWordWrap(true); page.gossipStatusLabel = gossipStatus
+    gossipStatus:GetParent().row.visibleWhen = function() return not self:GossipCapability() end
     page.refreshers[#page.refreshers + 1] = function()
         local available, reason = self:GossipCapability()
         gossip[1].frame:SetEnabled(available); gossip[1].button:SetEnabled(available)
-        gossip[1].label:SetTextColor(unpack(T.muted)); gossipStatus:SetText(reason)
+        gossipStatus:SetText(reason or "")
     end
-    page.refreshers[#page.refreshers+1]=function() if page.modeFooterLayout then page:Layout() end end
+    -- Blocked-state rows can appear after a session rejection.
+    page.refreshers[#page.refreshers + 1] = function() page:Layout() end
     page:Finish()
     return page
 end

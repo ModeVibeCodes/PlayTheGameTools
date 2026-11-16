@@ -4,7 +4,8 @@ local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 -- The same responsive scrolling and row layout is used on every page.
 function W.Page(parent, minimumWidth)
     local page = CreateFrame("Frame", nil, parent)
-    page.modePillSections=T.id=="mode" and parent.ptgMediaScope~=nil
+    -- Module pages use pill sections in every theme.
+    page.modePillSections=parent.ptgMediaScope~=nil
     page:SetPoint("TOPLEFT", 0, -36)
     page:SetPoint("BOTTOMRIGHT")
     page.rows, page.refreshers, page.sections, page.searchEntries, page.cursor = {}, {}, {}, {}, 0
@@ -17,7 +18,7 @@ function W.Page(parent, minimumWidth)
     scroll:SetScrollChild(content)
     page.content, page.scroll = content, scroll
     page.settingsScroll = scroll
-    page.contentInset=T.id=="mode" and minimumWidth~=0 and 12 or 0
+    page.contentInset=minimumWidth~=0 and 12 or 0
 
     local bar = CreateFrame("Slider", nil, page)
     bar:SetPoint("TOPRIGHT", -4, -4)
@@ -155,7 +156,7 @@ function W.Page(parent, minimumWidth)
     function page:Section(title, description, collapsible)
         -- Modern separates sections with more air than rows, so each group
         -- reads as one block; Blizzard keeps its tighter stock rhythm.
-        local sectionGap = T.blizzardArt and 24 or 32
+        local sectionGap = 32
         if self.cursor > 0 then self.cursor = self.cursor + sectionGap end
         local header = CreateFrame("Frame", nil, content)
         header:SetPoint("TOPLEFT", 0, -self.cursor)

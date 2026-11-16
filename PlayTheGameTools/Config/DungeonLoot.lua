@@ -9,12 +9,8 @@ function M:CreateConfigPage(parent)
     nav:SetPoint("TOPLEFT");nav:SetPoint("TOPRIGHT");nav:SetHeight(36)
     local buttons = {}
     local function Tab(text, callback)
-        local b=W.Button(nav,text,90,32,T.id=="mode" and "roundedTab" or "underline")
-        if T.id=="mode" then b.underline=b.selectionEdge
-        else
-            b.underline=b:CreateTexture(nil,"OVERLAY");W.Paint(b.underline,T.primary)
-            b.underline:SetPoint("BOTTOMLEFT",10,0);b.underline:SetPoint("BOTTOMRIGHT",-10,0);b.underline:SetHeight(2)
-        end
+        local b=W.Button(nav,text,90,32,"roundedTab")
+        b.underline=b.selectionEdge
         b.underline:Hide()
         b:SetScript("OnClick",callback);buttons[#buttons+1]=b;return b
     end
@@ -58,7 +54,7 @@ function M:CreateConfigPage(parent)
     end
     local root,rootRows=Pane(280)
     page.rootPane=root
-    if T.id=="mode" then W.SetupModeBrowser(page,root) end
+    W.SetupModeBrowser(page,root)
     local left,leftRows=Pane(140)
     local right,rightRows=Pane(180)
     page.listPane,page.detailPane=left,right
@@ -170,12 +166,7 @@ function M:CreateConfigPage(parent)
     end
     function page:Layout()
         local width=self:GetWidth()
-        if T.id=="mode" then W.LayoutModePills(buttons,width)
-        else
-            for index,b in ipairs(buttons) do
-                b:ClearAllPoints();b:SetSize((width-12)/4,32);b:SetPoint("TOPLEFT",(index-1)*(width+4)/4,0)
-            end
-        end
+        W.LayoutModePills(buttons,width)
         local questTab=M.active and M.view.dungeon~=nil and M.view.tab=="quests"
         self.faction:SetShown(questTab)
         self.faction:ClearAllPoints();self.faction:SetPoint("TOPRIGHT",toolbar,"TOPRIGHT",0,0);self.faction:SetSize(128,28)
@@ -227,11 +218,7 @@ function M:CreateConfigPage(parent)
             rootRows.modePanel="appearance"
             page.iconSize=rootRows:SettingSlider("Icon Size",24,72,2,function() return M.db.shortcutSize end,function(value) M:SetShortcutOption("shortcutSize",value) end," px")
             page.iconOpacity=rootRows:SettingSlider("Icon Opacity",25,100,5,function() return M.db.shortcutOpacity end,function(value) M:SetShortcutOption("shortcutOpacity",value) end,"%")
-            rootRows.modePanel="position"
-            rootRows:Add("Edit Icon Position",function() M:EditShortcutPosition() end)
-            rootRows:Add("Reset Shortcut Position",function() M:ResetShortcutPosition() end)
-            rootRows:Add("This icon opens from the Quick Actions button. Move that button in Edit Mode.",nil,nil,T.muted)
-            if addon.QuickActions.launcherFailure then rootRows:Add("Icon positioning unavailable: "..addon.QuickActions.launcherFailure,nil,nil,T.primary) end
+            if addon.QuickActions.launcherFailure then rootRows:Add("Quick Actions button unavailable: "..addon.QuickActions.launcherFailure,nil,nil,T.primary) end
             rootRows.modePanel="options"
             rootRows:Add("Keybinding",nil,nil,T.secondary,nil,{heading=true})
             page.bindingControl=rootRows:BindingControl(M:ShortcutBindingLabel(),function() M:CaptureShortcutBinding() end)
@@ -239,13 +226,10 @@ function M:CreateConfigPage(parent)
                 local _,message=M:SaveShortcutBinding(nil);M.bindingStatus=message;page:Refresh()
             end)
             if M.bindingStatus then rootRows:Add(M.bindingStatus,nil,nil,T.secondary) end
-            rootRows:Add("The selected key replaces its current binding. Uses your current WoW account/character bindings.",nil,nil,T.muted)
             rootRows.modePanel="data"
             rootRows:Add("Dungeon Data",nil,nil,T.secondary,nil,{heading=true})
             rootRows:Add(data.providerSource or data.source,nil,nil,T.muted)
             rootRows:Add("Bundled data: Lootified by Alen / CMaNGOS. GPLv3; no warranty. See CATALOG_SOURCES.md and LICENSES/GPL-3.0.txt.",nil,nil,T.muted)
-            rootRows:Add("Loot and quest availability can change. Suggested levels are a guide, not an entry requirement.",nil,nil,T.muted)
-            rootRows:Add("Dungeon emblems show the surrounding territory; quest emblems show who can take the quest.",nil,nil,T.muted)
             local refresh=rootRows:Add("Refresh",function() M.attempted={};M:ReadData();page:Refresh() end)
             self.reload=refresh.button;self.reload:SetWidth(86)
             -- Keep the refresh target compact rather than filling the settings page.

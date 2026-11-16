@@ -22,7 +22,7 @@ function addon:CreateProfileHub(page)
         box:SetScript('OnEscapePressed',function() box:ClearFocus() end)
         return box
     end
-    local status=W.Label(panel,P.status or 'Profile selection requires reload. Create, duplicate and rename save immediately.',nil,12,-56,600,T.muted)
+    local status=W.Label(panel,P.status or '',nil,12,-56,600,T.muted)
     status:SetWordWrap(true)
     local function Result(ok,reason) status:SetText(reason or (ok and 'Saved.' or 'Profile action failed.'));page:Refresh();page:Layout() end
     local select=W.Select(panel,260,function() return Options() end,function() return selected,selected end,function(name)

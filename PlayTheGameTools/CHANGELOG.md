@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+- Declutter and unify the interface. Edit Mode is now the only place to move
+  displays: one standard panel (Element, Anchor To, Attach, X/Y Offset, Reset
+  Position, Settings, Exit) works for every display. Quick Access, Food Bar and
+  Threat Meter now use the same Position Manager as the rest (their saved x/y
+  seed the managed position once and keep mirroring screen offsets). Settings
+  pages no longer have Position/Lock/offset rows, Campfire's separate Move
+  Windows mode is gone, and saved Lock flags are kept but no longer read:
+  displays move only in Edit Mode. The header Edit Mode button starts on the
+  current page's display.
+- One layout for every theme: Modern, Blizzard and mode share the sidebar,
+  header (search, Profile, Edit Mode), pill/sub-tab pages and selection
+  underline; themes differ only in colors, borders and textures.
+- Removed redundant text and settings: long footer notes (How It Works,
+  Visibility Help, Food Selection, Forecasts, Session Scope, Other Addon Suites,
+  Campfire TLDRs, Rogue notes), generic panel sentences, Global Settings status
+  rows, duplicate Enabled/Disabled text on the Dashboard, the XP Bar's in-page
+  enable switch and Use PTG/Existing buttons (a saved "existing" choice becomes a
+  disabled module, which looks the same). Automation warnings show only while an
+  action is actually blocked.
+- Performance: settings changes refresh only the visible page; Threat Meter
+  polls only while it shows a target, from a separate driver frame; the XP
+  session clock ticks only while session text is shown.
+- Native in-game confirmation is pending; test with `/reload` out of combat.
+
 - Guild Tools -> Roster now has Members and Analytics tabs. Members adds a search
   box (name, class, race, zone, rank, notes, or a level such as 60 or 40-59),
   Class and Status filters, levels beside names, an online marker and a hover

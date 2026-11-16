@@ -19,7 +19,7 @@ function A:OnSnapshot(snapshot)
         self.previewing=false;self:Hide(true);return
     end
     if self.previewing or self.camp.editing then self:RenderPreview();return end
-    if s.nearby~=true or self.camp.previewing or self.camp.placing then
+    if s.nearby~=true or self.camp.previewing then
         self:Hide(true);return
     end
     if not self.wasNearby then self.dirty=true;self.wasNearby=true end
