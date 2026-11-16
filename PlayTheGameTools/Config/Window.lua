@@ -81,7 +81,7 @@ local function Dashboard(parent)
     welcome.gapAfter = 8
     local lines = {
         "Welcome to Play The Game Tools!",
-        "Created by Mode  ·  Bugs: Discord NoJumperMike",
+        "Created by Mode and Prox  ·  Bugs: Discord NoJumperMike",
     }
     page.welcomeTexts = lines
     for index, text in ipairs(lines) do

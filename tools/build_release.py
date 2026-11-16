@@ -39,17 +39,20 @@ def payload():
     if len(order) != len(set(order)) or order[0] != 'Core/Edition.lua' or order[-2:] != ['Core/Init.lua', 'Core/ReleaseMetadata.lua']:
         raise ValueError('Invalid TOC order or duplicate entries')
     runtime = order
-    xml_name = 'Modules/DungeonLootMapPins.xml'
-    if runtime.count(xml_name) != 1 or runtime.index(xml_name) != runtime.index('Modules/DungeonLootMap.lua') + 1:
-        raise ValueError('Map pin template must follow its Lua mixin')
-    template = ET.fromstring(source_path(xml_name).read_bytes())
-    nodes = list(template)
+    # Each map pin template follows the Lua file that defines its mixin.
+    pin_templates = {'Modules/DungeonLootMapPins.xml': ('Modules/DungeonLootMap.lua', 'DungeonLoot'),
+                     'Modules/CityLabelsMapPins.xml': ('Modules/CityLabelsMap.lua', 'CityLabels')}
     ns = '{http://www.blizzard.com/wow/ui/}'
-    if (template.tag != ns + 'Ui' or len(nodes) != 1 or nodes[0].tag != ns + 'Frame'
-            or nodes[0].attrib != {'name': 'PlayTheGameToolsDungeonLootMapPinTemplate', 'virtual': 'true',
-                                   'enableMouse': 'true', 'mixin': 'PlayTheGameToolsDungeonLootMapPinMixin'}
-            or len(nodes[0]) != 0):
-        raise ValueError('Unexpected map pin template contents')
+    for xml_name, (mixin_file, prefix) in pin_templates.items():
+        if runtime.count(xml_name) != 1 or mixin_file not in runtime or runtime.index(xml_name) != runtime.index(mixin_file) + 1:
+            raise ValueError('Map pin template must follow its Lua mixin')
+        template = ET.fromstring(source_path(xml_name).read_bytes())
+        nodes = list(template)
+        if (template.tag != ns + 'Ui' or len(nodes) != 1 or nodes[0].tag != ns + 'Frame'
+                or nodes[0].attrib != {'name': f'PlayTheGameTools{prefix}MapPinTemplate', 'virtual': 'true',
+                                       'enableMouse': 'true', 'mixin': f'PlayTheGameTools{prefix}MapPinMixin'}
+                or len(nodes[0]) != 0):
+            raise ValueError('Unexpected map pin template contents')
     actual_xml = {p.relative_to(ADDON).as_posix() for p in ADDON.rglob('*.xml')}
     binding_name='Bindings.xml'
     binding=ET.fromstring(source_path(binding_name).read_bytes())
@@ -58,9 +61,9 @@ def payload():
             or entries[0].attrib!={'name':'PTGTOOLS_DUNGEON_LOOT','category':'ADDONS','header':'PTGTOOLS'}
             or len(entries[0]) or (entries[0].text or '').strip()!='PlayTheGameToolsOpenDungeonLoot();'):
         raise ValueError('Unexpected Dungeon Loot binding definition')
-    if actual_xml != {xml_name,binding_name}:
+    if actual_xml != {*pin_templates, binding_name}:
         raise ValueError('XML source inventory differs from TOC')
-    order = [name for name in runtime if name != xml_name]
+    order = [name for name in runtime if name not in pin_templates]
     for name in order:
         if not re.fullmatch(r'(?:Core|Config|Modules)/.+\.lua', name):
             raise ValueError(f'Unsupported runtime source: {name}')

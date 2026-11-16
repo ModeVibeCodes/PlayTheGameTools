@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Play The Game Tools
 ## Notes: Modular combat timer, automation and class training tools for WoW Forever.
-## Author: Mode
+## Author: Mode and Prox
 ## Version: 0.2.0-beta.2
 ## SavedVariables: PTGToolsDB, ModeToolsDB
 ## OptionalDeps: QuestieDB, Questie, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
@@ -65,6 +65,10 @@ Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
 Modules\ForeverGuildRoster.lua
 Modules\ThreatMeter.lua
+Modules\CityLabelsData.lua
+Modules\CityLabels.lua
+Modules\CityLabelsMap.lua
+Modules\CityLabelsMapPins.xml
 Modules\DungeonLootCatalog.lua
 Modules\DungeonLootCatalogItems.lua
 Modules\DungeonLootCatalogInstances.lua
@@ -119,6 +123,7 @@ Config\ForeverFoodBar.lua
 Config\ForeverRecruitment.lua
 Config\ForeverGuildRoster.lua
 Config\ThreatMeter.lua
+Config\CityLabels.lua
 Config\DungeonLootWidgets.lua
 Config\DungeonLoot.lua
 Config\CampfireMonitor.lua

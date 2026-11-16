@@ -51,6 +51,7 @@ function V:Normalize(source)
     if addon.ForeverRogue then addon.ForeverRogue.Initialize(profile.modules.foreverRogue) end
     if addon.ForeverRecruitment then addon.ForeverRecruitment.Initialize(profile.modules.foreverRecruitment) end
     if addon.ThreatMeter then addon.ThreatMeter.Initialize(profile.modules.threatMeter) end
+    if addon.CityLabels then addon.CityLabels.Initialize(profile.modules.cityLabels) end
     if addon.EnhancedExperienceBar then addon.EnhancedExperienceBar.Initialize(profile.modules.enhancedExperienceBar) end
     if addon.ForeverQuickAccessData then addon.ForeverQuickAccessData.Initialize(profile.modules.foreverQuickAccess) end
     if addon.modules.potionTracker then addon.PotionSettings.Initialize(profile.modules.potionTracker) end

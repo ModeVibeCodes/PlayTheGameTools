@@ -1,6 +1,6 @@
 # Play The Game Tools
 
-**By Mode** · WoW Forever · Public beta candidate 0.2.0-beta.1
+**By Mode and Prox** · WoW Forever · Public beta candidate 0.2.0-beta.1
 
 Play The Game Tools brings useful everyday tools into one modular addon with a unified dark
 configuration interface. Enable the features you want, adjust their appearance,
@@ -25,6 +25,10 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   selection and optional bandages with existing native click/combat guards.
 - **Threat Meter:** opt-in threat list for your current target with class-colored
   bars and percentages; pets are optional and off by default.
+- **City Labels:** opt-in under Quality of Life; dots and names on the world map
+  for trainers (your class, or all), banks, auction houses, inns, flight masters
+  and more, with faction, size and name options. Locations: Efficient Games data
+  (CC BY 4.0); see THIRD_PARTY_NOTICES.md.
 - **Guild Roster:** opt-in page under Guild Tools. **Members** lists every guild
   member by class with levels, an online marker and hover details, plus a search
   (name, class, race, zone, rank, notes or level) and Class/Status filters.
@@ -101,5 +105,6 @@ additional reporting option.
 
 Play The Game Tools original code is open source under [MIT](LICENSE). See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for training-catalog attribution
-and artwork ownership. WoW and Blizzard assets remain the property of Blizzard
+and artwork ownership, including the CC BY 4.0 City Labels location data from
+Efficient Games. WoW and Blizzard assets remain the property of Blizzard
 Entertainment. Play The Game Tools is an independent community addon.
