@@ -1,6 +1,6 @@
 # Play The Game Tools
 
-**By Mode and Prox** · WoW Forever · Public beta candidate 0.2.0-beta.3
+**By Mode and Prox** · WoW Forever · Release 0.3.0
 
 Play The Game Tools brings useful everyday tools into one modular addon with a unified dark
 configuration interface. Enable the features you want, adjust their appearance,
@@ -103,7 +103,7 @@ all special training cases are not comprehensively covered. No cross-class brows
 is provided. Auto Gossip is unavailable and remains manual. Development prototypes
 and Retail-only features are excluded.
 
-This is a beta candidate. Static checks do not establish in-game behavior; the
+Static checks do not establish in-game behavior; the
 candidate testing checklist is in [TESTING.md](TESTING.md). Recent popout/all-class
 behavior and native Automation acceptance still need the results recorded there.
 Screenshots will be added later.
