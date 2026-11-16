@@ -67,6 +67,7 @@ Modules\ForeverRecruitment.lua
 Modules\ForeverGuildRoster.lua
 Modules\ThreatMeter.lua
 Modules\CityLabelsData.lua
+Modules\CityLabelsClassicData.lua
 Modules\CityLabels.lua
 Modules\CityLabelsMap.lua
 Modules\CityLabelsMapPins.xml

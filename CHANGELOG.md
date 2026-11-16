@@ -12,6 +12,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   The level-up popup and the reload prompt still appear on their own without
   closing anything.
 
+- City Labels now uses icons instead of dots (Icon Size replaces Dot Size).
+  Class Trainers and Profession Trainers each choose Mine (your class / your
+  learned professions, detected automatically), All or Off; Mine is the default.
+  Trainers and services Efficient Games has not recorded yet, such as the
+  Undercity alchemy trainer, now come from CMaNGOS classic-db (GPL-3.0) Classic
+  spawn positions (marked in the tooltip); see THIRD_PARTY_NOTICES.md.
+
 ## 0.2.0-beta.3
 
 - Added City Labels (Quality of Life, off by default): colored dots with optional

@@ -42,10 +42,11 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   selection and optional bandages with existing native click/combat guards.
 - **Threat Meter:** opt-in threat list for your current target with class-colored
   bars and percentages; pets are optional and off by default.
-- **City Labels:** opt-in under Quality of Life; dots and names on the world map
-  for trainers (your class, or all), banks, auction houses, inns, flight masters
-  and more, with faction, size and name options. Locations: Efficient Games data
-  (CC BY 4.0); see [City Labels](docs/CITY_LABELS.md).
+- **City Labels:** opt-in under Quality of Life; icons and names on the world map
+  for your class's and professions' trainers (or all, or none), banks, auction
+  houses, inns, flight masters and more, with faction, size and name options.
+  Locations: Efficient Games data (CC BY 4.0), with Classic positions from CMaNGOS
+  classic-db (GPL-3.0) filling gaps; see [City Labels](docs/CITY_LABELS.md).
 - **Guild Roster:** opt-in page under Guild Tools. **Members** lists every guild
   member by class with levels, an online marker and hover details, plus a search
   (name, class, race, zone, rank, notes or level) and Class/Status filters.
@@ -125,8 +126,8 @@ Original code retains its [MIT grant](LICENSE). Distributions containing the
 bundled Dungeon Loot data are provided under [GPLv3](LICENSES/GPL-3.0.txt);
 editable source and attribution ship with the package. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for training-catalog attribution
-and artwork ownership, including the CC BY 4.0 City Labels location data from
-Efficient Games. WoW and Blizzard assets remain the property of Blizzard
+and artwork ownership, including the City Labels location data from Efficient
+Games (CC BY 4.0) and CMaNGOS classic-db (GPL-3.0). WoW and Blizzard assets remain the property of Blizzard
 Entertainment. Play The Game Tools is an independent community addon.
 
 ## Dungeon Loot
