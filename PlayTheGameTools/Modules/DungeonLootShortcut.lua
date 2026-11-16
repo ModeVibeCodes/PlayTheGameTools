@@ -171,6 +171,7 @@ function M:CaptureShortcutBinding()
             f:SetScript("OnKeyDown",nil);pcall(f.EnableKeyboard,f,false);pcall(f.SetPropagateKeyboardInput,f,true)
         end)
         self.bindingCapture=f
+        addon.Dialogs:Register(f,{group="settings",close=function() self:CancelShortcutBinding() end})
     end
     local f=self.bindingCapture
     f.hint:SetText("Modifiers allowed. Escape cancels.")

@@ -19,6 +19,7 @@ function addon:ShowReloadPrompt()
         end)
         later:SetScript("OnClick",function() dialog:Hide() end)
         dialog.reloadNow,dialog.later=now,later
+        addon.Dialogs:Register(dialog,{kind="notice"})
     end
     dialog:SetScale(math.max(0.1,math.min(1,(UIParent:GetWidth()-24)/460,(UIParent:GetHeight()-24)/180)))
     dialog.reason:SetText(R:GetReason());dialog.status:SetText("");dialog:Show()

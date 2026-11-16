@@ -19,6 +19,7 @@ Core\ReloadManager.lua
 Core\Categories.lua
 Core\Modules.lua
 Core\DisplayModes.lua
+Core\Dialogs.lua
 Core\EditMode.lua
 Core\Positioning.lua
 Core\PositionManager.lua

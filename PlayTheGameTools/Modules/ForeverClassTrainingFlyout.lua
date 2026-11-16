@@ -212,6 +212,7 @@ function M:CreateTrainingFlyout()
         addon.QuickActions:SetActive("classTraining",false)
     end)
     f:Hide();self.trainingFlyout=f
+    addon.Dialogs:Register(f,{close=function() self:CloseTrainingFlyout() end})
 end
 
 function M:RenderTrainingFlyout()

@@ -320,6 +320,7 @@ function addon.DungeonLoot:ShowCoordinates(target)
         local close=W.Button(frame,"Close",58,22);close:SetPoint("BOTTOMRIGHT",-10,8)
         close:SetScript("OnClick",function() frame:Hide() end)
         frame.edit=edit;self.coordinateFrame=frame
+        addon.Dialogs:Register(frame,{group="settings"})
     end
     local name="Map "..target.mapID
     if C_Map and type(C_Map.GetMapInfo)=="function" then
