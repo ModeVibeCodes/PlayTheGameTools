@@ -80,6 +80,7 @@ function addon:ShowModulePreview(module)
         window.viewport:SetPoint("TOPLEFT", 16, -50)
         window.viewport:SetPoint("BOTTOMRIGHT", -16, 16)
         window:SetScript("OnHide", function() window:StopMovingOrSizing(); window.moving = false; addon:RefreshModulePreviewLayout() end)
+        addon.Dialogs:Register(window, { group = "settings" })
     end
     for _, view in pairs(window.views) do view.frame:Hide() end
     if not window.views[module.id] then window.views[module.id] = View(module, window.viewport,"popout") end

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Windows and pop-ups no longer stack: opening Settings, Edit Mode, the
+  Recruiter or the Class Training flyout closes whichever of those is open.
+  Companions stay with their window (Settings' pop-out preview and popup
+  preview, the Recruiter's copy box). Escape now closes the addon's newest open
+  window, dialog or dropdown first, one per press, before the game menu opens.
+  The level-up popup and the reload prompt still appear on their own without
+  closing anything.
 - Added City Labels (Quality of Life, off by default): colored dots with optional
   names on the world map for class and profession trainers, weapon masters,
   banks, auction houses, inns, flight masters, guild masters and transmogrifiers,

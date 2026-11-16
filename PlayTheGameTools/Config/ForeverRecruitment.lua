@@ -17,7 +17,6 @@ function M:ShowCopyBox(name)
         cf:SetMovable(true);cf:EnableMouse(true);cf:RegisterForDrag("LeftButton")
         cf:SetScript("OnDragStart",cf.StartMoving);cf:SetScript("OnDragStop",cf.StopMovingOrSizing)
         W.Texture(cf,"Window")
-        if UISpecialFrames then table.insert(UISpecialFrames,"PlayTheGameToolsRecruitmentCopyFrame") end
         local title=W.Label(cf,"Press Ctrl+C to copy",nil,0,-12,320,T.text);title:SetJustifyH("CENTER")
         local hint=W.Label(cf,"Then paste it into Guild > Add Member",nil,0,-80,320,T.muted);hint:SetJustifyH("CENTER")
         local eb=CreateFrame("EditBox",nil,cf)
@@ -36,6 +35,7 @@ function M:ShowCopyBox(name)
         eb:SetScript("OnEditFocusGained",function(box) box:HighlightText() end)
         eb:SetScript("OnMouseUp",function(box) box:HighlightText() end)
         cf:SetScript("OnHide",function() eb:ClearFocus() end)
+        addon.Dialogs:Register(cf,{group="recruiter"})
         cf.eb=eb;self.copyFrame=cf
         if self.window then cf:SetPoint("BOTTOM",self.window,"TOP",0,6) else cf:SetPoint("CENTER",0,150) end
     end
@@ -64,7 +64,6 @@ function M:CreateWindow()
     f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
     f:SetScript("OnDragStart",f.StartMoving);f:SetScript("OnDragStop",f.StopMovingOrSizing)
     f:Hide()
-    if UISpecialFrames then table.insert(UISpecialFrames,"PlayTheGameToolsRecruitmentFrame") end
     W.Texture(f,"Window")
     f.title=W.Heading(f,"Recruiter",T.fontSize.section,16,-14,150,T.text)
 
@@ -214,6 +213,7 @@ function M:CreateWindow()
     end)
     f:SetScript("OnShow",function() M:RefreshWindow();M:SyncQuickAction() end)
     f:SetScript("OnHide",function() M:SyncQuickAction() end)
+    addon.Dialogs:Register(f,{group="recruiter"})
     return f
 end
 
@@ -278,10 +278,8 @@ end
 function M:OpenWindow()
     if not self.window then self:CreateWindow() end
     local f=self.window
-    -- Open beside the settings window when it is showing, otherwise centered.
-    f:ClearAllPoints()
-    if addon.configWindow and addon.configWindow:IsShown() then f:SetPoint("LEFT",addon.configWindow,"RIGHT",8,0)
-    else f:SetPoint("CENTER") end
+    -- Opening the recruiter closes the settings window, so it always centers.
+    f:ClearAllPoints();f:SetPoint("CENTER")
     f:Show()
     if f.Raise then f:Raise() end
 end

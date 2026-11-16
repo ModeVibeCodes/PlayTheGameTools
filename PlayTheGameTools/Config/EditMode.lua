@@ -430,6 +430,7 @@ function addon:CreateEditWindow()
         window:StopMovingOrSizing(); window.moving = false
         if self.editMode and not window.ending then self:SetEditMode(false) end
     end)
+    self.Dialogs:Register(window, { group = "editMode" })
 end
 
 function addon:BeginEditWorkspace()

@@ -2,6 +2,16 @@
 
 Global Settings now groups Appearance, account-wide Profiles, Optimizations and Class Colors. Bundled LibSharedMedia plus licensed PTG media populate the dropdowns. Standard game UI fonts inherit; module overrides stay in their own controls. Added account-wide profile selection/import/export, Auto Loot/Fast Loot, camera zoom, detected UI scale and red-error suppression. Prior page-only native feedback is retained; these additions await in-game confirmation. See docs/GLOBAL_SETTINGS.md.
 
+## Unreleased
+
+- Windows and pop-ups no longer stack: opening Settings, Edit Mode, the
+  Recruiter or the Class Training flyout closes whichever of those is open.
+  Companions stay with their window (Settings' pop-out preview and popup
+  preview, the Recruiter's copy box). Escape now closes the addon's newest open
+  window, dialog or dropdown first, one per press, before the game menu opens.
+  The level-up popup and the reload prompt still appear on their own without
+  closing anything.
+
 ## 0.2.0-beta.3
 
 - Added City Labels (Quality of Life, off by default): colored dots with optional

@@ -19,6 +19,7 @@ function W.Popup(button,width,height)
     menu:Hide();menu:SetSize(width,height);menu:SetFrameStrata("TOOLTIP")
     menu:SetFrameLevel(200);menu:SetClampedToScreen(true);menu:EnableMouse(true)
     W.PlacePopup(menu,button)
+    addon.Dialogs:Register(menu,{kind="layer"})
     return menu
 end
 function W.GlowDropdown(parent,getter,setter,allowed)

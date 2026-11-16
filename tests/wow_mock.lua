@@ -2,6 +2,7 @@
 frames = {}
 textures = {}
 SlashCmdList = {}
+UISpecialFrames = {} -- names Blizzard Escape (CloseSpecialWindows) hides
 testClock = 100
 testCombat = false
 testLockdown = false

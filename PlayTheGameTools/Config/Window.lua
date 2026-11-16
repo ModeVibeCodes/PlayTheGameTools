@@ -603,6 +603,8 @@ function addon:CreateConfig()
         self:ResetDisplayModes()
         self:NotifyConfigClosed()
     end)
+    -- Opening settings closes the addon's other windows; Escape closes it.
+    self.Dialogs:Register(window, { group = "settings" })
     self:UpdateWindowBounds(true)
 end
 

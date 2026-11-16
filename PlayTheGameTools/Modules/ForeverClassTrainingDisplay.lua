@@ -210,6 +210,7 @@ function M:ShowDing(level, rows, preview)
         guild:SetScript("OnClick",function() self:PrepareGuildDing() end)
         self.dingClose,self.dingTraining,self.dingGuild=close,open,guild
         frame:Hide();self.dingWindow=frame
+        addon.Dialogs:Register(frame,{kind="notice"})
     end
     self.dingTitle:SetText("DING")
     addon.Media:BindInterfaceFont(self.dingTitle,GameFontNormalLarge,self:PopupValue("popupTitleSize"))
@@ -254,7 +255,11 @@ function M:ShowDing(level, rows, preview)
         label:SetText(text);label:Show()
         detailCursor=detailCursor+math.max(lineHeight,label:GetStringHeight()+8)
     end
-    self.dingWindow:SetHeight(#details>0 and detailCursor+38 or cursor+48);self.dingWindow:Show()
+    self.dingWindow:SetHeight(#details>0 and detailCursor+38 or cursor+48)
+    -- The level-up popup is a notice; its preview sits beside the settings
+    -- page that tunes it.
+    addon.Dialogs:Configure(self.dingWindow,{kind=preview and "window" or "notice",group=preview and "settings" or false})
+    self.dingWindow:Show()
 end
 
 function M:SetGuildDingStatus(text)

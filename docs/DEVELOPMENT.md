@@ -1,5 +1,18 @@
 # Standalone Forever development
 
+Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
+window, dialog and dropdown registers with `addon.Dialogs:Register(frame,
+{kind, group, close})`. A `window` closes open windows/notices of other groups
+when shown; `notice` (reload prompt, level-up popup) never closes anything;
+`layer` (`W.Popup` menus) is Escape-only. Settings, its preview pop-out, the
+popup preview and Dungeon Loot's in-page dialogs share group `settings`; the
+Recruiter and its copy box share `recruiter`. Escape uses one stand-in frame,
+`PlayTheGameToolsEscapeHandler`, in `UISpecialFrames`; it is shown only while
+something is open and closes the newest entry per press. Register after any
+`SetScript("OnShow")` (hooks are used). Unprotected frames only; secure bars,
+menus and Camp Contributions are not registered. `tests/dialogs.py` guards it.
+Native confirmation is pending; `/reload` OOC (new TOC file: restart client).
+
 City Labels (Quality of Life, thirteenth module): Modules/CityLabelsData.lua
 (generated), CityLabels.lua, CityLabelsMap.lua + CityLabelsMapPins.xml and
 Config/CityLabels.lua (121 Lua chunks). One native map data provider on
