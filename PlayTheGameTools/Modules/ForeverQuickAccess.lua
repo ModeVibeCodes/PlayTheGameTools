@@ -73,6 +73,8 @@ function M:CreateBar()
     f:SetClampedToScreen(true);f:EnableMouse(true)
     f:SetFrameStrata("MEDIUM");f.buttons={}
     f.placeholder=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+    local path,size,flags=GameFontHighlightSmall:GetFont()
+    if not f.placeholder:SetFont(addon.Media:GetDisplayFont({}),size,flags or "") then f.placeholder:SetFont(path,size,flags or "") end
     f.placeholder:SetPoint("CENTER");f.placeholder:SetText("Professions");f.placeholder:Hide()
     addon.Media:ApplyBackdrop(f,{bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1},"foreverQuickAccess")
     local function start() addon.PositionManager:StartDragging(ELEMENT) end

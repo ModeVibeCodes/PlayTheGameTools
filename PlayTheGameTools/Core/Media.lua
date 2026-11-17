@@ -1,6 +1,7 @@
 local _, addon = ...
 
--- Shared media service. Game UI font changes are an explicit Global Settings feature.
+-- Shared media service. Global Font styles this addon's own text only; Blizzard
+-- FontObjects and other addons' fonts are never rewritten.
 local M = {
     gameFont = GameFontHighlight:GetFont(), chatFont = ChatFontNormal:GetFont(),
     regions = setmetatable({}, { __mode = "k" }),
@@ -306,7 +307,6 @@ function M:RefreshFonts()
     self:AttachLibrary()
     if InCombat() then self.pending = true; return end
     self.pending = false
-    self:ApplyGameFonts()
     for region, spec in pairs(self.regions) do self:ApplyInterfaceFont(region, spec) end
     for owner, callback in pairs(self.fontListeners) do callback(owner) end
     if self.borderPending then self:RefreshBorders() end
@@ -478,36 +478,6 @@ function M:RegisterProviderFonts()
         if ok and not (issecretvalue and issecretvalue(known)) and known==true then
             library:Register("font","Expressway",path)
             return
-        end
-    end
-end
-
--- User-requested game-wide font choice. Preserve each standard object's size,
--- flags and original face; addon-local explicit choices resolve immutable paths.
--- No SetFont hooks or third-party addon FontObjects are installed/rewritten.
-function M:ApplyGameFonts()
-    if not (addon.db and addon.db.globalMedia) then return end
-    if InCombat() then self.pending=true;return end
-    local selected=self:ResolveFont(addon.db.globalMedia.font) or self.gameFont
-    self.nativeFonts=self.nativeFonts or setmetatable({}, {__mode="k"})
-    for name,font in pairs(_G) do
-        if type(name)=="string" and (name:match("^GameFont") or name:match("^SystemFont") or name:match("^NumberFont")
-            or name:match("^ChatFont") or name:match("^QuestFont") or name:match("^GameTooltipText")
-            or name:match("^Tooltip") or name:match("^Invoice") or name:match("^MailFont") or name:match("^FriendsFont")
-            or name:match("^ErrorFont") or name:match("^SpellFont") or name:match("^AchievementFont")
-            or name:match("^ZoneTextFont") or name:match("^SubZoneTextFont") or name:match("^CombatTextFont"))
-            and not (issecretvalue and issecretvalue(font)) and (type(font)=="table" or type(font)=="userdata") then
-            pcall(function()
-                if font.GetObjectType and font:GetObjectType()=="Font" and font.GetFont and font.SetFont then
-                    local path,size,flags=font:GetFont()
-                    if type(path)=="string" and type(size)=="number" and size>0 then
-                        self.nativeFonts[font]=self.nativeFonts[font] or {path,size,flags}
-                        if path~=selected and font:SetFont(selected,size,flags or "")==false then
-                            local original=self.nativeFonts[font];font:SetFont(original[1],original[2],original[3] or "")
-                        end
-                    end
-                end
-            end)
         end
     end
 end

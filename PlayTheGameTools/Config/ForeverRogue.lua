@@ -94,7 +94,7 @@ function M:CreateConfigPage(parent)
         if launcher then
             Toggles({{"Show Label","showNames"},{"Show Inventory Count","showCounts"},{"Crop Icon","cropIcons"},{"Show Tooltip","tooltips"}},group)
             Sliders({{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
-            local c=page:Row("Label Text",42);local input=CreateFrame("EditBox",nil,c);input:SetSize(150,26);input:SetPoint("LEFT");input:SetAutoFocus(false);input:SetMaxLetters(40);input:SetFontObject(GameFontHighlight)
+            local c=page:Row("Label Text",42);local input=CreateFrame("EditBox",nil,c);input:SetSize(150,26);input:SetPoint("LEFT");input:SetAutoFocus(false);input:SetMaxLetters(40);input:SetFontObject(GameFontHighlight);addon.Media:BindInterfaceFont(input,GameFontHighlight)
             W.Texture(input,"InputField");input:SetTextInsets(6,6,0,0)
             local apply=W.Button(c,"Apply",64,26);apply:SetPoint("LEFT",input,"RIGHT",8,0)
             local function Apply() self:SetStyle(group,"labelText",input:GetText());input:ClearFocus();input:SetText(self.db[group].labelText) end

@@ -22,6 +22,7 @@ function M:ShowCopyBox(name)
         local eb=CreateFrame("EditBox",nil,cf)
         eb:SetSize(260,28);eb:SetPoint("TOP",0,-38);eb:SetAutoFocus(false)
         eb:SetFontObject(GameFontHighlight);eb:SetJustifyH("CENTER");eb:SetTextInsets(6,6,0,0)
+        addon.Media:BindInterfaceFont(eb,GameFontHighlight)
         W.Texture(eb,"InputField")
         -- Keep the text fixed to the name even if a key is typed into it.
         eb:SetScript("OnTextChanged",function(box,userInput)

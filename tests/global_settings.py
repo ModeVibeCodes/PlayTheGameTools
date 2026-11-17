@@ -56,7 +56,9 @@ Choose('font','media:PTG JetBrains Mono');Choose('texture','media:PTG Satin');Ch
 assert(addon.ReloadManager.requests.globalMedia)
 M:RefreshFonts()
 local path=M:GetFont('PTG JetBrains Mono')
-assert(GameFontHighlight:GetFont()==path and GameFontNormalLarge:GetFont()==path and ChatFontNormal:GetFont()==path,'standard game UI fonts follow global')
+-- Global Font is addon-only: Blizzard FontObjects keep their stock faces.
+assert(GameFontNormalLarge:GetFont()=='Fonts/FRIZQT__.TTF' and ChatFontNormal:GetFont()=='Fonts/ARIALN.TTF','game UI fonts untouched')
+assert(M.ApplyGameFonts==nil,'no game-wide font rewrite')
 assert(select(2,GameFontNormalLarge:GetFont())==16,'game font size retained')
 assert(M:GetDisplayFont({font='game',fontMedia=''})==path)
 assert(M:GetDisplayFont({font='chat',fontMedia=''})==M.chatFont,'explicit local chat choice retained')

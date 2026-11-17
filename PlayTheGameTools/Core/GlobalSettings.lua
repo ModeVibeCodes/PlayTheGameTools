@@ -170,7 +170,7 @@ function G:Start()
         if event=="LOOT_READY" then self:LootReady(...)
         elseif event=="LOOT_CLOSED" then self.lootGeneration=self.lootGeneration+1
         elseif event=="UI_SCALE_CHANGED" then self:ApplyScale()
-        elseif event=="ADDON_LOADED" then if not Combat() then self:ApplyErrors();addon.Media:ApplyGameFonts() end
+        elseif event=="ADDON_LOADED" then if not Combat() then self:ApplyErrors() end
         elseif event=="PLAYER_REGEN_ENABLED" then
             if addon.Media.sharedMediaPending then addon.Media:EnsureSharedMedia();addon.Media:DiscoverMedia() end
             if self.pending then self:Apply() end

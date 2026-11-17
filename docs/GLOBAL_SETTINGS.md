@@ -109,15 +109,14 @@ There are no module override sections on this page. Earlier experimental
 `globalMedia.overrides` data is retained but inert. Existing module custom fonts
 and XP texture settings remain more specific; their **Use Global Setting**
 choice resumes inheritance. Choosing Game/Chat locally pins the original native
-font path, even when the game UI's standard font objects use the global font.
+font path.
 
-The requested game-wide font behavior changes standard Blizzard FontObjects'
-faces outside combat, retaining their sizes, flags and colors. Standard game,
-system, chat, tooltip, quest and number fonts are covered; privately owned
-third-party FontObjects are not rewritten. Native text that does not use an
-accessible standard FontObject cannot be promised universal coverage. There are
-no global SetFont hooks or LSM:SetGlobal overrides. New/later-loaded standard
-objects are handled on addon loading; unchanged faces are not rewritten.
+**Global Font applies to Play The Game Tools' own interface only**: settings
+windows, Edit Mode and module displays. At the owner's request it no longer
+rewrites Blizzard's standard FontObjects, so unit frames, chat, tooltips, quest
+text and the rest of the game UI keep their stock fonts, as do other addons.
+There are no global SetFont hooks or LSM:SetGlobal overrides. Font objects
+reset on reload, so earlier game-wide changes disappear after one `/reload`.
 
 Owned module panel/icon borders resolve the global setting while retaining
 color/opacity/thickness and existing hidden or zero-size choices. Textures cover

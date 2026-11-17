@@ -111,6 +111,8 @@ function F:Render()
     local placeholder=#items==0 and self.owner.editing==true
     if not bar.placeholder then
         bar.placeholder=bar:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+        local path,size,flags=GameFontHighlightSmall:GetFont()
+        if not bar.placeholder:SetFont(addon.Media:GetDisplayFont({}),size,flags or "") then bar.placeholder:SetFont(path,size,flags or "") end
         bar.placeholder:SetPoint("CENTER");bar.placeholder:SetText("Food")
     end
     bar.placeholder:SetShown(placeholder)

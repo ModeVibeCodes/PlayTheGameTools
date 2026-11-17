@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Global Font now changes only Play The Game Tools' own windows and displays.
+  It no longer changes the font of the game's unit frames, chat, tooltips,
+  quest text or other addons. A `/reload` restores the game's original fonts.
 - Windows and pop-ups no longer stack: opening Settings, Edit Mode, the
   Recruiter or the Class Training flyout closes whichever of those is open.
   Companions stay with their window (Settings' pop-out preview and popup
