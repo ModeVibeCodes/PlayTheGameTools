@@ -32,7 +32,7 @@ assert(M:GetFont('PTG JetBrains Mono'):find('JetBrainsMono%-Regular.ttf'))
 assert(M.library:HashTable('statusbar')['PTG Graphite'])
 assert(M.library:HashTable('border')['Blizzard Tooltip'])
 assert(M.library:HashTable('border')['PTG Clean'] and M.library:HashTable('background')['PTG Matte'])
-assert(cvars.cameraDistanceMaxZoomFactor=='4' and math.abs(UIParent:GetScale()-768/1080)<.00001)
+assert(cvars.cameraDistanceMaxZoomFactor=='4' and cvars.uiScale=='1' and cvars.useUiScale=='0','startup leaves UI scale alone')
 addon:ToggleConfig();addon:SelectConfigPage('globalSettings')
 local w=addon.configWindow;local page=w.pages.globalSettings
 assert(w.moduleHeader.title:GetText()=='Global Settings' and not w.moduleHeader.toggle:IsShown())
@@ -129,13 +129,11 @@ assert(G:SetOption('hideErrors',false) and UIErrorsFrame:IsEventRegistered('UI_E
 UIErrorsFrame:UnregisterEvent('UI_ERROR_MESSAGE')
 G:SetOption('hideErrors',true);G:SetOption('hideErrors',false)
 assert(not UIErrorsFrame:IsEventRegistered('UI_ERROR_MESSAGE'),'do not restore an event suppressed by another owner')
-screenWidth,screenHeight=2560,1440;FireEvent('DISPLAY_SIZE_CHANGED');FireEvent('UI_SCALE_CHANGED')
-assert(math.abs(UIParent:GetScale()-768/1440)<.00001 and tonumber(cvars.uiScale)==.65)
-assert(G:SetOption('uiScale',80) and not G.db.autoScale and UIParent:GetScale()==.8)
-assert(G:SetOption('autoScale',true) and math.abs(UIParent:GetScale()-768/1440)<.00001)
-local priorScale=UIParent:GetScale();cvarLocked.useUiScale=true;G:ApplyScale()
-assert(G.status.uiScale:find('Unavailable') and UIParent:GetScale()==priorScale,'UI reports a rejected scale prerequisite')
-cvarLocked.useUiScale=false
+-- The game's own UI scale is never touched.
+local priorScale=UIParent:GetScale()
+screenWidth,screenHeight=2560,1440;FireEvent('DISPLAY_SIZE_CHANGED');FireEvent('UI_SCALE_CHANGED');G:Apply()
+assert(UIParent:GetScale()==priorScale and cvars.uiScale=='1' and cvars.useUiScale=='0','UI scale untouched')
+assert(G.ApplyScale==nil and not G:SetOption('uiScale',80) and not G:SetOption('autoScale',true),'no UI scale option')
 zoomMaximum=3.5;cvars.cameraDistanceMaxZoomFactor='1.9';assert(G:SetOption('cameraZoom',4) and G.db.cameraZoom==3.5)
 assert(G.status.cameraDistanceMaxZoomFactor:find('clamped'))
 local writes=#cvarWrites;testCombat=true
@@ -146,7 +144,7 @@ testCombat=false;FireEvent('PLAYER_REGEN_ENABLED');assert(not G.pending and #cva
 testLockdown=true;assert(not G:SetOption('autoLoot',true));testLockdown=false
 rejectedCVar='cameraDistanceMaxZoomFactor';G.db.cameraZoom=3;G:Apply()
 assert(G.status.cameraDistanceMaxZoomFactor:find('not accept'))
-local invalid=addon.ProfileCodec.Copy(addon.db);invalid.globalOptions.uiScale=0/0
+local invalid=addon.ProfileCodec.Copy(addon.db);invalid.globalOptions.cameraZoom=0/0
 assert(not addon.ProfileValidation:Validate(invalid),'invalid profile does not publish')
 ''')
 adopted,_=load(before=SETUP+"\ncvars.autoLootDefault='1'\n")
@@ -159,4 +157,4 @@ assert(P:Select('No Auto Loot',true))
 ''')
 off,_=load(adopted.eval('addon.ProfileCodec.Encode(PTGToolsDB)'),before=SETUP+"\ncvars.autoLootDefault='1'\n")
 off.execute("assert(not addon.GlobalSettings.db.autoLoot and cvars.autoLootDefault=='0','profile switching restores explicit off as well as on')")
-print('PASS bundled LSM, game/addon fonts, module overrides, account profiles/import/export/positions, class picker, loot epochs, scale/zoom readback and combat guards')
+print('PASS bundled LSM, game/addon fonts, module overrides, account profiles/import/export/positions, class picker, loot epochs, untouched UI scale, zoom readback and combat guards')

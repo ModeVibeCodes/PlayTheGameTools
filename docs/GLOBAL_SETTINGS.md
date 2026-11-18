@@ -170,14 +170,11 @@ remain excluded. Edit Mode's temporary active/dragging state is not serialized.
   client ceiling: accepted-value readback displays clamping and retains the
   accepted value. The game enforces its own limit. The mouse wheel still controls
   the current view; this changes its maximum distance, without forcing movement.
-- **Global UI Scale (%)** allows 40–115%. **Use Detected Scale** uses physical
-  screen height and `768 / height`: approximately .7111 at 1080p and .5333 at
-  1440p. Automatic detection is the initial default. A manual slider change exits
-  automatic mode. The native graphics slider's .65 lower bound remains respected
-  for the CVar; UIParent's supported scaling API applies the requested smaller
-  scale. Resolution/UI-scale events reapply it OOC with a reentrancy guard; combat
-  changes defer until combat ends. Actual resolution/scale/coexistence needs native
-  review. CVar writes verify public writable/nonsecure metadata and read back the
+- **Global UI Scale** was removed at the owner's request. The addon no longer
+  sets `useUiScale`/`uiScale` or resizes UIParent, so Blizzard's own UI Scale
+  option stays in control. Older saved `autoScale`/`uiScale` values are retained
+  but inert.
+- CVar writes verify public writable/nonsecure metadata and read back the
   accepted value; a refusal is shown instead of claiming success.
 - **Hide Error Text** unregisters only UIErrorsFrame's red-error event. It restores
   that event only if this helper originally found it registered. Yellow/system
@@ -250,11 +247,10 @@ and runtime media. No new native acceptance or release is claimed.
    sessions stay manual; confirmations/full bags retain native handling, and
    disabling restores stock timing without delayed requests on a later corpse.
 5. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Camera
-   Max Zoom / Global UI Scale (%) / Use Detected Scale / Applied Settings.
-   **Action:** adjust the sliders and restore detected scale. **Required state:**
-   OOC; repeat a resolution change separately. **Confirmation:** accepted camera
-   value/status matches the game; manual scale persists and detected scale matches
-   physical resolution; no reentrant scaling or combat writes/errors.
+   Max Zoom. **Action:** adjust the slider, then change Blizzard's own UI Scale
+   option and reload. **Required state:** OOC. **Confirmation:** accepted camera
+   value/status matches the game; Blizzard's UI Scale choice is kept after reload
+   and is not overridden; no combat writes/errors.
 6. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Hide
    Error Text. **Action:** enable, trigger an insufficient-resource error, disable
    and repeat. **Required state:** configure OOC. **Confirmation:** red text is

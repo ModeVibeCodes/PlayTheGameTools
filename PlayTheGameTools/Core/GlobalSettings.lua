@@ -16,12 +16,11 @@ local function Read(fn,...)
 end
 function G:ValidateOptions(db)
     assert(type(db)=="table","Global options must be a table; retained.")
-    for key,default in pairs({autoLoot=false,adoptAutoLoot=false,fastLoot=false,cameraZoom=4,autoScale=true,uiScale=71,hideErrors=false}) do
+    for key,default in pairs({autoLoot=false,adoptAutoLoot=false,fastLoot=false,cameraZoom=4,hideErrors=false}) do
         if db[key]==nil then db[key]=default end
         assert(type(db[key])==type(default),"Invalid global option: "..key)
     end
     assert(Number(db.cameraZoom,1,4),"Invalid camera zoom factor.")
-    assert(Number(db.uiScale,40,115),"Invalid global UI scale.")
     if db.classColors==nil then db.classColors={} end
     assert(type(db.classColors)=="table","Invalid class colors.")
     for class,color in pairs(db.classColors) do
@@ -58,15 +57,6 @@ function G:SetClassColor(class,color)
     addon.ReloadManager:Request("classColors","Apply custom class colors throughout the addon.")
     return true
 end
-function G:Resolution()
-    local width,height=Read(GetPhysicalScreenSize)
-    if Number(width,320,32768) and Number(height,200,32768) then return width,height end
-end
-function G:RecommendedScale()
-    local _,height=self:Resolution()
-    if height then return math.max(40,math.min(115,768/height*100)) end
-    return addon.db.globalOptions.uiScale
-end
 function G:WriteCVar(name,value)
     if Combat() then return false end
     local current,_,_,_,locked,secure,readOnly=Read(C_CVar and C_CVar.GetCVarInfo,name)
@@ -83,23 +73,6 @@ function G:WriteCVar(name,value)
     if not Number(numeric,0,100) then self.status[name]="Cannot verify the accepted value.";return false end
     self.status[name]=math.abs(numeric-tonumber(value))<.001 and "Applied." or ("Game accepted "..result.." (clamped).")
     return true,numeric
-end
-function G:ApplyScale()
-    if Combat() then self.pending=true;return end
-    if self.applyingScale then return end
-    local desired=self.db.autoScale and self:RecommendedScale() or self.db.uiScale
-    if self.db.autoScale and not self:Resolution() then self.status.uiScale="Resolution is not available yet.";return end
-    self.applyingScale=true
-    if not self:WriteCVar("useUiScale",1) then
-        self.status.uiScale=self.status.useUiScale;self.applyingScale=false;return
-    end
-    -- The native graphics slider starts at .65. UIParent's supported scale API
-    -- also allows the pixel-based 768/1440 scale below that graphics-slider floor.
-    if not self:WriteCVar("uiScale",math.max(.65,desired/100)) then self.applyingScale=false;return end
-    local ok=pcall(UIParent.SetScale,UIParent,desired/100)
-    local actual=Read(UIParent.GetScale,UIParent)
-    self.status.uiScale=ok and Number(actual,.1,2) and math.abs(actual-desired/100)<.001 and "Applied." or "The game did not accept the UI scale."
-    self.applyingScale=false
 end
 function G:ApplyErrors()
     local frame=UIErrorsFrame
@@ -124,14 +97,13 @@ function G:Apply()
         if type(native)=="boolean" then self.db.autoLoot=native;self.db.adoptAutoLoot=false end
     end
     if not self.db.adoptAutoLoot then self:WriteCVar("autoLootDefault",self.db.autoLoot and 1 or 0) end
-    self:ApplyScale();self:ApplyErrors()
+    self:ApplyErrors()
 end
 function G:SetOption(key,value)
-    if Combat() or not ({autoLoot=true,fastLoot=true,cameraZoom=true,autoScale=true,uiScale=true,hideErrors=true})[key] then return false end
+    if Combat() or not ({autoLoot=true,fastLoot=true,cameraZoom=true,hideErrors=true})[key] then return false end
     local candidate=addon.ProfileCodec.Copy(self.db);candidate[key]=value
     if not pcall(self.ValidateOptions,self,candidate) then return false end
     self.db[key]=value
-    if key=="uiScale" then self.db.autoScale=false end
     if key=="autoLoot" then self.db.adoptAutoLoot=false;self:WriteCVar("autoLootDefault",value and 1 or 0) end
     if key=="fastLoot" then self:ConfigureLoot() end
     self:Apply()
@@ -165,11 +137,10 @@ function G:Start()
     if self.events then return end
     self.db=addon.db.globalOptions
     local events=CreateFrame("Frame");self.events=events
-    for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","DISPLAY_SIZE_CHANGED","UI_SCALE_CHANGED","PLAYER_REGEN_ENABLED","ADDON_LOADED"}) do events:RegisterEvent(event) end
+    for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","PLAYER_REGEN_ENABLED","ADDON_LOADED"}) do events:RegisterEvent(event) end
     events:SetScript("OnEvent",function(_,event,...)
         if event=="LOOT_READY" then self:LootReady(...)
         elseif event=="LOOT_CLOSED" then self.lootGeneration=self.lootGeneration+1
-        elseif event=="UI_SCALE_CHANGED" then self:ApplyScale()
         elseif event=="ADDON_LOADED" then if not Combat() then self:ApplyErrors() end
         elseif event=="PLAYER_REGEN_ENABLED" then
             if addon.Media.sharedMediaPending then addon.Media:EnsureSharedMedia();addon.Media:DiscoverMedia() end

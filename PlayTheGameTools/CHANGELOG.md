@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Removed Global UI Scale from Global Settings → Optimizations. The addon no
+  longer changes or resets the game's UI scale; Blizzard's own UI Scale option
+  in the game's Graphics settings is in charge again.
 - Global Font now changes only Play The Game Tools' own windows and displays.
   It no longer changes the font of the game's unit frames, chat, tooltips,
   quest text or other addons. A `/reload` restores the game's original fonts.
