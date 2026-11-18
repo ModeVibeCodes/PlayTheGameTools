@@ -318,6 +318,21 @@ threat.execute('''
     assert(#M.entries==2 and M.entries[1].name=='Fixture' and M.entries[2].name=='Ally','pets hidden by default')
     assert(f.rows[1].percentText:GetText()=='80%' and f.rows[2]:IsShown() and not f.rows[3]:IsShown())
     assert(f.rows[1].edge:IsShown() and not f.rows[2].edge:IsShown(),'your own row is marked')
+    -- Bars wear class colors, yours brighter. The marker sits in a gutter left
+    -- of the bar, on the panel, never over a class color.
+    local function Same(a,b) for i=1,#b do if math.abs(a[i]-b[i])>1e-6 then return false end end;return true end
+    assert(Same(f.rows[1].statusBarColor,{0.78,0.61,0.43,0.9}) and Same(f.rows[2].statusBarColor,{0.41,0.8,0.94,0.7}),'class colors')
+    local point,rel,relPoint,x=f.rows[1].edge:GetPoint(1)
+    assert(point=='TOPRIGHT' and rel==f.rows[1] and relPoint=='TOPLEFT' and x<0,'marker sits in the gutter')
+    local T=addon.InterfaceTheme
+    assert(Same(f.rows[1].edge.color,T.primary) and not f.rows[1].warnFrame:IsShown(),'holding aggro: accent marker, no warning')
+    for id,theme in pairs(addon.InterfaceThemes) do
+        if type(theme)=='table' and theme.palette then
+            local p,w,far=theme.palette.primary,M.WARN_COLOR,0
+            for i=1,3 do far=math.max(far,math.abs(p[i]-w[i])) end
+            assert(far>0.25,'warning color differs from the '..id..' accent')
+        end
+    end
     assert(f.hint==nil and M.driver:GetScript('OnUpdate'),'no redundant Edit Mode label; polls with a target')
     local pm=addon.PositionManager
     assert(pm.elements.threatMeter and pm:GetPosition('threatMeter').x==320,'Edit Mode owns the seeded position')
@@ -328,6 +343,7 @@ threat.execute('''
     M:SetOption('showPets',true)
     assert(#M.entries==4 and M.entries[1].name=='Fixture' and M.entries[2].name=='Wolf (Fixture)','tanking first, then highest')
     assert(M.entries[4].name=='Imp (Ally)')
+    assert(Same(f.rows[2].statusBarColor,{0.5,0.53,0.58,0.7}),'pets are grey')
     -- Secret fields fall back to threat status; secrets are never compared.
     local secret={secret=true}
     local detailed=UnitDetailedThreatSituation
@@ -358,6 +374,8 @@ threat.execute('''
     assert(M.entries[1].name=='Wolf (Fixture)' and M.entries[1].aggro,'mob target first')
     assert(M.entries[2].name=='Ally' and M.entries[3].name=='Fixture','raw threat order')
     assert(f.rows[3].warn==true and f.rows[3].edge:IsShown(),'you are close to pulling')
+    assert(Same(f.rows[3].edge.color,M.WARN_COLOR) and f.rows[3].warnFrame:IsShown(),'warning: red marker and frame')
+    assert(not f.rows[1].warnFrame:IsShown() and not f.rows[2].warnFrame:IsShown(),'only your row warns')
     UnitDetailedThreatSituation=detailed;UnitIsUnit=nil;units.targettarget=nil;units.player[4]=true
     units.target=nil;FireEvent('PLAYER_TARGET_CHANGED')
     assert(#M.entries==0 and f.title:GetText()=='Threat' and not f.rows[1]:IsShown())

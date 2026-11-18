@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Threat Meter: your row's marker now sits in its own gap left of your bar, so
+  it no longer blends into your class color. When you are close to pulling
+  aggro the marker turns red (it was amber, which matched the Blizzard theme's
+  gold marker) and a thin red frame surrounds your bar.
 - Windows and pop-ups no longer stack: opening Settings, Edit Mode, the
   Recruiter or the Class Training flyout closes whichever of those is open.
   Companions stay with their window (Settings' pop-out preview and popup
