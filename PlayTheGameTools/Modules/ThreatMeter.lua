@@ -11,11 +11,18 @@ addon:RegisterModule("threatMeter",M)
 
 M.MAX_ROWS=10
 M.UPDATE_INTERVAL=0.5
--- Same graphite surfaces and hairlines as the settings window. Mint marks one
--- state only, your own row; it turns amber when you are close to pulling.
+-- Same graphite surfaces and hairlines as the settings window. The theme accent
+-- marks one state only, your own row, with a stripe in its own gutter left of
+-- the bar so it sits on the panel, never on a class color. Close to pulling,
+-- the stripe turns red and a red frame surrounds your bar.
 local WIDTH,HEADER,ROW,GAP,PAD=220,22,18,2,4
+local MARK=2
+local BAR_LEFT,BAR_WIDTH=PAD+MARK+GAP,WIDTH-PAD*2-MARK-GAP
 local FLAT="Interface\\Buttons\\WHITE8X8"
-local WARN={232/255,176/255,75/255}
+-- Red, unlike every theme accent (mint, gold, cyan), so a warning never
+-- reads as the ordinary marker.
+local WARN={240/255,86/255,72/255}
+M.WARN_COLOR=WARN
 local PET_COLOR={0.5,0.53,0.58}
 local DEFAULT_COLOR={0.6,0.6,0.6}
 local MESSAGES={unavailable="Threat data isn't available on this client.",
@@ -119,14 +126,21 @@ function M:CreateFrame()
     f.rows={}
     for i=1,self.MAX_ROWS do
         local bar=CreateFrame("StatusBar",nil,f)
-        bar:SetSize(WIDTH-PAD*2,ROW)
-        bar:SetPoint("TOPLEFT",PAD,-(HEADER+1+PAD+(i-1)*(ROW+GAP)))
+        bar:SetSize(BAR_WIDTH,ROW)
+        bar:SetPoint("TOPLEFT",BAR_LEFT,-(HEADER+1+PAD+(i-1)*(ROW+GAP)))
         bar:SetStatusBarTexture(addon.Media:GetSurfaceTexture("threatMeter"));bar:SetMinMaxValues(0,100)
         local track=bar:CreateTexture(nil,"BACKGROUND");track:SetAllPoints();addon.Media:PaintSurface(track,T.field,1,"threatMeter")
+        -- Gutter stripe, one row-gap left of the bar.
         bar.edge=bar:CreateTexture(nil,"OVERLAY")
-        bar.edge:SetPoint("TOPLEFT");bar.edge:SetPoint("BOTTOMLEFT");bar.edge:SetWidth(2)
+        bar.edge:SetPoint("TOPRIGHT",bar,"TOPLEFT",-GAP,0);bar.edge:SetPoint("BOTTOMRIGHT",bar,"BOTTOMLEFT",-GAP,0)
+        bar.edge:SetWidth(MARK)
+        -- 1px warning frame just outside the bar, over the panel and row gaps.
+        bar.warnFrame=CreateFrame("Frame",nil,bar)
+        bar.warnFrame:SetPoint("TOPLEFT",-1,1);bar.warnFrame:SetPoint("BOTTOMRIGHT",1,-1)
+        Outline(bar.warnFrame):SetColor(WARN)
+        bar.warnFrame:Hide()
         bar.nameText=Text(bar,11,T.text)
-        bar.nameText:SetPoint("LEFT",7,0);bar.nameText:SetWidth(WIDTH-PAD*2-56)
+        bar.nameText:SetPoint("LEFT",7,0);bar.nameText:SetWidth(BAR_WIDTH-56)
         bar.percentText=Text(bar,11,T.text,"RIGHT")
         bar.percentText:SetPoint("RIGHT",-6,0);bar.percentText:SetWidth(44)
         for _,text in ipairs({bar.nameText,bar.percentText}) do
@@ -315,6 +329,7 @@ function M:Update()
             bar.warn=e.player and not holding and fill>=90 or false
             if e.player then Paint(bar.edge,bar.warn and WARN or T.primary) end
             bar.edge:SetShown(e.player==true)
+            bar.warnFrame:SetShown(bar.warn)
             bar:Show()
         else
             bar:Hide()
