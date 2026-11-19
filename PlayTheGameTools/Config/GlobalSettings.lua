@@ -41,23 +41,10 @@ function addon:CreateGlobalSettingsPage(parent)
     local zoom=page:Row("Camera Max Zoom",48)
     page.refreshers[#page.refreshers+1]=W.Slider(zoom,1,4,.1,function() return G.db.cameraZoom end,function(v) G:SetOption("cameraZoom",v) end,"x",{decimals=1})
     page.zoomSlider=zoom.slider
-    local scale=page:Row("Global UI Scale (%)",48)
-    page.refreshers[#page.refreshers+1]=W.Slider(scale,40,115,1,function() return G.db.autoScale and G:RecommendedScale() or G.db.uiScale end,
-        function(v) G:SetOption("uiScale",v) end,"%",true)
-    page.uiScaleSlider=scale.slider
-    -- One button applies the scale recommended for the detected resolution.
-    local automatic=W.Button(page:Row("Automatic UI Scale",48),"Use Detected Scale",220,30);automatic:SetPoint("LEFT")
-    automatic:SetScript("OnClick",function() G:SetOption("autoScale",true);page:Refresh() end)
-    page.autoScaleButton=automatic
     -- Shown only when the client rejected Fast Loot this session.
     local blocked=W.Label(page:Row("Fast Loot",40),"Stopped after the client rejected it; loot manually.",nil,0,-4,360,T.primary)
     blocked:GetParent().row.visibleWhen=function() return G.lootBlocked==true end
-    page.refreshers[#page.refreshers+1]=function()
-        local width=G:Resolution()
-        automatic.label:SetText(width and ("Use Detected Scale ("..string.format("%.0f",G:RecommendedScale()).."%)") or "Use Detected Scale")
-        automatic:SetSelected(G.db.autoScale)
-        page:Layout()
-    end
+    page.refreshers[#page.refreshers+1]=function() page:Layout() end
 
     page:Section("Class Colors",nil,false)
     local host=page:Row("",180);host.rowLabel:Hide();host:ClearAllPoints()

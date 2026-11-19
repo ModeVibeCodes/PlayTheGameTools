@@ -257,13 +257,15 @@ function methods:GetObjectType() return self.kind end
 UIParent = Object()
 UIParent.width, UIParent.height = 1280, 800
 GameFontHighlight = Object()
+GameFontHighlightSmall = Object()
+GameFontHighlightSmall.font = {"Fonts/FRIZQT__.TTF", 10, ""}
 GameFontNormalLarge = Object()
 GameFontNormalLarge.font = {"Fonts/FRIZQT__.TTF", 16, ""}
 GameFontDisableSmall = Object()
 GameFontDisableSmall.font = {"Fonts/FRIZQT__.TTF", 10, ""}
 ChatFontNormal = Object()
 ChatFontNormal.font = {"Fonts/ARIALN.TTF", 12, ""}
-for _,font in ipairs({GameFontHighlight,GameFontNormalLarge,GameFontDisableSmall,ChatFontNormal}) do font.kind="Font" end
+for _,font in ipairs({GameFontHighlight,GameFontHighlightSmall,GameFontNormalLarge,GameFontDisableSmall,ChatFontNormal}) do font.kind="Font" end
 ColorPickerFrame = Object(UIParent)
 ColorPickerFrame:Hide()
 function ColorPickerFrame:SetupColorPickerAndShow(info)
