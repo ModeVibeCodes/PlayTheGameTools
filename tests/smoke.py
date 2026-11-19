@@ -45,6 +45,13 @@ lua, addon = load()
 lua.execute('''
     assert(addon.initialized and #addon.moduleOrder==13 and #addon.categoryOrder==5)
     assert(addon.Edition.name=='Forever' and addon.developmentPhase=='Forever Beta')
+    -- New installs: every gameplay module starts off, saved as an explicit false.
+    for _,id in ipairs(addon.moduleOrder) do
+        local module=addon.modules[id]
+        if not module.developer then
+            assert(module.defaultEnabled==false and not module.enabled and addon.db.modules[id].enabled==false,id..' starts off')
+        end
+    end
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)
     assert(SLASH_PLAYTHEGAMETOOLS1=='/ptg' and SLASH_PLAYTHEGAMETOOLS2==nil)
     SlashCmdList.PLAYTHEGAMETOOLS()
@@ -165,6 +172,13 @@ foreign.execute('''
     assert(ModeToolsDB==nil and addon.db.window.x==123 and addon.modules.combatTimer.enabled)
     assert(PlayTheGameToolsDB.reinviteDays==7 and PlayTheGameToolsDB.window==nil,'recruiter table untouched')
 ''')
+# Existing explicit choices survive the Class Training default change.
+kept, _ = load(before="PTGToolsDB={modules={foreverClassTraining={enabled=true}}}")
+kept.execute('''
+    assert(addon.modules.foreverClassTraining.enabled and addon.db.modules.foreverClassTraining.enabled==true,'saved on kept')
+''')
+off, _ = load(before="PTGToolsDB={modules={foreverClassTraining={enabled=false}}}")
+off.execute("assert(not addon.modules.foreverClassTraining.enabled and addon.db.modules.foreverClassTraining.enabled==false)")
 recruit, _ = load()
 recruit.execute('''
     local R=addon.ForeverRecruitment

@@ -35,8 +35,9 @@ installation procedure instead of changing it manually.
    or prototype is advertised as usable. Optional media addons are not required.
 
 For clean-install defaults, use a separate test account/client settings setup;
-never erase the developer's working SavedVariables. Confirm Class Training on,
-Combat Timer/Automation off, and no automatic training popout on login. This is a
+never erase the developer's working SavedVariables. Confirm every module page
+header reads Disabled (Class Training included), no Quick Actions button appears,
+and no automatic training popout on login. This is a
 separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning

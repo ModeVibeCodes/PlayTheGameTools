@@ -19,6 +19,8 @@ lua, _ = load()
 lua.execute(SETUP)
 lua.execute(r'''
     assert(not addon.modules.quickActions,'no page or switch of its own')
+    assert(Q.count==0 and not (Q.launcher and Q.launcher:IsShown()),'fresh install: every module off, no launcher')
+    addon:SetModuleEnabled('foreverClassTraining',true)
     ForceTraining()
     local b,ring=Q.launcher,Q.ring
     assert(b and b:IsShown() and b.icon.texture=='Interface\\Icons\\INV_Misc_Gear_01' and b.clamped)
@@ -176,6 +178,7 @@ recruiter.execute(SETUP)
 recruiter.execute(r'''
     local R=addon.ForeverRecruitment
     assert(not Q.actions.recruitment,'Recruitment starts off, so no icon')
+    addon:SetModuleEnabled('foreverClassTraining',true)
     ForceTraining();addon:SetModuleEnabled('dungeonLoot',true)
     local b,ring=Q.launcher,Q.ring
     addon:SetModuleEnabled('foreverRecruitment',true)
@@ -203,6 +206,7 @@ deferred_recruiter, _ = load()
 deferred_recruiter.execute(SETUP)
 deferred_recruiter.execute(r'''
     local R=addon.ForeverRecruitment
+    addon:SetModuleEnabled('foreverClassTraining',true)
     ForceTraining()
     testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
     addon:SetModuleEnabled('foreverRecruitment',true)

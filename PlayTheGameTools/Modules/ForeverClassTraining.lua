@@ -1,7 +1,7 @@
 local _, addon = ...
 local P = addon.ForeverTrainingData
 addon:RegisterCategory("questingLeveling",{title="Questing & Leveling"})
-local M = {title="Class Training", category="questingLeveling", defaultEnabled=true,
+local M = {title="Class Training", category="questingLeveling", defaultEnabled=false,
     configDescription="Browse your class training, upcoming levels and known ranks."}
 addon.ForeverClassTraining = M
 addon:RegisterModule("foreverClassTraining", M)

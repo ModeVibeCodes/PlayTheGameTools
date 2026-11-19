@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- New installs now start with every module off, including Class Training (it
+  used to start on). Turn on the modules you want from `/ptg`. Existing settings
+  are untouched: if Class Training is on for you now, it stays on.
 - Threat Meter: your row's marker now sits in its own gap left of your bar, so
   it no longer blends into your class color. When you are close to pulling
   aggro the marker turns red (it was amber, which matched the Blizzard theme's
