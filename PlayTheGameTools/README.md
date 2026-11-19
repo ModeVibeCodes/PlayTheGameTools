@@ -72,9 +72,9 @@ is not the installable package. Use one addon manager/source for this folder.
 
 ## First use and beta limits
 
-Class Training defaults on for new preferences and preserves an existing explicit
-off setting. Combat Timer and Automation default off; enable them individually
-in configuration. Automation can accept/complete quests, sell eligible junk and
+Every module, including Class Training, starts off for new preferences; enable
+the ones you want individually in configuration. Existing saved on/off choices
+are kept. Automation can accept/complete quests, sell eligible junk and
 spend personal funds when enabled. Review its switches before use. Gray equipment
 selling requires a separate opt-in. Auto Loot changes Blizzard's setting; disabling
 the option does not restore the previous client setting.

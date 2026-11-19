@@ -21,7 +21,9 @@ moves, through the shared Edit Mode, where it is listed as **Quick Actions**.
   widen the ring, and the main button's screen clamp grows so no icon opens
   off-screen.
 - A disabled module or hidden icon leaves the ring. With no icons left, the main
-  button and its Edit Mode entry hide. Dungeon Loot's keybinding is independent.
+  button and its Edit Mode entry hide. Every module starts off on a new install,
+  so the button first appears once Class Training, Dungeon Loot or Recruitment
+  is turned on. Dungeon Loot's keybinding is independent.
 - Nothing opens during combat. Frames are created and laid out outside combat only.
 
 ## Saved settings
