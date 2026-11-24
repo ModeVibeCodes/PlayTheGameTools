@@ -5,25 +5,27 @@ from smoke import load
 
 baseline,_=load(before=FIXTURE+EXTRA)
 baseline.execute('''
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
 function Keys(t) local out={} for k in pairs(t) do out[#out+1]=k end table.sort(out);return table.concat(out,'|') end
-assert(M.page.campfirePilot,'Modern uses the same element/panel layout')
-assert(not M.page.campfireColors.textColor.hex:IsShown(),'same picker-only color rows in every theme')
+CP=C.module.page
+assert(CP.campfirePilot,'Modern uses the same element/panel layout')
+assert(not CP.campfireColors.textColor.hex:IsShown(),'same picker-only color rows in every theme')
 addon.db.window.theme='mode'
 addon.db.globalMedia.border='media:PTG Clean'
 ''')
-controls=baseline.eval('Keys(M.page.campfireControls)')
-sliders=baseline.eval('Keys(M.page.campfireSliders)')
-colors=baseline.eval('Keys(M.page.campfireColors)')
+controls=baseline.eval('Keys(CP.campfireControls)')
+sliders=baseline.eval('Keys(CP.campfireSliders)')
+colors=baseline.eval('Keys(CP.campfireColors)')
 state=baseline.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 lua,_=load(state,before=FIXTURE+EXTRA)
 lua.globals().controlKeys=controls
 lua.globals().sliderKeys=sliders
 lua.globals().colorKeys=colors
 lua.execute(r'''
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page;page:SelectSectionTab(2)
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local page=C.module.page
 local pilot=page.campfirePilot
+assert(not page.sectionTabs and not page.modeLayout,'its own page: no section strip, the pilot owns the layout')
 assert(pilot and pilot.bar:IsShown() and pilot.element=='general' and pilot.panel=='options')
 function Keys(t) local out={} for k in pairs(t) do out[#out+1]=k end table.sort(out);return table.concat(out,'|') end
 assert(Keys(page.campfireControls)==controlKeys and Keys(page.campfireSliders)==sliderKeys and Keys(page.campfireColors)==colorKeys,'all original options retained')
@@ -41,7 +43,7 @@ for _,element in ipairs({'general','monitor','buffs','contributions'}) do
   assert(rim.modeAsset=='ModePillSurface' and rim.layer=='BACKGROUND' and pilot.buttons[element].fill.layer=='ARTWORK','high-resolution pill border backs the same smooth fill shape')
   assert(pilot.buttons[element].outline.shown and pilot.buttons[element].fill.points[1][4]==1.5,'main pill fill stays inside the outer border')
   if element=='general' then
-   assert(page.campfireControls.enabled.frame:GetParent().row:IsShown(),'General shows its options')
+   assert(page.campfireControls.showInCombat.frame:GetParent().row:IsShown(),'General shows its options')
    local text=page.campfireColors.textColor.host.row
    assert(text.editAppearance and not text:IsShown(),'shared text color is styled in Edit Mode')
   end
@@ -95,7 +97,7 @@ for _,width in ipairs({1000,840,480}) do
  -- Options here are checkboxes only, so no left checkbox column is needed.
  assert(not pilot.togglesLeft and pilot.inlineHeader:IsShown()==(width==480) and not pilot.inlineText:IsShown(),'compact header only on narrow pages')
  local cell=page.campfireControls.contributionUseInterfaceFont
- assert((cell.frame:GetParent()~=page.campfireControls.enabled.frame:GetParent()) and cell.frame:GetWidth()>0)
+ assert((cell.frame:GetParent()~=page.campfireControls.showInCombat.frame:GetParent()) and cell.frame:GetWidth()>0)
  assert(not size.row.divider:IsShown(),'pilot uses group separators instead of per-field lines')
  local first,last=pilot.buttons.general,pilot.buttons.contributions
  local left=first.points[1][4];local right=last.points[1][4]+last:GetWidth()
@@ -104,7 +106,7 @@ for _,width in ipairs({1000,840,480}) do
  assert(first:GetWidth()<=128 and first:GetWidth()/first:GetHeight()==4,'primary capsules keep the same preferred size and circular end proportions')
 end
 -- Existing setters and native picker/cancel still operate from the moved controls.
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:SetModuleEnabled('campfireMonitor',true)
 size.numericInput:SetText('21');size.numericInput.scripts.OnEnterPressed(size.numericInput)
 assert(C.db.contributionTitleSize==21,'numeric callback retained')
 local previous=C.db.contributionTitleColor[1]
@@ -112,10 +114,12 @@ color.pick.scripts.OnClick()
 ColorPickerFrame.r=.2;ColorPickerFrame.g=.3;ColorPickerFrame.b=.4;ColorPickerFrame.info.swatchFunc()
 assert(C.db.contributionTitleColor[1]==.2)
 ColorPickerFrame.info.cancelFunc();assert(C.db.contributionTitleColor[1]==previous)
-page:SelectSectionTab(1)
-assert(not pilot.bar:IsShown() and page.modeLayout.bar:IsShown() and page.scroll.points[1][5]==-page.modeLayout.viewportTop,'Loot Sparkles uses the shared Mode panels independently of the approved Campfire pilot')
+assert(pilot.bar:IsShown() and pilot.bar.points[1][5]==0 and page.scroll.points[1][5]==-(8+pilot.bar:GetHeight()),'pills sit at the top of the page, with no section strip above')
+local spark=addon:EnsureConfigPage('lootSparkles')
+assert(not spark.campfirePilot and spark.modeLayout and not spark.sectionTabs,'Loot Sparkles uses the shared Mode panels on its own page')
 local clear=page.scroll.ClearAllPoints;local anchorChanges=0
 function page.scroll:ClearAllPoints() anchorChanges=anchorChanges+1;page:Layout();clear(self) end
+pilot.viewportTop=nil -- force one re-anchor, as returning to the page from elsewhere does
 page:SelectCampfirePanel('general','options')
 assert(anchorChanges==1 and not pilot.layingOut,'native size callbacks cannot recurse through viewport layout')
 page.scroll.ClearAllPoints=clear
@@ -126,12 +130,12 @@ for _,query in ipairs({'Compact Buff Text','Title Color','Kit Name Size'}) do
   assert(not (row and row.editAppearance),'settings search does not offer Edit Mode styling: '..result.label)
  end
 end
-page:SelectSectionTab(1)
+page:SelectCampfirePanel('general')
 local target
 for _,entry in ipairs(page.searchEntries) do if entry.label=='Show Kit Icons' then target=entry;break end end
 assert(target)
 page:Reveal(target)
-assert(page.selectedSection==page.sections[2] and pilot.element=='contributions' and pilot.panel=='options' and target.row:IsShown(),'search reveals the correct element')
+assert(pilot.element=='contributions' and pilot.panel=='options' and target.row:IsShown(),'search reveals the correct element')
 for _,id in ipairs({'monitor','buffs','contributions'}) do
  page.campfireJumps[id].scripts.OnClick()
  assert(pilot.element==id and pilot.panel=='options','existing jump callers retain routing')
@@ -141,7 +145,8 @@ page:SelectCampfirePanel('buffs','text');page:SelectCampfirePanel('monitor')
 assert(pilot.panel=='options','settings always show Options')
 page.contributionPreview.scripts.OnClick();assert(A.previewing)
 page:SelectCampfirePanel('contributions','text');assert(A.previewing,'editing style does not stop preview')
-page:SelectSectionTab(1);assert(not A.previewing,'leaving Campfire retains preview cleanup')
+addon:SelectConfigPage('lootSparkles');assert(not A.previewing,'leaving Campfire retains preview cleanup')
+addon:SelectConfigPage('campfireMonitor')
 testCombat=true;testLockdown=true
 page:SelectCampfirePanel('general','options');assert(pilot.bar:IsShown(),'presentation navigation remains combat safe')
 testCombat=false;testLockdown=false
@@ -150,8 +155,8 @@ addon.db.window.theme='blizzard'
 restored,_=load(lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)'),before=FIXTURE+EXTRA)
 restored.globals().controlKeys=controls
 restored.execute('''
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local out={} for key in pairs(M.page.campfireControls) do out[#out+1]=key end table.sort(out)
-assert(M.page.campfirePilot and table.concat(out,'|')==controlKeys,'Blizzard uses the same controls and layout')
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local out={} for key in pairs(C.module.page.campfireControls) do out[#out+1]=key end table.sort(out)
+assert(C.module.page.campfirePilot and table.concat(out,'|')==controlKeys,'Blizzard uses the same controls and layout')
 ''')
 print('PASS shared rounded Campfire panels, complete control parity/reachability, paired text layout, search, callbacks and preview cleanup (mock only)')

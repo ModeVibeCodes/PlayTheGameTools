@@ -30,7 +30,7 @@ addon:ToggleConfig()
 assert(Inventory()==expectedInventory,'all original module setting rows retained')
 -- Native anchored viewports resolve after their strip. The mock normally gives
 -- unsized frames 1024 units, which previously hid this startup ordering bug.
-for _,id in ipairs({'foreverGuildRoster','lootSparkles','foreverClassTraining'}) do
+for _,id in ipairs({'foreverGuildRoster','foreverClassTraining'}) do
  local p=addon:EnsureConfigPage(id);local strip=p.sectionTabs;local viewport=strip.viewport
  local widths={};for i,button in ipairs(strip.buttons) do widths[i]=button:GetWidth() end
  viewport:SetWidth(0);strip:Layout()
@@ -63,7 +63,10 @@ local panels={'options','text','appearance'}
 for _,id in ipairs(addon.moduleOrder) do
  addon:SelectConfigPage(id)
  local p=addon:EnsureConfigPage(id)
- if id~='dungeonLoot' then assert(p.modeLayout,'Mode rollout missing '..id) else assert(p.modeBrowser) end
+ -- Campfire Monitor keeps its own approved pilot layout on its own page.
+ if id=='dungeonLoot' then assert(p.modeBrowser)
+ elseif id=='campfireMonitor' then assert(p.campfirePilot and not p.modeLayout)
+ else assert(p.modeLayout,'Mode rollout missing '..id) end
  for _,color in ipairs(p.settingsColors or {}) do
   assert(not color.hex:IsShown() and (not color.apply or not color.apply:IsShown()),'native picker replaces redundant fields '..id)
   assert(color.pick:GetWidth()==80)
@@ -113,7 +116,7 @@ for _,id in ipairs(addon.moduleOrder) do
  for _,row in ipairs(addon:EnsureConfigPage(id).rows or {}) do assert(not removed[row.settingsTitle or ''],'redundant note remains '..id..' '..tostring(row.settingsTitle)) end
 end
 local spark=addon:EnsureConfigPage('lootSparkles')
-spark:SelectModePanel('Loot Sparkles','options');spark:Layout()
+spark:SelectModePanel('sparkles','options');spark:Layout()
 assert(spark.sparkleStatus:GetText()==(addon.LootSparkles:StatusNotice() or ''),'live status keeps its text')
 local A=addon.ForeverAutomation;local automation=addon:EnsureConfigPage('foreverAutomation')
 automation:SelectModePanel('Quests','options');automation:Refresh();automation:Layout()
@@ -138,13 +141,14 @@ assert(sparkRow:IsShown() and spark.sparkleStatus:GetText():find('rejected',1,tr
 LS.status=nil;spark:Refresh();assert(not sparkRow:IsShown())
 local found=false
 for _,cells in ipairs(spark.toggleGrids) do for _,cell in ipairs(cells) do found=found or cell.label:GetText()=='Enable Loot Sparkles' end end
-assert(found,'Loot Sparkles keeps its own switch: the page switch also covers Campfire Monitor')
+for _,chip in pairs(spark.sparkleControls) do found=found or chip.label:GetText()=='Enable Loot Sparkles' end
+assert(not found and #spark.chipRows==1,'own module since the split: the module switch is the only switch')
 local Ro=addon.ForeverRogue;local rogue=addon:EnsureConfigPage('foreverRogue');local was=Ro.active
 Ro.active=false;rogue:Refresh();assert(not rogue.poisonStatus:GetParent().row:IsShown(),'no disabled echo')
 Ro.active=was;rogue:Refresh()
-local CM=addon.CampfireMonitor;local campOn=CM.db.enabled
-CM.db.enabled=false;spark:Refresh();spark:Layout();assert(not spark.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
-CM.db.enabled=campOn;spark:Refresh()
+local CM=addon.CampfireMonitor;local camp=addon:EnsureConfigPage('campfireMonitor');local campOn=CM.module.active
+CM.module.active=false;camp:Refresh();camp:Layout();assert(not camp.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
+CM.module.active=campOn;camp:Refresh()
 -- Food Bar: one switch for the two saved flags.
 local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
 for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
@@ -240,10 +244,11 @@ D:Navigate(nil);assert(not d.modeBrowser.viewport:IsShown(),'General panels hide
 D:Navigate(nil,'general');d:SelectModeBrowserPanel('appearance')
 d.iconSize.slider:SetValue(44);assert(D.db.shortcutSize==44,'browser slider keeps native setter')
 -- Shared selection code never changes the Campfire pilot or its preview cleanup.
-addon:SelectConfigPage('lootSparkles');local c=addon:EnsureConfigPage('lootSparkles')
+addon:SelectConfigPage('campfireMonitor');local c=addon:EnsureConfigPage('campfireMonitor');local sp=addon:EnsureConfigPage('lootSparkles')
 for i=1,3 do
- c:SelectCampfirePanel('monitor','text');assert(c.campfirePilot.bar:IsShown() and not c.modeLayout.bar:IsShown())
- c:SelectSectionTab(1);c:SelectModePanel('Loot Sparkles','text');assert(c.modeLayout.header:IsShown() and not c.campfirePilot.bar:IsShown())
+ c:SelectCampfirePanel('monitor','text');assert(c.campfirePilot.bar:IsShown() and not c.modeLayout)
+ addon:SelectConfigPage('lootSparkles');sp:SelectModePanel('sparkles','text');assert(sp.modeLayout.header:IsShown() and not sp.campfirePilot)
+ addon:SelectConfigPage('campfireMonitor')
 end
 testCombat=true;testLockdown=true
 p:SelectModePanel('launcherStyle','text');d:SelectModeBrowserPanel('options')
@@ -254,7 +259,7 @@ blizzard,_=load(lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)'),before=SETUP)
 blizzard.execute(inventory+'''
 addon:ToggleConfig();Inventory()
 for _,id in ipairs(addon.moduleOrder) do
- local p=addon:EnsureConfigPage(id);assert(p.modeLayout or p.modeBrowser,'Blizzard uses the same layout '..id)
+ local p=addon:EnsureConfigPage(id);assert(p.modeLayout or p.modeBrowser or (id=='campfireMonitor' and p.campfirePilot),'Blizzard uses the same layout '..id)
  for _,color in ipairs(p.settingsColors or {}) do assert(not color.hex:IsShown() and color.pick:GetWidth()==80,'same picker-only color rows') end
 end
 ''')

@@ -58,10 +58,10 @@ W.ModeLayoutPlans={
         if row.settingsHasSlider then return section.title,"appearance" end
         return section.title,"options"
     end},
-    lootSparkles={preserveSections=true,route=function(row)
-        if not row.section or row.section.title~="Loot Sparkles" then return end
-        if Label(row)=="Name Font Size" then return "Loot Sparkles","text" end
-        return "Loot Sparkles",(row.settingsGroupTitle or row.settingsGroup)=="Appearance" and "appearance" or "options"
+    -- One feature since Campfire Monitor split out to its own page.
+    lootSparkles={features={{"sparkles","Loot Sparkles"}},route=function(row)
+        if Label(row)=="Name Font Size" then return "sparkles","text" end
+        return "sparkles",(row.settingsGroupTitle or row.settingsGroup)=="Appearance" and "appearance" or "options"
     end},
     foreverRecruitment={preserveSections=true,route=function(row) if row.section then return row.section.title,"options" end end},
     foreverGuildRoster={preserveSections=true},
@@ -99,9 +99,9 @@ W.EditAppearance={
     roguePoisonReminder={page="foreverRogue",features={{"watchStyle","Poison Reminder"}}},
     rogueQuickPoisons={page="foreverRogue",features={{"launcherStyle","Quick Icon"},{"flyoutStyle","Expanded Menu"}}},
     -- Camp buffs share the icon window unless they are split into their own.
-    campfireMonitor={page="lootSparkles",features={{"monitor","Campfire Icon"},{"buffs","Camp Buffs",CampBuffsShared},{"general","Shared Text"}}},
-    campfireBuffs={page="lootSparkles",features={{"buffs","Camp Buffs"},{"general","Shared Text"}}},
-    campfireContributions={page="lootSparkles",features={{"contributions","Contributions"}}},
+    campfireMonitor={page="campfireMonitor",features={{"monitor","Campfire Icon"},{"buffs","Camp Buffs",CampBuffsShared},{"general","Shared Text"}}},
+    campfireBuffs={page="campfireMonitor",features={{"buffs","Camp Buffs"},{"general","Shared Text"}}},
+    campfireContributions={page="campfireMonitor",features={{"contributions","Contributions"}}},
 }
 -- The Text/Appearance panels are the styling Edit Mode takes over.
 W.EditAppearancePanels={text=true,appearance=true}

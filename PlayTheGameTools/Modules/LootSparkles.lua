@@ -1,12 +1,16 @@
 local _, addon = ...
 if not addon.Edition or addon.Edition.name ~= "Forever" then return end
 
-local M = {title="Gameplay Enhancements", category="questingLeveling", defaultEnabled=false,
-    configDescription="Independent quality-of-life features. Choose a tab and enable the features you want."}
+-- v2 split: Loot Sparkles keeps the "lootSparkles" ID and saved table that the
+-- old Gameplay Enhancements module used. Campfire Monitor is its own module
+-- (CampfireMonitor.lua) whose settings still live in this table's "campfire".
+local M = {title="Loot Sparkles", category="questingLeveling", defaultEnabled=false,
+    searchAliases={"gameplay enhancements"},
+    configDescription="Sparkles over things you can loot or gather in the world."}
 addon.LootSparkles = M
 addon:RegisterModule("lootSparkles", M)
 
-M.defaults = {sparklesEnabled=true, questSparkles=true, ore=true, herbs=true, questObjects=true, corpses=true,
+M.defaults = {questSparkles=true, ore=true, herbs=true, questObjects=true, corpses=true,
     showNames=true, size=36, opacity=85, fontSize=14, offsetY=-45}
 M.ranges = {size={16,72,2}, opacity={20,100,5}, fontSize={10,24,1}, offsetY={-120,60,5}}
 local softCVars = {SoftTargetInteract="3", SoftTargetIconGameObject="1",
@@ -23,7 +27,21 @@ end
 function M:OutsideCombat()
     return self.Read(InCombatLockdown) == false and self.Read(UnitAffectingCombat, "player") == false
 end
+-- Before the split, "enabled" was the Gameplay Enhancements master and
+-- sparklesEnabled/campfire.enabled were the inner switches. Once per profile,
+-- record the old master in splitMasterEnabled (Campfire Monitor reads it) and
+-- make this switch master AND sparklesEnabled. The old inner values stay
+-- saved and unread; nothing else is moved or erased. Pure: profile
+-- validation runs it on detached copies before modules initialize.
+function M.AdoptSplit(db)
+    if db.splitMasterEnabled ~= nil then return end
+    local master = db.enabled == true
+    db.splitMasterEnabled = master
+    db.enabled = master and db.sparklesEnabled ~= false
+end
 function M.Initialize(db)
+    M.AdoptSplit(db)
+    assert(type(db.splitMasterEnabled) == "boolean", "Invalid Loot Sparkles setting: splitMasterEnabled")
     for key, default in pairs(M.defaults) do
         if db[key] == nil then db[key] = default end
         local value, range = db[key], M.ranges[key]
@@ -33,6 +51,7 @@ function M.Initialize(db)
                 (value-range[1]) % range[3] == 0, "Invalid Loot Sparkles range: "..key)
         end
     end
+    -- Campfire Monitor's saved table stays here; validate it with its owner.
     if addon.CampfireMonitor then addon.CampfireMonitor.Initialize(db) end
 end
 function M:HasNodes() return self.db.ore or self.db.herbs or self.db.questObjects or self.db.corpses end
@@ -94,9 +113,9 @@ function M:Configure(force)
     end
     self.pending=nil
     local conflict = self:Conflict()
-    self.running = self.active and self.db.sparklesEnabled and not conflict
+    self.running = self.active and not conflict
     self.status = conflict and ("Paused: disable "..conflict.." in AddOns and reload to avoid competing settings.") or
-        (self.active and self.db.sparklesEnabled and "Ready. One nearby interaction target; custom sparkles pause in combat." or "Loot Sparkles disabled. Previous owned settings restored.")
+        (self.active and "Ready. One nearby interaction target; custom sparkles pause in combat." or "Loot Sparkles disabled. Previous owned settings restored.")
     if self.running and self.db.questSparkles then self:Write(questCVar,"1",force=="questSparkles")
     else self:Restore(questCVar) end
     self.nodes = self.running and self:HasNodes()
@@ -141,7 +160,6 @@ function M:UpdatePoller()
 end
 function M:OnInitialize()
     self.Initialize(self.db)
-    if addon.CampfireMonitor then addon.CampfireMonitor:Attach(self) end
     self.units={}
     self.driver=CreateFrame("Frame")
     self.driver:SetScript("OnEvent",function(_,event,unit)
@@ -193,11 +211,7 @@ function M:OnEnable()
         pcall(self.driver.RegisterEvent,self.driver,event)
     end
     self:Configure(false)
-    if addon.CampfireMonitor then addon.CampfireMonitor:SyncEnabled() end
     self.questWasOn=self.db.questSparkles
-end
-function M:SetEditMode(enabled)
-    if addon.CampfireMonitor then addon.CampfireMonitor:SetEditMode(enabled) end
 end
 function M:OnDisable()
     self.active=false
@@ -205,5 +219,4 @@ function M:OnDisable()
     self.nodes=false; self.running=false
     self.driver:SetScript("OnUpdate",nil)
     self:Configure(false); self:RestartNotice()
-    if addon.CampfireMonitor then addon.CampfireMonitor:StopPreview();addon.CampfireMonitor:SyncEnabled() end
 end

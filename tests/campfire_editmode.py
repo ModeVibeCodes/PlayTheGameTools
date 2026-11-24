@@ -17,7 +17,7 @@ tips[102]={lines={{leftText='Camp Benefits'},
 }}
 auras={{spellId=C.NEARBY,auraInstanceID=101,icon=135805},
  {spellId=C.BENEFITS,auraInstanceID=102,duration=3600,expirationTime=testClock+3600}}
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:SetModuleEnabled('campfireMonitor',true)
 local pm=addon.PositionManager
 assert(C.active and pm.elements.campfireMonitor)
 assert(Plain(C.frame.buffTitle:GetText())=='Camp Buffs')
@@ -57,7 +57,7 @@ assert(Plain(C.frame.text:GetText()):find('2 hours remaining',1,true),'native fu
 auras={};C:Refresh();assert(not C.frame:IsShown())
 addon:SetEditMode(true)
 assert(C.frame:IsShown() and C.frame.buffTimer==nil and Plain(C.frame.text:GetText()):find('2%% Crit'))
-addon:SetEditMode(false);addon:SetModuleEnabled('lootSparkles',false)
+addon:SetEditMode(false);addon:SetModuleEnabled('campfireMonitor',false)
 assert(not pm.elements.campfireMonitor.editMode and not C.timerDriver)
 ''')
 state=lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')

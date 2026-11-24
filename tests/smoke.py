@@ -43,7 +43,8 @@ def load(encoded=None, project=18, variable='PTGToolsDB', before=None):
 files, order, _ = payload()
 lua, addon = load()
 lua.execute('''
-    assert(addon.initialized and #addon.moduleOrder==13 and #addon.categoryOrder==5)
+    -- Campfire Monitor split from Loot Sparkles (Gameplay Enhancements): 14 modules.
+    assert(addon.initialized and #addon.moduleOrder==14 and #addon.categoryOrder==5)
     assert(addon.Edition.name=='Forever' and addon.developmentPhase=='Forever Beta')
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)
     assert(SLASH_PLAYTHEGAMETOOLS1=='/ptg' and SLASH_PLAYTHEGAMETOOLS2==nil)
