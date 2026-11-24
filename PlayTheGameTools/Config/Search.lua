@@ -42,18 +42,10 @@ function addon:SearchSettings(query, limit)
             results[#results + 1] = { module = module, label = module.title, score = score, kind = "module",
                 title = module.title, context = module.configDescription or module.description or "" }
         end
-        -- Display styling is edited in Layout, not on this page; a section
-        -- holding only such rows has no heading on the page to scroll to.
-        local entries, styledOnly = page and page.searchEntries or {}, {}
-        for _, entry in ipairs(entries) do
-            if entry.kind ~= "section" and entry.section then
-                local styled = entry.row and entry.row.editAppearance and true or false
-                styledOnly[entry.section] = styled and styledOnly[entry.section] ~= false
-            end
-        end
-        for _, entry in ipairs(entries) do
-            -- An entry may name a condition under which its control exists at all.
-            if not (entry.row and entry.row.editAppearance) and not (entry.kind == "section" and styledOnly[entry.section])
+        for _, entry in ipairs(page and page.searchEntries or {}) do
+            -- An entry may name a condition under which its control exists at
+            -- all; an entry without a label (an unlabelled row) is never a result.
+            if entry.label and entry.label ~= ""
                 and (not entry.available or entry.available()) then
                 local rank = Match(entry.label, query)
                 for _, alias in ipairs(entry.keywords or {}) do

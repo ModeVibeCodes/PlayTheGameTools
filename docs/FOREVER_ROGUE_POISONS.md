@@ -1,5 +1,22 @@
 # Rogue class tools
 
+> **v2 (current page):** sidebar **Rogue Tools** is one scroll of three groups.
+> **Poison Reminder:** **Show reminder**, **When** (When Needed / When Needed
+> (OOC) / Always Outside Combat / Always, Including Combat), **Use Time
+> Threshold** / **Use Charge Threshold**, **Reminder Threshold (min)** /
+> **Charge Threshold**, **Show icons**, **Show weapon hands**, **Show poison names**, **Show time
+> left**, **Show item counts**, **Show poison charges**, **Right-click to
+> dismiss**, **Customize Reminder**. **Quick Poisons:** **Show quick poisons**,
+> **When** (When Needed / Always Outside Combat), **Menu opens** (Up / Down /
+> Left / Right), **Show icon**, **Show icon label**, **Show icon count**, **Icon tooltip**,
+> **Show menu icons**, **Show menu names**, **Show menu counts**, **Menu tooltips**, **Customize Quick
+> Access**. **Settings:** the six poison tiles, **Refresh Poisons**, **Restore
+> Dismissed**, **Dismiss Quick Access**. Each group's rows below its switch show
+> only while that switch is on. Styling (sizes, fonts, colors, borders) lives in
+> Layout; **Customize** opens it. Layout-only keys (vertical layout, poison
+> columns, label and timer position, label text, visible menu rows) stay saved
+> with no control. The sections below describe the earlier layout.
+
 November 8, 2026, layout revision on `codex/rogue-tools-layout`. The owner confirmed
 the previous inventory-backed application version working in quick testing; that
 confirmation does not cover this revision's layout, dismissal or shared Edit Mode

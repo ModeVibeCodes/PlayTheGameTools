@@ -11,15 +11,15 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
 
 ## Included features
 
-- **Global Settings:** shared addon/game UI fonts, bundled LibSharedMedia choices,
-  remembered shared media and cataloged assets from installed disabled providers,
-  installed SharedMedia/MyMedia activation and custom media registrations,
-  account-wide profiles with import/export, class-color pickers, Auto Loot/Fast
-  Loot, camera distance, detected/manual UI scale and red-error text controls.
-  Open `/ptg` → Global Settings; [details and native checks](docs/GLOBAL_SETTINGS.md).
-- **Experience Bar:** opt-in under Questing & Leveling; flat or native
-  Blizzard/SharedMedia fill, current/rested/total-quest-log XP, full-height tinted
-  overlays, session time/XP per hour, separate bar/session text controls and shared Edit Mode movement.
+- **Settings:** the page pinned at the bottom of the sidebar: the interface
+  **Theme** (Modern, Blizzard, mode), nine **Class colors**, **Fast loot**,
+  **Hide red error text**, **Camera distance**, account-wide profiles with
+  import/export (**Active profile**, **Manage**) and **About**. Displays use the
+  built-in font, surface and edge; each display is styled in **Layout**.
+  Open `/ptg` → **Settings**; [details and native checks](docs/GLOBAL_SETTINGS.md).
+- **Experience Bar:** opt-in under Questing & Leveling; current/rested/total-quest-log XP,
+  full-height tinted overlays, session time/XP per hour, and Layout for
+  movement and styling (Scale, Opacity, Text size, Background).
   Choose PTG or existing XP bars, with opt-in native/Ellesmere XP-only hiding.
   See [behavior, limits and testing](docs/ENHANCED_EXPERIENCE_BAR.md).
 
@@ -58,7 +58,7 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   a re-invite window, and a **History** menu for the never-invite list, invite
   history and invite/join/decline statistics.
 - **Loot Sparkles:** opt-in Gameplay Enhancements under Questing & Leveling; clearer quest objects, herbs, ore and lootable corpses with optional names and range text. Custom indicators pause in combat.
-- **Campfire Monitor:** Gameplay Enhancements tab with an optional native nearby-fire icon/text display, compact earned bonuses in a joined or separately movable window, appearance/position controls and a profession reference guide. Campfire monitoring starts off. Includes a movable Camp Contributions popup for ready carried profession kits, with native click-to-place actions, detected-kit summary, safe sample preview and shared Edit Mode positioning. Text colors use the native picker; gradients are optional. Contributions has independent window, icon, row and text styling; quick jumps link the three campfire elements.
+- **Campfire Monitor:** Gameplay Enhancements tab with an optional native nearby-fire icon/text display, compact earned bonuses in a joined or separately movable window, Layout positioning and styling, and a profession reference guide. Campfire monitoring starts off. Includes a movable Camp Contributions popup for ready carried profession kits, with native click-to-place actions, detected-kit summary, safe sample preview and shared Edit Mode positioning. Each of the three campfire displays is styled in Layout; the page keeps their show/hide switches.
 - **Shared configuration:** independent module switches, saved settings, appearance
   controls and positioning/preview tools where supported by the module.
 
@@ -94,9 +94,9 @@ Class Training defaults on for new preferences and preserves an existing explici
 off setting. Combat Timer and Automation default off; enable them individually
 in configuration. Automation can accept/complete quests, sell eligible junk and
 spend personal funds when enabled. Review its switches before use. Gray equipment
-selling requires a separate opt-in. Auto Loot is now under Global Settings →
-Optimizations and works independently of Automation. First adoption retains the
-native preference; afterward profiles restore the selected on/off value.
+selling requires a separate opt-in. The addon no longer has an Auto Loot
+switch; the game's own Auto Loot option is left to the player, and **Settings →
+Game → Fast loot** works independently of Automation.
 
 Training costs are catalog estimates before discounts, not guaranteed trainer
 offers. Eligibility can be uncertain; pet training, tomes, quest acquisition and

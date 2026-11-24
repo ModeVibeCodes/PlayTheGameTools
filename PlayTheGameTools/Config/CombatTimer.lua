@@ -108,37 +108,8 @@ function addon:CreateTimerOptions(parent, timer, options)
         button:SetScript("OnClick", function() callback(); page:Refresh() end)
         return button
     end
-    local function Slider(title, minimum, maximum, step, getter, setter, suffix, numeric)
-        local row = page:Row(title)
-        page.refreshers[#page.refreshers + 1] = widgets.Slider(row, minimum, maximum, step, getter, setter, suffix, numeric)
-        if title == "Font Size" then page.fontSizeInput, page.fontSizeSlider = row.numericInput, row.slider
-        elseif title == "Background opacity" then page.opacityInput, page.opacitySlider = row.numericInput, row.slider
-        elseif title == "Frame scale" then page.scaleInput, page.scaleSlider = row.numericInput, row.slider end
-    end
-
     widgets.Preview(page, timer)
-    -- The timer always reads MM:SS, so there is no format choice.
-    page:Section("Display")
-    local font, refreshFont = widgets.FontDropdown(page:Row("Font", nil, { "font selection", "typeface" }), timer)
-    page.fontDropdown = font
-    page.refreshers[#page.refreshers + 1] = refreshFont
-    Slider("Font Size", 10, 48, 1, function() return timer.db.appearance.fontSize end, function(v) timer:SetAppearance("fontSize", v) end, nil, true)
-    local outline = Action(page:Row("Text outline", nil, { "font outline" }), "", 30, function() timer:SetAppearance("outline", not timer.db.appearance.outline) end, "checkbox")
-    page.outlineButton = outline
-    page.refreshers[#page.refreshers + 1] = function()
-        outline:SetSelected(timer.db.appearance.outline)
-    end
-
-    widgets.ColorRow(page, timer, "Text Color", "textColor")
-    widgets.ColorRow(page, timer, "Background Color", "backgroundColor")
-    Slider("Background opacity", 0, 100, 5,
-        function() return math.floor(timer.db.appearance.backgroundOpacity * 100 + 0.5) end,
-        function(v) timer:SetAppearance("backgroundOpacity", v / 100) end, "%", { minimum = 1, maximum = 100 })
-
-    Slider("Frame scale", 50, 200, 5,
-        function() return math.floor(timer.db.appearance.scale * 100 + 0.5) end,
-        function(v) timer:SetAppearance("scale", v / 100) end, "%", true)
-
+    -- Font, size, colors and scale are styled in Layout (the Style card).
     page:Section("Behavior")
     if options.behavior then options.behavior(page, Action)
     else

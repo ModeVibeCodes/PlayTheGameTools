@@ -33,9 +33,9 @@ frames; this change removes the remaining paths that applied a saved font,
 texture or border to settings text, Edit Mode or module displays.
 
 Per-display choices on module pages (a display's own font, the XP bar texture,
-icon borders) still list every LibSharedMedia entry and still apply. Their
-**Use Global Setting** choice now means the built-in default above; renaming that
-label belongs to the module pages.
+icon borders) are gone since the v2 styling reset (see DEVELOPMENT.md): each
+display uses the built-in defaults above, scaled by its Layout Style card. Saved
+per-display styling was reset once per profile, with a one-time notice.
 
 **Class colors** is one row of nine class swatches. Clicking a swatch opens the
 native color picker (blocked in combat); cancelling restores the previous color.

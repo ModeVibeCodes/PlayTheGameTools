@@ -67,7 +67,6 @@ function W.Page(parent, minimumWidth)
                 if row.divider then row.divider:Hide() end
             end
             local show = row.sectionHeader or not row.section or row.section.expanded
-            if self.ModeRowVisible then show=self:ModeRowVisible(row,show) end
             if row.visibleWhen then show=show and row.visibleWhen() end
             row:SetShown(show)
             return show
@@ -188,12 +187,20 @@ function W.Page(parent, minimumWidth)
         local row = entry.row
         if row and row:IsShown() then
             bar:SetValue(math.max(0, (row.offset or 0) - 8))
-            if not row.searchHighlight then row.searchHighlight = W.Fill(row, T.primary, "OVERLAY", 1, 0.08) end
-            row.searchHighlight:Show()
-            row.searchEpoch = (row.searchEpoch or 0) + 1
-            local epoch = row.searchEpoch
+            -- entry.flash names a control outside the scroll (a page-header
+            -- button) to outline instead of flashing the row.
+            local target = entry.flash and entry.flash()
+            if target and target:IsShown() then
+                if not target.searchHighlight then target.searchHighlight = W.Outline(target, T.primary, "OVERLAY", -3, 1) end
+            else
+                target = row
+                if not row.searchHighlight then row.searchHighlight = W.Fill(row, T.primary, "OVERLAY", 1, 0.08) end
+            end
+            target.searchHighlight:SetShown(true)
+            target.searchEpoch = (target.searchEpoch or 0) + 1
+            local epoch = target.searchEpoch
             C_Timer.After(1.5, function()
-                if row.searchEpoch == epoch then row.searchHighlight:Hide() end
+                if target.searchEpoch == epoch then target.searchHighlight:SetShown(false) end
             end)
         end
     end
@@ -250,7 +257,6 @@ function W.Page(parent, minimumWidth)
         self.searchEntries[#self.searchEntries + 1] = { label = title, keywords = keywords, section = self.activeSection, row = row, kind = "setting" }
         controls.row, controls.rowLabel = row, label
         row.settingsHost,row.settingsLabel,row.settingsTitle,row.settingsGroup=controls,label,title,self.activeGroup
-        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.cursor = self.cursor + height + 4
         return controls
     end
@@ -261,7 +267,6 @@ function W.Page(parent, minimumWidth)
         local heading=title:gsub("(%a)([%w]*)",function(first,rest) return first:upper()..rest end)
         row.subsectionHeading=W.Heading(row, heading, T.fontSize.group, 0, -10, 360, T.secondary)
         row.settingsGroupTitle=title;self.activeGroup=title
-        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.rows[#self.rows + 1] = row
         self.cursor = self.cursor + 42
     end

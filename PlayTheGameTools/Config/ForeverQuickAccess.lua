@@ -36,29 +36,9 @@ function M:CreateConfigPage(parent)
             cell.frame:SetEnabled(p~=nil);cell.button:SetEnabled(p~=nil)
         end
     end
-    page:Section("Layout")
-    Slider("Bar Scale","scale","%")
-    Slider("Icon Size","iconSize")
-    Slider("Icons Per Row","columns")
-    Slider("Icon Spacing","spacing")
-    Slider("Bar Padding","padding")
-    Toggle("Show Profession Names","showNames")
-    Slider("Name Font Size","fontSize")
-    Toggle("Show Tooltips","showTooltips")
-    page:Section("Appearance")
-    -- Reuse the established color widget through a narrow adapter; storage stays flat.
-    local colorOwner={db={appearance=self.db}}
-    function colorOwner:CanConfigure() return M:CanConfigure() end
-    function colorOwner:SetAppearance(key,value) return M:SetOption(key,value) end
-    function colorOwner:GetFonts() return M:GetFonts() end
-    local _,refreshFont=W.FontDropdown(page:Row("Name Font"),colorOwner)
-    page.refreshers[#page.refreshers+1]=refreshFont
-    Toggle("Name Outline","outline")
-    W.ColorRow(page,colorOwner,"Background Color","backgroundColor")
-    Slider("Background Opacity","backgroundOpacity","%")
-    W.ColorRow(page,colorOwner,"Border Color","borderColor")
-    Slider("Border Opacity","borderOpacity","%")
-    W.ColorRow(page,colorOwner,"Name Color","textColor")
+    -- Icon size, fonts and colors are styled in Layout (the Style card).
+    page:ToggleGrid({{label="Show Tooltips",get=function() return self.db.showTooltips end,set=function(v) self:SetOption("showTooltips",v) end},
+        {label="Show Profession Names",get=function() return self.db.showNames end,set=function(v) self:SetOption("showNames",v) end}})
     page:Section("Visibility")
     Slider("Out of Combat Opacity","outOpacity","%")
     Slider("In Combat Opacity","combatOpacity","%")

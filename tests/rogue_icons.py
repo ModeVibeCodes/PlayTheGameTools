@@ -9,29 +9,28 @@ lua.execute(r'''
 local M=addon.ForeverRogue
 addon:SetModuleEnabled('foreverRogue',true);M:SetOption('flyout',true)
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue');local p=M.page
-assert(not p.customize and p.iconGroups.watchStyle and p.iconGroups.launcherStyle)
+-- v2: the page holds no styling rows; Customize opens the display in Layout.
+assert(not p.iconGroups and not p.poisonStyles and not p.poisonSliders['watchStyle:iconSize'])
 local function Visible(frame)
  while frame do if not frame:IsShown() then return false end;frame=frame:GetParent() end
  return true
 end
--- Layout's shared Style card replaced the borrowed styling column. The page's
--- own icon rows stay off screen (removed in a later pass) and still save below.
-assert(addon:SetEditMode(true) and addon.PositionManager:SelectElement('roguePoisonReminder'))
-assert(addon.editWindow.styleCard:IsShown() and not Visible(p.poisonSliders['watchStyle:iconSize']),'only the Style card in Layout')
-assert(not p.poisonSliders['watchStyle:iconPadding'] and not p.poisonSliders['launcherStyle:iconPadding'] and not p.poisonSliders['flyoutStyle:iconPadding'])
-assert(not p.poisonSliders['watchStyle:spacing'] and not p.poisonSliders['watchStyle:cellWidth'])
+-- Layout's shared Style card replaced the page's styling rows; the module's
+-- own style values still render and save below.
+p.displayButtons[1].scripts.OnClick()
+assert(addon.editMode and addon.PositionManager.selected=='roguePoisonReminder','Customize Reminder opens it in Layout')
+assert(addon.editWindow.styleCard:IsShown(),'only the Style card in Layout')
+for key in pairs(p.poisonSliders) do assert(key:sub(1,5)=='root:','no styling sliders on the page: '..key) end
 assert(addon.PositionManager:SelectElement('rogueQuickPoisons'))
 assert(addon.editWindow.styleCard.title:GetText()=='Rogue: Quick Access Poisons')
 addon:SetEditMode(false)
 assert(not M.watchButtons[1].globalIconBorder.iconBorder:IsShown() and not M.watchButtons[1].iconBackground:IsShown(),'Default reminder remains bare')
 local a,b=M.watchButtons[1],M.watchButtons[2]
-local input=p.poisonSliders['watchStyle:iconGap'].numericInput
 for _,gap in ipairs({0,8,30,120}) do
- input:SetText(tostring(gap));input.scripts.OnEnterPressed()
+ assert(M:SetStyle('watchStyle','iconGap',gap))
  assert(M.db.watchStyle.iconGap==gap and b.points[1][4]-a.points[1][4]-a:GetWidth()==gap,'Gap is the true space between icon buttons')
 end
-input:SetText('30');input.scripts.OnEnterPressed()
-input=p.poisonSliders['watchStyle:iconSize'].numericInput;input:SetText('52');input.scripts.OnEnterPressed()
+assert(M:SetStyle('watchStyle','iconGap',30) and M:SetStyle('watchStyle','iconSize',52))
 assert(a:GetWidth()==52 and b:GetWidth()==52 and M.db.launcherStyle.iconSize==40)
 M:SetStyle('watchStyle','iconPadding',16)
 assert(a.icon.points[1][4]==0 and a.icon.points[2][4]==0,'Legacy image inset is retained but no longer affects artwork')

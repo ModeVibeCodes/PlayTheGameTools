@@ -50,14 +50,13 @@ for _,id in ipairs(addon.moduleOrder) do
   for _,size in ipairs({1000,560,1200}) do
    p.scroll:SetWidth(size);p:Refresh();p:Layout()
    for row,route in pairs(s.routes) do
-    -- Display styling (editAppearance) is reached in Layout: layout_style.py.
-    if not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation and not row.modePaired and (not row.visibleWhen or row.visibleWhen()) then
+    -- Display styling is not on these pages (v2): layout_style.py.
+    assert(row.editAppearance==nil and row.modePaired==nil and row.modeReplacedNavigation==nil,'no hidden styling rows '..id)
+    if not row.sectionHeader and not row.subsectionHeading and (not row.visibleWhen or row.visibleWhen()) then
      assert(row:IsShown(),'unreachable row '..id..' '..(row.settingsTitle or 'toggle'))
      assert(row.points[1][4]==p.contentInset,'one column, no gutter '..id)
-     if row.section then assert(row.section.header:IsShown(),'a shown row has its section heading '..id..' '..row.section.title)
-assert(not row.section.header.editAppearance,'headings are never styling rows '..id) end
+     if row.section then assert(row.section.header:IsShown(),'a shown row has its section heading '..id..' '..row.section.title) end
     end
-    if row.editAppearance then assert(not row:IsShown(),'styling stays in Layout '..id) end
    end
    local last=-1
    for _,section in ipairs(p.sections) do
@@ -69,7 +68,7 @@ assert(not row.section.header.editAppearance,'headings are never styling rows '.
   -- A search hit scrolls the one page to the row and flashes it.
   for _,entry in ipairs(p.searchEntries) do
    local row=entry.row
-   if row.modeRoute and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation then
+   if row.modeRoute and not row.sectionHeader and not row.subsectionHeading then
     -- Hold the 1.5 s fade so the flash can be seen (mock timers fire at once).
     local after,faded=C_Timer.After,nil;C_Timer.After=function(delay,callback) assert(delay==1.5);faded=callback end
     p.scrollbar:SetValue(0);p:Reveal(entry);C_Timer.After=after
@@ -129,6 +128,14 @@ CM.module.active=campOn;camp:Refresh()
 local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
 for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
 assert(labels['Show Food Bar'] and not labels['Enable Food Bar'],'one Food Bar switch')
+-- Per-bar information switches: tooltips and names (real keys only).
+local QAm=addon.ForeverQuickAccess
+for label,target in pairs({['Show Tooltips']={QAm.db,'showTooltips'},['Show Profession Names']={QAm.db,'showNames'},
+ ['Food Tooltips']={addon.ForeverFoodBar.db,'showTooltips'},['Show Food Names']={addon.ForeverFoodBar.db,'showNames'}}) do
+ local cell=assert(labels[label],'missing switch '..label);local db,key=target[1],target[2];local was=db[key]
+ cell.button.scripts.OnClick();assert(db[key]==not was,label);cell.button.scripts.OnClick();assert(db[key]==was)
+end
+assert(labels['Reveal on Hover'] and not labels['Icons Per Row'],'hover reveal kept; columns has no control')
 F.db.enabled,F.db.shown=true,false;assert(not F:IsOn(),'old hidden bar reads off')
 assert(F:SetShown(true) and F.db.enabled and F.db.shown and F:IsOn())
 assert(F:SetShown(false) and not F.db.enabled and not F.db.shown and not F.active)
@@ -147,14 +154,10 @@ F:SetShown(true);for _,event in ipairs({'BAG_UPDATE_DELAYED','ITEM_DATA_LOAD_RES
 F:SetShown(false)
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:Layout()
-assert(not timer.sections[1].header:IsShown() and timer.sections[2].header:IsShown(),'Display holds only Layout styling, so its heading hides; Behavior stays')
-assert(timer.sections[2].header.offset==0,'the first shown group starts the scroll')
-local paired
-for _,color in ipairs(timer.settingsColors) do
- if color.key=='textColor' then paired=color;assert(color.host.row==timer.fontSizeSlider:GetParent().row and color.host.row.editAppearance,'text size and picker share the original slider row') end
-end
-assert(paired)
-for _,result in ipairs(addon:SearchSettings('Display')) do assert(not (result.module.id=='combatTimer' and result.kind=='section'),'no search hit for a heading that never shows') end
+assert(#timer.sections==1 and timer.sections[1].title=='Behavior' and timer.sections[1].header:IsShown(),'the Display section left with its styling rows; Behavior stays')
+assert(timer.sections[1].header.offset==0,'the first shown group starts the scroll')
+assert(not timer.fontSizeSlider and not timer.fontDropdown and (not timer.settingsColors or #timer.settingsColors==0),'no Combat Timer styling rows')
+for _,result in ipairs(addon:SearchSettings('Display')) do assert(not (result.module.id=='combatTimer' and result.kind=='section' and result.title=='Display'),'no search hit for the removed Display heading') end
 local clear=timer.scroll.ClearAllPoints
 function timer.scroll:ClearAllPoints() self.modeResizeCalls=(self.modeResizeCalls or 0)+1;timer:Layout();clear(self) end
 timer:UpdatePreviewLayout();assert(not timer.updatingPreview,'native viewport callbacks cannot recurse through the layout')
@@ -186,15 +189,21 @@ training:ShowSection(3);assert(training.selectedSection.title=='Shortcut Icon & 
 addon:SetModuleEnabled('foreverClassTraining',false);training:RenderSettings()
 assert(not training.sections[3].header:IsShown(),'shortcut settings hide with the module')
 addon:SetModuleEnabled('foreverClassTraining',true);CT.db.showShortcut=nil;training:ShowSection(1)
--- Rogue: styling rows stay in Layout but keep their callbacks; toggles stay
--- in their own rows at every width.
+-- Rogue: styling lives in Layout; the page's own sliders and switches keep
+-- their callbacks, and toggles stay in their own rows at every width.
 local R=addon.ForeverRogue
 addon:SetModuleEnabled('foreverRogue',true);R:SetOption('flyout',true)
 local p=addon:EnsureConfigPage('foreverRogue')
-local slider=p.poisonSliders['watchStyle:fontSize'].slider
-slider:SetValue(19);assert(R.db.watchStyle.fontSize==19,'original slider callback retained')
-local outline=p.poisonStyles.watchStyle.outline
-local old=R.db.watchStyle.outline;outline.button.scripts.OnClick();assert(R.db.watchStyle.outline~=old,'original checkbox callback retained')
+assert(not p.poisonStyles and not p.poisonSliders['watchStyle:fontSize'],'no Rogue styling rows')
+local slider=p.poisonSliders['root:threshold'].slider
+slider:SetValue(9);assert(R.db.threshold==9,'original slider callback retained')
+local charges=p.poisonControls.showPoisonCharges
+local old=R.db.showPoisonCharges;charges.button.scripts.OnClick();assert(R.db.showPoisonCharges~=old,'original checkbox callback retained')
+-- Searching rogue never offers an unlabelled row.
+for _,result in ipairs(addon:SearchSettings('rogue')) do
+ assert(not result.entry or (result.entry.label and result.entry.label~=''),'empty search label: '..result.label)
+ assert(not result.label:find('> $'),'result ends in an empty label: '..result.label)
+end
 for _,width in ipairs({1000,560}) do
  p.scroll:SetWidth(width);p:Layout()
  for _,cells in ipairs(p.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.frame:GetParent().row,'toggle stays in its row') end end

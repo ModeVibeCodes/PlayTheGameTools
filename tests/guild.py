@@ -124,6 +124,16 @@ lua.execute(r'''
         local found=addon:SearchSettings(query)
         assert(found[1] and found[1].module==G,'search finds Guild: '..query)
     end
+    -- The "Open Guild" result lands on the page header's Open Guild button.
+    local result
+    for _,item in ipairs(addon:SearchSettings('open guild')) do if item.entry and item.entry.label=='Open Guild' then result=item end end
+    assert(result and result.module==G,'Open Guild is a search result')
+    local after,faded=C_Timer.After,nil;C_Timer.After=function(_,callback) faded=callback end
+    addon:SelectConfigPage('foreverRecruitment');G.page:Reveal(result.entry);C_Timer.After=after
+    local header=addon.configWindow.moduleHeader.openButton
+    assert(header.searchHighlight and header.searchHighlight.shown,'the header button is outlined')
+    assert(not (G.page.note:GetParent().row.searchHighlight),'the page note is not flashed')
+    faded();assert(not header.searchHighlight.shown,'the outline fades')
 ''')
 
 # --- Window: Roster and Recruit tabs, History menu, /ptgr. ------------------

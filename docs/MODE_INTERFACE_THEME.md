@@ -7,17 +7,29 @@
 > category headings, nested rows and the 240-unit sidebar describe the earlier
 > shell. See [DEVELOPMENT.md](DEVELOPMENT.md) and the
 > [v2 window checks](../TESTING.md#v2-settings-window).
+>
+> **v2 Settings page:** the old Global Settings page is now **Settings**, pinned
+> at the bottom of the sidebar: one scroll of **Appearance** (**Theme** cards
+> Modern / Blizzard / mode, **Class colors**), **Game** (**Fast loot**, **Hide red
+> error text**, **Camera distance**), **Profile** (**Active profile**, **Manage**)
+> and **About**. The Global Font, Global Texture and Global Border pickers, the
+> Auto Loot switch and the Optimizations tab are gone: the configuration window
+> uses its theme's own font and materials, and displays use the built-in font,
+> surface and thin edge, scaled by each display's Layout Style card. Since the
+> v2 styling reset, displays have no per-display font, texture or border
+> choices either ([GLOBAL_SETTINGS.md](GLOBAL_SETTINGS.md)).
 
 ## Module layout rollout — November 10
 
 Campfire Monitor's design is owner-accepted. PR #26 now applies its layout pattern
 to the other module settings **within Mode only**. Existing themes, gameplay
-displays, settings and profile data remain unchanged. Global Settings retains
-its existing navigation. See the [page map and exact native checks](MODE_MODULE_LAYOUTS.md).
+displays, settings and profile data remain unchanged. Settings (then Global
+Settings) kept its existing navigation. See the [page map and exact native checks](MODE_MODULE_LAYOUTS.md).
 Broad native acceptance is pending before considering other themes.
 
-Forever only, experimental and opt-in. Open `/ptg` → **Global Settings** →
-**Appearance** → **Interface Theme** → **mode**, then use header **Reload** OOC.
+Forever only, experimental and opt-in. Open `/ptg` → **Settings** →
+**Appearance** → **Theme** → the **mode** card, then **Reload now** in the
+banner above the page, OOC.
 Modern remains the default. Modern and Blizzard retain their palettes and layouts.
 The selected theme uses the existing profile setting and reload flow; no settings
 are reset or migrated. Theme changes affect configuration surfaces only.
@@ -32,7 +44,7 @@ The original Figma surface and sheen stay in place. One static abstract detail
 layer, generated in Figma at [node 24:31](https://www.figma.com/design/8ZPSZPK4eJ4ocvy7CA2HpO?node-id=24-31),
 adds soft diagonal planes and fine grain at **18% opacity** below all controls.
 It is rendered once across the page area, without slicing, animation or polling.
-Global Texture cannot override this interface material. Modern, Blizzard and
+No texture choice overrides this interface material (Global Texture is gone). Modern, Blizzard and
 module/feature displays retain their existing appearance.
 
 This prototype reuses the existing Figma materials as its base. Figma's layout
@@ -45,7 +57,7 @@ darker base remains usable. Start with `/reload` OOC; native fit remains pending
 
 **Navigation:** PTG Tools → Questing & Leveling → · Class Training → General.
 **Action:** `/reload`, reopen the page, inspect the background and switch between
-General and Level Up Window, then reopen Global Settings → Appearance.
+General and Level Up Window, then reopen Settings → Appearance.
 **Required state:** OOC, Interface Theme set to **mode**.
 **Confirmation:** page area is slightly darker with faint abstract detail, all
 text/controls remain clear and operable, and the existing sidebar/control colors
@@ -84,22 +96,18 @@ rounded control art rather than scaling the larger panel corners.
 Native screenshots exposed square small controls in the preceding revision.
 Checkbox runtime art is now 32×32 (the original Figma source is 24×24), and both
 checkboxes and switches use complete alpha sprites without texture slicing.
-Fresh file paths prevent reusing old cached images. Custom global borders cannot
-replace these small silhouettes with rectangular frames; **None** still hides
-their outlines. If a new small-control file is unavailable, the already bundled
+Fresh file paths prevent reusing old cached images. No border choice replaces
+these small silhouettes with rectangular frames (Global Border is gone). If a new small-control file is unavailable, the already bundled
 circular thumb supplies a rounded fallback instead of a solid square. The new
 native result remains pending owner confirmation.
 
 Lato Regular/Bold, selected from Figma's font catalog, is the mode configuration
-default when Global Font is **Game font**; **PTG Lato** is also available explicitly.
-Other explicit Global Font choices still win. This does not set the global font,
-change gameplay fonts or overwrite a saved choice. **Global Texture** affects
-module/feature displays only. Mode's window, page panels and configuration popups
-always use their original theme material and sheen, regardless of that selection.
-Modern keeps its flat surfaces and Blizzard keeps its native popup background.
-The selected global texture stays saved for module displays; no reset is needed
-to restore the interface. Global Border remains independent; use **Thin** to
-review authored corner treatment. Gameplay functions and state meanings are unchanged.
+font; Modern and Blizzard use the stock game font. There is no Global Font,
+Global Texture or Global Border picker any more: saved `globalMedia` values stay
+in SavedVariables, unread. Mode's window, page panels and configuration popups
+always use their original theme material and sheen. Modern keeps its flat
+surfaces and Blizzard keeps its native popup background. Gameplay functions and
+state meanings are unchanged.
 
 The sidebar lists every populated category expanded by default each UI session.
 Bold gray category headings are plain text click targets: clicking collapses/expands
@@ -178,8 +186,8 @@ Use the feature branch there for local `/reload` testing, preserving the junctio
 and SavedVariables. The isolated PR checkout alone is not the live source.
 No release publication or automatic theme activation is included.
 
-1. **Navigation:** Play The Game Tools → Global Settings → Appearance → Interface Theme → mode;
-   **Action:** open `/ptg`, select **mode**, then click header **Reload**;
+1. **Navigation:** Play The Game Tools → Settings → Appearance → Theme → mode;
+   **Action:** open `/ptg`, select the **mode** card, then click **Reload now** in the banner;
    **Required state:** OOC, feature branch available through the existing test installation;
    **Confirmation:** reopening `/ptg` shows neutral graphite backgrounds, gray headings,
    readable gray text and all populated sidebar categories expanded.
@@ -197,31 +205,32 @@ No release publication or automatic theme activation is included.
    visit populated categories and scroll the sidebar; labels remain readable and
    disabled controls stay inactive. Check your usual module controls/Preview/Edit
    Mode for unchanged behavior and report errors, clipped labels or missing controls.
-4. **Navigation:** Play The Game Tools → Global Settings → Appearance → Interface Theme → Modern / Blizzard;
-   **Action:** select either existing theme and click header **Reload**;
+4. **Navigation:** Play The Game Tools → Settings → Appearance → Theme → Modern / Blizzard;
+   **Action:** select either existing theme card and click **Reload now** in the banner;
    **Required state:** OOC; **Confirmation:** its original palette, selected-category
    sidebar expansion and top category tabs return; settings and positions persist.
-5. **Navigation:** Play The Game Tools → header → Profile: <active name>;
-   **Action:** click the button; **Required state:** OOC;
-   **Confirmation:** Global Settings opens with **Profiles** selected and the same
-   active profile; no profile change occurs from opening it.
-6. **Navigation:** PTG Tools → Global Settings → Appearance → Global Font / Global Texture / Global Border;
-   **Action:** choose **PTG Lato**, **Flat**, **Thin**, respectively, then header
-   **Reload**; **Required state:** OOC, optional when existing custom media differs;
-   **Confirmation:** the recommended Lato type and authored graphite satin/soft
-   corners appear. Your previous choices can be restored through the same controls.
-7. **Navigation:** PTG Tools → Global Settings → Appearance / Profiles;
-   **Action:** alternate the two tabs, hover **Modern**, **Blizzard** and **mode**
-   without changing the theme, and scroll **Profiles**; **Required state:** OOC;
+5. **Navigation:** Play The Game Tools → Settings → Profile → Active profile;
+   **Action:** read the selected name without changing it; **Required state:** OOC;
+   **Confirmation:** the active profile is shown; no profile change occurs from
+   opening the page. (The header Profile button is gone since the v2 shell.)
+6. **Navigation:** PTG Tools → Settings → Appearance;
+   **Action:** scroll the section; **Required state:** OOC, theme **mode**;
+   **Confirmation:** only **Theme** and **Class colors** are listed (no Global
+   Font, Global Texture or Global Border); the window shows Lato type and the
+   authored graphite satin/soft corners.
+7. **Navigation:** PTG Tools → Settings → Appearance / Profile;
+   **Action:** hover the **Modern**, **Blizzard** and **mode** cards without
+   changing the theme, and scroll to **Profile**; **Required state:** OOC;
    **Confirmation:** a single fading line sits directly under selected text,
    buttons have rounded corners, rows stay inside their borders, and the thinner
    scroll indicator works. Logo/title sit at upper left in cyan; **X** is far right
    and **Profile: <active name>** is immediately left with only its name cyan.
    Neither removed separator is visible.
-8. **Navigation:** PTG Tools → Global Settings → Optimizations → Auto Loot;
-   **Action:** hover the checkbox and inspect its shape without changing the value;
-   **Required state:** OOC; **Confirmation:** rounded checkbox corners, unchanged
-   saved state and normal text-only hover.
+8. **Navigation:** PTG Tools → Settings → Game → Fast loot;
+   **Action:** hover the switch and inspect its shape without changing the value;
+   **Required state:** OOC; **Confirmation:** capsule track and circular thumb,
+   unchanged saved state and normal text-only hover. (Auto Loot and the
+   Optimizations tab are gone; the game's own Auto Loot option is the player's.)
 9. **Navigation:** PTG Tools → Timers → · Combat Timer → header's unlabeled module
    enable switch (beside **Enabled** / **Disabled**);
    **Action:** inspect/hover without changing the current state; **Required state:**
@@ -246,7 +255,7 @@ No release publication or automatic theme activation is included.
     **Action:** inspect the caption/name group, then click it;
     **Required state:** OOC; **Confirmation:** centered, proportionate text with
     only the name cyan, Close far right, and the existing Profiles page opens.
-14. **Navigation:** PTG Tools → Global Settings → Optimizations → Camera Max Zoom;
+14. **Navigation:** PTG Tools → Settings → Game → Camera distance;
     **Action:** inspect the numeric field and slider thumb;
     **Required state:** OOC; **Confirmation:** centered value text and rounded
     thumb corners with the same thumb size; the current value is unchanged.
@@ -257,14 +266,13 @@ No release publication or automatic theme activation is included.
     replaces the same unfilled region and stays inside the larger rounded gray
     charcoal rim; the switch thumb remains contained and the original setting is restored.
 
-16. **Navigation:** PTG Tools → Global Settings → Appearance → Global Texture;
-    **Action:** inspect after `/reload` with the existing selection, then choose
-    **PTG Satin** and use header **Reload**; restore the original selection if desired;
-    **Required state:** OOC; **Confirmation:** original graphite window/page material
-    and sheen remain in both cases, including dropdown/popup surfaces. Module
-    displays continue to use the selected texture where they inherit Global Texture.
+16. **Navigation:** PTG Tools → Settings → Appearance;
+    **Action:** inspect after `/reload`; open the **Manage** menu under Profile;
+    **Required state:** OOC, theme **mode**; **Confirmation:** the original graphite
+    window/page material and sheen remain, including dropdown/popup surfaces.
+    Global Texture no longer exists, so no saved texture changes them.
 
-On November 9 the owner accepted the current appearance and Global Texture
+On November 9 the owner accepted the current appearance and the (since removed) Global Texture
 isolation and authorized PR #24's merge into main. This supersedes the pending
 visual-review notes above; it is scoped cosmetic acceptance, not new module or
 gameplay validation. Future refinements belong in a new PR. Record Forever build,

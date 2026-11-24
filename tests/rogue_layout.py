@@ -38,19 +38,35 @@ M:SetOption('reminderVisibility','always');testCombat=true;testLockdown=true;Fir
 testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED');M:SetOption('reminderVisibility','needed')
 -- Settings presentation, class branding and family actions.
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue');local p=M.page
-assert(#p.sections==2 and p.sections[1].title=='Display' and p.sections[2].title=='Settings','placement lives in Edit Mode')
+assert(#p.sections==3 and p.sections[1].title=='Poison Reminder' and p.sections[2].title=='Quick Poisons' and p.sections[3].title=='Settings','placement lives in Edit Mode')
+-- v2 mockup rows: Show reminder / When, Show quick poisons / When / Menu opens, and the information switches.
+assert(p.poisonControls.watcher and p.poisonControls.flyout and p.reminderVisibility and p.quickVisibility and #p.directionButtons==4)
+p.directionButtons[3].scripts.OnClick();assert(M.db.direction=='LEFT' and p.directionButtons[3].selected,'Menu opens sets direction')
+p.directionButtons[1].scripts.OnClick();assert(M.db.direction=='UP')
+local hands=p.poisonControls['watchStyle:showHands']
+hands.button.scripts.OnClick();assert(M.db.watchStyle.showHands==false and not M.watchButtons[1].caption:IsShown(),'Show weapon hands hides the hand labels')
+hands.button.scripts.OnClick();assert(M.db.watchStyle.showHands==true)
+local menuNames=p.poisonControls['flyoutStyle:showNames'];local was=M.db.flyoutStyle.showNames
+menuNames.button.scripts.OnClick();assert(M.db.flyoutStyle.showNames==not was);menuNames.button.scripts.OnClick()
+for _,part in ipairs({'watchStyle','launcherStyle','flyoutStyle'}) do
+    local icons=p.poisonControls[part..':showIcons'];assert(icons,'Show icons switch for '..part)
+    icons.button.scripts.OnClick();assert(M.db[part].showIcons==false);icons.button.scripts.OnClick();assert(M.db[part].showIcons==true)
+end
+p.poisonControls.flyout.button.scripts.OnClick();assert(not M.db.flyout and not p.quickVisibility:GetParent().row:IsShown(),'Quick Poisons rows hide with their switch')
+p.poisonControls.flyout.button.scripts.OnClick();assert(M.db.flyout and p.quickVisibility:GetParent().row:IsShown())
 local h=addon.configWindow.moduleHeader
 assert(h.classIcon==nil and h.title:IsShown() and h.title:GetText()=='Rogue Tools','page header names the page; no duplicate class icon')
 assert(addon.configWindow.sidebarModuleButtons.foreverRogue.classIcon.texture==M.classIcon,'Class icon appears in the sidebar row')
 assert(p.poisonGrid[1].label:GetText()=='Recent' and p.poisonGrid[4].label:GetText()=='Crippling')
 assert(p.poisonGrid[2].available and p.poisonGrid[4].icon.desaturated and not p.poisonGrid[4]:IsEnabled())
-assert(not p.customize)
+assert(not p.customize and not p.launcherLabelInput,'no styling rows on the page')
 p.poisonGrid[2].scripts.OnClick();assert(M.db.quickApply=='family:8679' and #applications==n)
 enchants[0]={};M:Refresh();assert(M.watchButtons[1].attrs.item1=='item:6949','Family selection uses available native rank')
 Click(M.watchButtons[1]);assert(applications[#applications].id==6949 and applications[#applications].target==16)
 p.poisonGrid[1].scripts.OnClick();assert(M.db.quickApply=='last')
-p.displayButtons[2].scripts.OnClick();assert(p.customize=='quick')
-M:SetStyle('launcherStyle','showNames',true);p.launcherLabelInput:SetText('Poison Kit');p.launcherLabelInput.scripts.OnEnterPressed()
+p.displayButtons[2].scripts.OnClick();assert(addon.editMode and PM.selected=='rogueQuickPoisons','Customize Quick Access opens it in Layout')
+addon:SetEditMode(false)
+M:SetStyle('launcherStyle','showNames',true);assert(M:SetStyle('launcherStyle','labelText','Poison Kit'))
 assert(M.openButton.label:GetText()=='Poison Kit' and M.openButton.label:IsShown())
 assert(not M:SetStyle('launcherStyle','labelText','bad|text'))
 M:SetStyle('launcherStyle','labelPosition','TOP');assert(M.db.launcherStyle.labelPosition=='TOP')
@@ -97,4 +113,4 @@ local custom={watchStyle={backgroundOpacity=45,borderSize=3,showTimers=true,cust
 M.Initialize(custom);assert(custom.watchStyle.backgroundOpacity==45 and custom.watchStyle.borderSize==3 and custom.watchStyle.showTimers and custom.watchStyle.custom=='preserve')
 assert(not M:SetOption('quickApply','family:9999') and not M:SetOption('reminderVisibility','bad'))
 ''')
-print('PASS Rogue layout: dismissal/rearm/combat, two-section UI, family grid, minimal migration, labels, paired controls, class branding, shared Edit Mode highlights/drag/coordinates, persistence')
+print('PASS Rogue layout: dismissal/rearm/combat, three-section UI with mockup rows, family grid, minimal migration, labels, paired controls, class branding, shared Edit Mode highlights/drag/coordinates, persistence')
