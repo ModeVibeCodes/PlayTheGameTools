@@ -52,6 +52,44 @@ in Config/SectionTabs.lua). No TOC, SavedVariables or frame-name changes;
 `tests/mode_module_layouts.py` and `tests/campfire_mode_layout.py` guard it.
 Native confirmation is pending; `/reload` OOC.
 
+Guild (branch `t3/v2w2-guild`, v2 wave 2, 2026-11-24): Guild Roster and
+Guild Recruitment merged into one module. **ID choice:** the Guild module keeps
+`foreverRecruitment` (title "Guild"), because that saved table holds everything
+worth keeping: `history` (invite times and never-invite list), `records`
+(statistics), `message`, `minLevel`/`maxLevel`/`chunkSize`, `classes` and
+`reinviteDays`. The roster stored only `enabled`, so `foreverGuildRoster` is
+retired as a module (`Modules/ForeverGuildRoster.lua` is now
+`addon.ForeverGuildRoster`, driven by Guild's `OnInitialize`/`SetActive`). Its
+table is never written or removed. Adoption is one-time and non-destructive:
+`M:AdoptRoster` runs in `OnInitialize` (before the saved switch is applied) and,
+unless `db.rosterAdopted` is set, turns Guild on when the old Roster table had
+`enabled=true`, then sets `rosterAdopted=true` in the Guild table; so Guild is
+on if either old module was on, and turning it off later sticks. Profiles
+adopt when they are next loaded. `addon.retiredModules.foreverGuildRoster`
+lets `ProfileManager:PrepareImport` accept old exported profiles that carry the
+retired ID (one-line change; unknown IDs are still refused); exports carry only
+registered modules. `addon.ForeverGuild` aliases `addon.ForeverRecruitment`.
+Window: `Config/ForeverGuild.lua` (one new TOC entry, 124 Lua chunks) builds
+the Guild window (old frame name `PlayTheGameToolsRecruitmentFrame`, Dialogs
+group `recruiter`, 536×712) with the module switch, **Roster**/**Recruit** tabs
+(`M:SelectTab`, session-only `M.tab`, default Roster; `/ptgr` opens Recruit) and
+the settings page: a note plus **Open Guild**, a page-owned button anchored left
+of `configWindow.moduleHeader.toggle` (no Window.lua change), disabled while
+off. The page carries an "Open Guild" search entry whose keywords are the old
+names so they rank Guild first. `Config/ForeverRecruitment.lua` builds the
+Recruit tab (`M:BuildRecruitTab`) with one **History** menu (`W.Popup`) for
+`M.HISTORY_ACTIONS`; `Config/ForeverGuildRoster.lua` builds the Roster tab
+(`Roster:BuildView`) as one stacked, scrolling column instead of a settings page
+with pills. The roster reads members and registers events only while the
+Roster tab is visible (`Roster:SetViewShown`, from the window's OnShow/OnHide
+and tab changes). Quick Actions keeps the `recruitment` action key, titled
+"Guild", shown whenever the module is on. Mode: `foreverRecruitment` has an
+empty plan (no route: the page is only compacted; it has no sections); the Roster plan is gone. Recruit guards are unchanged: `Ready()`
+(switch and `InCombatLockdown`), Who only from clicks with the 5 s cooldown, the
+copy box instead of an invite API, `CanGuildInvite`, `ADDON_ACTION_BLOCKED`
+reporting. No new game APIs. `tests/guild.py` and `tests/guild_roster.py` cover
+it. Native confirmation is pending; new TOC file: restart the client once.
+
 Layout (branch `t3/v2-layout-mode`, v2 redesign): one on-screen mode replaces
 Preview and Edit Mode. `addon:SetEditMode(true/false)` is still the way in and
 out and `addon.editMode` its only flag; `addon:SetPreviewMode`/`previewMode` are

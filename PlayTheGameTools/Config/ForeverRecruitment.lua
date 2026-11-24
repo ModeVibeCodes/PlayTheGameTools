@@ -3,8 +3,12 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 local M,W,T=addon.ForeverRecruitment,addon.ConfigWidgets,addon.InterfaceTheme
 
 local ROW_HEIGHT=22
+-- The Guild window (Config/ForeverGuild.lua) is this size; the Recruit tab
+-- fills it below the shared header, so the offsets below are window offsets.
 local WINDOW_W,WINDOW_H=536,712 -- room for the row Whisper button and message box
+M.WINDOW_W,M.WINDOW_H=WINDOW_W,WINDOW_H
 local MESSAGE_H=84
+local HISTORY_W=96
 
 ---------------------------------------------------------------------------
 -- Copy-name box: the name is pre-highlighted so Ctrl+C copies it.
@@ -44,7 +48,7 @@ function M:ShowCopyBox(name)
 end
 
 ---------------------------------------------------------------------------
--- Recruiter window
+-- Recruit tab of the Guild window
 ---------------------------------------------------------------------------
 local function Tooltip(button,title,text)
     button:HookScript("OnEnter",function(self)
@@ -55,58 +59,31 @@ local function Tooltip(button,title,text)
     end)
     button:HookScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
 end
+M.Tooltip=Tooltip
 
-function M:CreateWindow()
-    local f=CreateFrame("Frame","PlayTheGameToolsRecruitmentFrame",UIParent)
-    self.window=f
-    -- Same strata as the settings window (DIALOG); raised on show so it opens in front.
-    f:SetSize(WINDOW_W,WINDOW_H);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG");f:SetClampedToScreen(true)
-    if f.SetToplevel then f:SetToplevel(true) end
-    f:SetMovable(true);f:EnableMouse(true);f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart",f.StartMoving);f:SetScript("OnDragStop",f.StopMovingOrSizing)
-    f:Hide()
-    W.Texture(f,"Window")
-    f.title=W.Heading(f,"Recruiter",T.fontSize.section,16,-14,150,T.text)
-
-    local close=W.Button(f,"Close",64,24,"secondary");close:SetPoint("TOPRIGHT",-12,-10)
-    close:SetScript("OnClick",function() f:Hide() end)
-    local settings=W.Button(f,"Settings",76,24,"secondary");settings:SetPoint("RIGHT",close,"LEFT",-6,0)
-    settings:SetScript("OnClick",function()
-        if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
-        if addon.SelectConfigPage then addon:SelectConfigPage(M.id) end
-    end)
-
-    -- Module switch, so recruiting can be turned on without the settings window.
-    local power=W.Button(f,"",44,24,"toggle");power:SetPoint("RIGHT",settings,"LEFT",-10,0)
-    power:SetScript("OnClick",function() if M:OutsideCombat() then addon:SetModuleEnabled(M.id,not M.enabled);M:RefreshWindow() end end)
-    f.power=power
-    local powerLabel=W.Label(f,"",nil,0,0,70,T.muted);powerLabel:ClearAllPoints()
-    powerLabel:SetPoint("RIGHT",power,"LEFT",-6,0);powerLabel:SetJustifyH("RIGHT")
-    f.refreshers={}
+-- f is the Guild window (it keeps the controls' names); panel is the tab's
+-- frame, filling the window, which every control here belongs to.
+function M:BuildRecruitTab(f,panel)
     local function Refresher(fn) f.refreshers[#f.refreshers+1]=fn end
-    Refresher(function()
-        power:SetSelected(M.enabled==true);powerLabel:SetText(M.enabled and "Enabled" or "Disabled")
-        powerLabel:SetTextColor(unpack(W.StateColor(M.enabled==true)))
-    end)
 
     -- Search settings: level range, levels per search, classes and whisper.
     local function Numeric(key,low,high,width)
-        local input=W.NumericInput(f,function() return M.db[key] end,function(v) M:SetOption(key,v) end,low,high,width or 44)
+        local input=W.NumericInput(panel,function() return M.db[key] end,function(v) M:SetOption(key,v) end,low,high,width or 44)
         Refresher(function() input:Refresh() end);return input
     end
-    local levelLabel=W.Label(f,"Level range",nil,16,-56,90,T.secondary)
+    local levelLabel=W.Label(panel,"Level range",nil,16,-56,90,T.secondary)
     local minInput=Numeric("minLevel",1,function() return M.db.maxLevel end)
     minInput:SetPoint("TOPLEFT",104,-50)
-    local to=W.Label(f,"to",nil,0,0,20,T.secondary);to:ClearAllPoints();to:SetPoint("LEFT",minInput,"RIGHT",6,0)
+    local to=W.Label(panel,"to",nil,0,0,20,T.secondary);to:ClearAllPoints();to:SetPoint("LEFT",minInput,"RIGHT",6,0)
     local maxInput=Numeric("maxLevel",function() return M.db.minLevel end,60)
     maxInput:SetPoint("LEFT",minInput,"RIGHT",28,0)
-    local chunkLabel=W.Label(f,"Levels per search",nil,0,0,120,T.secondary);chunkLabel:ClearAllPoints()
+    local chunkLabel=W.Label(panel,"Levels per search",nil,0,0,120,T.secondary);chunkLabel:ClearAllPoints()
     chunkLabel:SetPoint("LEFT",maxInput,"RIGHT",24,0)
     local chunkInput=Numeric("chunkSize",1,60);chunkInput:SetPoint("LEFT",chunkLabel,"RIGHT",4,0)
     f.minInput,f.maxInput,f.chunkInput=minInput,maxInput,chunkInput
 
     local function CheckBox(text,get,set,x,y,r,g,b)
-        local cell=CreateFrame("Button",nil,f);cell:SetSize(140,24);cell:SetPoint("TOPLEFT",x,y)
+        local cell=CreateFrame("Button",nil,panel);cell:SetSize(140,24);cell:SetPoint("TOPLEFT",x,y)
         cell:EnableMouse(true);cell:RegisterForClicks("LeftButtonUp")
         local box=W.Button(cell,"",24,24,"checkbox");box:SetPoint("LEFT",-4,0)
         local label=W.Label(cell,text,nil,22,-5,116)
@@ -118,10 +95,10 @@ function M:CreateWindow()
         Refresher(function() box:SetSelected(get()) end)
         return cell,label
     end
-    W.Label(f,"Classes",nil,16,-94,90,T.secondary)
-    local all=W.Button(f,"All",56,22,"secondary");all:SetPoint("TOPLEFT",104,-90)
+    W.Label(panel,"Classes",nil,16,-94,90,T.secondary)
+    local all=W.Button(panel,"All",56,22,"secondary");all:SetPoint("TOPLEFT",104,-90)
     all:SetScript("OnClick",function() for _,c in ipairs(M.CLASSES) do M.db.classes[c]=true end;M:ResetScan();M:Refresh() end)
-    local none=W.Button(f,"None",56,22,"secondary");none:SetPoint("LEFT",all,"RIGHT",6,0)
+    local none=W.Button(panel,"None",56,22,"secondary");none:SetPoint("LEFT",all,"RIGHT",6,0)
     none:SetScript("OnClick",function() for _,c in ipairs(M.CLASSES) do M.db.classes[c]=false end;M:ResetScan();M:Refresh() end)
     f.classChecks={}
     for i,classFile in ipairs(M.CLASSES) do
@@ -130,8 +107,8 @@ function M:CreateWindow()
             function(value) M:SetClassEnabled(classFile,value) end,20+((i-1)%3)*146,-120-math.floor((i-1)/3)*26,r,g,b)
     end
 
-    W.Label(f,"Whisper message",nil,16,-208,WINDOW_W-32,T.secondary)
-    local holder=CreateFrame("Frame",nil,f);holder:SetSize(WINDOW_W-48,MESSAGE_H);holder:SetPoint("TOPLEFT",24,-226)
+    W.Label(panel,"Whisper message",nil,16,-208,WINDOW_W-32,T.secondary)
+    local holder=CreateFrame("Frame",nil,panel);holder:SetSize(WINDOW_W-48,MESSAGE_H);holder:SetPoint("TOPLEFT",24,-226)
     W.Texture(holder,"InputField")
     local viewHeight=MESSAGE_H-10
     local messageScroll=CreateFrame("ScrollFrame",nil,holder)
@@ -171,22 +148,22 @@ function M:CreateWindow()
     f.message,f.SaveMessage=message,SaveMessage
 
     local TOP=-326 -- action buttons, status and list sit below the settings
-    local scan=W.Button(f,"Scan",104,28);scan:SetPoint("TOPLEFT",16,TOP)
+    local scan=W.Button(panel,"Scan",104,28);scan:SetPoint("TOPLEFT",16,TOP)
     scan:SetScript("OnClick",function() M:Scan() end)
     Tooltip(scan,"Scan","Clears the candidate list, then runs the next Who search.")
-    local invite=W.Button(f,"Invite Next",104,28);invite:SetPoint("LEFT",scan,"RIGHT",6,0)
+    local invite=W.Button(panel,"Invite Next",104,28);invite:SetPoint("LEFT",scan,"RIGHT",6,0)
     invite:SetScript("OnClick",function() M:InviteCandidate(1) end)
-    local nextButton=W.Button(f,"Next",104,28,"primary");nextButton:SetPoint("LEFT",invite,"RIGHT",6,0)
+    local nextButton=W.Button(panel,"Next",104,28,"primary");nextButton:SetPoint("LEFT",invite,"RIGHT",6,0)
     nextButton:SetScript("OnClick",function() M:Next() end)
     Tooltip(nextButton,"Next","Shows the next candidate's name ready to copy (Ctrl+C), or runs the next search if the list is empty.")
-    local clear=W.Button(f,"Clear",80,28,"secondary");clear:SetPoint("LEFT",nextButton,"RIGHT",6,0)
+    local clear=W.Button(panel,"Clear",80,28,"secondary");clear:SetPoint("LEFT",nextButton,"RIGHT",6,0)
     clear:SetScript("OnClick",function() M:ClearCandidates() end)
     f.scan,f.invite,f.next,f.clear=scan,invite,nextButton,clear
 
-    f.status=W.Label(f,"",nil,16,TOP-40,WINDOW_W-32,T.secondary);f.status:SetWordWrap(true)
-    f.listHeader=W.Label(f,"",nil,16,TOP-74,WINDOW_W-32,T.text)
+    f.status=W.Label(panel,"",nil,16,TOP-40,WINDOW_W-32,T.secondary);f.status:SetWordWrap(true)
+    f.listHeader=W.Label(panel,"",nil,16,TOP-74,WINDOW_W-32,T.text)
 
-    local list=CreateFrame("Frame",nil,f)
+    local list=CreateFrame("Frame",nil,panel)
     list:SetPoint("TOPLEFT",12,TOP-94);list:SetPoint("BOTTOMRIGHT",-12,36)
     W.Texture(list,"InsetPanel")
     local scroll=CreateFrame("ScrollFrame",nil,list)
@@ -201,10 +178,28 @@ function M:CreateWindow()
     for _,frame in ipairs({list,scroll,content}) do frame:EnableMouseWheel(true);frame:SetScript("OnMouseWheel",Wheel) end
     f.scroll,f.content,f.bar,f.rows=scroll,content,bar,{}
 
-    f.stats=W.Label(f,"",nil,16,-(WINDOW_H-24),WINDOW_W-32,T.muted)
+    f.stats=W.Label(panel,"",nil,16,-(WINDOW_H-24),WINDOW_W-32-HISTORY_W-8,T.muted)
+
+    -- History: the three clear/reset actions share one menu beside the statistics.
+    local history=W.Button(panel,"History",HISTORY_W,24,"secondary");history:SetPoint("BOTTOMRIGHT",-12,8)
+    local menu=W.Popup(history,200,12+#M.HISTORY_ACTIONS*30)
+    W.Texture(menu,"Window")
+    menu.items={}
+    for i,action in ipairs(M.HISTORY_ACTIONS) do
+        local item=W.Button(menu,action.label,188,28,"tab");item:SetPoint("TOPLEFT",6,-6-(i-1)*30)
+        item:SetScript("OnClick",function() menu:Hide();M:RunHistoryAction(action.id) end)
+        menu.items[i]=item
+    end
+    history:SetScript("OnClick",function()
+        if menu:IsShown() then menu:Hide();return end
+        W.PlacePopup(menu,history);menu:Show()
+    end)
+    history:HookScript("OnHide",function() menu:Hide() end)
+    Tooltip(history,"History","Clear the invite history or the never-invite list, or reset the statistics.")
+    f.history,f.historyMenu=history,menu
 
     -- Show the Who cooldown on the Scan button.
-    f:SetScript("OnUpdate",function(self,elapsed)
+    panel:SetScript("OnUpdate",function(self,elapsed)
         self.tick=(self.tick or 0)+elapsed
         if self.tick<0.2 then return end
         self.tick=0
@@ -212,10 +207,6 @@ function M:CreateWindow()
         if cd>0 then scan.label:SetText(string.format("Scan (%.0f)",math.ceil(cd)));scan:SetEnabled(false)
         else scan.label:SetText("Scan");scan:SetEnabled(true) end
     end)
-    f:SetScript("OnShow",function() M:RefreshWindow();M:SyncQuickAction() end)
-    f:SetScript("OnHide",function() M:SyncQuickAction() end)
-    addon.Dialogs:Register(f,{group="recruiter"})
-    return f
 end
 
 local function GetRow(f,i)
@@ -274,43 +265,4 @@ function M:RefreshWindow()
     f.stats:SetText(self:StatsText())
     local ready=self.active==true
     f.invite:SetEnabled(ready and #self.candidates>0);f.next:SetEnabled(ready)
-end
-
-function M:OpenWindow()
-    if not self.window then self:CreateWindow() end
-    local f=self.window
-    -- Opening the recruiter closes the settings window, so it always centers.
-    f:ClearAllPoints();f:SetPoint("CENTER")
-    f:Show()
-    if f.Raise then f:Raise() end
-end
-function M:ToggleWindow()
-    if self.window and self.window:IsShown() then self.window:Hide() else self:OpenWindow() end
-end
-
-SLASH_PLAYTHEGAMETOOLSRECRUIT1="/ptgr"
-SlashCmdList.PLAYTHEGAMETOOLSRECRUIT=function()
-    if addon.initialized then M:ToggleWindow() end
-end
-
----------------------------------------------------------------------------
--- Settings page
----------------------------------------------------------------------------
-function M:CreateConfigPage(parent)
-    local page=W.Page(parent,620);self.page=page
-    local function Button(label,text,fn,width)
-        local b=W.Button(page:Row(label,48),text,width or 180,28);b:SetPoint("LEFT")
-        b:SetScript("OnClick",function() fn();page:Refresh() end);return b
-    end
-
-    -- Searching, status, statistics and invite options live in the Recruiter
-    -- window; this page only opens it and clears stored history.
-    page:Section("Recruiter")
-    Button("Recruiter Window","Open Recruiter",function() self:OpenWindow() end)
-
-    page:Section("History")
-    Button("Invited Players","Clear Invite History",function() self:ClearInvited() end)
-    Button("Never-Invite List","Clear Never-Invite List",function() self:ClearBlacklist() end)
-    Button("Invite Statistics","Reset Statistics",function() self:ResetStats() end)
-    page:Finish();return page
 end

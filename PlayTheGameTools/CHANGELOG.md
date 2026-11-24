@@ -12,6 +12,18 @@
   chips you click on and off. The Map Labels page shows one source line with a
   **Full notice in About** button; the full notice is unchanged in Settings →
   About.
+- Guild Roster and Guild Recruitment are now one module, **Guild**: one
+  sidebar entry and one switch. **Open Guild** in the page header (or the Guild
+  icon in Quick Actions) opens one Guild window with **Roster** and **Recruit**
+  tabs. Roster holds Class Summary, Members by Class with its search and
+  filters, and the breakdowns in one scrolling column. Recruit keeps Level
+  range, Levels per search, the class picks and the whisper box beside the
+  results they change; the three clear/reset buttons are now one **History**
+  menu there. `/ptgr` opens the window on Recruit. Guild is on after the
+  update if either old module was on, and your recruit history, statistics,
+  whisper text and level/class picks are kept. Searching "roster" or
+  "recruitment" finds Guild.
+
 - Layout replaces Preview and Edit Mode. Every enabled display shows its sample
   data with its name, and can be dragged. The bar along the top reads Layout,
   "Click a display to style it", Drag to move, a Grid switch and Done. Grid

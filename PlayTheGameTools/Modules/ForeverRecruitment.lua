@@ -1,17 +1,32 @@
 local addonName,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 
--- Recruitment flow ported from the guild's standalone Play The Game Tools
+-- The Guild module: one switch and one Guild window with Roster and Recruit
+-- tabs. It keeps the Recruitment module's ID, foreverRecruitment, because that
+-- saved table holds the recruit history, statistics, whisper text and level/
+-- class picks. The roster (ForeverGuildRoster.lua) saved only its switch; its
+-- old foreverGuildRoster table is left where it is and read once (OnInitialize).
+--
+-- Recruit flow ported from the guild's standalone Play The Game Tools
 -- recruiter: class x level-range Who sweeps that split capped ranges, a
 -- copy-name box for the native Guild > Add Member dialog, and invite/join/
 -- decline tracking from system messages.
 addon:RegisterCategory("guildTools",{title="Guild Tools"})
-local M={title="Recruitment",category="guildTools",defaultEnabled=false,
-    configDescription="Find guildless players by level and class, then invite them through Guild > Add Member.",
-    -- Settings that live only in the Recruiter window still route search here.
-    searchAliases={"whisper","whisper text","minimum level","maximum level","levels per search","classes","recruiter window"}}
+local M={title="Guild",category="guildTools",defaultEnabled=false,
+    configDescription="Search your guild, and find guildless players to invite.",
+    -- The old module names and the settings that live only in the Guild window
+    -- still route search here.
+    searchAliases={"roster","guild roster","recruitment","guild recruitment","recruiter","recruiter window",
+        "guild members","class summary","members by class","class totals","member search","roster search",
+        "guild analytics","last online","guild ranks","online members",
+        "whisper","whisper text","minimum level","maximum level","level range","levels per search","classes",
+        "invite history","never-invite list","statistics"}}
 addon.ForeverRecruitment=M
+addon.ForeverGuild=M
 addon:RegisterModule("foreverRecruitment",M)
+-- Retired module IDs whose saved tables stay in profiles; imports may carry them.
+addon.retiredModules=addon.retiredModules or {}
+addon.retiredModules.foreverGuildRoster="foreverRecruitment"
 
 -- Forever uses the original nine classes.
 M.CLASSES={"WARRIOR","PALADIN","HUNTER","ROGUE","PRIEST","SHAMAN","MAGE","WARLOCK","DRUID"}
@@ -43,6 +58,7 @@ local validClass={};for _,c in ipairs(M.CLASSES) do validClass[c]=true end
 -- Pure validation and defaults; also used by profile validation on detached copies.
 -- history: [name] = invite time (number), "skip" (never invite) or legacy "contacted".
 -- records: invite statistics. Both are runtime keys excluded from profile export.
+-- rosterAdopted: true once the old Roster switch has been read (see OnInitialize).
 function M.Initialize(db)
     for k,v in pairs({minLevel=10,maxLevel=MAX_LEVEL,message=DEFAULT_MESSAGE,chunkSize=5,
         reinviteDays=7}) do
@@ -59,6 +75,7 @@ function M.Initialize(db)
     assert(Number(db.chunkSize,1,MAX_LEVEL),"Invalid recruitment levels per search")
     assert(Number(db.reinviteDays,0,365),"Invalid recruitment re-invite days")
     assert(Text(db.message,MESSAGE_BYTES),"Invalid recruitment message")
+    assert(db.rosterAdopted==nil or type(db.rosterAdopted)=="boolean","Invalid Guild adoption marker")
     assert(type(db.classes)=="table","Invalid recruitment classes")
     for classFile,enabled in pairs(db.classes) do
         assert(validClass[classFile] and type(enabled)=="boolean","Invalid recruitment class")
@@ -76,8 +93,21 @@ function M.Initialize(db)
     assert(count<=M.HISTORY_LIMIT,"Recruitment history exceeds "..M.HISTORY_LIMIT.." records")
 end
 
+-- One-time, non-destructive adoption of the retired Roster module's switch:
+-- Guild is on if either old module was on. The old table is only read; the
+-- marker lives in this table so turning Guild off later sticks.
+function M:AdoptRoster(modules)
+    if self.db.rosterAdopted then return end
+    local legacy=type(modules)=="table" and modules[addon.ForeverGuildRoster.LEGACY_ID]
+    if type(legacy)=="table" and legacy.enabled==true then self.db.enabled=true end
+    self.db.rosterAdopted=true
+end
+
 function M:OnInitialize()
     self.Initialize(self.db)
+    -- Runs before the module's saved switch is applied, so an adopted "on" takes effect now.
+    self:AdoptRoster(addon.db and addon.db.modules)
+    addon.ForeverGuildRoster:Initialize()
     -- Earlier "Mark Contacted" entries become invites made now, so they return
     -- after the re-invite window instead of staying hidden permanently.
     local now=Now()
@@ -86,7 +116,7 @@ function M:OnInitialize()
     end
     self:PruneHistory()
     self.candidates={};self.candidateSet={};self.awaitingConfirm={}
-    self.status="Enable Recruitment, pick levels and classes, then click Scan."
+    self.status="Turn Guild on, pick levels and classes, then click Scan."
 end
 
 function M:Print(message)
@@ -106,7 +136,7 @@ function M:OutsideCombat()
     return Public(state) and state==false
 end
 function M:Ready()
-    if not self.active then self:SetStatus("Enable Recruitment first (Guild Tools > Recruitment).");return false end
+    if not self.active then self:SetStatus("Turn Guild on first.");return false end
     if not self:OutsideCombat() then self:SetStatus("Unavailable in combat.");return false end
     return true
 end
@@ -165,6 +195,18 @@ function M:Remember(name,state)
         end
     end
     history[name]=state;return true
+end
+-- The Recruit tab's History menu: one entry per clear/reset.
+M.HISTORY_ACTIONS={
+    {id="invited",label="Clear Invite History",run="ClearInvited"},
+    {id="never",label="Clear Never-Invite List",run="ClearBlacklist"},
+    {id="stats",label="Reset Statistics",run="ResetStats"},
+}
+function M:RunHistoryAction(id)
+    for _,action in ipairs(self.HISTORY_ACTIONS) do
+        if action.id==id then self[action.run](self);return true end
+    end
+    return false
 end
 function M:ClearInvited()
     for name,state in pairs(self.db.history) do
@@ -402,7 +444,7 @@ function M:SyncQuickAction()
     local active=self.active==true
     if active and not self.shortcut and Q.OutsideCombat() then
         self.shortcut=Q:AddAction(QUICK_ACTION,{order=30,texture="Interface\\Icons\\Ability_Warrior_BattleShout",
-            color={.96,.62,.28},title="Recruiter",hint="Click to open or close the Recruiter window.",
+            color={.96,.62,.28},title="Guild",hint="Click to open or close the Guild window.",
             onClick=function() if self.active then self:ToggleWindow() end end})
     end
     Q:SetAvailable(QUICK_ACTION,active)
@@ -424,6 +466,7 @@ function M:OnEnable()
             self:Print("|cffff5555Blocked by the game:|r "..tostring(arg2).." - please report this.")
         end
     end)
+    addon.ForeverGuildRoster:SetActive(true)
     self:SyncQuickAction()
     self:SetStatus("Ready. Pick levels and classes, then click Scan.")
 end
@@ -431,6 +474,7 @@ function M:OnDisable()
     self.active=false;self:ResetScan()
     if self.events then self.events:UnregisterAllEvents() end
     if self.copyFrame then self.copyFrame:Hide() end
+    addon.ForeverGuildRoster:SetActive(false)
     self:SyncQuickAction()
-    self:SetStatus("Recruitment disabled.")
+    self:SetStatus("Guild is off.")
 end

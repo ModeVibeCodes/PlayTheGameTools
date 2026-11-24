@@ -162,56 +162,39 @@ game state. Leave a feature off if you are not ready to exercise it.
    **Confirmation:** Only Quests and Merchant groups appear; there is no Dialogue
    group, Auto Gossip switch or Auto Gossip Availability note. Dialogue stays manual.
 
-## E. Guild Recruitment
+## E. Guild
 
-1. **Navigation:** `/ptg` → sidebar **Recruitment** → **Recruiter** section.
-   **Action:** Turn the page switch on, set Minimum Level / Maximum Level, pick one
-   class, click Open Recruiter, then click Scan in the Recruiter window.
-   **Required state:** OOC, in a guild with invite permission.
-   **Confirmation:** One Who search runs; the Who window closes again if it was not
-   already open; unguilded players in range appear in the list with class colors.
-2. **Navigation:** Recruiter window (Open Recruiter or `/ptgr`).
-   **Action:** With candidates listed, click Scan again after the countdown.
-   **Required state:** Candidates present, Scan button not counting down.
-   **Confirmation:** The list empties before the next search's results appear.
-3. **Navigation:** Recruiter window.
-   **Action:** Click Invite on a row, press Ctrl+C, open Guild → Add Member,
-   paste and confirm.
-   **Required state:** OOC, invite permission, a willing test player.
-   **Confirmation:** The copy box shows the name; the game invites without a
-   blocked-action message; Statistics show Invited +1 (and Joined/Declined after
-   the reply); no whisper is sent.
-4. **Navigation:** Recruiter window.
-   **Action:** Type a message longer than 255 characters in the Whisper message
-   box, then click Whisper on a row without pressing Enter.
-   **Required state:** OOC, candidates listed, a willing test player.
-   **Confirmation:** The box scrolls as you type; the player receives the whole
-   message as consecutive whispers with no blocked-action message; the row leaves
-   the list; Statistics do not change.
-5. **Navigation:** Recruiter window, then `/ptg` → sidebar **Recruitment** → **History** section.
-   **Action:** Click X on a row, scan again, then click Clear Never-Invite List.
-   **Required state:** OOC.
-   **Confirmation:** The X'd player no longer appears until the list is cleared;
-   invited players stay hidden for the saved re-invite window (7 days by default).
-
-## Guild Roster
-
-Run `python tests/guild_roster.py`. Mocks do not establish native member data, so
-these checks need the game client. The page is one scroll: the status line, then
-the **Members** section, then the **Analytics** section. The search and analytics revision adds no files; `/reload` applies it.
+Guild Roster and Guild Recruitment are one module, **Guild**: one sidebar entry,
+one switch, and one Guild window with **Roster** and **Recruit** tabs. Run
+`python tests/guild.py` and `python tests/guild_roster.py` with smoke/build. Mocks
+establish neither native member data nor Who, whisper or invite behavior. One new
+file (`Config/ForeverGuild.lua`) is in the TOC: restart the client once.
 
 | Check | Navigation | Action | Required state | Confirmation |
 | --- | --- | --- | --- | --- |
-| R1 Turn on | `/ptg` → sidebar **Roster** → **Analytics** section | Click the switch at the top right of the page | Logged in on a character in a guild | Switch reads **Enabled**; **Class Summary** shows **Total Members**, **Online Now** and all nine classes with a count, including 0 |
-| R2 Members by class | `/ptg` → sidebar **Roster** → **Members** section | Scroll to the bottom of the list, then compare with the native guild window | R1 done | Each class with members has a colored heading such as **Mage (12)** and its names alphabetically, each with its level on the right; the line above the list reads **N members, M online** and both numbers match the native window; offline members are included |
-| R3 Totals agree | `/ptg` → sidebar **Roster** → **Analytics** section, then **Members** section | Compare each **Class Summary** count with the number in that class's heading | R1 done; search box empty, **All Classes** and **All Members** selected | Every count matches its heading |
-| R4 No guild | `/ptg` → sidebar **Roster** | Open the page, then scroll to the **Analytics** section | Roster enabled on a character not in a guild | The status line reads **You are not in a guild.**; **Analytics** shows **Total Members: 0** and no breakdowns, with no Lua error |
-| R5 Turn off | `/ptg` → sidebar **Roster** | Click the switch at the top right of the page | Roster enabled | Switch reads **Disabled**; names are cleared and the page asks you to turn on the switch |
-| R6 Online marker and tooltip | `/ptg` → sidebar **Roster** → **Members** section | Hover one online and one offline name | R1 done | Online names have a small accent square before them. The tooltip shows the name, then **Level N Race Class**, **Rank: …**, then **Online in Zone** for an online member or **Last online … ago** for an offline one, plus **Note:** / **Officer Note:** when the native window shows them. Moving away closes it |
-| R7 Search | `/ptg` → sidebar **Roster** → **Members** section | Type part of a name in the box reading **Search name, zone, rank, note or level**, then a zone, a rank name, `60`, and `40-59`; then clear the box | R1 done | Each search lists only matching members and reads **Showing X of N members** (or **No members match your search.**); numbers match levels only; clearing restores the full list |
-| R8 Filters | `/ptg` → sidebar **Roster** → **Members** section | Choose a class in **All Classes**, then **Online** and **Offline** in **All Members**; return both to **All Classes** and **All Members** | R1 done | Only that class is listed; **Online** shows only marked names and matches the native online count for that class; **Offline** shows the rest |
-| R9 Breakdowns | `/ptg` → sidebar **Roster** → **Analytics** section | Scroll through **Level**, **Rank**, **Race**, **Last Online** and **Online By Zone** | R1 done | Each line shows a bar and **count (share%)**; the longest bar is the largest count; **Rank** follows the guild's rank order; **Last Online** starts with **Online Now** equal to **Online Now** above; **Online By Zone** counts only online members, or reads **Nobody is online right now.** |
-| R10 Nothing saved | `/ptg` → sidebar **Roster** → **Members** section | Type a search and choose a class filter, then `/reload` and reopen the page | R1 done | The search box is empty and the filters read **All Classes** and **All Members** |
+| G1 Switch carried over | `/ptg` → sidebar **Guild** | Look at the page header switch | Before updating, Roster **or** Recruitment was on; first login after the update | The switch is on. With both previously off it is off. The sidebar has one **Guild** entry and no Roster or Recruitment entries |
+| G2 Turned off stays off | `/ptg` → sidebar **Guild** | Click the header switch off, `/reload`, reopen the page | G1 with the switch on | The switch is still off after the reload |
+| G3 Saved recruit data kept | `/ptg` → sidebar **Guild** → **Open Guild** → **Recruit** | Read Level range, Levels per search, the class boxes, the whisper box and the line at the bottom | Guild on; you used the Recruiter before updating | Values match what you had; the bottom line shows your old **Invited / Joined / Declined** numbers; players you invited or marked X earlier still do not come back in a Scan |
+| G4 Page | `/ptg` → sidebar **Guild** | Read the page; click **Open Guild** with the switch off, then on | Out of combat | The page shows only a note about the Roster and Recruit tabs. **Open Guild** sits left of the header switch, is dimmed and does nothing while off; while on it opens the Guild window on **Roster** and closes Settings |
+| G5 Old names | `/ptg` search box | Type `roster`, then `recruitment`, then `guild recruitment` | Out of combat | Each time the first result is **Guild** (or **Guild > Open Guild**); choosing it opens the Guild page |
+| G6 Quick Actions | Quick Actions launcher | Click the launcher, hover the Guild icon, click it; click it again | Guild on, out of combat | One icon with the tooltip **Guild** / **Click to open or close the Guild window.**; it opens the Guild window and the second click closes it. With Guild off there is no icon |
+| G7 Tabs and `/ptgr` | Guild window | Click **Recruit**, **Roster**, close with **Close**; type `/ptgr` twice | Guild on | Each tab shows only its own controls; the window reopens on the last tab used; `/ptgr` opens it on **Recruit** and the second `/ptgr` closes it |
+| E1 Scan | Guild window → **Recruit** | Set Level range, pick one class, click **Scan** | Out of combat, in a guild with invite permission | One Who search runs; the Who window closes again if it was not already open; unguilded players in range appear in the list with class colors |
+| E2 New scan clears | Guild window → **Recruit** | With candidates listed, click **Scan** again after the countdown | Candidates present, **Scan** not counting down | The list empties before the next search's results appear |
+| E3 Invite | Guild window → **Recruit** | Click **Invite** on a row, press Ctrl+C, open the game's Guild → Add Member, paste and confirm | Out of combat, invite permission, a willing test player | The copy box shows the name; the game invites without a blocked-action message; the bottom line shows Invited +1 (Joined/Declined after the reply); no whisper is sent |
+| E4 Whisper | Guild window → **Recruit** | Type a message longer than 255 characters in the whisper box, then click **Whisper** on a row without pressing Enter | Out of combat, candidates listed, a willing test player | The box scrolls as you type; the player receives the whole message as consecutive whispers with no blocked-action message; the row leaves the list; the bottom line does not change |
+| E5 History menu | Guild window → **Recruit** → **History** (bottom right) | Click **X** on a row and scan again; then choose **Clear Never-Invite List**; then open **History** again and choose **Reset Statistics** | Out of combat | The menu lists **Clear Invite History**, **Clear Never-Invite List** and **Reset Statistics** and closes after a choice. The X'd player stays out of scans until the list is cleared; the bottom line reads **Invited: 0   Joined: 0   Declined: 0** after the reset; invited players stay hidden for the saved re-invite window (7 days by default) until **Clear Invite History** |
+| E6 Combat | Guild window → **Recruit** | Enter combat, click **Scan**, **Invite** and **Whisper** | In combat, candidates listed | Nothing is sent; the status line reads **Unavailable in combat.** |
+| R1 Turn on | Guild window → **Roster** | Click the switch in the window header | Logged in on a character in a guild; Guild off | **Class Summary** shows **Total Members**, **Online Now** and all nine classes with a count, including 0 |
+| R2 Members by class | Guild window → **Roster** | Scroll to **Members by Class** and to the bottom of the list, then compare with the native guild window | R1 done | Each class with members has a colored heading such as **Mage (12)** and its names alphabetically, each with its level on the right; the line above the list reads **N members, M online** and both numbers match the native window; offline members are included |
+| R3 Totals agree | Guild window → **Roster** | Compare each **Class Summary** count with the number in that class's heading | R1 done; search box empty, **All Classes** and **All Members** selected | Every count matches its heading |
+| R4 No guild | Guild window → **Roster** | Open the tab | Guild on, on a character not in a guild | The top reads **You are not in a guild.**; **Total Members: 0** and no breakdowns, with no Lua error |
+| R5 Turn off | Guild window → **Roster** | Click the switch in the window header | Guild on | Names are cleared and the tab reads **Turn Guild on with the switch above to view your guild.**; the Quick Actions icon leaves the ring |
+| R6 Online marker and tooltip | Guild window → **Roster** | Hover one online and one offline name | R1 done | Online names have a small accent square before them. The tooltip shows the name, then **Level N Race Class**, **Rank: …**, then **Online in Zone** for an online member or **Last online … ago** for an offline one, plus **Note:** / **Officer Note:** when the native window shows them. Moving away, switching to **Recruit** or closing the window closes it |
+| R7 Search | Guild window → **Roster** | Type part of a name in the box reading **Search name, zone, rank, note or level**, then a zone, a rank name, `60`, and `40-59`; then clear the box | R1 done | Each search lists only matching members and reads **Showing X of N members** (or **No members match your search.**); numbers match levels only; clearing restores the full list |
+| R8 Filters | Guild window → **Roster** | Choose a class in **All Classes**, then **Online** and **Offline** in **All Members**; return both to **All Classes** and **All Members** | R1 done | Only that class is listed; **Online** shows only marked names and matches the native online count for that class; **Offline** shows the rest |
+| R9 Breakdowns | Guild window → **Roster** | Scroll below the members through **Level**, **Rank**, **Race**, **Last Online** and **Online by Zone** | R1 done | Each line shows a bar and **count (share%)**; the longest bar is the largest count; **Rank** follows the guild's rank order; **Last Online** starts with **Online Now** equal to **Online Now** above; **Online by Zone** counts only online members, or reads **Nobody is online right now.** |
+| R10 Nothing saved | Guild window → **Roster** | Type a search and choose a class filter, then `/reload` and reopen the tab | R1 done | The search box is empty and the filters read **All Classes** and **All Members** |
 
 ## Map Labels
 
@@ -263,7 +246,7 @@ Stock artwork, fonts, text fit and contrast require these in-game checks.
 | T8 Modern navigation and sections | Modern active; click a sidebar entry, then **Class Training** | Compare the selected sidebar entry with the others; scroll the page top to bottom | Out of combat | Selected entry has a mint bar on its left edge; the page is one scroll with no pills or tabs: **General**, **Level Up Window**, **Shortcut Icon & Menu**, **Upcoming Abilities** and **Available & Known** follow one another as plain headings with no Collapse button, separated by clearly more space than rows; dividers are visible but quiet |
 | T9 Modern checkboxes and sliders | Modern active; sidebar **Automation**, then sidebar **Map Labels** → **Appearance** group | On Automation tick and untick any box; on Map Labels drag the **Icon Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
 | T10 Solid Dungeon Loot text | `/ptg` → sidebar **Dungeon Loot** (enabled) | On **Dungeons** read the card titles and Suggested Starting Levels headings; open a dungeon and view **Boss Loot** and **Quests** | Out of combat | Every heading, card title, list entry and NPC name is one solid colour; the selected tab underline is one solid accent; bracket headings sit over a plain hairline |
-| T11 Recruitment page | `/ptg` → sidebar **Recruitment** | Scroll the page, then click **Open Recruiter** | Out of combat | Page shows only Recruiter (**Open Recruiter**) and History (**Clear Invite History**, **Clear Never-Invite List**, **Reset Statistics**); the Recruiter window still has Level range, Levels per search, Classes and the whisper box, and saved values are as before |
+| T11 Guild page | `/ptg` → sidebar **Guild** | Read the page, then click **Open Guild** | Guild on, out of combat | Superseded by section E, checks G3 and G4: the page holds only a note; Level range, Levels per search, Classes, the whisper box and the **History** menu are on the Guild window's **Recruit** tab with saved values as before |
 
 ## v2 settings window
 

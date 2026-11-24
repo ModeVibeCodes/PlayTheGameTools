@@ -65,8 +65,11 @@ W.ModeLayoutPlans={
         if Label(row)=="Name Font Size" then return "sparkles","text" end
         return "sparkles",(row.settingsGroupTitle or row.settingsGroup)=="Appearance" and "appearance" or "options"
     end},
-    foreverRecruitment={route=function(row) if row.section then return row.section.title,"options" end end},
-    foreverGuildRoster={},
+    -- Guild (ID foreverRecruitment) has no settings sections: its page is a
+    -- note, and the page header's Open Guild button opens the Guild window. A
+    -- plan without a route only compacts the page. Guild Roster's plan left
+    -- with its page (the retired foreverGuildRoster ID).
+    foreverRecruitment={},
     foundation={},
     foreverRogue={route=function(row)
         if row.modeFeature then return row.modeFeature,row.modePanel or "appearance" end

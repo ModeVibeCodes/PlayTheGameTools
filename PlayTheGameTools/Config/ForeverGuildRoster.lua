@@ -12,6 +12,7 @@ local DOT=6            -- online marker before each name
 local HEADING_HEIGHT=30
 local GROUP_GAP=12
 local CONTROL_HEIGHT=30
+local GROUP_HEADING=32  -- a heading above each part of the tab
 local CONTROL_GAP=8
 local SEARCH_MINIMUM=180
 local CLASS_SELECT=150
@@ -21,18 +22,10 @@ local CHART_LABEL=150
 local CHART_COUNT=86
 local BAR_HEIGHT=8
 
--- A page row with no label: its controls span the row and position themselves.
-local function BlockRow(page,height)
-    local controls=page:Row("",height)
-    table.remove(page.searchEntries) -- the empty label would be a blank search result
-    local row=controls.row
-    controls.rowLabel:Hide()
-    controls:ClearAllPoints();controls:SetAllPoints(row)
-    return row,controls
-end
+local SCROLL_STEP=LINE*3
 local function HasMembers() return M.snapshot.total>0 end
 
--- Only a tooltip this page opened is ever hidden by it.
+-- Only a tooltip this tab opened is ever hidden by it.
 local tooltipCell
 local function HideMemberTooltip()
     if tooltipCell and GameTooltip then GameTooltip:Hide() end
@@ -48,18 +41,69 @@ local function ShowMemberTooltip(cell)
     GameTooltip:Show()
 end
 
-function M:CreateConfigPage(parent)
-    local page=W.Page(parent,320);self.page=page
+-- The Roster tab of the Guild window (Config/ForeverGuild.lua). One scrolling
+-- column: the status line, Class Summary, Members by Class with its search and
+-- filters, then the breakdowns. Each block lays itself out to the width and
+-- sets its own height; Layout stacks the visible ones.
+function M:BuildView(f,panel)
+    local page={rows={}};self.view=page
+    local scroll=CreateFrame("ScrollFrame",nil,panel)
+    scroll:SetPoint("TOPLEFT",16,-52);scroll:SetPoint("BOTTOMRIGHT",-24,12)
+    local content=CreateFrame("Frame",nil,scroll);content:SetSize(1,1);scroll:SetScrollChild(content)
+    local bar=CreateFrame("Slider",nil,panel)
+    bar:SetPoint("TOPRIGHT",-12,-52);bar:SetPoint("BOTTOMRIGHT",-12,12);bar:SetWidth(4)
+    bar:SetOrientation("VERTICAL");bar:SetValueStep(LINE);W.ScrollThumb(bar,40)
+    bar:SetScript("OnValueChanged",function(_,value) scroll:SetVerticalScroll(value) end)
+    local function Wheel(_,delta) bar:SetValue(bar:GetValue()-delta*SCROLL_STEP) end
+    for _,frame in ipairs({scroll,content}) do frame:EnableMouseWheel(true);frame:SetScript("OnMouseWheel",Wheel) end
+    page.scroll,page.content,page.scrollbar=scroll,content,bar
 
-    -- Shown above both tabs whenever the list cannot be read.
-    local statusRow,statusControls=BlockRow(page,32)
+    -- A block spans the column; layoutChildren(width) positions its contents.
+    local function BlockRow(height)
+        local row=CreateFrame("Frame",nil,content)
+        row:SetHeight(height)
+        page.rows[#page.rows+1]=row
+        return row,row
+    end
+    local function GroupHeading(title)
+        local row=BlockRow(GROUP_HEADING)
+        row.heading=W.Heading(row,title,T.fontSize.group,0,-10,360,T.secondary)
+        function row:layoutChildren(width) self.heading:SetWidth(width) end
+        return row
+    end
+    function page:Layout()
+        local width=math.max(1,scroll:GetWidth())
+        local y=0
+        for _,row in ipairs(self.rows) do
+            local visible=not row.visibleWhen or row.visibleWhen()
+            row:SetShown(visible)
+            if visible then
+                if y>0 then y=y+(row.gapBefore or 0) end
+                row:ClearAllPoints();row:SetPoint("TOPLEFT",0,-y);row:SetWidth(width)
+                if row.layoutChildren then row:layoutChildren(width) end
+                y=y+row:GetHeight()
+            end
+        end
+        content:SetSize(width,math.max(1,y))
+        local maximum=math.max(0,y-scroll:GetHeight())
+        bar:SetMinMaxValues(0,maximum);bar:SetValue(math.min(bar:GetValue(),maximum));bar:SetShown(maximum>0)
+    end
+    scroll:SetScript("OnSizeChanged",function() page:Layout() end)
+
+    -- Shown at the top whenever the list cannot be read.
+    local statusRow,statusControls=BlockRow(32)
     statusRow.visibleWhen=function() return M.status~=nil end
     local status=W.Label(statusControls,"",nil,0,-9,520,T.muted)
     function statusRow:layoutChildren(width) status:SetWidth(width) end
     page.statusLabel=status
 
-    page:Section("Members",nil,false)
-    local toolbarRow,toolbar=BlockRow(page,CONTROL_HEIGHT+14)
+    local summaryHeading=GroupHeading("Class Summary")
+    local summaryRow,summaryControls=BlockRow(SUMMARY_TOP+LINE*3)
+
+    local membersHeading=GroupHeading("Members by Class")
+    membersHeading.gapBefore=GROUP_GAP
+    local toolbarRow,toolbar=BlockRow(CONTROL_HEIGHT+14)
+    page.toolbarRow=toolbarRow
     local search=CreateFrame("EditBox",nil,toolbar)
     search:SetHeight(CONTROL_HEIGHT);search:SetAutoFocus(false);search:SetMaxLetters(60)
     search:SetFontObject(GameFontHighlight);search:SetTextInsets(8,8,0,0)
@@ -88,7 +132,6 @@ function M:CreateConfigPage(parent)
     local classSelect=Chooser(CLASS_SELECT,classChoices,"class")
     local statusSelect=Chooser(STATUS_SELECT,M.STATUS_FILTERS,"status")
     page.classFilter,page.statusFilter=classSelect,statusSelect
-    page.refreshers[#page.refreshers+1]=function() classSelect:Refresh();statusSelect:Refresh() end
     -- The filters follow the search box, or drop below it on a narrow page.
     function toolbarRow:layoutChildren(width)
         local filters=CLASS_SELECT+STATUS_SELECT+CONTROL_GAP
@@ -103,13 +146,13 @@ function M:CreateConfigPage(parent)
         self:SetHeight(-y+CONTROL_HEIGHT+6)
     end
 
-    local resultRow,resultControls=BlockRow(page,28)
+    local resultRow,resultControls=BlockRow(28)
     resultRow.visibleWhen=HasMembers
     local results=W.Label(resultControls,"",nil,0,-8,520,T.muted)
     function resultRow:layoutChildren(width) results:SetWidth(width) end
     page.resultLabel=results
 
-    local membersRow,membersControls=BlockRow(page,40)
+    local membersRow,membersControls=BlockRow(40)
     local headings,cells,groups={},{},{}
     page.classHeadings,page.memberCells,page.nameLabels,page.membersRow=headings,cells,{},membersRow
     local function Heading(classFile)
@@ -157,9 +200,7 @@ function M:CreateConfigPage(parent)
         self:SetHeight(math.max(1,-y))
     end
 
-    page:Section("Analytics",nil,false)
-    page:Group("Class Summary")
-    local summaryRow,summaryControls=BlockRow(page,SUMMARY_TOP+LINE*3)
+    -- Class Summary sits above the list; its block was placed first.
     local total=W.Heading(summaryControls,"",T.fontSize.group,0,-10,220,T.text)
     local online=W.Label(summaryControls,"",nil,0,-12,200,T.muted)
     page.totalLabel,page.onlineLabel=total,online
@@ -202,9 +243,9 @@ function M:CreateConfigPage(parent)
     local charts={}
     page.charts=charts
     local function Chart(title,key)
-        page:Group(title)
-        page.rows[#page.rows].visibleWhen=HasMembers
-        local row,controls=BlockRow(page,CHART_LINE)
+        local heading=GroupHeading(title)
+        heading.visibleWhen=HasMembers;heading.gapBefore=GROUP_GAP
+        local row,controls=BlockRow(CHART_LINE)
         row.visibleWhen=HasMembers
         local chart={row=row,bars={},entries={},max=0}
         chart.empty=W.Label(controls,"",nil,0,-6,360,T.muted)
@@ -292,12 +333,12 @@ function M:CreateConfigPage(parent)
             if tooltipCell.member and tooltipCell:IsShown() then ShowMemberTooltip(tooltipCell) else HideMemberTooltip() end
         end
         for _,chart in ipairs(chartOrder) do chart:Render() end
+        classSelect:Refresh();statusSelect:Refresh()
         self:Layout()
     end
+    -- Leaving the tab or closing the window closes a tooltip this tab opened.
+    function page:OnHidden() HideMemberTooltip() end
 
-    page:HookScript("OnShow",function() M:SetPageShown(true) end)
-    page:HookScript("OnHide",function() M:SetPageShown(false);HideMemberTooltip() end)
-    page:Finish()
     page:RenderRoster()
     return page
 end
