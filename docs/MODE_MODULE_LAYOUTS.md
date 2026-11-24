@@ -1,5 +1,15 @@
 # Mode module settings rollout — November 10, 2026
 
+> **v2 (current):** every module page is one vertical scroll of titled groups
+> in every theme; the pills and Options/Text/Appearance/Position panels below
+> describe the November rollout. Since the v2 styling reset, display styling
+> (fonts, sizes, colors, textures, borders) is not on any page: each display is
+> styled in **Layout** (the Style card), so the Text/Appearance rows named below
+> are gone. Class Training's page holds **General**, **Level Up Window** and
+> **Shortcut Icon & Menu**; **Upcoming Abilities** and **Available & Known** are
+> the two tabs of the Class Training window, opened with the page header's
+> **Open Class Training** button. See [DEVELOPMENT.md](DEVELOPMENT.md).
+
 The owner accepted Campfire Monitor's flow and authorized applying the pattern
 to the other module settings pages in PR #26. This rollout is **Mode only**.
 Modern and Blizzard keep their existing page layouts. The owner accepted the
@@ -40,7 +50,7 @@ long explanatory blocks move to the bottom; minor text keeps its location.
 | Quality of Life → Automation | Quests, Merchant | Each is one compact Options page |
 | Quality of Life → Profession & Food Bars | Professions, Food Bar | Options, Text, Appearance, Position |
 | Quality of Life → Threat Meter | One display | Options, Position; no invented text/appearance settings |
-| Questing & Leveling → Class Training | General, Level Up Window, Shortcut Icon & Menu, Upcoming Abilities, Available & Known | Options, Text, Appearance where available; the last two views remain live catalogs |
+| Questing & Leveling → Class Training | General, Level Up Window, Shortcut Icon & Menu | Options, Text, Appearance where available; the live catalogs (Upcoming Abilities, Available & Known) are tabs of the Class Training window (header **Open Class Training**) |
 | Questing & Leveling → Dungeon Loot | Dungeons, Boss Loot, Quests, General | General: Options, Appearance, Position, Data; browser/search/quest/map/binding behavior retained |
 | Questing & Leveling → Gameplay Enhancements | Loot Sparkles, Campfire Monitor | Loot Sparkles: Options, Text, Appearance; approved Campfire layout unchanged |
 | Questing & Leveling → Experience Bar | XP Bar, Session Text | XP Bar: Options, Text, Appearance, Position; Session Text: Options, Text |
@@ -120,8 +130,9 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
    **Confirmation:** carried-item rows still refresh, show the original
    selections and remain selectable; no food or profession choices are reset.
 6. **Navigation:** PTG Tools → Questing & Leveling → Class Training → **Level Up
-   Window** / **Shortcut Icon & Menu**, then **Upcoming Abilities** / **Available
-   & Known**. **Action:** review each settings panel and both catalogs; use
+   Window** / **Shortcut Icon & Menu**, then the page header's **Open Class
+   Training** → **Upcoming Abilities** / **Available & Known** tabs (v2: the
+   catalogs moved to that window). **Action:** review each settings group and both catalogs; use
    General → **Spellbook** row → **Refresh**. **Required state:** OOC; header
    switch enabled and the two features enabled in General. **Confirmation:**
    catalogs refresh normally, costs and ability rows remain visible, and

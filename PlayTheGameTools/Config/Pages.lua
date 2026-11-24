@@ -187,12 +187,20 @@ function W.Page(parent, minimumWidth)
         local row = entry.row
         if row and row:IsShown() then
             bar:SetValue(math.max(0, (row.offset or 0) - 8))
-            if not row.searchHighlight then row.searchHighlight = W.Fill(row, T.primary, "OVERLAY", 1, 0.08) end
-            row.searchHighlight:Show()
-            row.searchEpoch = (row.searchEpoch or 0) + 1
-            local epoch = row.searchEpoch
+            -- entry.flash names a control outside the scroll (a page-header
+            -- button) to outline instead of flashing the row.
+            local target = entry.flash and entry.flash()
+            if target and target:IsShown() then
+                if not target.searchHighlight then target.searchHighlight = W.Outline(target, T.primary, "OVERLAY", -3, 1) end
+            else
+                target = row
+                if not row.searchHighlight then row.searchHighlight = W.Fill(row, T.primary, "OVERLAY", 1, 0.08) end
+            end
+            target.searchHighlight:SetShown(true)
+            target.searchEpoch = (target.searchEpoch or 0) + 1
+            local epoch = target.searchEpoch
             C_Timer.After(1.5, function()
-                if row.searchEpoch == epoch then row.searchHighlight:Hide() end
+                if target.searchEpoch == epoch then target.searchHighlight:SetShown(false) end
             end)
         end
     end

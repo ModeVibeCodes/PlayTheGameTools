@@ -4,6 +4,17 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- v2 styles displays only in **Layout**. Each display's old font, color and
+  size settings (Combat Timer, Profession & Food Bars, Experience Bar, Rogue
+  Tools reminder and Quick Access, Campfire icon, Camp Buffs and Camp
+  Contributions) are reset to their defaults once per profile, and those
+  hidden settings are gone from the pages. Positions, Layout Style card values,
+  module switches and show/hide options are kept. If anything was reset, one
+  chat line and a banner in the settings window say so; **Dismiss** hides the
+  banner for good. New or unchanged profiles show nothing.
+- Searching "rogue" no longer lists empty "Rogue Tools > Display >" results,
+  and the Guild page's **Open Guild** result now outlines the page header's
+  **Open Guild** button.
 - Gameplay Enhancements is now two modules with their own switches: Campfire
   Monitor and Loot Sparkles. Each starts on only if Gameplay Enhancements and
   its own Enable switch were both on. The Enable Loot Sparkles and Enable

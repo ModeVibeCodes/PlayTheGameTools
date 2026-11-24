@@ -121,8 +121,10 @@ function M:CreateConfigPage(parent)
     local note=W.Label(controls,M.PAGE_NOTE,nil,0,-6,520,T.muted);note:SetWordWrap(true)
     function row:layoutChildren(width) note:SetWidth(width) end
     page.note=note
-    -- The old module names find this page first, as "Guild > Open Guild".
+    -- The old module names find this page first, as "Guild > Open Guild". The
+    -- result scrolls to the top and outlines the page header's Open Guild button.
     page.searchEntries[#page.searchEntries+1]={label="Open Guild",row=row,kind="setting",
+        flash=function() return addon.configWindow and addon.configWindow.moduleHeader.openButton end,
         keywords={"roster","guild roster","recruitment","guild recruitment","recruiter","recruiter window"}}
     page:Finish()
     return page
