@@ -217,8 +217,8 @@ Static/mock checks: `tests/global_settings.py`, `tests/shared_media.py`,
 this is native confirmation.
 
 1. **Navigation:** `/ptg` → Settings → Appearance → Theme. **Action:**
-   click the **mode** card, then the **Modern** card, then **mode** again and use
-   the header **Reload** (or the reload banner once the window change lands).
+   click the **mode** card, then the **Modern** card, then **mode** again and
+   click **Reload now** on the "Applies after a reload" banner above the page.
    **Required state:** out of combat. **Confirmation:** each card draws its own
    colors and edges, the clicked card is outlined, **Current** stays on the theme
    on screen until the reload, and after it the mode theme is applied and marked
