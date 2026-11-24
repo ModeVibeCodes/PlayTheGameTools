@@ -133,8 +133,8 @@ Entertainment. Play The Game Tools is an independent community addon.
 ## Dungeon Loot
 
 With Dungeon Loot enabled, click the Quick Actions button, then its loot icon, to open the dungeon
-index. General -> Quick Icon has show, size, opacity, reset and shared Edit
-Mode positioning controls. General -> Keybinding lets you assign or clear a key
+index. General -> Quick Icon has size and opacity controls; the icon is in the
+ring while the module is on, and shared Edit Mode moves the ring. General -> Keybinding lets you assign or clear a key
 there; WoW Key Bindings also exposes Open Dungeon Loot. No key is assigned
 automatically. Choosing a key replaces its existing action; the field beside
 Set Keybinding shows the assigned key or Not bound. Opening and

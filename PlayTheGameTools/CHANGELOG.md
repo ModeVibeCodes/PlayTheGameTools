@@ -8,6 +8,11 @@
   Actions ring) and Rogue is now Rogue Tools. Only the names changed: your
   saved settings, keybindings and positions carry over. Searching settings for
   an old name still finds the module.
+- Quick Actions ring: the "show in Quick Actions" switches are gone (Class
+  Training's Shortcut Icon & Menu checkbox and Dungeon Loot's Show Shortcut Icon
+  row). While a module is on, its icon is in the ring; turning the module off
+  takes it out. Icon size, opacity and the popout options stay. Old saved
+  switch values are left in your profile but no longer read.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

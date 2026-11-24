@@ -6,6 +6,9 @@ Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and
 Rogue Tools (`foreverRogue`). Module IDs, SavedVariables keys, frame names and
 doc file names are unchanged; old names stay as `searchAliases`. Dated notes
 below keep the names that were current when they were written.
+Quick Actions: no per-module ring switch. Class Training and Dungeon Loot show
+their ring icon whenever the module is on (Recruitment already did). Their old
+`showShortcut` values stay in SavedVariables, unread and unvalidated.
 
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,

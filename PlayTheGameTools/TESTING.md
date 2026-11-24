@@ -21,7 +21,7 @@ installation procedure instead of changing it manually.
    **Required state:** Candidate installed with game closed, fresh client start.
    **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and Prox, and version
    0.2.0-beta.1; configuration opens without a Lua error or wrong-edition message.
-2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut.
+2. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training → General → Level Up Window.
    **Action:** Record its current value, change it, reload using `/reload`, then
    reopen the same page. Restore your preferred value afterward.
    **Required state:** OOC, Class Training enabled; retain existing settings.
@@ -48,9 +48,8 @@ separate result from the existing-settings upgrade check above.
    **Required state:** OOC, enabled module, supported current class.
    **Confirmation:** Only your class appears; learned/superseded ranks are handled
    sensibly, estimates remain estimates, uncertain entries are not guaranteed offers.
-2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut;
-   Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
-   **Action:** Turn Show Shortcut on, click the book, scroll, minimize, reopen,
+2. **Navigation:** Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
+   **Action:** With Class Training on (its icon is always in the ring then), click the book, scroll, minimize, reopen,
    click Jump to Settings; move the Quick Actions button near screen edges in Edit Mode.
    **Required state:** OOC, enabled module; preserve preferred final position.
    **Confirmation:** Bounded translucent list scrolls, glow follows open state,

@@ -145,6 +145,13 @@ CT.db.levelAlerts=false;training:RenderTraining();assert(training.selectedSectio
 CT.db.levelAlerts=true;training:SelectModePanel('Upcoming Abilities','options')
 training.catalogVersion=nil;training:RenderTraining();training:Layout()
 assert(training.selectedSection.title=='Upcoming Abilities' and not training.modeLayout.bar:IsShown(),'catalog rebuild stays independent of settings panels')
+-- No Quick Actions switch: the shortcut tab follows the module switch alone,
+-- whatever an old saved showShortcut says.
+for _,cells in ipairs(training.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.label:GetText()~='Shortcut Icon & Menu','no ring switch') end end
+CT.db.showShortcut=false;training:RenderTraining()
+assert(training.sectionTabs.buttons[3].enabled==true,'shortcut settings stay reachable while the module is on')
+training:SelectSectionTab(3);assert(training.selectedSection.title=='Shortcut Icon & Menu')
+CT.db.showShortcut=nil;training:SelectSectionTab(1)
 -- Existing Rogue customization guards still apply, while the new feature pills
 -- enter the original presentation state before showing its controls.
 local R=addon.ForeverRogue

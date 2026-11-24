@@ -82,15 +82,18 @@ lua.execute(r'''
     Click(b);Click(CT.shortcut);assert(f:IsShown())
     Click(b);Click(CT.shortcut);assert(not f:IsShown() and not ring:IsShown(),'reopening the ring and clicking again closes it')
 
-    -- Removing an icon re-spreads the rest and closes its popout.
-    Click(b);Click(CT.shortcut);assert(f:IsShown())
+    -- No per-module ring switch: an old saved showShortcut=false is not read.
     CT.db.showShortcut=false;CT:SyncTrainingDisplays()
+    assert(CT.shortcut:IsShown() and Q.count==2,'a module that is on is in the ring')
+    -- Turning a module off removes its icon, re-spreads the rest and closes its popout.
+    Click(b);Click(CT.shortcut);assert(f:IsShown())
+    addon:SetModuleEnabled('foreverClassTraining',false)
     assert(not f:IsShown() and not CT.shortcut:IsShown() and Q.count==1 and b:IsShown())
     local _,top=Offset(DL.shortcut);assert(top==74,'remaining icon takes the first slot')
     -- With nothing left the main button and its Edit Mode element go too.
     addon:SetModuleEnabled('dungeonLoot',false)
     assert(Q.count==0 and not b:IsShown() and not pm.elements.quickActionsLauncher.editMode)
-    CT.db.showShortcut=true;CT:SyncTrainingDisplays();assert(Q.count==1 and b:IsShown() and pm.elements.quickActionsLauncher.editMode)
+    addon:SetModuleEnabled('foreverClassTraining',true);assert(Q.count==1 and CT.shortcut:IsShown() and b:IsShown() and pm.elements.quickActionsLauncher.editMode)
 
     -- Combat closes the ring and blocks reopening it.
     Click(b);assert(ring:IsShown())

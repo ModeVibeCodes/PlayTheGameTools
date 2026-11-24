@@ -211,12 +211,9 @@ function M:CreateConfigPage(parent)
         if not M.active then
             rootRows:Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
         elseif v.tab=="general" then
-            rootRows.modePanel="options"
-            rootRows:Add("Quick Icon",nil,nil,T.secondary,nil,{heading=true})
-            rootRows:Add("Show Shortcut Icon: "..(M.db.showShortcut and "On" or "Off"),function()
-                M:SetShortcutOption("showShortcut",not M.db.showShortcut);page:Refresh()
-            end)
+            -- While the module is on, its shortcut is in the Quick Actions ring.
             rootRows.modePanel="appearance"
+            rootRows:Add("Quick Icon",nil,nil,T.secondary,nil,{heading=true})
             page.iconSize=rootRows:SettingSlider("Icon Size",24,72,2,function() return M.db.shortcutSize end,function(value) M:SetShortcutOption("shortcutSize",value) end," px")
             page.iconOpacity=rootRows:SettingSlider("Icon Opacity",25,100,5,function() return M.db.shortcutOpacity end,function(value) M:SetShortcutOption("shortcutOpacity",value) end,"%")
             if addon.QuickActions.launcherFailure then rootRows:Add("Quick Actions button unavailable: "..addon.QuickActions.launcherFailure,nil,nil,T.primary) end

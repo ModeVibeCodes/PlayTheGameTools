@@ -33,9 +33,9 @@ function M:CreateConfigPage(parent)
         elseif key=="levelAlerts" then self:RequestLevelPlayed() end
         self:SyncTrainingDisplays()
     end
+    -- While the module is on, its shortcut is in the Quick Actions ring.
     page:ToggleGrid({
         {label="Level Up Window",get=function() return self.db.levelAlerts~=false end,set=function(v) applyFeature("levelAlerts",v) end},
-        {label="Shortcut Icon & Menu",get=function() return self.db.showShortcut~=false end,set=function(v) applyFeature("showShortcut",v) end},
     },{maxColumns=2})
     page:Section("Level Up Window")
     local previewRow=page:Row("Level Up Window",42)
@@ -147,7 +147,7 @@ function M:CreateConfigPage(parent)
     function page:SelectSectionTab(section)
         local index=type(section)=="number" and section or nil
         if not index then for i,s in ipairs(self.sections) do if s==section then index=i end end end
-        if index==2 and (not M.active or M.db.levelAlerts==false) or index==3 and (not M.active or M.db.showShortcut==false) then return end
+        if index==2 and (not M.active or M.db.levelAlerts==false) or index==3 and not M.active then return end
         selectTab(self,section)
     end
     page.sectionTabs:SetPoint("TOPLEFT"); page.sectionTabs:SetPoint("TOPRIGHT", -24, 0)
@@ -159,8 +159,9 @@ function M:CreateConfigPage(parent)
         local lookup = {}
         for _, result in ipairs(M.rows or {}) do lookup[result.record.id] = result end
         local title = self.selectedSection and self.selectedSection.title
-        for i,key in pairs({[2]="levelAlerts",[3]="showShortcut"}) do
-            local enabled=M.active and M.db[key]~=false
+        -- Tab 3 (Shortcut Icon & Menu) follows the module switch alone.
+        for i,key in pairs({[2]="levelAlerts",[3]=true}) do
+            local enabled=M.active and (key==true or M.db[key]~=false)
             self.sectionTabs.buttons[i]:SetEnabled(enabled);self.sectionTabs.buttons[i]:SetAlpha(enabled and 1 or 0.4)
             if not enabled and self.selectedSection==self.sections[i] then self:SelectSectionTab(1);title="General" end
         end
