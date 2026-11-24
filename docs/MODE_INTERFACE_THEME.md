@@ -1,5 +1,13 @@
 # mode interface theme
 
+> **v2 window shell:** the header now holds only the brand, **Layout** and
+> **X**; search heads the sidebar; the sidebar is one A–Z module list with
+> **Settings** pinned at the bottom; a pending reload shows as a banner with
+> **Reload now** above the page. Notes below about header Reload/Profile/search,
+> category headings, nested rows and the 240-unit sidebar describe the earlier
+> shell. See [DEVELOPMENT.md](DEVELOPMENT.md) and the
+> [v2 window checks](../TESTING.md#v2-settings-window).
+
 ## Module layout rollout — November 10
 
 Campfire Monitor's design is owner-accepted. PR #26 now applies its layout pattern
@@ -224,13 +232,13 @@ No release publication or automatic theme activation is included.
     **Required state:** OOC after `/reload` with this revision;
     **Confirmation:** rounded corners rather than the reported solid square,
     with the same saved checked/unchecked state.
-11. **Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements / · Enhanced Experience Bar;
+11. **Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements / · Experience Bar;
     **Action:** inspect both sidebar entries, then click each;
     **Required state:** OOC; **Confirmation:** each name stays on one line and
     opens the same page. Long names may use a slightly smaller selected font.
 12. **Navigation:** PTG Tools → Questing & Leveling → · Class Training → General;
-    **Action:** inspect the page title, header switch, **Level Up Window** and
-    **Shortcut Icon & Menu** checkboxes without changing their values;
+    **Action:** inspect the page title, header switch and **Level Up Window**
+    checkbox without changing its value;
     **Required state:** OOC after `/reload`; **Confirmation:** no page perimeter
     line crosses the title/controls, checked fills stay inside their outlines,
     and the search bar's left edge lines up with **Class Training**.

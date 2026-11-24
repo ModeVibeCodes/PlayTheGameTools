@@ -1,70 +1,71 @@
 local _,addon=...
 local W,T,P,R=addon.ConfigWidgets,addon.InterfaceTheme,addon.ProfileManager,addon.ReloadManager
-function addon:CreateProfileHub(page)
-    local controls=page:Row('',92)
-    local panel=controls.row;controls.rowLabel:Hide();controls:Hide()
-    page.profileHub=panel
-    local current=W.Label(panel,'',nil,12,-6,600,T.primary)
-    local selected,renameTarget=P.activeName,P.activeName
-    local draft,mode='',nil
-    local function Options(empty)
-        local items={};if empty then items[1]={id='',label='Use manual profile'} end
-        for _,name in ipairs(P:List()) do items[#items+1]={id=name,label=name} end
-        return items
+local function Combat() return InCombatLockdown() or UnitAffectingCombat("player") end
+local DANGER={1,0.54,0.54,1}
+
+-- Muted line under a row's label. The row grows to fit the wrapped text.
+function addon:AddSettingsHint(controls,text,minimum)
+    local row=controls.row
+    local hint=W.Label(row,text,"GameFontHighlightSmall",0,-36,172,T.muted)
+    hint:SetWordWrap(true)
+    local previous=row.layoutChildren
+    function row:layoutChildren(width)
+        if previous then previous(self,width) end
+        local height=hint:GetStringHeight()
+        if (issecretvalue and issecretvalue(height)) or type(height)~="number" or height~=height or height<0 or height==math.huge then height=28 end
+        self:SetHeight(math.max(minimum or 52,self:GetHeight(),44+height))
     end
-    local function Input(parent,width,placeholder)
-        local box=CreateFrame('EditBox',nil,parent);box:SetSize(width,28);box:SetPoint('LEFT')
-        box:SetAutoFocus(false);box:SetMaxLetters(200);box:SetFontObject(GameFontHighlight);box:SetTextInsets(6,6,0,0);box:SetText('')
-        addon.Media:BindInterfaceFont(box,GameFontHighlight);W.Texture(box,'InputField')
-        local hint=W.Label(box,placeholder or 'Enter profile name',nil,6,0,width-12,T.muted)
-        hint:ClearAllPoints();hint:SetPoint('LEFT',6,0)
-        box:HookScript('OnTextChanged',function() hint:SetShown(box:GetText()=='') end)
-        box:SetScript('OnEscapePressed',function() box:ClearFocus() end)
-        return box
-    end
-    local status=W.Label(panel,P.status or '',nil,12,-56,600,T.muted)
-    status:SetWordWrap(true)
-    local function Result(ok,reason) status:SetText(reason or (ok and 'Saved.' or 'Profile action failed.'));page:Refresh();page:Layout() end
-    local select=W.Select(panel,260,function() return Options() end,function() return selected,selected end,function(name)
-        local ok,reason=P:Select(name,true);if ok then selected=name end
-        Result(ok,reason=='reload-required' and 'Profile pending. Use Reload in the header, or choose Later when closing.' or reason)
+    row.settingsHint=hint
+    return hint
+end
+
+local function Input(parent,width,placeholder)
+    local box=CreateFrame('EditBox',nil,parent);box:SetSize(width,28);box:SetPoint('LEFT')
+    box:SetAutoFocus(false);box:SetMaxLetters(200);box:SetFontObject(GameFontHighlight);box:SetTextInsets(6,6,0,0);box:SetText('')
+    addon.Media:BindInterfaceFont(box,GameFontHighlight);W.Texture(box,'InputField')
+    local hint=W.Label(box,placeholder or 'Enter profile name',nil,6,0,width-12,T.muted)
+    hint:ClearAllPoints();hint:SetPoint('LEFT',6,0)
+    box:HookScript('OnTextChanged',function() hint:SetShown(box:GetText()=='') end)
+    box:SetScript('OnEscapePressed',function() box:ClearFocus() end)
+    box.placeholder=hint
+    return box
+end
+
+-- What each Manage action shows. "target" actions choose which profile they
+-- act on; the others create a new one.
+local ACTIONS={
+    new={title='New profile',confirm='Create',name='Name for the new profile'},
+    duplicate={title='Duplicate profile',confirm='Duplicate',target=true,name='Name for the copy'},
+    rename={title='Rename profile',confirm='Rename',target=true,name='New name'},
+    import={title='Import profile',confirm='Import As New',name='Name (optional)',text=true},
+    export={title='Export profile',target=true,text=true},
+    delete={title='Delete profile',confirm='Delete',target=true,danger=true},
+}
+addon.ProfileActions={'new','duplicate','rename','import','export','delete'}
+
+-- One small dialog for every Manage action, over the settings page.
+local function Dialog(page,hub)
+    local dialog=hub.dialog
+    if dialog then return dialog end
+    dialog=CreateFrame('Frame',nil,page);dialog:Hide();hub.dialog=dialog
+    dialog:SetSize(460,190);dialog:SetPoint('CENTER');dialog:SetFrameStrata('DIALOG')
+    dialog:SetFrameLevel(page:GetFrameLevel()+100);dialog:EnableMouse(true);dialog:SetClampedToScreen(true)
+    W.Texture(dialog,'Window');W.Texture(dialog,'BorderSilver','BORDER')
+    local title=W.Heading(dialog,'',T.fontSize.section,16,-14,428)
+    local message=W.Label(dialog,'',nil,16,-44,428,T.muted);message:SetWordWrap(true)
+    local targetLabel=W.Label(dialog,'Profile',nil,16,0,90,T.text)
+    local target,name,kind
+    local targetSelect=W.Select(dialog,260,function()
+        local items={};for _,profile in ipairs(P:List()) do items[#items+1]={id=profile,label=profile} end;return items
+    end,function() return target,target end,function(chosen)
+        target=chosen
+        if kind=='rename' then name:SetText(chosen) end
+        dialog:Update()
     end)
-    select:ClearAllPoints();select:SetPoint('TOPLEFT',12,-24)
-    local cancel=W.Button(panel,'Cancel Selection',132,28,'secondary');cancel:SetPoint('LEFT',select,'RIGHT',8,0)
-    cancel:SetScript('OnClick',function() P:CancelSelection();selected=P.activeName;Result(true,P.status) end)
-    local function Action(title,label,callback)
-        local row=page:Row(title,44)
-        local input=Input(row,220)
-        local button=W.Button(row,label,100,28);button:SetPoint('LEFT',input,'RIGHT',8,0)
-        button:SetScript('OnClick',function() Result(callback(input:GetText())) end)
-        return input,button
-    end
-    local createInput,create=Action('Create New Profile','Create',function(name) return P:Create(name) end)
-    local duplicateInput,duplicate=Action('Duplicate Profile','Duplicate',function(name) return P:Duplicate(selected,name) end)
-    local renameRow=page:Row('Rename Profile',78)
-    local renameSelect=W.Select(renameRow,220,function() return Options() end,function() return renameTarget,renameTarget end,function(name) renameTarget=name end)
-    renameSelect:ClearAllPoints();renameSelect:SetPoint('TOPLEFT',0,0)
-    local renameInput=Input(renameRow,220,'New name');renameInput:ClearAllPoints();renameInput:SetPoint('TOPLEFT',0,-34)
-    local rename=W.Button(renameRow,'Rename',100,28);rename:SetPoint('LEFT',renameInput,'RIGHT',8,0)
-    rename:SetScript('OnClick',function()
-        local old=renameTarget;local name=P:Name(renameInput:GetText());local ok,reason=P:Rename(old,name)
-        if ok then renameTarget=name;if selected==old then selected=name end end
-        Result(ok,reason)
-    end)
-    local modeRow=page:Row('Import / Export',42)
-    local import=W.Button(modeRow,'Import',88,28,'choice');import:SetPoint('LEFT')
-    local export=W.Button(modeRow,'Export',88,28,'choice');export:SetPoint('LEFT',import,'RIGHT',8,0)
-    import:SetSelected(false);export:SetSelected(false)
-    local editControls=page:Row('Profile String',280)
-    local editorRow=editControls.row
-    editorRow.visibleWhen=function() return page.profileEditorOpen==true end
-    editControls.rowLabel:Hide();editControls:Hide()
-    local heading=W.Label(editorRow,'',nil,12,-6,300,T.secondary)
-    local nameLabel=W.Label(editorRow,'Profile Name (Optional)',nil,12,-34,174)
-    local importName=Input(editorRow,260,'Enter profile name');importName:ClearAllPoints();importName:SetPoint('TOPLEFT',190,-26)
-    local scroll=CreateFrame('ScrollFrame',nil,editorRow);scroll:SetPoint('TOPLEFT',12,-66);scroll:SetPoint('BOTTOMRIGHT',-12,88)
-    scroll:EnableMouseWheel(true)
-    local edit=CreateFrame('EditBox',nil,scroll);edit:SetSize(500,110);edit:SetMultiLine(true);edit:SetAutoFocus(false)
+    name=Input(dialog,260,'')
+    local nameLabel=W.Label(dialog,'Name',nil,16,0,90,T.text)
+    local scroll=CreateFrame('ScrollFrame',nil,dialog);scroll:EnableMouseWheel(true)
+    local edit=CreateFrame('EditBox',nil,scroll);edit:SetSize(400,110);edit:SetMultiLine(true);edit:SetAutoFocus(false)
     edit:SetMaxLetters(addon.ProfileCodec.limit);edit:SetFontObject(GameFontHighlight);addon.Media:BindInterfaceFont(edit,GameFontHighlight)
     W.Texture(edit,'InputField');scroll:SetScrollChild(edit)
     local resizing=false
@@ -83,115 +84,183 @@ function addon:CreateProfileHub(page)
         if scroll:GetVerticalScroll()>maximum then scroll:SetVerticalScroll(maximum) end
         resizing=false
     end
-    edit:SetScript("OnTextChanged",Resize);scroll:SetScript("OnSizeChanged",Resize)
-    scroll:SetScript("OnShow",Resize)
-    edit:SetScript("OnEscapePressed",function() edit:ClearFocus() end)
-    scroll:SetScript("OnMouseWheel",function(_,delta)
+    edit:SetScript('OnTextChanged',Resize);scroll:SetScript('OnSizeChanged',Resize);scroll:SetScript('OnShow',Resize)
+    edit:SetScript('OnEscapePressed',function() edit:ClearFocus() end)
+    scroll:SetScript('OnMouseWheel',function(_,delta)
         scroll:SetVerticalScroll(math.max(0,math.min(math.max(0,edit:GetHeight()-scroll:GetHeight()),scroll:GetVerticalScroll()-delta*36)))
     end)
-    local apply=W.Button(editorRow,'Import As New',130,28);apply:SetPoint('BOTTOMLEFT',12,10)
-    local clear=W.Button(editorRow,'Clear',80,28,'secondary');clear:SetPoint('LEFT',apply,'RIGHT',8,0)
-    local close=W.Button(editorRow,'Close',80,28,'secondary');close:SetPoint('LEFT',clear,'RIGHT',8,0)
-    local feedback=W.Label(editorRow,'',nil,12,-196,600,T.muted);feedback:SetWordWrap(true);feedback:SetHeight(36)
+    local feedback=W.Label(dialog,'',nil,16,0,428,T.muted);feedback:SetWordWrap(true)
+    feedback:ClearAllPoints();feedback:SetPoint('BOTTOMLEFT',16,50);feedback:SetWidth(428)
+    local confirm=W.Button(dialog,'',130,28,'primary');confirm:SetPoint('BOTTOMLEFT',16,14)
+    -- Delete uses a plain button with a red label; red on the accent fill reads poorly.
+    local remove=W.Button(dialog,'Delete',130,28);remove:SetPoint('BOTTOMLEFT',16,14);remove:SetLabelColor(DANGER);remove:Hide()
+    local cancel=W.Button(dialog,'Cancel',100,28,'secondary');cancel:SetPoint('LEFT',confirm,'RIGHT',8,0)
+    local draft,settingText=''
+    kind=''
     local cacheText,cacheName,cacheResult,cacheResolved,cacheReason
     local function ValidateImport()
-        local text,name=draft,importName:GetText()
-        if text~=cacheText or name~=cacheName then
-            cacheText,cacheName=text,name
-            cacheResult,cacheResolved,cacheReason=P:PrepareImport(text,name)
+        local text,typed=draft,name:GetText()
+        if text~=cacheText or typed~=cacheName then
+            cacheText,cacheName=text,typed
+            cacheResult,cacheResolved,cacheReason=P:PrepareImport(text,typed)
         end
-        local trimmed=name:match('^%s*(.-)%s*$')
-        apply.label:SetText(trimmed~='' and P:Name(name) and 'Import' or 'Import As New')
-        apply:SetEnabled(mode=='import' and cacheResult~=nil)
-        if mode=='import' then feedback:SetText(text=='' and 'Paste a Play The Game Tools profile string.' or cacheResult and ('Import as '..cacheResolved..'.') or cacheReason) end
+        local trimmed=typed:match('^%s*(.-)%s*$')
+        confirm.label:SetText(trimmed~='' and P:Name(typed) and 'Import' or 'Import As New')
+        confirm:SetEnabled(cacheResult~=nil)
+        feedback:SetText(text=='' and 'Paste a Play The Game Tools profile string.' or cacheResult and ('Import as '..cacheResolved..'.') or cacheReason)
     end
-    local settingText=false
     edit:HookScript('OnTextChanged',function()
-        if not settingText and mode=='import' then
+        if not settingText and kind=='import' then
             draft=edit:GetText();R:SetDraft('profile-import',draft:match('^%s*(.-)%s*$')~='');ValidateImport()
         end
     end)
-    importName:HookScript('OnTextChanged',ValidateImport)
-    local function SetMode(nextMode)
-        if mode=='import' then draft=edit:GetText() end
-        mode=nextMode;page.profileEditorOpen=true
-        import:SetSelected(mode=='import');export:SetSelected(mode=='export')
-        heading:SetText(mode=='import' and 'Import Profile' or 'Export Profile')
-        nameLabel:SetShown(mode=='import');importName:SetShown(mode=='import');apply:SetShown(mode=='import');clear:SetShown(mode=='import')
-        scroll:ClearAllPoints();scroll:SetPoint('TOPLEFT',12,mode=='import' and -66 or -30);scroll:SetPoint('BOTTOMRIGHT',-12,88)
-        settingText=true
-        if mode=='import' then edit:SetText(draft)
-        else
-            local text,reason=P:Export(selected)
-            edit:SetText(text or '');feedback:SetText(text and 'Ctrl+A, Ctrl+C to copy this profile.' or reason)
+    name:HookScript('OnTextChanged',function() if kind=='import' then ValidateImport() end end)
+    -- Places the parts each action uses, top to bottom.
+    function dialog:Update()
+        local action=ACTIONS[kind]
+        title:SetText(action.title)
+        local subject=action.target and target or P.activeName
+        local text
+        if kind=='new' then text='Starts as a copy of '..P.activeName..', the profile in use.'
+        elseif kind=='duplicate' then text='Copies every setting of the chosen profile.'
+        elseif kind=='rename' then text='Renames the chosen profile everywhere it is used.'
+        elseif kind=='import' then text='Paste a profile string. Nothing you have is overwritten.'
+        elseif kind=='export' then text='Ctrl+A, then Ctrl+C, copies the string below.'
+        else text='Deletes '..(subject or '')..' and all of its settings. This cannot be undone.' end
+        message:SetText(text)
+        local y=-44-math.max(14,message:GetStringHeight())-14
+        targetLabel:SetShown(action.target==true);targetSelect:SetShown(action.target==true)
+        if action.target then
+            targetLabel:ClearAllPoints();targetLabel:SetPoint('TOPLEFT',16,y-8)
+            targetSelect:ClearAllPoints();targetSelect:SetPoint('TOPLEFT',110,y);targetSelect:Refresh()
+            y=y-38
         end
-        settingText=false
-        ValidateImport();page:Layout();edit:SetFocus()
-        if mode=='export' then edit:HighlightText() end
+        nameLabel:SetShown(action.name~=nil);name:SetShown(action.name~=nil)
+        if action.name then
+            name.placeholder:SetText(action.name)
+            nameLabel:ClearAllPoints();nameLabel:SetPoint('TOPLEFT',16,y-8)
+            name:ClearAllPoints();name:SetPoint('TOPLEFT',110,y)
+            y=y-38
+        end
+        scroll:SetShown(action.text==true)
+        local height=-y+(action.text and 150 or 0)+70
+        dialog:SetHeight(height)
+        if action.text then
+            scroll:ClearAllPoints();scroll:SetPoint('TOPLEFT',16,y);scroll:SetPoint('BOTTOMRIGHT',-16,74)
+            settingText=true
+            if kind=='import' then edit:SetText(draft)
+            else
+                local exported,reason=P:Export(subject)
+                edit:SetText(exported or '');feedback:SetText(exported and '' or reason or '')
+            end
+            settingText=false
+        end
+        local button=action.danger and remove or confirm
+        confirm:SetShown(action.confirm~=nil and not action.danger);remove:SetShown(action.danger==true)
+        if action.confirm then button.label:SetText(action.confirm) end
+        button:SetEnabled(true)
+        cancel.label:SetText(action.confirm and 'Cancel' or 'Close')
+        cancel:ClearAllPoints()
+        if action.confirm then cancel:SetPoint('LEFT',button,'RIGHT',8,0) else cancel:SetPoint('BOTTOMLEFT',16,14) end
+        if kind=='import' then ValidateImport() end
+        if kind=='export' then edit:SetFocus();edit:HighlightText() end
     end
-    import:SetScript('OnClick',function() SetMode('import') end)
-    export:SetScript('OnClick',function() SetMode('export') end)
-    clear:SetScript('OnClick',function()
-        if mode~='import' then return end
-        draft='';edit:SetText('');R:SetDraft('profile-import',false);ValidateImport()
-    end)
-    apply:SetScript('OnClick',function()
-        if mode~='import' then return end
-        local ok,reason=P:Import(draft,importName:GetText())
-        if ok then draft='';edit:SetText('');R:SetDraft('profile-import',false);cacheText=nil end
-        Result(ok,reason);ValidateImport()
-    end)
-    close:SetScript('OnClick',function()
-        page.profileEditorOpen=false;import:SetSelected(false);export:SetSelected(false)
-        edit:ClearFocus();importName:ClearFocus();page:Layout()
-    end)
-    local specControl=page:Row('Specialization Profiles',42)
-    local specToggle=W.Button(specControl,'Enable Spec Profiles',190,28,'choice');specToggle:SetPoint('LEFT')
-    specToggle:SetScript('OnClick',function() local c=P:Character();if c then Result(P:SetSpecEnabled(not c.specEnabled)) end end)
-    specControl.row.visibleWhen=function() return not addon.Edition or addon.Edition.name~="Forever" end
-    local specRows={}
-    local help=page:Row('',52)
-    help.row.visibleWhen=function() local c=P:Character();return c and c.specEnabled end
-    help.rowLabel:Hide();help:ClearAllPoints();help:SetPoint('TOPLEFT',12,-4);help:SetPoint('BOTTOMRIGHT',-12,4)
-    local text=W.Label(help,'Manual selection assigns the current spec. Unassigned specs use your manual profile. Apply a pending selection with Reload.',nil,0,0,600,T.muted);text:SetWordWrap(true)
-    local function BuildSpecs()
-        for _,spec in ipairs(P:Specs()) do
-            if not specRows[spec.id] then
-                local row=page:Row(spec.label,42);row.row.section=nil
-                table.remove(page.rows)
-                local insertion=1
-                for i,item in ipairs(page.rows) do if item==help.row then insertion=i+1;break end end
-                for _ in pairs(specRows) do insertion=insertion+1 end
-                table.insert(page.rows,insertion,row.row)
-                row.row.visibleWhen=help.row.visibleWhen
-                local button=W.Select(row,260,function() return Options(true) end,function()
-                    local c=P:Character();local value=c and c.specProfiles[spec.id] or '';return value,value~='' and value or 'Use manual profile'
-                end,function(name) Result(P:Assign(spec.id,name~='' and name or nil)) end)
-                specRows[spec.id]={row=row.row,button=button}
+    function dialog:Open(nextKind,selected)
+        kind=nextKind;target=selected
+        if kind=='delete' and (target==P.activeName or target==hub.Shown()) then
+            -- Offer a profile that can actually be deleted.
+            for _,candidate in ipairs(P:List()) do
+                if candidate~=P.activeName and candidate~=hub.Shown() then target=candidate;break end
             end
         end
+        feedback:SetText('');name:SetText(kind=='rename' and (target or '') or '')
+        cacheText=nil
+        self:Show();self:Update()
+        if name:IsShown() then name:SetFocus() end
     end
-    BuildSpecs()
-    function panel:layoutChildren(width) current:SetWidth(width-24);status:SetWidth(width-24) end
-    function editorRow:layoutChildren(width) feedback:SetWidth(width-24) end
-    page.refreshers[#page.refreshers+1]=function()
-        BuildSpecs()
-        if not P.root.profiles[selected] then selected=P.activeName end
-        if not P.root.profiles[renameTarget] then renameTarget=P.activeName end
-        local c=P:Character();local pending=c and c.pendingProfile
-        current:SetText('Current Profile: '..P.activeName..(pending and '  |  Pending: '..pending or ''))
-        select:Refresh();renameSelect:Refresh();specToggle:SetSelected(c and c.specEnabled or false)
-        cancel:SetEnabled(pending~=nil or P.queued~=nil);specToggle:SetEnabled(c~=nil)
-        -- A renamed/imported profile can change conflict/default-name resolution.
-        cacheText=nil;ValidateImport()
-        for _,entry in pairs(specRows) do entry.button:Refresh() end
+    local function Confirm()
+        local ok,reason
+        if kind=='new' then ok,reason=P:Create(name:GetText())
+        elseif kind=='duplicate' then ok,reason=P:Duplicate(target,name:GetText())
+        elseif kind=='rename' then ok,reason=P:Rename(target,name:GetText())
+        elseif kind=='import' then
+            ok,reason=P:Import(draft,name:GetText())
+            if ok then draft='';R:SetDraft('profile-import',false) end
+        elseif kind=='delete' then ok,reason=P:Delete(target) end
+        if ok then dialog:Hide();hub.Result(reason) else feedback:SetText(reason or 'Profile action failed.') end
     end
-    P:RegisterListener(panel,function() if P.status then status:SetText(P.status) end end)
-    panel.current,panel.select,panel.nameInput=current,select,createInput
-    panel.create,panel.duplicate,panel.rename=create,duplicate,rename
-    panel.duplicateInput,panel.renameInput,panel.renameSelect=duplicateInput,renameInput,renameSelect
-    panel.import,panel.export,panel.editor,panel.importApply=import,export,edit,apply
-    panel.importNameInput,panel.clearImport,panel.closeEditor=importName,clear,close
-    panel.cancel,panel.specToggle,panel.specRows=cancel,specToggle,specRows
-    page.searchEntries[#page.searchEntries+1]={label='Profiles',keywords={'import','export','specialization'},row=panel,kind='setting'}
+    confirm:SetScript('OnClick',Confirm);remove:SetScript('OnClick',Confirm)
+    cancel:SetScript('OnClick',function() dialog:Hide() end)
+    dialog:SetScript('OnHide',function() edit:ClearFocus();name:ClearFocus() end)
+    dialog.title,dialog.message,dialog.feedback,dialog.confirm,dialog.remove,dialog.cancel=title,message,feedback,confirm,remove,cancel
+    dialog.target,dialog.nameInput,dialog.editor,dialog.scroll=targetSelect,name,edit,scroll
+    function dialog:Kind() return kind end
+    function dialog:Target() return target end
+    addon.Dialogs:Register(dialog,{group='settings'})
+    return dialog
+end
+
+-- Active profile chooser and its Manage menu (Settings -> Profile).
+function addon:CreateProfileHub(page)
+    local controls=page:Row('Active profile',76,{'profile','profiles','new','duplicate','rename','import','export','delete'})
+    local panel=controls.row
+    page.profileHub=panel
+    addon:AddSettingsHint(controls,'Each profile keeps its own copy of every setting.',76)
+    local hub,message={},nil
+    local function Shown() local c=P:Character();return c and c.pendingProfile or P.activeName end
+    hub.Shown=Shown
+    local status=W.Label(controls,'',nil,0,-36,420,T.muted);status:SetWordWrap(true)
+    -- A waiting switch outranks the last action's result.
+    local function StatusText()
+        local shown=Shown()
+        if shown~=P.activeName then return 'Switches to '..shown..' after a reload. Choose '..P.activeName..' to stay.' end
+        return message or ''
+    end
+    function hub.Result(text) message=text;page:Refresh();page:Layout() end
+    local select=W.Select(controls,220,function()
+        local items={};for _,name in ipairs(P:List()) do items[#items+1]={id=name,label=name} end;return items
+    end,function() local name=Shown();return name,name end,function(name)
+        local ok,reason=P:Select(name,true)
+        if not ok then hub.Result(reason)
+        elseif reason=='deferred' then hub.Result('Profile change waits until combat ends.')
+        else hub.Result(nil) end
+    end)
+    select:ClearAllPoints();select:SetPoint('TOPLEFT',0,0)
+    local manage=W.Button(controls,'Manage',100,30);manage:SetPoint('LEFT',select,'RIGHT',8,0)
+    local menu=W.Popup(manage,180,10)
+    W.Texture(menu,'Window')
+    local labels={new='New profile…',duplicate='Duplicate…',rename='Rename…',import='Import…',export='Export…',delete='Delete profile…'}
+    local items,y={},-6
+    for index,kind in ipairs(addon.ProfileActions) do
+        if index==4 or index==6 then
+            local line=W.Fill(menu,T.line,'ARTWORK');line:ClearAllPoints()
+            line:SetPoint('TOPLEFT',10,y-4);line:SetPoint('TOPRIGHT',-10,y-4);line:SetHeight(1)
+            y=y-9
+        end
+        local item=W.Button(menu,labels[kind],168,26,'tab');item:SetPoint('TOPLEFT',6,y)
+        item.label:SetJustifyH('LEFT');item.label:SetWidth(148)
+        if kind=='delete' then item:SetLabelColor(DANGER) end
+        item:SetScript('OnClick',function() menu:Hide();Dialog(page,hub):Open(kind,Shown()) end)
+        items[kind]=item;y=y-28
+    end
+    menu:SetHeight(-y+6)
+    manage:SetScript('OnClick',function()
+        if Combat() or not manage:IsEnabled() then return end
+        local shown=menu:IsShown();if addon.CloseFontDropdown then addon:CloseFontDropdown() end
+        W.PlacePopup(menu,manage);menu:SetShown(not shown)
+    end)
+    manage:SetScript('OnHide',function() menu:Hide() end)
+    addon.fontDropdownMenus=addon.fontDropdownMenus or {};addon.fontDropdownMenus[menu]=true
+    local previous=panel.layoutChildren
+    function panel:layoutChildren(width)
+        status:SetWidth(math.max(120,width-198))
+        local height=status:GetStringHeight()
+        if (issecretvalue and issecretvalue(height)) or type(height)~="number" or height~=height or height<0 or height==math.huge then height=14 end
+        self:SetHeight(math.max(76,status:GetText()~='' and 56+height or 0))
+        if previous then previous(self,width) end
+    end
+    page.refreshers[#page.refreshers+1]=function() select:Refresh();status:SetText(StatusText()) end
+    P:RegisterListener(panel,function() page:Refresh() end)
+    panel.select,panel.manage,panel.menu,panel.menuItems,panel.status=select,manage,menu,items,status
+    function panel:Dialog() return Dialog(page,hub) end
 end

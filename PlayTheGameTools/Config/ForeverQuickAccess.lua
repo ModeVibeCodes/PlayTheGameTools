@@ -13,16 +13,11 @@ function M:CreateConfigPage(parent)
         page.refreshers[#page.refreshers+1]=W.Slider(page:Row(label,48),r[1],r[2],r[3],
             function() return self.db[key] end,function(v) self:SetOption(key,v) end,suffix,true)
     end
-    local function Button(label,text,callback)
-        local b=W.Button(page:Row(label,48),text,180,28)
-        b:SetPoint("LEFT");b:SetScript("OnClick",function() callback();page:Refresh() end)
-        return b
-    end
     page:Section("Professions")
     Toggle("Show Profession Bar","showProfessionBar")
     local status=W.Label(page:Row("Learned Professions",72),"",nil,0,-4,280,addon.Theme.muted)
     status:SetWordWrap(true)
-    Button("Update Learned List","Refresh Professions",function() self:RefreshProfessions() end)
+    -- No refresh button: SKILL_LINES_CHANGED and SPELLS_CHANGED re-read professions.
     -- Five reusable rows allow learning/unlearning to update an already-open page.
     page.professionCells={}
     for i=1,5 do
@@ -33,7 +28,7 @@ function M:CreateConfigPage(parent)
         cell.searchEntry=page.searchEntries[#page.searchEntries]
     end
     page.refreshers[#page.refreshers+1]=function()
-        status:SetText(self.message or "Enable Quick Access Bars to discover learned professions.")
+        status:SetText(self.message or "Turn on Profession & Food Bars to discover learned professions.")
         for i,cell in ipairs(page.professionCells) do
             local p=self.professions[i]
             cell.label:SetText(p and p.name or "No profession")

@@ -1,29 +1,36 @@
 local _, addon = ...
 local W, T = addon.ConfigWidgets, addon.InterfaceTheme
--- Edit Mode is the single home for placement and display styling. Every
--- registered display uses the same panel: on the left choose the element, its
--- anchor, its offsets, reset or exit; on the right style the selected element.
-local LEFT, PAD, LABEL = 340, 20, 84
-local CONTROL = LEFT - PAD * 2 - LABEL
-local ROW = 38
-local TOP = 56
--- The styling column fits the settings rows' widest (280-unit) choosers.
-local STYLE = 540
-local WIDTH, HEIGHT = LEFT + STYLE, 500
-local TABS = 40
+-- Layout: the one on-screen mode. Every enabled display shows its sample data
+-- with its name, and can be dragged. The bar along the top says what to do and
+-- holds Grid and Done. Clicking a display opens its Style card beside it: the
+-- same Scale, Opacity, Text size and Background for every display, a Position
+-- section for anchoring and exact offsets, Reset and Settings.
+-- The bar keeps the earlier Edit Mode window's frame name and Escape handling.
+local BAR_HEIGHT, BAR_PAD, BAR_GAP = 44, 14, 14
+local CARD_WIDTH, PAD, LABEL = 300, 14, 86
+local CONTROL = CARD_WIDTH - PAD * 2 - LABEL
+local ROW, HEADER, FOOTER = 36, 44, 50
+local CARD_GAP = 16
 
 local function InCombat() return InCombatLockdown() or UnitAffectingCombat("player") end
+
+local function TextWidth(text, fallback)
+    local width = text:GetStringWidth()
+    if issecretvalue and issecretvalue(width) then return fallback end
+    return type(width) == "number" and width > 0 and math.ceil(width) or fallback
+end
 
 function addon:UpdateEditWindowBounds()
     local window = self.editWindow
     if not window or InCombat() then return end
-    window:SetScale(math.max(0.1, math.min(1, (UIParent:GetWidth() - 24) / WIDTH, (UIParent:GetHeight() - 24) / HEIGHT)))
+    local width = window.contentWidth or window:GetWidth()
+    window:SetScale(math.max(0.1, math.min(1, (UIParent:GetWidth() - 24) / width, (UIParent:GetHeight() - 24) / (BAR_HEIGHT + 420))))
 end
 
--- Open a display's styling: Edit Mode with that display selected.
+-- Open Layout with one display's Style card already open.
 function addon:EditElementAppearance(id)
     if InCombat() then
-        print("Play The Game Tools: edit display appearance outside combat.")
+        print("Play The Game Tools: open Layout outside combat.")
         return false
     end
     if not self.editMode and not self:SetEditMode(true) then return false end
@@ -32,272 +39,128 @@ function addon:EditElementAppearance(id)
     return self.PositionManager:SelectElement(id)
 end
 
--- The styling column shows the selected display's Text and Appearance rows.
--- Rows are borrowed from its settings page, so every control keeps its own
--- getter, setter, refresher and saved key; they return when the selection
--- changes or Edit Mode ends. Settings pages never show these rows.
-local PANELS = { { "appearance", "Appearance" }, { "text", "Text" } }
-local function CreateStyleColumn(owner, window)
-    local column = { borrowed = {}, parents = {}, headings = {}, tabs = {}, selected = {} }
-    local x = LEFT + PAD
-    local rule = W.Fill(window, T.line, "ARTWORK")
-    rule:ClearAllPoints(); rule:SetPoint("TOPLEFT", LEFT, -TOP); rule:SetPoint("BOTTOMLEFT", LEFT, PAD); rule:SetWidth(1)
-    local scroll = CreateFrame("ScrollFrame", nil, window)
-    scroll:SetPoint("TOPLEFT", x, -TOP); scroll:SetPoint("BOTTOMRIGHT", -PAD - 12, PAD)
-    local content = CreateFrame("Frame", nil, scroll)
-    local width = STYLE - PAD * 2 - 12
-    content:SetSize(width, 1)
-    scroll:SetScrollChild(content)
-    local bar = CreateFrame("Slider", nil, window)
-    bar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 6, 0); bar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 6, 0)
-    bar:SetWidth(4); bar:SetOrientation("VERTICAL"); bar:SetValueStep(24)
-    W.ScrollThumb(bar, 40)
-    bar:SetScript("OnValueChanged", function(_, value)
-        if owner.CloseFontDropdown then owner:CloseFontDropdown() end
-        scroll:SetVerticalScroll(value)
-    end)
-    local function Wheel(_, delta) bar:SetValue(bar:GetValue() - delta * 42) end
-    scroll:EnableMouseWheel(true); scroll:SetScript("OnMouseWheel", Wheel)
-    content:EnableMouseWheel(true); content:SetScript("OnMouseWheel", Wheel)
-    local note = W.Label(window, "", nil, x, -TOP - 8, STYLE - PAD * 2, T.muted)
-    note:SetWordWrap(true)
-    column.scroll, column.content, column.scrollbar, column.note = scroll, content, bar, note
-
-    local function Spec() return column.element and W.EditAppearance[column.element] end
-    -- Campfire rows carry their own rule; the page's wrapper filters by its tabs.
-    local function Visible(row)
-        local tag = row.editAppearance
-        local predicate
-        if tag.campfire then predicate = tag.visible else predicate = row.visibleWhen end
-        return not predicate or predicate()
+-- Guide lines every PM.GRID units out from the centre of the screen. Never
+-- takes the mouse, so the game world stays clickable through it.
+function addon:RefreshLayoutGrid()
+    local show = self.editMode and self.EditMode.grid and self.editWindow and self.editWindow:IsShown() and not InCombat()
+    local grid = self.layoutGrid
+    if not show then
+        if grid then grid:Hide() end
+        return
     end
-    local function Eligible(row, feature, panel)
-        local tag = row.editAppearance
-        if not tag or tag.feature ~= feature or tag.panel ~= panel then return false end
-        if row.sectionHeader or row.subsectionHeading or row.campfireSectionHeader or row.campfireHidden
-            or row.modePaired or row.modeReplacedNavigation then return false end
-        return Visible(row) and true or false
+    if not grid then
+        grid = CreateFrame("Frame", "PlayTheGameToolsLayoutGrid", UIParent)
+        grid:SetAllPoints(UIParent); grid:SetFrameStrata("BACKGROUND"); grid:EnableMouse(false)
+        grid.lines = {}
+        self.layoutGrid = grid
     end
-    -- Some pages gate a feature's rows on their own session choice (Rogue's
-    -- Customize state); select the feature before reading its rows.
-    local function Prepare(feature)
-        local plan = W.ModeLayoutPlans[Spec().page]
-        if plan and plan.select then plan.select(column.page, feature) end
-    end
-    local function Rows(feature, panel)
-        local rows = {}
-        for _, row in ipairs(column.page.rows) do
-            if Eligible(row, feature, panel) then rows[#rows + 1] = row end
-        end
-        return rows
-    end
-    local function Features()
-        local items = {}
-        for _, entry in ipairs(Spec().features) do
-            if not entry[3] or entry[3]() then
-                Prepare(entry[1])
-                for _, panel in ipairs(PANELS) do
-                    if #Rows(entry[1], panel[1]) > 0 then items[#items + 1] = entry; break end
-                end
-            end
-        end
-        return items
-    end
-    local function Heading(index, text)
-        local heading = column.headings[index]
-        if not heading then
-            heading = { label = W.Heading(content, text, 20, 0, 0, 200, T.text) }
-            heading.line, heading.align = W.ModeHeadingRule(content, heading.label)
-            column.headings[index] = heading
-        end
-        heading.label:SetText(text); heading.label:SetWidth(width)
-        heading.label:Show(); heading.line:Show(); heading.align()
-        return heading.label
-    end
-    local function Tab(index)
-        local button = column.tabs[index]
-        if not button then
-            button = W.Button(window, "", 150, 28, "choice")
-            button:SetScript("OnClick", function()
-                if not column.element or not button.feature then return end
-                column.selected[column.element] = button.feature
-                bar:SetValue(0); column:Layout()
-            end)
-            column.tabs[index] = button
-        end
-        return button
-    end
-
-    function column:Return()
-        if owner.CloseFontDropdown then owner:CloseFontDropdown() end
-        if owner.CloseTimerColorPicker then owner:CloseTimerColorPicker() end
-        -- Detach first: hiding a focused field applies it and refreshes the
-        -- page, which must not borrow rows again while they are going home.
-        local page, borrowed, parents = self.page, self.borrowed, self.parents
-        self.page, self.borrowed, self.parents = nil, {}, {}
-        if page then page.editRefreshed = nil end
-        local any = false
-        for row in pairs(borrowed) do
-            row.editBorrowed = nil
-            row:Hide(); row:SetParent(parents[row]); row:ClearAllPoints()
-            any = true
-        end
-        if page and any then page:Layout() end
-    end
-
-    function column:Layout()
-        if self.layingOut then return end
-        self.layingOut = true
-        for _, heading in ipairs(self.headings) do heading.label:Hide(); heading.line:Hide() end
-        for _, button in ipairs(self.tabs) do button:Hide() end
-        local features = self.page and Features() or {}
-        local feature
-        for _, entry in ipairs(features) do if entry[1] == self.selected[self.element] then feature = entry[1] end end
-        feature = feature or (features[1] and features[1][1])
-        if #features > 1 then
-            local cell = math.min(160, (STYLE - PAD * 2 - 8 * (#features - 1)) / #features)
-            for index, entry in ipairs(features) do
-                local button = Tab(index)
-                button.feature = entry[1]; button.label:SetText(entry[2])
-                button:ClearAllPoints(); button:SetPoint("TOPLEFT", x + (index - 1) * (cell + 8), -TOP)
-                button:SetSize(cell, 28); button:SetSelected(entry[1] == feature); button:Show()
-            end
-        end
-        local top = TOP + (#features > 1 and TABS or 0)
-        scroll:ClearAllPoints(); scroll:SetPoint("TOPLEFT", x, -top); scroll:SetPoint("BOTTOMRIGHT", -PAD - 12, PAD)
-        local shown, y, count = {}, 0, 0
-        if feature then
-            Prepare(feature)
-            for _, panel in ipairs(PANELS) do
-                local rows = Rows(feature, panel[1])
-                if #rows > 0 then
-                    count = count + 1
-                    if count > 1 then y = y + 16 end
-                    local label = Heading(count, panel[2])
-                    label:ClearAllPoints(); label:SetPoint("TOPLEFT", 0, -y)
-                    y = y + 34
-                    for _, row in ipairs(rows) do
-                        if not self.borrowed[row] then
-                            self.borrowed[row], self.parents[row] = true, row:GetParent()
-                            row.editBorrowed = true; row:SetParent(content)
-                        end
-                        shown[row] = true
-                        row:SetWidth(width)
-                        if row.layoutChildren then row:layoutChildren(width) end
-                        row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -y); row:Show()
-                        y = y + row:GetHeight() + 2
-                    end
-                end
-            end
-        end
-        -- A row whose own rule no longer applies stays on loan, hidden.
-        for row in pairs(self.borrowed) do if not shown[row] then row:Hide() end end
-        local element = self.element and addon.PositionManager.elements[self.element]
-        note:SetText(not element and "Select a display to style it."
-            or ((element.label or element.module.title) .. " has no text or appearance settings."))
-        note:SetShown(count == 0)
-        scroll:SetShown(count > 0)
-        content:SetHeight(math.max(1, y + 12))
-        local maximum = math.max(0, y + 12 - (HEIGHT - top - PAD))
-        bar:SetMinMaxValues(0, maximum)
-        bar:SetValue(math.min(bar:GetValue(), maximum))
-        bar:SetShown(count > 0 and maximum > 0)
-        self.feature = feature
-        self.layingOut = false
-    end
-
-    function column:Show(element)
-        local id = element and element.id or nil
-        if id ~= nil and id == self.element then return end
-        self:Return()
-        self.element = id
-        bar:SetValue(0)
-        local spec = Spec()
-        if spec and owner.modules[spec.page] and owner.EnsureConfigPage then
-            local page = owner:EnsureConfigPage(spec.page)
-            self.page = page
-            -- Setters refresh their page; refreshed values can change which rows apply.
-            page.editRefreshed = function() column:Layout() end
-            self:Layout()
-            page:Refresh()
+    local size, width, height = self.PositionManager.GRID, UIParent:GetWidth(), UIParent:GetHeight()
+    local used = 0
+    local function Line(horizontal, offset)
+        used = used + 1
+        local line = grid.lines[used]
+        if not line then line = grid:CreateTexture(nil, "BACKGROUND"); grid.lines[used] = line end
+        local center = offset == 0
+        line:SetColorTexture(1, 1, 1, center and 0.22 or 0.08)
+        line:ClearAllPoints()
+        if horizontal then
+            line:SetPoint("LEFT", grid, "LEFT", 0, offset); line:SetPoint("RIGHT", grid, "RIGHT", 0, offset); line:SetHeight(1)
         else
-            self:Layout()
+            line:SetPoint("TOP", grid, "TOP", offset, 0); line:SetPoint("BOTTOM", grid, "BOTTOM", offset, 0); line:SetWidth(1)
         end
+        line:Show()
     end
-    return column
+    for step = -math.floor(width / 2 / size), math.floor(width / 2 / size) do Line(false, step * size) end
+    for step = -math.floor(height / 2 / size), math.floor(height / 2 / size) do Line(true, step * size) end
+    for index = used + 1, #grid.lines do grid.lines[index]:Hide() end
+    grid:Show()
 end
 
 -- Labels that read the same everywhere a target is offered.
 local TARGET_LABELS = { screen = "Screen", player = "Player Frame", target = "Target Frame",
     party = "Party Frames", focus = "Focus Frame", minimap = "Minimap" }
 
-function addon:CreateEditWindow()
-    local E, PM, P = self.EditMode, self.PositionManager, self.Positioning
-    local window = CreateFrame("Frame", "PlayTheGameToolsEditWindow", UIParent)
-    window:Hide()
-    self.editWindow = window
-    window:SetSize(WIDTH, HEIGHT)
-    window:SetPoint("TOP", UIParent, "TOP", 0, -48)
-    window:SetFrameStrata("DIALOG")
-    window:SetFrameLevel(80)
-    window:SetMovable(true)
-    window:SetClampedToScreen(true)
-    window:EnableMouse(true)
-    W.Texture(window, "Window")
-    W.Texture(window, "BorderSilver", "BORDER")
-    local drag = CreateFrame("Frame", nil, window)
-    drag:SetPoint("TOPLEFT", 8, -8)
-    drag:SetPoint("TOPRIGHT", -8, -8)
-    drag:SetHeight(36)
-    drag:EnableMouse(true)
-    drag:RegisterForDrag("LeftButton")
-    drag:SetScript("OnDragStart", function()
-        if InCombat() then return end
-        window.moving = true; window:StartMoving()
-    end)
-    drag:SetScript("OnDragStop", function() window:StopMovingOrSizing(); window.moving = false end)
-    window.title = W.Heading(drag, "Edit Mode", T.fontSize.section, 12, -8, 280, T.text)
-    local style = CreateStyleColumn(self, window)
-    window.style = style
-    local refreshing
+local SLIDERS = {
+    { key = "scale", label = "Scale" },
+    { key = "opacity", label = "Opacity" },
+    { key = "text", label = "Text size" },
+}
 
+local function CreateStyleCard(owner, window)
+    local E, PM, P = owner.EditMode, owner.PositionManager, owner.Positioning
+    local card = CreateFrame("Frame", nil, window)
+    card:Hide()
+    card:SetSize(CARD_WIDTH, 200)
+    card:SetFrameStrata("DIALOG"); card:SetFrameLevel(window:GetFrameLevel() + 10)
+    card:SetClampedToScreen(true)
+    card:EnableMouse(true)
+    W.Texture(card, "Window")
+    W.Texture(card, "BorderSilver", "BORDER")
     local function Selected() return E:Selected() end
-    local function Row(index, text)
-        local top = -TOP - (index - 1) * ROW
-        local label = W.Label(window, text, nil, PAD, top - 8, LABEL - 8, T.secondary)
-        local host = CreateFrame("Frame", nil, window)
-        host:SetPoint("TOPLEFT", PAD + LABEL, top)
+
+    card.title = W.Heading(card, "", T.fontSize.section, PAD, -13, CARD_WIDTH - PAD * 2 - 34, T.text)
+    local close = W.Button(card, "X", 26, 26, "secondary")
+    close:SetPoint("TOPRIGHT", -10, -9)
+    close:SetScript("OnClick", function() E:Deselect() end)
+    card.closeButton = close
+    local rule = W.Fill(card, T.line, "ARTWORK")
+    rule:ClearAllPoints(); rule:SetPoint("TOPLEFT", PAD, -HEADER); rule:SetSize(CARD_WIDTH - PAD * 2, 1)
+
+    local rows = {}
+    local function Row(text)
+        local label = W.Label(card, text, nil, PAD, 0, LABEL - 8, T.secondary)
+        local host = CreateFrame("Frame", nil, card)
         host:SetSize(CONTROL, 30)
-        return host, label
+        local row = { label = label, host = host }
+        rows[#rows + 1] = row
+        return row
     end
-    local function Dropdown(index, text, choices, getter, setter)
-        local host, label = Row(index, text)
-        local button = W.Select(host, CONTROL, choices, getter, setter)
-        button:ClearAllPoints(); button:SetPoint("TOPLEFT")
-        return button, label
+    local refreshing
+    card.sliders = {}
+    for _, spec in ipairs(SLIDERS) do
+        local row = Row(spec.label)
+        local range = PM.STYLE[spec.key]
+        row.refresh = W.Slider(row.host, range.minimum, range.maximum, 5, function()
+            local element = Selected()
+            return element and PM:GetStyle(element.id)[spec.key] or range.default
+        end, function(value)
+            local element = Selected()
+            if not refreshing and element then PM:SetStyle(element.id, spec.key, value) end
+        end, "%")
+        row.slider = row.host.slider
+        card.sliders[spec.key] = row
     end
-
-    -- Element: every enabled display that can be placed, in registration order.
-    local elements = Dropdown(1, "Element", function()
-        local items = {}
-        for _, id in ipairs(PM.order) do
-            local element = PM.elements[id]
-            if element.editMode and element.module.enabled then
-                items[#items + 1] = { id = id, label = element.label or element.module.title }
-            end
-        end
-        return items
-    end, function()
+    local background = Row("Background")
+    local switch = W.Button(background.host, "", 34, 30, "toggle")
+    switch:SetPoint("LEFT")
+    switch:SetScript("OnClick", function()
         local element = Selected()
-        if not element then return nil, "No movable element" end
-        return element.id, element.label or element.module.title
-    end, function(id) PM:SelectElement(id) end)
+        if element and not InCombat() then PM:SetStyle(element.id, "background", not PM:GetStyle(element.id).background) end
+    end)
+    background.switch = switch
+    card.backgroundRow = background
 
+    -- Anchoring and exact offsets, folded away until asked for.
+    local positionToggle = W.Button(card, "Position", CARD_WIDTH - PAD * 2, 28, "secondary")
+    positionToggle:SetScript("OnClick", function()
+        card.positionOpen = not card.positionOpen
+        owner:RefreshEditWindow()
+    end)
+    card.positionToggle = positionToggle
+    local position = {}
+    local function Dropdown(text, choices, getter, setter)
+        local row = Row(text)
+        local button = W.Select(row.host, CONTROL, choices, getter, setter)
+        button:ClearAllPoints(); button:SetPoint("TOPLEFT")
+        row.dropdown = button
+        position[#position + 1] = row
+        return button, row
+    end
     local function Position()
         local element = Selected()
         return element and PM:GetPosition(element.id)
     end
-    local targets, targetLabel = Dropdown(2, "Anchor To", function()
+    local targets, targetRow = Dropdown("Anchor To", function()
         local element, items = Selected(), {}
         if not element then return items end
         for _, item in ipairs(PM:GetAllowedTargets(element.id)) do
@@ -308,8 +171,8 @@ function addon:CreateEditWindow()
         end
         return items
     end, function()
-        local position = Position()
-        local id = position and position.target or "screen"
+        local p = Position()
+        local id = p and p.target or "screen"
         local label = TARGET_LABELS[id] or (addon.FrameAnchors:ValidID(id) and id:sub(7)) or id
         if not P:Resolve(id) then label = label .. " (unavailable)" end
         return id, label
@@ -318,14 +181,13 @@ function addon:CreateEditWindow()
         if not element then return end
         if id == "picker" then addon.FrameAnchors:Start(element.id) else E:SetTarget(id) end
     end)
-    local placements, placementLabel = Dropdown(3, "Attach", function() return P.placements end, function()
+    local placements, placementRow = Dropdown("Attach", function() return P.placements end, function()
         local p = Position()
         local placement = P:Placement(p and p.placement)
         return placement.id, placement.label
     end, function(id) E:SetPlacement(id) end)
-
-    local function Coordinate(index, axis)
-        local host = Row(index, axis == "x" and "X Offset" or "Y Offset")
+    local function Coordinate(axis)
+        local row = Row(axis == "x" and "X Offset" or "Y Offset")
         local function Limits()
             local element = Selected()
             if not element then return 0, 0 end
@@ -340,83 +202,188 @@ function addon:CreateEditWindow()
             return axis == "x" and x or y
         end
         local low, high = Limits()
-        local refresh = W.Slider(host, low, high, 1, Get, function(value)
+        local refresh = W.Slider(row.host, low, high, 1, Get, function(value)
             if not refreshing then E:SetCoordinate(axis, value) end
         end, "", {
             minimum = function() local l = Limits(); return l end,
             maximum = function() local _, h = Limits(); return h end,
         })
-        local input, slider = host.numericInput, host.slider
+        local input, slider = row.host.numericInput, row.host.slider
         input:SetWidth(64)
         slider:SetPoint("RIGHT", -72, 0)
-        return input, slider, function()
+        row.input, row.slider = input, slider
+        row.refresh = function()
             local l, h = Limits()
             slider:SetMinMaxValues(l, h)
             refresh()
         end
+        position[#position + 1] = row
+        return row
     end
-    local xInput, xSlider, refreshX = Coordinate(4, "x")
-    local yInput, ySlider, refreshY = Coordinate(5, "y")
+    local xRow, yRow = Coordinate("x"), Coordinate("y")
+    card.targetDropdown, card.placementDropdown = targets, placements
+    card.xInput, card.yInput, card.xSlider, card.ySlider = xRow.input, yRow.input, xRow.slider, yRow.slider
 
-    -- The actions rest at the bottom of the placement column.
-    local footer = -HEIGHT + 144
-    local rule = W.Fill(window, T.line, "ARTWORK")
-    rule:ClearAllPoints(); rule:SetPoint("TOPLEFT", PAD, footer); rule:SetSize(LEFT - PAD * 2, 1)
-    local highlights = W.Button(window, "", 30, 30, "checkbox")
-    highlights:SetPoint("TOPLEFT", PAD - 6, footer - 10)
-    highlights:SetScript("OnClick", function() E:SetHighlights(not E.highlights) end)
-    local highlightLabel = W.Label(window, "Show Highlights", nil, PAD + 30, footer - 17, 200)
-    local half = (LEFT - PAD * 2 - 8) / 2
-    local reset = W.Button(window, "Reset Position", half, 30, "secondary")
-    reset:SetPoint("TOPLEFT", PAD, footer - 48)
+    local half = (CARD_WIDTH - PAD * 2 - 8) / 2
+    local reset = W.Button(card, "Reset", half, 30, "secondary")
     reset:SetScript("OnClick", function()
         local element = Selected()
-        if element and not InCombat() then PM:ResetPosition(element.id) end
+        if element and not InCombat() then PM:ResetLayout(element.id) end
     end)
-    local settings = W.Button(window, "Settings", half, 30, "secondary")
-    settings:SetPoint("TOPLEFT", PAD + half + 8, footer - 48)
+    local settings = W.Button(card, "Settings", half, 30, "secondary")
     settings:SetScript("OnClick", function()
         if InCombat() then return end
         local element = Selected()
-        if not element or not self.modules[element.module.id] then return end
+        if not element or not owner.modules[element.module.id] then return end
         local id = element.module.id
-        self:SetEditMode(false)
-        self:SelectConfigPage(id)
+        owner:SetEditMode(false)
+        owner:SelectConfigPage(id)
     end)
-    local exit = W.Button(window, "Exit", LEFT - PAD * 2, 32)
-    exit:SetPoint("TOPLEFT", PAD, footer - 88)
-    exit:SetSelected(true)
-    exit:SetScript("OnClick", function() self:SetEditMode(false) end)
+    card.resetButton, card.settingsButton = reset, settings
 
-    function self:RefreshEditWindow()
-        if refreshing then return end
-        refreshing = true
+    local function Place(row, y)
+        row.label:ClearAllPoints(); row.label:SetPoint("TOPLEFT", PAD, -y - 8)
+        row.host:ClearAllPoints(); row.host:SetPoint("TOPLEFT", PAD + LABEL, -y)
+        row.label:Show(); row.host:Show()
+    end
+    local function Hide(row) row.label:Hide(); row.host:Hide() end
+    function card:Layout()
+        local y = HEADER + 10
+        for _, spec in ipairs(SLIDERS) do Place(self.sliders[spec.key], y); y = y + ROW end
+        Place(background, y); y = y + ROW
+        positionToggle:ClearAllPoints(); positionToggle:SetPoint("TOPLEFT", PAD, -y - 2)
+        positionToggle.label:SetText(self.positionOpen and "Position  -" or "Position  +")
+        y = y + ROW
+        for _, row in ipairs(position) do
+            if self.positionOpen then Place(row, y); y = y + ROW else Hide(row) end
+        end
+        reset:ClearAllPoints(); reset:SetPoint("TOPLEFT", PAD, -y - 6)
+        settings:ClearAllPoints(); settings:SetPoint("TOPLEFT", PAD + half + 8, -y - 6)
+        self:SetHeight(y + FOOTER)
+    end
+
+    -- Beside the display, on the side with more room.
+    function card:Attach(element)
+        self:ClearAllPoints()
+        local x = P:Geometry(element.frame)
+        local cx = UIParent:GetCenter()
+        if x and cx and x > cx then
+            self:SetPoint("RIGHT", element.frame, "LEFT", -CARD_GAP, 0)
+        else
+            self:SetPoint("LEFT", element.frame, "RIGHT", CARD_GAP, 0)
+        end
+        self.attached = element.id
+    end
+
+    function card:Refresh()
         local element = Selected()
-        local anchoring = element ~= nil and element.supportsAnchoring == true
-        local available = element ~= nil and P:Resolve(element.position.target or "screen") ~= nil
-        elements:SetEnabled(element ~= nil)
-        settings:SetEnabled(element ~= nil and self.modules[element.module.id] ~= nil)
-        reset:SetEnabled(element ~= nil)
-        xInput:SetEnabled(available); yInput:SetEnabled(available)
-        xSlider:SetEnabled(available); ySlider:SetEnabled(available)
-        refreshX(); refreshY()
-        -- Screen-only displays keep the rows so the panel never changes shape.
+        if not element then
+            self.attached = nil
+            for _, row in ipairs(position) do if row.dropdown then row.dropdown.menu:Hide() end end
+            self:Hide()
+            return
+        end
+        refreshing = true
+        self.title:SetText(element.label or element.module.title)
+        local style = PM:GetStyle(element.id)
+        for _, spec in ipairs(SLIDERS) do self.sliders[spec.key].refresh() end
+        local text = self.sliders.text
+        text.slider:SetEnabled(element.styleText)
+        text.label:SetTextColor(unpack(element.styleText and T.secondary or T.unavailable))
+        switch:SetSelected(style.background)
+        local anchoring = element.supportsAnchoring == true
+        local available = P:Resolve(element.position.target or "screen") ~= nil
         targets:SetEnabled(anchoring); placements:SetEnabled(anchoring and available)
-        targetLabel:SetTextColor(unpack(anchoring and T.secondary or T.unavailable))
-        placementLabel:SetTextColor(unpack(anchoring and T.secondary or T.unavailable))
-        elements:Refresh(); targets:Refresh(); placements:Refresh()
-        highlights:SetSelected(E.highlights)
-        style:Show(element)
+        targetRow.label:SetTextColor(unpack(anchoring and T.secondary or T.unavailable))
+        placementRow.label:SetTextColor(unpack(anchoring and T.secondary or T.unavailable))
+        for _, row in ipairs({ xRow, yRow }) do
+            row.input:SetEnabled(available); row.slider:SetEnabled(available); row.refresh()
+        end
+        targets:Refresh(); placements:Refresh()
+        settings:SetEnabled(owner.modules[element.module.id] ~= nil)
+        self:Layout()
+        -- A card follows its display while it is dragged; only re-pick a side when settled.
+        if self.attached ~= element.id or not element.dragging then self:Attach(element) end
+        self:Show()
         refreshing = false
     end
+    function card:CloseMenus()
+        for _, row in ipairs(position) do if row.dropdown then row.dropdown.menu:Hide() end end
+    end
+    return card
+end
+
+function addon:CreateEditWindow()
+    local E, PM = self.EditMode, self.PositionManager
+    local window = CreateFrame("Frame", "PlayTheGameToolsEditWindow", UIParent)
+    window:Hide()
+    self.editWindow = window
+    window:SetSize(600, BAR_HEIGHT)
+    window:SetPoint("TOP", UIParent, "TOP", 0, -24)
+    window:SetFrameStrata("DIALOG")
+    window:SetFrameLevel(80)
+    window:SetMovable(true)
+    window:SetClampedToScreen(true)
+    window:EnableMouse(true)
+    window:RegisterForDrag("LeftButton")
+    window:SetScript("OnDragStart", function()
+        if InCombat() then return end
+        window.moving = true; window:StartMoving()
+    end)
+    window:SetScript("OnDragStop", function() window:StopMovingOrSizing(); window.moving = false end)
+    W.Texture(window, "Window")
+    W.Texture(window, "BorderSilver", "BORDER")
+
+    local title = W.Heading(window, "Layout", T.fontSize.section, BAR_PAD, -12, 120, T.text)
+    local cue = W.Label(window, "Click a display to style it", nil, 0, -15, 220, T.primary)
+    local hint = W.Label(window, "Drag to move", nil, 0, -15, 140, T.muted)
+    local grid = W.Button(window, "", 34, 30, "toggle")
+    grid:SetScript("OnClick", function() E:SetGrid(not E.grid) end)
+    local gridLabel = W.Label(window, "Grid", nil, 0, -15, 60, T.secondary)
+    local done = W.Button(window, "Done", 76, 30)
+    done:SetSelected(true)
+    done:SetScript("OnClick", function() self:SetEditMode(false) end)
+    local empty = W.Label(window, "Turn on a module with a display to place it here.", nil, 0, 0, 420, T.muted)
+    empty:ClearAllPoints(); empty:SetPoint("TOP", window, "BOTTOM", 0, -10); empty:SetJustifyH("CENTER")
+    window.title, window.cue, window.hint, window.gridButton, window.gridLabel = title, cue, hint, grid, gridLabel
+    window.doneButton, window.emptyLabel = done, empty
+    -- Earlier name for Done, kept for callers of the Edit Mode window.
+    window.exitButton = done
+
+    function window:LayoutBar()
+        local x = BAR_PAD
+        local function Put(region, width, y)
+            region:ClearAllPoints(); region:SetPoint("LEFT", window, "LEFT", x, y or 0)
+            region:SetWidth(width); x = x + width + BAR_GAP
+        end
+        Put(title, TextWidth(title, 56))
+        Put(cue, TextWidth(cue, 170))
+        Put(hint, TextWidth(hint, 90))
+        local gridX = x
+        grid:ClearAllPoints(); grid:SetPoint("LEFT", window, "LEFT", gridX, 0); x = x + 40
+        Put(gridLabel, TextWidth(gridLabel, 30))
+        done:ClearAllPoints(); done:SetPoint("LEFT", window, "LEFT", x, 0); x = x + done:GetWidth() + BAR_PAD - 4
+        self.contentWidth = x
+        self:SetWidth(x)
+    end
+    window:LayoutBar()
+
+    local card = CreateStyleCard(self, window)
+    window.styleCard = card
+
+    function self:RefreshEditWindow()
+        if not self.editWindow then return end
+        grid:SetSelected(E.grid)
+        local count = 0
+        for _, id in ipairs(PM.order) do
+            local element = PM.elements[id]
+            if element.editMode and element.module.enabled then count = count + 1 end
+        end
+        empty:SetShown(count == 0)
+        card:Refresh()
+    end
     -- Clearing focus runs the numeric input's normal apply.
-    function self:CommitEditInputs() xInput:ClearFocus(); yInput:ClearFocus() end
-    window.elementDropdown = elements
-    window.xInput, window.yInput = xInput, yInput
-    window.xSlider, window.ySlider = xSlider, ySlider
-    window.targetDropdown, window.placementDropdown, window.resetPosition = targets, placements, reset
-    window.settingsButton, window.exitButton, window.highlightButton = settings, exit, highlights
-    window.highlightLabel = highlightLabel
+    function self:CommitEditInputs() card.xInput:ClearFocus(); card.yInput:ClearFocus() end
     window:EnableKeyboard(true)
     window:SetPropagateKeyboardInput(true)
     window:SetScript("OnKeyDown", function(_, key)
@@ -424,10 +391,11 @@ function addon:CreateEditWindow()
         window:SetPropagateKeyboardInput(key ~= "ESCAPE")
         if key == "ESCAPE" then self:SetEditMode(false) end
     end)
+    window:SetScript("OnShow", function() self:RefreshLayoutGrid() end)
     window:SetScript("OnHide", function()
-        for _, dropdown in ipairs({ elements, targets, placements }) do dropdown.menu:Hide() end
-        style:Return(); style.element = nil
+        card:CloseMenus(); card:Hide(); card.attached = nil
         window:StopMovingOrSizing(); window.moving = false
+        self:RefreshLayoutGrid()
         if self.editMode and not window.ending then self:SetEditMode(false) end
     end)
     self.Dialogs:Register(window, { group = "editMode" })
@@ -443,6 +411,7 @@ function addon:BeginEditWorkspace()
     self.editWindow:Show()
     self.Positioning:Refresh()
     self.EditMode:RefreshElements()
+    self:RefreshLayoutGrid()
 end
 
 function addon:FinishEditWorkspace()

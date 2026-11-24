@@ -70,7 +70,7 @@ function M:RefreshTraining()
             if not self:OutsideCombat() then self.dirty=true;return false end
             self.snapshot, self.rows = snapshot, P.ResolveTraining(snapshot)
             self.message = self.className .. " · Level " .. (snapshot.level or "?")
-        else self.message = "Character data unavailable. Try Refresh outside combat." end
+        else self.message = "Character data unavailable. It updates when your spellbook changes or combat ends." end
     end
     if self.UpdateTrainingPage then self:UpdateTrainingPage() end
     if self.SyncTrainingDisplays then self:SyncTrainingDisplays() end

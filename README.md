@@ -17,14 +17,14 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   account-wide profiles with import/export, class-color pickers, Auto Loot/Fast
   Loot, camera distance, detected/manual UI scale and red-error text controls.
   Open `/ptg` → Global Settings; [details and native checks](docs/GLOBAL_SETTINGS.md).
-- **Enhanced Experience Bar:** opt-in under Questing & Leveling; flat or native
+- **Experience Bar:** opt-in under Questing & Leveling; flat or native
   Blizzard/SharedMedia fill, current/rested/total-quest-log XP, full-height tinted
   overlays, session time/XP per hour, separate bar/session text controls and shared Edit Mode movement.
   Choose PTG or existing XP bars, with opt-in native/Ellesmere XP-only hiding.
   See [behavior, limits and testing](docs/ENHANCED_EXPERIENCE_BAR.md).
 
-- **Rogue Class Tools:** Poison Reminder and Quick Access Poisons under Class
-  Tools -> Rogue, with per-hand reminders, inventory-backed OOC applications,
+- **Rogue Tools:** Poison Reminder and Quick Access Poisons under Class
+  Tools -> Rogue Tools, with per-hand reminders, inventory-backed OOC applications,
   Recent/poison selection, independent appearance and shared Edit Mode.
   See [controls and validation](docs/FOREVER_ROGUE_POISONS.md).
 
@@ -42,11 +42,11 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   selection and optional bandages with existing native click/combat guards.
 - **Threat Meter:** opt-in threat list for your current target with class-colored
   bars and percentages; pets are optional and off by default.
-- **Points of Interest Labels:** opt-in under Quality of Life; icons and names on the world map
+- **Map Labels:** opt-in under Quality of Life; icons and names on the world map
   for your class's and professions' trainers (or all, or none), banks, auction
   houses, inns, flight masters and more, with faction, size and name options.
   Locations: Efficient Games data (CC BY 4.0), with Classic positions from CMaNGOS
-  classic-db (GPL-3.0) filling gaps; see [Points of Interest Labels](docs/CITY_LABELS.md).
+  classic-db (GPL-3.0) filling gaps; see [Map Labels](docs/CITY_LABELS.md).
 - **Guild Roster:** opt-in page under Guild Tools. **Members** lists every guild
   member by class with levels, an online marker and hover details, plus a search
   (name, class, race, zone, rank, notes or level) and Class/Status filters.
@@ -100,7 +100,7 @@ native preference; afterward profiles restore the selected on/off value.
 Training costs are catalog estimates before discounts, not guaranteed trainer
 offers. Eligibility can be uncertain; pet training, tomes, quest acquisition and
 all special training cases are not comprehensively covered. No cross-class browser
-is provided. Auto Gossip is unavailable and remains manual. Development prototypes
+is provided. Gossip dialogue is never automated. Development prototypes
 and Retail-only features are excluded.
 
 Static checks do not establish in-game behavior; the
@@ -126,15 +126,15 @@ Original code retains its [MIT grant](LICENSE). Distributions containing the
 bundled Dungeon Loot data are provided under [GPLv3](LICENSES/GPL-3.0.txt);
 editable source and attribution ship with the package. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for training-catalog attribution
-and artwork ownership, including the Points of Interest Labels location data from Efficient
+and artwork ownership, including the Map Labels location data from Efficient
 Games (CC BY 4.0) and CMaNGOS classic-db (GPL-3.0). WoW and Blizzard assets remain the property of Blizzard
 Entertainment. Play The Game Tools is an independent community addon.
 
 ## Dungeon Loot
 
 With Dungeon Loot enabled, click the Quick Actions button, then its loot icon, to open the dungeon
-index. General -> Quick Icon has show, size, opacity, reset and shared Edit
-Mode positioning controls. General -> Keybinding lets you assign or clear a key
+index. General -> Quick Icon has size and opacity controls; the icon is in the
+ring while the module is on, and shared Edit Mode moves the ring. General -> Keybinding lets you assign or clear a key
 there; WoW Key Bindings also exposes Open Dungeon Loot. No key is assigned
 automatically. Choosing a key replaces its existing action; the field beside
 Set Keybinding shows the assigned key or Not bound. Opening and

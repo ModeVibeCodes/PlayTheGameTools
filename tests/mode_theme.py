@@ -33,87 +33,53 @@ mode.execute(r'''
     local missing=addon.ConfigWidgets.ModePageDetail(w,-12)
     assert(missing.color[4]==0,'undiscovered detail stays transparent without replacing the base material')
     testMissingTextures=nil
-    local popup=addon.ConfigWidgets.Popup(w.reloadButton,180,60)
+    local popup=addon.ConfigWidgets.Popup(w.layoutButton,180,60)
     local surface=addon.ConfigWidgets.Fill(popup,T.panel)
     assert(surface.texture==addon.Media:GetTexture('ModeSurface'),'detached configuration popups keep mode material')
     local display=CreateFrame('Frame',nil,UIParent):CreateTexture(nil,'BACKGROUND')
     addon.Media:PaintSurface(display,T.panel,1,'combatTimer')
-    assert(display.texture==addon.Media.library:HashTable('background')['PTG Graphite'],'module display still inherits selected global texture')
+    assert(display.texture==addon.Media.defaultStatusBar,'a saved Global Texture is no longer applied to module displays')
     local moduleFrame=CreateFrame('Frame',nil,UIParent)
     addon.Media:ApplyBackdrop(moduleFrame,{bgFile='original'},'lootSparkles')
-    assert(moduleFrame.backdrop.bgFile==display.texture,'module backdrop still inherits global texture')
-    assert(w.title:GetText()=='Play The Game Tools' and w.sidebarWidth==240,'one brand text in every theme')
+    assert(moduleFrame.backdrop.bgFile==display.texture,'module backdrops take the built-in surface')
+    assert(w.title:GetText()=='Play The Game Tools' and w.sidebarWidth==212,'one brand text in every theme')
     assert(w.title.color[1]==0 and w.title.color[2]==240/255 and w.title.color[3]==1,'cyan branding')
     assert(w.brandLogo and not w.headerArt:IsShown() and not w.columnEdge:IsShown())
     assert(w.brandLogo.points[1][5]==0,'logo centers inside the header without overlapping navigation')
     assert(w.canvasSheen.gradient.minimum.a==0.018 and w.bodySheen.gradient.maximum.a==0,'static neutral background sheen')
-    assert(w.profileButton.label:GetText()=='Profile:' and w.profileButton.profileName:GetText()==addon.ProfileManager.activeName)
-    assert(w.profileButton.profileName.color[2]==T.primary[2] and w.profileButton.label.color[1]==T.secondary[1])
     assert(w.closeButton.points[1][1]=='RIGHT' and w.closeButton.points[1][2]==w.headerControls,'close is rightmost')
-    assert(w.profileButton.points[1][2]==w.closeButton and w.editButton.points[1][2]==w.profileButton,'profile is immediately left of close')
+    assert(w.layoutButton.points[1][2]==w.closeButton and w.profileButton==nil,'Layout is immediately left of close')
     assert(T.muted[1]<T.secondary[1] and T.secondary[1]<T.text[1],'descriptor hierarchy')
-    assert(w.searchInput:GetParent()==w.headerBar and w.searchInput:GetWidth()==200,'header search')
-    assert(w.searchInput.points[1][1]=='TOPLEFT' and w.searchInput.points[1][2]==w and w.searchInput.points[1][4]==w.contentLeft,'search aligns with module title')
-    assert(w.headerReserved>=w:GetWidth()-w.contentLeft+16,'left search preserves off-screen drag recovery')
+    assert(w.searchInput:GetParent()==w.sidebar and w.searchInput.points[1][1]=='TOPLEFT','sidebar search')
+    assert(w.headerReserved>=w.headerControls:GetWidth(),'header controls stay reachable after off-screen recovery')
     assert(w.canvas.modeAsset=='ModeSurface' and not w.bodyBorder and not w.border.shown,'page perimeter borders removed')
-    local profile=w.profileButton
-    local group=profile.label:GetWidth()+8+profile.profileName:GetWidth()
-    assert(math.abs(profile.label.points[1][4]-(profile:GetWidth()-group)/2)<.001,'profile label and name centered together')
-    assert(profile:GetWidth()>=132 and profile:GetWidth()<=196,'profile button proportions bounded')
-    for _,name in ipairs({'Mode',string.rep('LongProfile',8)}) do
-        profile.profileName:SetText(name);profile:LayoutProfileText()
-        local span=profile.label:GetWidth()+8+profile.profileName:GetWidth()
-        assert(math.abs(profile.label.points[1][4]-(profile:GetWidth()-span)/2)<.001 and profile:GetWidth()<=196,'short/long profile text balances within header')
-    end
-    profile.profileName:SetText(addon.ProfileManager.activeName);profile:LayoutProfileText()
-    assert(w.title.font[1]:find('Lato%-Bold.ttf') and w.navigationButtons.dashboard.label.font[1]:find('Lato%-Regular.ttf'))
-    w.profileButton.scripts.OnClick()
-    assert(w.selectedPage=='globalSettings' and w.pages.globalSettings.selectedSection.title=='Profiles','existing profile page shortcut')
-    addon:SelectConfigPage('dashboard')
+    local first=w.navigationButtons[addon:ListedConfigPages()[1]]
+    assert(w.title.font[1]:find('Lato%-Bold.ttf') and first.label.font[1]:find('Lato%-Regular.ttf'))
     assert(w.categoryNavigation==nil,'no duplicate module strip')
-    local function VisibleRows()
-        local result={};for _,row in ipairs(w.navigation.rows) do result[row]=true end;return result
+    -- One flat A-Z list: no category headings or nested children.
+    for _,row in ipairs(w.navigation.rows) do
+        assert(row.skinStyle=='tab' and row:IsShown() and row.label:GetText():sub(1,3)~='\194\183 ')
+        assert(row.label.font[2]<=T.fontSize.body and not row.label.wordWrap)
+        assert(row.label:GetStringWidth()<=row:GetWidth()-row.textReserve,'single-line row fits '..row.label:GetText())
     end
-    for _,cid in ipairs(addon.categoryOrder) do
-        local category=addon.categories[cid]
-        if #category.modules>0 then
-            local heading=w.navigationButtons[cid]
-            assert(heading.expanded and heading.skinStyle=='categoryHeading')
-            assert(heading.label.color[1]==T.heading[1] and heading.label.font[2]==T.fontSize.group)
-            local rows=VisibleRows()
-            for _,id in ipairs(category.modules) do
-                local button=w.sidebarModuleButtons[id]
-                assert(rows[button] and button:IsShown() and button.label:GetText():sub(1,3)=='· ')
-                assert(button.label.font[2]<=T.fontSize.body and not button.label.wordWrap)
-                assert(button.label:GetStringWidth()<=button:GetWidth()-(addon.modules[id].classIcon and 48 or 26),'single-line child fits '..id)
-            end
-            local selected=w.selectedPage
-            heading.scripts.OnClick()
-            assert(not heading.expanded and w.selectedPage==selected,'collapse does not navigate or toggle a module')
-            rows=VisibleRows()
-            for _,id in ipairs(category.modules) do assert(not rows[w.sidebarModuleButtons[id]]) end
-            heading.scripts.OnClick();assert(heading.expanded)
-        end
-    end
+    for _,cid in ipairs(addon.categoryOrder) do assert(w.navigationButtons[cid]==nil) end
     for _,id in ipairs(addon.moduleOrder) do
         addon:SelectConfigPage(id)
         assert(w.selectedPage==id and w.pages[id]:IsShown(),id)
         assert(w.moduleHeader.title:GetText()==addon.modules[id].title,id)
-        if addon.modules[id].category then assert(w.sidebarModuleButtons[id].selected,id) end
+        if w.sidebarModuleButtons[id] then assert(w.sidebarModuleButtons[id].selected,id) end
     end
-    local cid=addon.modules.combatTimer.category
-    addon:SelectConfigPage('combatTimer')
-    w.navigationButtons[cid].scripts.OnClick()
-    assert(w.collapsedCategories[cid] and w.pages.combatTimer:IsShown(),'active page survives collapse')
-    w:Hide();w:Show()
-    assert(w.collapsedCategories[cid],'reopening the active page preserves collapsed state')
-    addon:SelectConfigPage('dashboard')
-    w:Hide();w:Show()
-    assert(w.collapsedCategories[cid],'unrelated navigation and reopen retain disclosure')
     local results=addon:SearchSettings('Combat Timer')
     assert(#results>0)
+    -- Renamed modules keep their old names as search aliases.
+    for query,id in pairs({['points of interest']='cityLabels',['enhanced experience']='enhancedExperienceBar',['quick access bars']='foreverQuickAccess'}) do
+        local found=addon:SearchSettings(query)
+        assert(found[1] and found[1].module.id==id,'old module name still finds '..id)
+    end
+    assert(addon.modules.cityLabels.title=='Map Labels' and addon.modules.enhancedExperienceBar.title=='Experience Bar')
+    assert(addon.modules.foreverQuickAccess.title=='Profession & Food Bars' and addon.modules.foreverRogue.title=='Rogue Tools')
     addon:SelectConfigPage(results[1].module.id)
-    assert(not w.collapsedCategories[cid] and w.sidebarModuleButtons.combatTimer:IsShown(),'direct/search routing reveals child')
+    assert(w.sidebarModuleButtons.combatTimer:IsShown() and w.sidebarModuleButtons.combatTimer.selected,'search routing selects the row')
     local b=w.sidebarModuleButtons.combatTimer
     local resting=b.fill.vertexColor[4]
     b.scripts.OnEnter(b);assert(not b.activeGlow:IsShown() and b.label.shadowColor[4]>0 and b.fill.vertexColor[4]==resting,'text-only hover')
@@ -125,10 +91,10 @@ mode.execute(r'''
     local oldWidth=b:GetWidth();b:SetWidth(100);b.scripts.OnSizeChanged(b)
     assert(b.selectionEdge:GetWidth()<=80,'line follows resized text area')
     b:SetWidth(oldWidth);b.scripts.OnSizeChanged(b)
-    local oldText=b.label:GetText();b.label:SetText('· Enhanced Experience Bar')
-    b:SetWidth(164);b:FitNavigationText()
-    assert(not b.label.wordWrap and b.label:GetStringWidth()<=138,'long subcategory fits one line at constrained width')
-    b.label:SetText(oldText);b:SetWidth(oldWidth);b:FitNavigationText()
+    local oldText=b.label:GetText();b.label:SetText('Profession & Food Bars')
+    b:SetWidth(164);b.scripts.OnSizeChanged(b)
+    assert(not b.label.wordWrap and b.label:GetStringWidth()<=164-b.textReserve,'long title fits one line at constrained width')
+    b.label:SetText(oldText);b:SetWidth(oldWidth);b.scripts.OnSizeChanged(b)
     local page=w.pages.combatTimer
     assert(page.contentInset==12)
     for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12+(page.layoutInsetLeft or 0),'visible rows preserve border padding after the optional heading/checkbox gutter') end end
@@ -179,12 +145,12 @@ mode.execute(r'''
     toggle:SetEnabled(true);toggle:SetSelected(false)
     toggle.scripts.OnEnter(toggle);assert(not toggle.activeGlow:IsShown() and toggle.label.shadowColor[4]>0)
     toggle.scripts.OnLeave(toggle);assert(not toggle.activeGlow:IsShown())
-    addon:SelectConfigPage('dashboard');assert(not b.activeGlow:IsShown())
+    addon:SelectConfigPage('globalSettings');assert(not b.activeGlow:IsShown())
     assert(addon.ProfileCodec.Encode(PTGToolsDB)==before,'navigation preserves all saved preferences')
     local media=addon.Media
     local original=addon.db.globalMedia.font
     addon.db.globalMedia.font='media:PTG JetBrains Mono';media:RefreshFonts()
-    assert(w.title.font[1]:find('JetBrainsMono%-Regular.ttf'),'explicit font customization retained')
+    assert(w.title.font[1]:find('Lato%-Bold.ttf'),'a saved Global Font no longer overrides the theme font')
     addon.db.globalMedia.font=original;media:RefreshFonts()
     assert(w.title.font[1]:find('Lato%-Bold.ttf'))
     local t=CreateFrame('Frame',nil,UIParent):CreateTexture(nil,'BACKGROUND')
@@ -203,18 +169,21 @@ mode.execute(r'''
     testMissingFonts=nil;media:RefreshFonts()
     addon:SelectConfigPage('globalSettings')
     local page=w.pages.globalSettings
-    assert(#page.sections==4 and page.themeButtons[3].selected and page.mediaControls['global:font'])
+    assert(#page.sections==4 and page.themeButtons[3].selected and not page.mediaControls,'theme cards, no media pickers')
+    assert(page.themeButtons[3].current:IsShown() and not page.themeButtons[1].current:IsShown(),'applied theme marked Current')
     reloads=0;C_UI.Reload=function() reloads=reloads+1 end
-    w.reloadButton.scripts.OnClick();assert(reloads==1)
-    testCombat=true;w.reloadButton.scripts.OnClick();assert(reloads==1,'combat reload remains blocked');testCombat=false
     page.themeButtons[2].scripts.OnClick()
+    local reload=w.reloadBanner.reloadButton
+    assert(w.reloadBanner:IsShown(),'pending theme shows the reload banner')
+    reload.scripts.OnClick();assert(reloads==1)
+    testCombat=true;reload.scripts.OnClick();assert(reloads==1,'combat reload remains blocked');testCombat=false
 ''')
 # Other themes share the same layout/behavior; only colors, borders and textures differ.
 back, _ = load(mode.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
 back.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('combatTimer')
     local w=addon.configWindow
-    assert(addon.InterfaceTheme.id=='blizzard' and w.categoryNavigation==nil and w.profileButton and w.searchInput:GetParent()==w.headerBar,'same navigation, header and search')
+    assert(addon.InterfaceTheme.id=='blizzard' and w.categoryNavigation==nil and w.layoutButton and w.searchInput:GetParent()==w.sidebar,'same navigation, header and search')
     assert(not w.bodyDetail and not w.bodySurface,'Blizzard keeps its own page material')
     assert(w.sidebarModuleButtons.combatTimer:IsShown() and w.pages.combatTimer.modeLayout,'same sidebar and page layout')
     local popup=CreateFrame('Frame',nil,UIParent)
@@ -227,12 +196,12 @@ modern, _ = load(back.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))
 modern.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('combatTimer')
     local w=addon.configWindow
-    assert(addon.InterfaceTheme.id=='modern' and w.categoryNavigation==nil and w.profileButton,'same navigation and header')
+    assert(addon.InterfaceTheme.id=='modern' and w.categoryNavigation==nil and w.layoutButton,'same navigation and header')
     assert(not w.bodyDetail and not w.bodySurface,'Modern keeps its own page material')
-    assert(w.navigationButtons.timers.skinStyle=='categoryHeading','same collapsible categories')
+    assert(w.navigationButtons.timers==nil and w.navigationButtons.combatTimer.skinStyle=='tab','same flat module list')
     assert(addon.db.globalMedia.texture=='background:PTG Graphite' and not w.canvas.texture,'Modern retains flat canvas without resetting global selection')
     local fill=addon.ConfigWidgets.Fill(w,addon.InterfaceTheme.panel)
     assert(not fill.texture,'Modern settings panels ignore global texture')
     assert(w.sidebarModuleButtons.combatTimer.label.font[2]<=addon.InterfaceTheme.fontSize.body)
 ''')
-print('PASS mode palette/materials/font, text-only hover, profile/header search, all pages, collapse/reload, persistence and identical layout across themes')
+print('PASS mode palette/materials/font, text-only hover, sidebar search, all pages, A-Z sidebar/reload banner, persistence and identical layout across themes')

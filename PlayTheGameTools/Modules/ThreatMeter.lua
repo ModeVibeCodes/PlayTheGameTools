@@ -72,6 +72,7 @@ end
 function M:RegisterPosition()
     local ok,element=addon.PositionManager:RegisterModuleDisplay("threatMeter",self.frame,self,{
         label="Threat Meter",defaultX=320,defaultY=-120,canDrag=function() return self.active==true end,
+        onStyleChanged=function() self:ApplyStyle() end,
         onRegistered=function(registered) registered.editMode=self.active==true;self:Update();addon.PositionManager:RefreshSelection() end})
     if ok then element.editMode=self.active==true end
 end
@@ -85,6 +86,7 @@ local function Paint(texture,color,alpha) texture:SetColorTexture(color[1],color
 local function Text(parent,size,color,justify)
     local text=parent:CreateFontString(nil,"OVERLAY","GameFontHighlight")
     addon.Media:BindInterfaceFont(text,GameFontHighlight,size,"threatMeter")
+    text.baseSize=size
     text:SetTextColor(color[1],color[2],color[3],1)
     text:SetJustifyH(justify or "LEFT");text:SetWordWrap(false)
     return text
@@ -112,11 +114,11 @@ function M:CreateFrame()
     -- Position Manager owns dragging; the meter itself never takes the mouse.
     f:EnableMouse(false)
 
-    local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();addon.Media:PaintSurface(bg,T.panel,0.94,"threatMeter")
+    local bg=f:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints();addon.Media:PaintSurface(bg,T.panel,0.94,"threatMeter");f.background=bg
     f.border=addon.ConfigWidgets.Outline(f,T.lineStrong,nil,nil,nil,"threatMeter");f.border:SetColor(T.lineStrong)
     local header=f:CreateTexture(nil,"BORDER")
     header:SetPoint("TOPLEFT",1,-1);header:SetPoint("TOPRIGHT",-1,-1);header:SetHeight(HEADER);addon.Media:PaintSurface(header,T.surface,1,"threatMeter")
-    local rule=f:CreateTexture(nil,"BORDER")
+    local rule=f:CreateTexture(nil,"BORDER");f.header,f.rule=header,rule
     rule:SetPoint("TOPLEFT",1,-1-HEADER);rule:SetPoint("TOPRIGHT",-1,-1-HEADER);rule:SetHeight(1);Paint(rule,T.line)
     f.title=Text(f,12,T.text)
     f.title:SetPoint("TOPLEFT",PAD+5,-1);f.title:SetSize(WIDTH-PAD*2-10,HEADER)
@@ -159,7 +161,23 @@ function M:CreateFrame()
         if self.elapsed>=self.UPDATE_INTERVAL then self.elapsed=0;self:Update() end
     end
     f:SetScript("OnEvent",function() self:Update() end)
+    self:ApplyStyle()
     self:ApplyPosition()
+end
+
+-- Layout's Style card: Text size rescales every label, Background hides the
+-- panel, header and outline (the threat bars stay).
+function M:ApplyStyle()
+    local f=self.frame
+    if not f then return end
+    local PM=addon.PositionManager
+    local texts={f.title,f.empty}
+    for _,bar in ipairs(f.rows) do texts[#texts+1]=bar.nameText;texts[#texts+1]=bar.percentText end
+    for _,text in ipairs(texts) do
+        addon.Media:BindInterfaceFont(text,GameFontHighlight,PM:StyleFontSize("threatMeter",text.baseSize),"threatMeter")
+    end
+    local background=PM:StyleBackground("threatMeter")
+    f.background:SetShown(background);f.header:SetShown(background);f.rule:SetShown(background);f.border:SetShown(background)
 end
 
 function M:SetPolling(enabled)

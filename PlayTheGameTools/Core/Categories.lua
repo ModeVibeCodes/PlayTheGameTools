@@ -1,7 +1,9 @@
 local _, addon = ...
 addon.categories, addon.categoryOrder = {}, {}
 
--- Categories organize existing modules; they have no enable state or lifecycle.
+-- Categories group existing modules as data; they have no enable state or
+-- lifecycle. The settings sidebar no longer shows them: it lists module pages
+-- A to Z. Modules still register a category, and search no longer uses it.
 function addon:RegisterCategory(id, definition)
     assert(not self.initialized, "Play The Game Tools: register categories before initialization.")
     assert(type(id) == "string" and id ~= "" and id ~= "dashboard" and not self.categories[id], "Play The Game Tools: unique category ID required.")

@@ -114,7 +114,7 @@ for _,id in ipairs(addon.moduleOrder) do
 end
 local spark=addon:EnsureConfigPage('lootSparkles')
 spark:SelectModePanel('Loot Sparkles','options');spark:Layout()
-assert(spark.sparkleStatus:GetText()==(addon.LootSparkles.status or 'Disabled.'),'live status keeps its text')
+assert(spark.sparkleStatus:GetText()==(addon.LootSparkles:StatusNotice() or ''),'live status keeps its text')
 local A=addon.ForeverAutomation;local automation=addon:EnsureConfigPage('foreverAutomation')
 automation:SelectModePanel('Quests','options');automation:Refresh();automation:Layout()
 local questRow
@@ -123,6 +123,48 @@ assert(questRow and not questRow:IsShown(),'no quest status text while nothing i
 A.questBlocked=true;automation:Refresh()
 assert(questRow:IsShown() and automation.questStatusLabel:GetText():find('Unavailable this session',1,true),'rejection warning appears')
 A.questBlocked=nil;automation:Refresh();assert(not questRow:IsShown())
+-- Auto Gossip could never be turned on, so it and its explanation are gone.
+for _,row in ipairs(automation.rows) do
+ assert(row.settingsTitle~='Auto Gossip Availability' and row.settingsGroupTitle~='Dialogue','no Dialogue placeholder')
+ for _,cell in ipairs(row.settingsToggles or {}) do assert(cell.label:GetText()~='Auto Gossip','no Auto Gossip switch') end
+end
+assert(not A:SetOption('autoGossip',true) and A.GossipCapability==nil)
+-- Status rows never just repeat a switch; real notices still show.
+local LS=addon.LootSparkles;local sparkRow=spark.sparkleStatus:GetParent().row
+LS.status='Loot Sparkles disabled. Previous owned settings restored.';spark:Refresh()
+assert(not sparkRow:IsShown() and LS:StatusNotice()==nil,'no on/off echo')
+LS.status='Client rejected setting: SoftTargetInteract';spark:Refresh()
+assert(sparkRow:IsShown() and spark.sparkleStatus:GetText():find('rejected',1,true),'real notice shown')
+LS.status=nil;spark:Refresh();assert(not sparkRow:IsShown())
+local found=false
+for _,cells in ipairs(spark.toggleGrids) do for _,cell in ipairs(cells) do found=found or cell.label:GetText()=='Enable Loot Sparkles' end end
+assert(found,'Loot Sparkles keeps its own switch: the page switch also covers Campfire Monitor')
+local Ro=addon.ForeverRogue;local rogue=addon:EnsureConfigPage('foreverRogue');local was=Ro.active
+Ro.active=false;rogue:Refresh();assert(not rogue.poisonStatus:GetParent().row:IsShown(),'no disabled echo')
+Ro.active=was;rogue:Refresh()
+local CM=addon.CampfireMonitor;local campOn=CM.db.enabled
+CM.db.enabled=false;spark:Refresh();spark:Layout();assert(not spark.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
+CM.db.enabled=campOn;spark:Refresh()
+-- Food Bar: one switch for the two saved flags.
+local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
+for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
+assert(labels['Show Food Bar'] and not labels['Enable Food Bar'],'one Food Bar switch')
+F.db.enabled,F.db.shown=true,false;assert(not F:IsOn(),'old hidden bar reads off')
+assert(F:SetShown(true) and F.db.enabled and F.db.shown and F:IsOn())
+assert(F:SetShown(false) and not F.db.enabled and not F.db.shown and not F.active)
+qa:Refresh();qa:Layout()
+for _,row in ipairs(qa.rows) do if row.settingsTitle=='Food Bar Status' then assert(not row:IsShown(),'no Food Bar status while off') end end
+-- Manual refresh buttons are gone: game events update this data.
+addon:SetModuleEnabled('foreverClassTraining',true)
+local CTm,trainingPage=addon.ForeverClassTraining,addon:EnsureConfigPage('foreverClassTraining')
+local manual={Spellbook=true,['Update Learned List']=true,['Carried Items']=true}
+for _,page in ipairs({trainingPage,qa}) do for _,row in ipairs(page.rows) do assert(not manual[row.settingsTitle or ''],'manual refresh remains: '..tostring(row.settingsTitle)) end end
+assert(trainingPage.refreshButton==nil)
+for _,event in ipairs({'SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE'}) do assert(CTm.eventFrame.events[event],'training listens to '..event) end
+local QA=addon.ForeverQuickAccess;addon:SetModuleEnabled('foreverQuickAccess',true)
+for _,event in ipairs({'SKILL_LINES_CHANGED','SPELLS_CHANGED'}) do assert(QA.events.events[event],'professions listen to '..event) end
+F:SetShown(true);for _,event in ipairs({'BAG_UPDATE_DELAYED','ITEM_DATA_LOAD_RESULT'}) do assert(F.events.events[event],'food listens to '..event) end
+F:SetShown(false)
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
 assert(timer.modeLayout.panel=='options','timer styling is edited in Edit Mode')
@@ -145,6 +187,13 @@ CT.db.levelAlerts=false;training:RenderTraining();assert(training.selectedSectio
 CT.db.levelAlerts=true;training:SelectModePanel('Upcoming Abilities','options')
 training.catalogVersion=nil;training:RenderTraining();training:Layout()
 assert(training.selectedSection.title=='Upcoming Abilities' and not training.modeLayout.bar:IsShown(),'catalog rebuild stays independent of settings panels')
+-- No Quick Actions switch: the shortcut tab follows the module switch alone,
+-- whatever an old saved showShortcut says.
+for _,cells in ipairs(training.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.label:GetText()~='Shortcut Icon & Menu','no ring switch') end end
+CT.db.showShortcut=false;training:RenderTraining()
+assert(training.sectionTabs.buttons[3].enabled==true,'shortcut settings stay reachable while the module is on')
+training:SelectSectionTab(3);assert(training.selectedSection.title=='Shortcut Icon & Menu')
+CT.db.showShortcut=nil;training:SelectSectionTab(1)
 -- Existing Rogue customization guards still apply, while the new feature pills
 -- enter the original presentation state before showing its controls.
 local R=addon.ForeverRogue

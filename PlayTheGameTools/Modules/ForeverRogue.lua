@@ -2,7 +2,7 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 addon:RegisterCategory("classTools",{title="Class Tools"})
 local D=addon.ForeverRogueData
-local M={title="Rogue",category="classTools",classIcon="Interface\\Icons\\ClassIcon_Rogue",defaultEnabled=false,Data=D,Initialize=D.Initialize,
+local M={title="Rogue Tools",category="classTools",classIcon="Interface\\Icons\\ClassIcon_Rogue",defaultEnabled=false,Data=D,Initialize=D.Initialize,
     configDescription="Poison Reminder highlights weapons that need poison. Quick Access Poisons offers one-click applications outside combat."}
 addon.ForeverRogue=M;addon:RegisterModule("foreverRogue",M)
 function M:OnInitialize()
@@ -159,7 +159,8 @@ function M:RegisterPositions()
                 end,
                 onHighlight=function()
                     if not addon.editMode then f:EnableMouse(false) end
-                end})
+                end,
+                onStyleChanged=function() self:Layout() end})
             assert(ok,"Play The Game Tools: Rogue position registration failed: "..tostring(registered))
             e=registered;e.label=f.enableKey=="watcher" and "Rogue: Poison Reminder" or "Rogue: Quick Access Poisons"
             e.defaults={target="screen",placement="center",x=f.enableKey=="watcher" and 0 or 200,y=-140}
@@ -173,7 +174,9 @@ function M:RegisterPositions()
         end
         e.editMode=self.active and self.db[f.enableKey] or false
         self.db[f.xKey],self.db[f.yKey]=math.floor(e.position.x+0.5),math.floor(e.position.y+0.5)
-        PM:ApplyPosition(f.elementId)
+        -- Layout() hand-anchors with only the module scale; force the manager to
+        -- re-anchor with the full (module x Style card) scale.
+        PM:ApplyPosition(f.elementId, true)
     end
 end
 function M:SyncEditElements()

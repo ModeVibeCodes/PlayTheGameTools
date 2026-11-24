@@ -41,7 +41,7 @@ end
 
 function M:SetOption(key, value)
     if (key ~= "autoLoot" and key ~= "autoAccept" and key ~= "autoTurnIn" and
-        key ~= "sellJunk" and key ~= "sellGrayEquipment" and key ~= "repair" and key ~= "autoGossip") or not Plain(value) or type(value) ~= "boolean" then return false end
+        key ~= "sellJunk" and key ~= "sellGrayEquipment" and key ~= "repair") or not Plain(value) or type(value) ~= "boolean" then return false end
     if key == "autoLoot" and value and not self:Capability() then return false end
     self.db[key] = value
     if key == "autoLoot" then
@@ -62,10 +62,6 @@ function M:SetRepairThreshold(value)
     self:ConfigureMerchant()
     if addon.RefreshConfig then addon:RefreshConfig() end
     return true
-end
-
-function M:GossipCapability()
-    return false, "Deferred: the native option data cannot verify harmless dialogue or exclude consequential services. No Auto Gossip selections are made."
 end
 
 function M:OnEnable() self.active = true; self:ConfigureQuests(); self:ConfigureMerchant(); self:ApplyAutoLoot() end

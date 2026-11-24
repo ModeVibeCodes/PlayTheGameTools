@@ -1,4 +1,4 @@
-"""Actual contribution sliders, numeric fields, reset and Edit Mode controls."""
+"""Actual contribution sliders, numeric fields, reset and Layout controls."""
 from camp_contributions import EXTRA
 from campfire_monitor import FIXTURE
 from smoke import load
@@ -29,10 +29,10 @@ assert(addon:SetEditMode(true) and addon.PositionManager:SelectElement('campfire
 assert(addon.editMode and A.window.strata=='MEDIUM' and addon.editWindow.strata=='DIALOG','workspace is above the editable panel')
 local pm=addon.PositionManager;local e=pm.elements.campfireContributions
 assert(pm.selected==e.id and e.decoration.handle:IsShown())
-local input=addon.editWindow.xInput
+local input=addon.editWindow.styleCard.xInput
 input:SetText('145');input.scripts.OnEnterPressed(input)
 assert(C.db.contributionX==145 and pm:GetPosition(e.id).x==145)
-input=addon.editWindow.yInput;input:SetText('-65');input.scripts.OnEnterPressed(input)
+input=addon.editWindow.styleCard.yInput;input:SetText('-65');input.scripts.OnEnterPressed(input)
 assert(C.db.contributionY==-65)
 e.decoration.handle.scripts.OnDragStart();assert(e.dragging)
 A.window.centerX=650;A.window.centerY=420
@@ -47,9 +47,9 @@ local legacy=addon.ProfileCodec.Copy(M.db);legacy.campfire.contributionX=52.5;le
 C.Initialize(legacy);assert(legacy.campfire.contributionX==53 and legacy.campfire.contributionY==-43)
 addon.editWindow.exitButton.scripts.OnClick()
 assert(not addon.editMode and A.window.strata=='DIALOG')
--- Reset Position is the Edit Mode panel's standard action.
+-- Reset on the Layout Style card restores the default position (and style).
 assert(addon:SetEditMode(true) and pm:SelectElement(e.id))
-addon.editWindow.resetPosition.scripts.OnClick()
+addon.editWindow.styleCard.resetButton.scripts.OnClick()
 addon.editWindow.exitButton.scripts.OnClick()
 if not A.previewing then page.contributionPreview.scripts.OnClick() end
 assert(C.db.contributionX==0 and C.db.contributionY==120)

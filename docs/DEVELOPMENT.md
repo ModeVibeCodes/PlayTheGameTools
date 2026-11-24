@@ -1,5 +1,87 @@
 # Standalone Forever development
 
+v2 window shell (branch `t3/v2-window-shell`): `Config/Window.lua` is now
+960×640 (was 1120×760) with the same fit-to-screen scaling and off-screen
+recovery; the sidebar is 212 wide and the header 48 tall. The header holds the
+brand and only **Layout** (calls `addon:SetEditMode`, starting on the current
+module's first display, exactly as the old Edit Mode button did) and **X**;
+`window.editButton` names the same control. The Preview, Reload, Edit Mode and
+Profile header buttons are gone; profiles stay on the Settings page. A pending
+`ReloadManager` request shows as a banner above the page (`window.reloadBanner`,
+**Reload now** = `ReloadManager:Reload()`); `ReloadManager:Refresh` drives it.
+The sidebar is the search box, one flat A–Z list of module pages
+(`addon:ListedConfigPages()`, each row with an on/off dot) and **Settings**
+pinned at the bottom (the `globalSettings` page, titled "Settings"). No
+Dashboard, no category headings: categories stay registered as module data
+(`Core/Categories.lua`) but nothing shows them. A module with a stock
+`classIcon` (`ClassIcon_<Class>`) is listed and searchable only for that class
+(`addon:IsConfigPageListed`). Developer Mode is not listed; `/ptg dev` opens it
+(`addon:OpenDeveloperPage`). The window opens on the last page used this
+session (not saved), or the first module. The page header is the title,
+description (wraps to two lines; header 76 tall) and the one switch, with no
+Enabled/Disabled text. Search
+(`Config/Search.lua`) sits at the top of the sidebar; its results replace the
+list while it holds text and include the Settings page; choosing one opens the
+page and flashes the row. No new TOC files, SavedVariables or frame names.
+`tests/window_shell.py` guards the shell. Native confirmation is pending;
+`/reload` OOC.
+
+Layout (branch `t3/v2-layout-mode`, v2 redesign): one on-screen mode replaces
+Preview and Edit Mode. `addon:SetEditMode(true/false)` is still the way in and
+out and `addon.editMode` its only flag; `addon:SetPreviewMode`/`previewMode` are
+gone (modules' own `SetPreviewMode(bool)` is now driven by Layout, so displays
+show sample data). `Config/EditMode.lua` builds the bar
+(`PlayTheGameToolsEditWindow`: Layout, cue, Drag to move, Grid, Done) and the
+Style card; nothing is selected on entry, and a selection is the open card.
+`addon:EditElementAppearance(id)` opens Layout with one card open. Styles live
+in each display's position record as `style = {scale, opacity, text,
+background}` (whole percents 50-200 / 10-100 / 50-200, boolean); defaults leave
+no record, so profiles, export and import carry styles with positions.
+Display API (Core/PositionManager.lua): Scale/Opacity are generic (the manager
+multiplies the frame's own SetScale/SetAlpha; GetScale/GetAlpha return the
+display's own value; restored on unregister). Displays implement Text size and
+Background with `onStyleChanged(element, style)` (re-render) and read values via
+`PM:StyleView(id, settings, {text=, background=, scale=, opacity=})`,
+`PM:StyleFontSize(id, size)` or `PM:StyleBackground(id)`; `styleText=false`
+marks a display without text. Styles never apply in combat (deferred to
+PLAYER_REGEN_ENABLED). Grid is session-only (`EditMode.grid`), off by default,
+snaps screen-centred drops to 32 units. No TOC or new files besides
+`tests/layout_style.py`; `tests/edit_mode.py` covers the mode. Native
+confirmation is pending; `/reload` OOC.
+v2 module cuts (branch `t3/v2-module-cuts`, 2026-11-23): part of the approved
+v2 settings redesign. Display titles only: Map Labels (`cityLabels`), Experience
+Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and
+Rogue Tools (`foreverRogue`). Module IDs, SavedVariables keys, frame names and
+doc file names are unchanged; old names stay as `searchAliases`. Dated notes
+below keep the names that were current when they were written.
+Quick Actions: no per-module ring switch. Class Training and Dungeon Loot show
+their ring icon whenever the module is on (Recruitment already did). Their old
+`showShortcut` values stay in SavedVariables, unread and unvalidated.
+Combat Timer: `CombatTimerDisplay.Format(seconds)` is always MM:SS; the Timer
+format row and `SetAppearance("format")` are gone. `appearance.format` stays in
+SavedVariables and profile validation, unread by the display.
+Experience Bar: `hideAtMax` left the defaults (old values stay, unread); the
+display hides whenever the player is capped outside Layout. The
+Ellesmere row and its search entry use `M:EllesmereLoaded()`
+(`C_AddOns.IsAddOnLoaded("EllesmereUIActionBars")`); `OtherBarsStatus` and the
+Detected XP Bars row are gone. Search skips entries whose `available()` is false.
+Automation: the Dialogue group, `GossipCapability` and the `autoGossip` option and
+default are removed; an old saved `autoGossip` stays, unread. The Quest/Merchant
+Automation rows stay: they appear only while the client rejected an action.
+Echoes: `LootSparkles:StatusNotice()` drops the two on/off status strings; the
+Rogue, Campfire and Food Bar status rows hide while they would only restate a
+switch. Food Bar: `F:IsOn()` = `enabled and shown`, `F:SetShown(v)` sets both, and
+`SyncEnabled` follows `IsOn()`. Enable Loot Sparkles and Enable Campfire Monitor
+stay: both are independent features under the one Gameplay Enhancements switch.
+Refresh buttons: Spellbook Refresh, Update Learned List and Refresh Bags are gone.
+Their modules already re-read on SPELLS_CHANGED / LEARNED_SPELL_IN_SKILL_LINE
+(SpellBookDocumentation), SKILL_LINES_CHANGED (SkillInfoDocumentation) and
+BAG_UPDATE_DELAYED (ContainerDocumentation) / ITEM_DATA_LOAD_RESULT
+(ItemDocumentation), all in Blizzard's published Forever API docs
+(Gethe/wow-ui-source, `forever` branch), and on PLAYER_REGEN_ENABLED after combat.
+Not in scope and kept: Dungeon Loot's Dungeon Data Refresh, Campfire's Refresh
+Status and Rogue Tools' Refresh Poisons. Native confirmation is pending; `/reload` OOC.
+
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,
 {kind, group, close})`. A `window` closes open windows/notices of other groups
@@ -33,7 +115,7 @@ column borrows those same row frames while the element is selected
 change, exit or combat, so controls, callbacks and saved keys are unchanged.
 Non-display styling (Loot Sparkles, Class Training, Dungeon Loot) stays put. No
 new files in the TOC; no SavedVariables changes. `tests/edit_mode_appearance.py`
-guards the contract. Native confirmation is pending; `/reload` OOC.
+guarded the contract. Superseded by Layout (below): the column and that test are gone. Native confirmation is pending; `/reload` OOC.
 
 Declutter / unified Edit Mode (branch `t3/declutter-ui-unify-edit-mode`):
 placement lives only in Edit Mode (`Config/EditMode.lua`), and every display

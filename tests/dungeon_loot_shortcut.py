@@ -9,7 +9,7 @@ lua,_=load()
 lua.globals().bindingAction=binding.text.strip()
 lua.execute(r'''
     local M=addon.DungeonLoot
-    assert(not M.active and not M.shortcut and M.db.showShortcut and not M.db.shortcutLocked)
+    assert(not M.active and not M.shortcut and M.db.showShortcut==nil and not M.db.shortcutLocked,'no ring switch is seeded')
     assert(BINDING_HEADER_PTGTOOLS=='Play The Game Tools' and BINDING_NAME_PTGTOOLS_DUNGEON_LOOT=='Open Dungeon Loot')
     -- The binding opens the disabled module's settings without enabling it or loading its catalog.
     local read=addon.DungeonLootProvider.Read
@@ -29,8 +29,10 @@ lua.execute(r'''
     testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
     assert(not PlayTheGameToolsOpenDungeonLoot())
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
-    M.db.showShortcut=false;M:SyncShortcut();assert(not b:IsShown())
-    assert(PlayTheGameToolsOpenDungeonLoot() and M.view.dungeon==nil,'keybind works when icon is hidden')
+    -- An old saved showShortcut=false is not read: a module that is on is in the ring.
+    M.db.showShortcut=false;M:SyncShortcut();assert(b:IsShown())
+    M.db.showShortcut=nil
+    assert(PlayTheGameToolsOpenDungeonLoot() and M.view.dungeon==nil,'keybind opens Dungeon Loot')
     M:Navigate(nil,'general')
     local function Click(label)
         for _,slot in ipairs(M.page.rootPane.slots) do
@@ -38,9 +40,10 @@ lua.execute(r'''
         end
         error('Missing '..label)
     end
-    Click('Show Shortcut Icon: Off');assert(b:IsShown())
     for _,slot in ipairs(M.page.rootPane.slots) do
-        assert(not (slot.visible and slot.button.label:GetText():find('Lock Shortcut',1,true)),'lock row removed')
+        local text=slot.visible and slot.button.label:GetText() or ''
+        assert(not text:find('Lock Shortcut',1,true),'lock row removed')
+        assert(not text:find('Show Shortcut',1,true),'no Quick Actions switch')
     end
     local launcher=addon.PositionManager.elements.quickActionsLauncher
     assert(addon.PositionManager:SetOffsets(launcher.id,12,34))
@@ -55,8 +58,9 @@ lua.execute(r'''
     local candidate=addon.ProfileCodec.Copy(addon.db)
     candidate.modules.dungeonLoot.shortcutPosition.x=0/0
     assert(not addon.ProfileValidation:Validate(candidate),'invalid profile position rejected')
-    candidate=addon.ProfileCodec.Copy(addon.db);candidate.modules.dungeonLoot.showShortcut='yes'
-    assert(not addon.ProfileValidation:Validate(candidate),'invalid visibility rejected')
+    -- The retired switch is left unread, so an old value never blocks an import.
+    candidate=addon.ProfileCodec.Copy(addon.db);candidate.modules.dungeonLoot.showShortcut=false
+    assert(addon.ProfileValidation:Validate(candidate),'old visibility value ignored')
 ''')
 encoded=lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored,_=load(encoded)

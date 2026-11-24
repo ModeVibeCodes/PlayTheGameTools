@@ -25,6 +25,7 @@ function C:RegisterDisplay(f,separate)
                 -- The manager owns Edit Mode input; outside it the display is click-through.
                 if not addon.editMode then f:EnableMouse(false) end
             end,
+            onStyleChanged=function() self:Render() end,
         })
         assert(ok,"Play The Game Tools: campfire position registration failed: "..tostring(registered))
         e=registered
@@ -114,8 +115,11 @@ function C:PaintDisplay(f,separate)
     local db=self.db
     local scale=(separate and db.benefitsScale or db.scale)/100
     local width=separate and db.benefitsWidth or db.width
-    local size=separate and db.benefitsFontSize or db.fontSize
+    -- Layout's Style card: Text size scales every line, Background hides the fill and border.
+    local function Size(value) return PM:StyleFontSize(f.elementId,value) end
+    local size=Size(separate and db.benefitsFontSize or db.fontSize)
     local background=separate and db.benefitsBackgroundOpacity or db.backgroundOpacity
+    if not PM:StyleBackground(f.elementId) then background=0 end
     local opacity=separate and db.benefitsOpacity or db.opacity
     local font=addon.Media:GetInterfaceFont(nil,"lootSparkles")
     f:SetScale(scale);f:SetWidth(width)
@@ -140,8 +144,8 @@ function C:PaintDisplay(f,separate)
         f.caption:SetTextColor(unpack(db.textColor));Row(f.caption,self:MonitorStatus(),size)
     else f.caption:Hide() end
     if db.showBenefits and (separate or not db.separateBenefits) and (s.benefits or self:IsBuffSample()) then
-        Row(f.buffTitle,self:HeaderText("Camp Buffs"),db.benefitsFontSize+3)
-        Row(f.text,self:ColorBuffText(self:BuildBenefitsText()),db.benefitsFontSize)
+        Row(f.buffTitle,self:HeaderText("Camp Buffs"),Size(db.benefitsFontSize+3))
+        Row(f.text,self:ColorBuffText(self:BuildBenefitsText()),Size(db.benefitsFontSize))
     else f.buffTitle:Hide();f.text:Hide() end
     local details=not separate and self:BuildText() or ""
     if details~="" then f.details:SetTextColor(unpack(db.textColor));Row(f.details,details,size)

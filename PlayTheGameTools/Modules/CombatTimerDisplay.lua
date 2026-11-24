@@ -3,11 +3,10 @@ local D = {}
 addon.CombatTimerDisplay = D
 
 -- Presentation only: no clock, events, enable state or position persistence.
-function D.Format(seconds, format)
-    local value = string.format("%02d:%02d", math.floor(seconds / 60), seconds % 60)
-    if format == "square" then return "[" .. value .. "]" end
-    if format == "round" then return "(" .. value .. ")" end
-    return value
+-- Always plain MM:SS. An older saved appearance.format (square/round brackets)
+-- may remain in profiles; it is no longer read.
+function D.Format(seconds)
+    return string.format("%02d:%02d", math.floor(seconds / 60), seconds % 60)
 end
 
 function D.Apply(view, appearance, layout)
@@ -23,6 +22,7 @@ function D.Apply(view, appearance, layout)
     view.text:SetTextColor(appearance.textColor[1], appearance.textColor[2], appearance.textColor[3], 1)
     addon.Media:PaintSurface(view.background,appearance.backgroundColor,appearance.backgroundOpacity,"combatTimer")
     if not view.globalBorder then view.globalBorder={};addon.Border.Create(view.globalBorder,view.frame) end
-    addon.Border.Apply(view.globalBorder,{borderStyle=addon.Media:GlobalStyle("border","combatTimer"),borderColor={1,1,1},borderOpacity=1,inset=true})
+    local border = appearance.layoutBackground == false and "none" or addon.Media:GlobalStyle("border","combatTimer")
+    addon.Border.Apply(view.globalBorder,{borderStyle=border,borderColor={1,1,1},borderOpacity=1,inset=true})
     addon.Border.Render(view.globalBorder)
 end

@@ -1,4 +1,4 @@
-"""Generate the Points of Interest Labels data files from two pinned public sources.
+"""Generate the Map Labels data files from two pinned public sources.
 
 1. PlayTheGameTools/Modules/CityLabelsData.lua (CC BY 4.0): the EG Link WoW:
    Forever dataset by Efficient Games (https://github.com/JIVESCORP/eg-link-output-wowf),

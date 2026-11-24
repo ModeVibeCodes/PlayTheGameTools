@@ -10,8 +10,8 @@ function R:GetReason()
     return table.concat(reasons," ")
 end
 function R:Refresh()
-    local window=addon.configWindow
-    if window and window.reloadButton then window.reloadButton:SetSelected(self:IsPending()) end
+    -- The settings window shows pending requests as a banner above the page.
+    if addon.configWindow and addon.RefreshReloadBanner then addon:RefreshReloadBanner() end
     if self.prompt then
         if not self:IsPending() then self.prompt:Hide()
         elseif self.prompt:IsShown() then self.prompt.reason:SetText(self:GetReason()) end

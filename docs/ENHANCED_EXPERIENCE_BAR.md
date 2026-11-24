@@ -1,7 +1,7 @@
-# Enhanced Experience Bar
+# Experience Bar
 
 Forever only; opt-in tenth module. Open `/ptg`, expand **Questing & Leveling**,
-then select **Enhanced Experience Bar**. Uses the addon's shared **Edit Mode**
+then select **Experience Bar**. Uses the addon's shared **Edit Mode**
 workspace for its owned frame. Existing modules, settings and stock XP UI stay intact.
 
 ## Owner acceptance and merge closeout — 2026-11-07
@@ -20,7 +20,9 @@ no release publication or SavedVariables changes are part of this merge.
   detected Blizzard/Ellesmere XP displays. **Use Existing Bar** hides PTG and
   returns display control to their owners. **Hide Blizzard XP Bar** and **Hide
   Ellesmere XP Bar** can be set separately while using PTG. Both default off.
-  Detection/status is shown in **Detected XP Bars**; unrelated suites are left
+  **Hide Ellesmere XP Bar** appears only while EllesmereUIActionBars is loaded.
+  The bar always hides at maximum level (there is no switch for it; an old saved
+  Hide at Maximum Level value is no longer read). Unrelated suites are left
   alone, with their own settings used to enable/disable their bars. No automatic
   popup or external SavedVariables edits. Disable PTG to release its hides.
 
@@ -136,26 +138,26 @@ and the deterministic release build (99 Lua / 174 packaged files). These are
 Lua 5.1 mock/static results; no in-game acceptance is claimed.
 
 1. **Navigation:** Chat input → `/reload`, then `/ptg` → Play The Game Tools →
-   Questing & Leveling → Enhanced Experience Bar → General →
-   Enable Enhanced Experience Bar; **Action:** reload and enable on a leveling
+   Questing & Leveling → Experience Bar → General →
+   Enable Experience Bar; **Action:** reload and enable on a leveling
    character; **Required state:** OOC with feature branch installed;
    **Confirmation:** bar shows current XP %, rested % and total quest log XP without
    errors. This revision uses existing runtime files; `/reload` loads it.
 2. **Navigation:** Native Quest Log → zone headers, then Play The Game Tools →
-   Questing & Leveling → Enhanced Experience Bar → Bar Appearance → Forecasts;
+   Questing & Leveling → Experience Bar → Bar Appearance → Forecasts;
    **Action:** accept an unfinished quest, collapse headers, complete it, then
    turn it in; **Required state:** OOC, below max level; **Confirmation:** total
    includes its reward before completion, does not double-count completion,
    and drops on turn-in as XP rises. Header collapse and selected quest remain
    unchanged after scanning. Compare the sum with each quest's native reward.
-3. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → Layout → Rested Overlay Opacity / Quest Overlay Opacity; **Action:** tune each, toggle Show Rested Overlay
+3. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+   → Layout → Rested Overlay Opacity / Quest Overlay Opacity; **Action:** tune each, toggle Show Rested Overlay
    and Show Quest Overlay separately; **Required state:** OOC, rested pool and
    quests available; **Confirmation:** current XP has priority, then rested,
    then quest tint only beyond the rested endpoint. No color blending between
    forecasts, no split lanes, and no change to the total quest XP label.
-4. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → Bar Appearance → Bar Texture, then Bar Text / Session Text / Colors;
+4. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+   → Bar Appearance → Bar Texture, then Bar Text / Session Text / Colors;
    **Action:** choose Flat, Blizzard XP, Blizzard Status Bar and an installed
    SharedMedia texture; independently change Bar Font / Session Font, text colors,
    sizes, outlines, alignment and separators; disable
@@ -163,45 +165,49 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
    **Confirmation:** immediate readable updates; enabling native colors restores
    blue/purple. Bar text edits do not alter session text. No pipe separators/errors.
    Bar Text → Quest Log XP Format shows Percent, XP Amount or both as selected.
-5. **Navigation:** Play The Game Tools → header → Edit Mode → Enhanced Experience
-   Bar handle; **Action:** drag, exit with Escape, `/reload`; **Required state:** OOC,
+5. **Navigation:** Play The Game Tools → header → Edit Mode → Experience Bar
+   handle; **Action:** drag, exit with Escape, `/reload`; **Required state:** OOC,
    feature enabled; **Confirmation:** PREVIEW while editing; saved appearance and
    position persist, normal play locks movement. This is the addon's workspace,
    not Blizzard's Edit Mode menu.
-6. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → Session Text → Session Tracking → Reset Session; **Action:** reset, earn XP,
+6. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+   → Session Text → Session Tracking → Reset Session; **Action:** reset, earn XP,
    wait and cross a level; **Required state:** leveling character, reset OOC;
    **Confirmation:** session clock/XP/hr update with no rollover spike. `/reload`
    resets counters while retaining appearance/position.
-7. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → General → Enable Enhanced Experience Bar; **Action:** disable/re-enable
+7. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+   → General → Enable Experience Bar; **Action:** disable/re-enable
    after a combat/XP gain check; **Required state:** settings OOC;
    **Confirmation:** combat XP updates without blocked-action errors, disable
    hides the bar, re-enable starts a fresh session and other features still work.
 
-8. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → Colors → Rested XP Overlay Color / Quest Log XP Overlay Color → Pick;
+8. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+   → Colors → Rested XP Overlay Color / Quest Log XP Overlay Color → Pick;
    **Action:** choose distinct colors, then `/reload`; **Required state:** OOC,
    overlays enabled with rested XP and quest log rewards (or Preview enabled);
    **Confirmation:** only the selected overlay tint changes, both colors persist,
    and Use Native XP Colors can remain enabled for the main fill.
 
-9. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → XP Bar Choice → Choose Your XP Bar → Use PTG Only;
+9. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+   → XP Bar Choice → Choose Your XP Bar → Use PTG Only;
    **Action:** click Use PTG Only, then gain XP; **Required state:** OOC for the
    choice, leveling character with native/Ellesmere XP visible beforehand;
    **Confirmation:** PTG stays visible, detected duplicate XP bars hide and stay
    hidden after XP refresh; native reputation/other suite bars remain available.
-10. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-    Bar → XP Bar Choice → Hide Blizzard XP Bar / Hide Ellesmere XP Bar;
+10. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+    → XP Bar Choice → Hide Blizzard XP Bar / Hide Ellesmere XP Bar;
     **Action:** toggle each separately, then choose Choose Your XP Bar → Use
     Existing Bar; **Required state:** OOC; **Confirmation:** individual hides are
     independent, Existing hides PTG and the owners decide their normal visibility.
-    Toggle General → Enable Enhanced Experience Bar off to verify restoration
+    Toggle General → Enable Experience Bar off to verify restoration
     on disable. No external addon settings are reset.
-11. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-    Bar → XP Bar Choice → Detected XP Bars; **Action:** `/reload`, enter/leave
-    combat and inspect status; **Required state:** Use PTG Only chosen OOC;
-    **Confirmation:** choice persists, no blocked-action/errors; unsupported
-    targets are reported rather than forced. Missing new runtime files may need
-    one client restart after this TOC addition.
+11. **Navigation:** Play The Game Tools → Questing & Leveling → Experience Bar
+    → Other XP Bars; **Action:** inspect the switches with EllesmereUIActionBars
+    enabled, then disabled at character selection and logged in again;
+    **Required state:** OOC; **Confirmation:** Hide Blizzard XP Bar is always
+    there, Hide Ellesmere XP Bar only while EllesmereUIActionBars is loaded, and
+    no Detected XP Bars row or Hide at Maximum Level switch appears.
+12. **Navigation:** the on-screen Experience Bar; **Action:** reach maximum level
+    (or log in a max-level character) with the module on; **Required state:** any;
+    **Confirmation:** the bar hides itself; Preview and Edit Mode still show the
+    sample bar.

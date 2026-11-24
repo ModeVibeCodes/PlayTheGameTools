@@ -20,8 +20,10 @@ moves, through the shared Edit Mode, where it is listed as **Quick Actions**.
 - Icons are spaced evenly clockwise from the top. Larger icons or longer lists
   widen the ring, and the main button's screen clamp grows so no icon opens
   off-screen.
-- A disabled module or hidden icon leaves the ring. With no icons left, the main
-  button and its Edit Mode entry hide. Dungeon Loot's keybinding is independent.
+- There are no per-module "show in Quick Actions" switches: while a module is on,
+  its icon is in the ring, and turning the module off takes it out. With no icons
+  left, the main button and its Edit Mode entry hide. Dungeon Loot's keybinding is
+  independent.
 - Nothing opens during combat. Frames are created and laid out outside combat only.
 
 ## Saved settings
@@ -30,7 +32,9 @@ The position is `positions.quickActionsLauncher`. Its first value comes from the
 Class Training icon's saved position when present; Reset Shortcut Position returns
 to the factory spot. `positions.dungeonLootShortcut`, both modules'
 `shortcutPosition` and Dungeon Loot's `shortcutLocked` stay in saved settings, are
-still validated and are no longer read for placement.
+still validated and are no longer read for placement. The retired ring switches
+(Class Training's and Dungeon Loot's `showShortcut`) stay in saved settings but
+are no longer read or validated.
 
 ## Adding an icon
 
@@ -57,7 +61,7 @@ Adding `Modules/QuickActions.lua` requires one full client restart.
 
 1. **Navigation:** on-screen Quick Actions button. **Action:** hover it, click it,
    click it again. **Required state:** Forever, out of combat, Class Training on
-   with Shortcut Icon & Menu on, and Dungeon Loot on with Show Shortcut Icon: On.
+   and Dungeon Loot on.
    **Confirmation:** a round dimmed gear icon with a neutral edge and a "Quick
    Actions" tooltip; the old separate icons are gone. Open shows the book and loot
    dice on a solid gold ring over a dark dial, the gear turns gold with a halo and
@@ -78,10 +82,11 @@ Adding `Modules/QuickActions.lua` requires one full client restart.
    the position survives the reload.
 5. **Navigation:** `/ptg` -> Questing & Leveling -> Dungeon Loot -> General -> Quick
    Icon; `/ptg` -> Questing & Leveling -> Class Training -> Shortcut Icon & Menu ->
-   Shortcut Icon Size. **Action:** change both sizes to 72, Icon Opacity to 50%, and
-   set Show Shortcut Icon: Off; open the ring after each. **Required state:** out of
-   combat. **Confirmation:** the ring widens without overlap, only the loot icon
-   fades, and hiding it leaves one icon at the top.
+   Shortcut Icon Size; then the Dungeon Loot page's header switch. **Action:** change
+   both sizes to 72, Icon Opacity to 50%, then turn Dungeon Loot off; open the ring
+   after each. **Required state:** out of combat. **Confirmation:** the ring widens
+   without overlap, only the loot icon fades, and turning Dungeon Loot off leaves one
+   icon at the top. Neither page shows a switch for showing its icon in the ring.
 6. **Navigation:** Quick Actions button -> ordinary combat. **Action:** open the
    ring, enter combat, click the button, leave combat, click it. **Required state:**
    safe ordinary combat. **Confirmation:** the ring closes on combat entry, stays

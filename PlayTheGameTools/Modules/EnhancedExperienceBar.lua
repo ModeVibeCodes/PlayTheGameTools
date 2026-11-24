@@ -1,6 +1,7 @@
 local _, addon = ...
 if not addon.Edition or addon.Edition.name ~= "Forever" then return end
-local M = { title = "Enhanced Experience Bar", category = "questingLeveling", defaultEnabled = false,
+local M = { title = "Experience Bar", category = "questingLeveling", defaultEnabled = false,
+    searchAliases = {"enhanced experience bar", "xp bar"},
     description = "Experience, rested pool, total quest log rewards and session progress.", supportsAnchoring = true }
 addon.EnhancedExperienceBar = M
 addon:RegisterModule("enhancedExperienceBar", M)
@@ -32,7 +33,7 @@ local defaults = { width = 600, height = 24, scale = 100, opacity = 100, overlay
     textOffset = 0, sessionGap = 6, sessionAbove = false, align = "CENTER", blizzardStyle = false,
     nativeColors = true, showXP = true, showRested = true, showQuests = true, showValues = false,
     showRestedOverlay = true, showQuestOverlay = true, showSession = true, showRate = true,
-    hideAtMax = true, normalColor = {0.58, 0, 0.55}, restedColor = {0, 0.39, 0.88},
+    normalColor = {0.58, 0, 0.55}, restedColor = {0, 0.39, 0.88},
     questColor = {1, 0.78, 0.2}, textColor = {0.95, 0.96, 1}, backgroundColor = {0.07, 0.08, 0.1},
     borderColor = {0.26, 0.31, 0.38}, restedOverlayColor = {0, 0.39, 0.88},
     barTexture = "default", questFormat = "percent", separator = "dash", sessionSeparator = "dash",

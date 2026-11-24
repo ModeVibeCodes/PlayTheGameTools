@@ -199,6 +199,40 @@ function P:Rename(old,name)
     if self.queued and self.queued.name==old then self.queued.name=name end
     self:Notify("renamed");return true,"Profile renamed."
 end
+-- Removes one stored profile. The profile in use, or one waiting to apply after
+-- a reload, is never removed; nothing else in the account root changes except
+-- references that would otherwise point at the removed name.
+function P:Delete(name)
+    if not self.root.profiles[name] then return false,"Profile not found." end
+    if name==self.activeName then return false,"This profile is in use. Switch to another profile, reload, then delete it." end
+    if self.queued and self.queued.name==name then return false,"A switch to this profile is waiting; choose another profile first." end
+    local function Pending(selection)
+        return type(selection)=="table" and (selection.pendingProfile==name or selection.activeProfile==name)
+    end
+    if Pending(self.root.accountSelection) then return false,"A switch to this profile is waiting; choose another profile first." end
+    -- Per-character assignments are read only where specialization profiles
+    -- exist; elsewhere they are dormant and a missing name already falls back.
+    if specProfilesAvailable then
+        for _,character in pairs(self.root.characters) do
+            if Pending(character) or (type(character)=="table" and character.manualProfile==name) then
+                return false,"Another character uses this profile."
+            end
+            if type(character)=="table" and type(character.specProfiles)=="table" then
+                for _,assigned in pairs(character.specProfiles) do
+                    if assigned==name then return false,"A specialization uses this profile." end
+                end
+            end
+        end
+    end
+    self.root.profiles[name]=nil
+    local selection=self.root.accountSelection
+    if type(selection)=="table" then
+        if selection.manualProfile==name then selection.manualProfile=self.activeName end
+        if selection.failedProfile==name then selection.failedProfile=nil end
+    end
+    if self.root.defaultProfile==name then self.root.defaultProfile=self.activeName end
+    self:Notify("deleted");return true,"Profile deleted."
+end
 function P:Select(name,manual)
     if not self.root.profiles[name] then return false,"Profile not found; assignment retained." end
     local character=self:Character()

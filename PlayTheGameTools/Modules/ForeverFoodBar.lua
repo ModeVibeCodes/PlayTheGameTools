@@ -11,6 +11,14 @@ function F:SetOption(key,value)
     if key=="font" then self.db.fontMedia="" end
     self:SyncEnabled();return true
 end
+-- The bar is on when both saved flags are: older profiles may hold either one
+-- off (the bar's own Hide button clears shown). The page switch sets both.
+function F:IsOn() return self.db.enabled==true and self.db.shown==true end
+function F:SetShown(value)
+    if not D.OutsideCombat() or type(value)~="boolean" then return false end
+    self.db.enabled,self.db.shown=value,value
+    self:SyncEnabled();return true
+end
 function F:Select(id,value)
     if not D.OutsideCombat() or not D.Number(id,1,2147483647) or type(value)~="boolean" then return false end
     local candidate=addon.ProfileCodec.Copy(self.owner.db)
@@ -27,6 +35,7 @@ function F:RegisterPosition()
     local ok,element=addon.PositionManager:RegisterModuleDisplay(ELEMENT,self.bar,self.owner,{
         db=self.db,label="Food Bar",defaultX=0,defaultY=-260,
         canDrag=function() return self.active==true end,
+        onStyleChanged=function() self:Render() end,
         onRegistered=function() self:Render();addon.PositionManager:RefreshSelection() end})
     if ok then element.editMode=self.active and self.db.enabled and self.db.shown and self.bar:IsShown() or false end
 end
@@ -77,7 +86,8 @@ function F:Render()
         self.message="Native macro action dispatcher unavailable.";if self.bar then self.bar:Hide() end;return
     end
     self:CreateBar();if self.blocked or not self.bar then return end
-    local items=self:VisibleItems();local bar,db=self.bar,self.db
+    -- Layout's Style card: Text size scales names and counts, Background hides the fill and border.
+    local items=self:VisibleItems();local bar,db=self.bar,addon.PositionManager:StyleView(ELEMENT,self.db,{text={"fontSize"},background={"backgroundOpacity","borderOpacity"}})
     local w,h,columns,cellHeight=D.Geometry(#items,db)
     bar:SetSize(w,h);bar:SetScale(db.scale/100)
     if not addon.PositionManager.elements[ELEMENT] then
@@ -127,7 +137,7 @@ function F:Refresh()
     if self.owner.page then self.owner.page:Refresh() end
 end
 function F:SyncEnabled()
-    local enabled=self.owner.active and self.db.enabled
+    local enabled=self.owner.active and self:IsOn()
     if not self.events then self.events=CreateFrame("Frame") end
     self.events:UnregisterAllEvents();self.events:SetScript("OnEvent",nil);self.active=enabled
     if not enabled then if self.bar then self:StopDrag();self.bar:Hide() end;return end

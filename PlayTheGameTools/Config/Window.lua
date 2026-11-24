@@ -1,9 +1,18 @@
 local _, addon = ...
 local W, T = addon.ConfigWidgets, addon.InterfaceTheme
-local WINDOW_WIDTH, WINDOW_HEIGHT = 1120, 760
-local SIDEBAR_WIDTH, HEADER_HEIGHT = 240, 56
--- Reserve the header controls (Reload/Preview/Edit Mode/Profile/Close) for safe dragging.
-local HEADER_RESERVED = 720
+local WINDOW_WIDTH, WINDOW_HEIGHT = 960, 640
+local SIDEBAR_WIDTH, HEADER_HEIGHT = 212, 48
+-- Reserve the header controls (Layout/Close) for safe dragging.
+local HEADER_RESERVED = 160
+local BANNER_HEIGHT, BANNER_GAP = 44, 12
+local NAV_ROW_HEIGHT, NAV_ROW_STEP = 30, 32
+
+-- The Settings page is not a module; search and the page header name it here.
+addon.SETTINGS_PAGE = {
+    id = "globalSettings",
+    title = "Settings",
+    description = "Look, game options and profiles for the whole addon.",
+}
 
 local function InCombat()
     return InCombatLockdown() or UnitAffectingCombat("player")
@@ -67,73 +76,105 @@ function addon:UpdateWindowBounds(initial)
     window.boundsPending = false
 end
 
+-- A class tool, marked by its stock class icon, is listed only for that class.
+-- An unreadable class keeps the page listed; the page itself explains it.
+local function RequiredClass(module)
+    local name = type(module.classIcon) == "string" and module.classIcon:match("ClassIcon_(%a+)$")
+    return name and name:upper() or nil
+end
+function addon:IsConfigPageListed(id)
+    local module = self.modules[id]
+    if not module or module.developer then return false end
+    local required = RequiredClass(module)
+    if not required or type(UnitClass) ~= "function" then return true end
+    local ok, _, class = pcall(UnitClass, "player")
+    if not ok or (issecretvalue and issecretvalue(class)) or type(class) ~= "string" then return true end
+    return class == required
+end
+
+-- Sidebar order: module pages by title, A to Z.
+function addon:ListedConfigPages()
+    local listed = {}
+    for _, id in ipairs(self.moduleOrder) do
+        if self:IsConfigPageListed(id) then listed[#listed + 1] = id end
+    end
+    table.sort(listed, function(a, b)
+        local x, y = self.modules[a].title:lower(), self.modules[b].title:lower()
+        if x ~= y then return x < y end
+        return a < b
+    end)
+    return listed
+end
+
 local function GenericPage(parent, module)
     local page = W.Page(parent)
     page:Finish()
     return page
 end
 
-local function Dashboard(parent)
-    local page = W.Page(parent)
-    -- Credits sit as plain type on the canvas; no card is needed to group them.
-    local welcome = CreateFrame("Frame", nil, page.content)
-    welcome:SetSize(400, 58)
-    welcome.gapAfter = 8
-    local lines = {
-        "Welcome to Play The Game Tools!",
-        "Created by Mode and Prox  ·  Bugs: Discord NoJumperMike",
-    }
-    page.welcomeTexts = lines
-    for index, text in ipairs(lines) do
-        local label
-        if index == 1 then label = W.Heading(welcome, text, T.fontSize.section, 0, -4, 360, T.text)
-        else label = W.Label(welcome, text, nil, 0, -12 - (index - 1) * 20, 360, index == 2 and T.secondary or T.muted) end
-        label:SetPoint("TOPRIGHT", 0, index == 1 and -4 or -12 - (index - 1) * 20)
+-- Page header: title and a description of up to two lines on the left, the
+-- module's one on/off switch on the right, closed by a hairline. The switch
+-- is the state; no Enabled/Disabled text repeats it.
+local function PageHeader(parent)
+    local header = CreateFrame("Frame", nil, parent)
+    header:SetPoint("TOPLEFT")
+    header:SetPoint("TOPRIGHT")
+    header:SetHeight(W.PAGE_HEADER_HEIGHT)
+    header:EnableMouse(false)
+    local title = W.Heading(header, "", T.fontSize.page, 0, -2, 520, T.text)
+    title:SetPoint("TOPRIGHT", -64, -2)
+    title:SetWordWrap(false)
+    local description = W.Label(header, "", nil, 0, -30, 520, T.muted)
+    description:SetPoint("TOPRIGHT", -64, -30)
+    -- Long descriptions (Rogue Tools) wrap; the fixed height holds two lines.
+    description:SetHeight(W.PAGE_DESCRIPTION_HEIGHT)
+    description:SetJustifyV("TOP")
+    description:SetWordWrap(true)
+    local toggle = W.Button(header, "", 44, 24, "toggle")
+    toggle:SetPoint("TOPRIGHT", 0, -2)
+    local divider = W.Fill(header, T.line, "BORDER")
+    divider:ClearAllPoints(); divider:SetPoint("BOTTOMLEFT", 0, 12); divider:SetPoint("BOTTOMRIGHT", 0, 12)
+    divider:SetHeight(1)
+    toggle:SetScript("OnClick", function()
+        if header.module then addon:SetModuleEnabled(header.module.id, not header.module.enabled) end
+    end)
+    function header:Refresh()
+        local gameplay = self.module ~= nil and not self.module.developer
+        toggle:SetShown(gameplay)
+        if gameplay then toggle:SetSelected(self.module.enabled) end
     end
-    page.rows[#page.rows + 1] = welcome
-    page.cursor = 66
-    -- Forever readiness keeps profile services available without exposing controls.
-    if not addon.Edition or addon.Edition.name ~= "Forever" then addon:CreateProfileHub(page) end
-    page:Section("Modules", nil, false)
-    page.moduleRows = {}
-    for _, id in ipairs(addon.moduleOrder) do
-        local module = addon.modules[id]
-        if not module.developer then
-        local row = CreateFrame("Frame", nil, page.content)
-        row:SetPoint("TOPLEFT", 0, -page.cursor)
-        row:SetSize(400, 56)
-        row.gapAfter = 0
-        row:EnableMouse(true)
-        row:SetScript("OnMouseUp", function(_, button)
-            if button == "LeftButton" then addon:SelectConfigPage(id) end
-        end)
-        local divider = W.Fill(row, T.line, "BORDER")
-        divider:ClearAllPoints(); divider:SetPoint("TOPLEFT"); divider:SetPoint("TOPRIGHT"); divider:SetHeight(1)
-        -- The whole row opens the module; the switch on the right toggles it.
-        local navigate = W.Button(row, module.title, 250, 54, "tab")
-        navigate:SetPoint("TOPLEFT", 0, -1)
-        navigate:SetPoint("BOTTOMRIGHT", -76, 0)
-        navigate.label:ClearAllPoints()
-        navigate.label:SetJustifyH("LEFT")
-        navigate.label:SetPoint("TOPLEFT", 14, -12)
-        navigate.label:SetPoint("TOPRIGHT", -12, -12)
-        navigate:SetLabelColor(T.text)
-        local summary = W.Label(navigate, module.configDescription or module.description or "", nil, 14, -30, 360, T.muted)
-        summary:SetPoint("TOPRIGHT", -12, -30)
-        summary:SetWordWrap(false)
-        -- The switch shows the state; no duplicate Enabled/Disabled text.
-        local toggle = W.Button(row, "", 52, 26, "toggle")
-        toggle:SetPoint("RIGHT", -12, 0)
-        navigate:SetScript("OnClick", function() addon:SelectConfigPage(id) end)
-        toggle:SetScript("OnClick", function() addon:SetModuleEnabled(id, not module.enabled) end)
-        page.refreshers[#page.refreshers + 1] = function() toggle:SetSelected(module.enabled) end
-        page.rows[#page.rows + 1] = row
-        page.moduleRows[id] = { row = row, navigate = navigate, toggle = toggle, summary = summary }
-        page.cursor = page.cursor + 56
-        end
+    -- module is nil for the Settings page, which has no switch.
+    function header:SetModule(module, info)
+        self.module = module
+        info = info or module
+        title:SetText(info.title)
+        description:SetText(info.configDescription or info.description or "")
+        self:Refresh()
     end
-    page:Finish()
-    return page
+    header.title, header.description, header.toggle, header.divider = title, description, toggle, divider
+    return header
+end
+
+-- Pending reload requests show at the top of the page area until applied.
+local function ReloadBanner(parent)
+    local banner = CreateFrame("Frame", nil, parent)
+    banner:Hide()
+    banner:SetHeight(BANNER_HEIGHT)
+    banner.fill = W.Fill(banner, T.surface, "BACKGROUND")
+    banner.outline = W.Outline(banner, T.primary, "BORDER", 0, 0.6)
+    banner.accent = W.Fill(banner, T.primary, "ARTWORK")
+    banner.accent:ClearAllPoints(); banner.accent:SetPoint("TOPLEFT"); banner.accent:SetPoint("BOTTOMLEFT")
+    banner.accent:SetWidth(2)
+    local reload = W.Button(banner, "Reload now", 104, 28, "primary")
+    reload:SetPoint("RIGHT", -8, 0)
+    banner.message = W.Label(banner, "Applies after a reload", nil, 14, -6, 400, T.text)
+    banner.message:SetPoint("TOPRIGHT", -124, -6)
+    banner.message:SetWordWrap(false)
+    banner.reason = W.Label(banner, "", nil, 14, -23, 400, T.muted)
+    banner.reason:SetPoint("TOPRIGHT", -124, -23)
+    banner.reason:SetWordWrap(false)
+    banner.reloadButton = reload
+    return banner
 end
 
 function addon:CreateConfig()
@@ -199,7 +240,8 @@ function addon:CreateConfig()
     -- clear margin inside it instead of sitting on its inner edge.
     local edge = window.blizzardBackdrop and 8 or 0
 
-    -- A non-interactive header owns disjoint drag and button regions.
+    -- A non-interactive header owns disjoint drag and button regions:
+    -- the brand on the left, Layout and Close on the right.
     local header = CreateFrame("Frame", nil, window)
     header:SetPoint("TOPLEFT")
     header:SetPoint("TOPRIGHT")
@@ -211,30 +253,24 @@ function addon:CreateConfig()
     window.headerArt:SetPoint("BOTTOMLEFT", sidebarWidth + 2, 0); window.headerArt:SetPoint("BOTTOMRIGHT", -1, 0)
     window.headerArt:SetHeight(1)
     if art then window.headerArt:Hide() end
-    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 20 + edge, -21, sidebarWidth - 24 - edge, T.heading)
-    do
-        window.title:SetTextColor(unpack(T.primary))
-        local logo=header:CreateTexture(nil,"ARTWORK")
-        logo:SetPoint("LEFT",14+edge,-edge/2);logo:SetSize(38,38)
-        addon.Media:ApplyTexture(logo,"ModeLogo")
-        window.brandLogo=logo
-        window.title:ClearAllPoints();window.title:SetPoint("LEFT",logo,"RIGHT",8,0)
-        window.title:SetWidth(sidebarWidth-72-edge)
-    end
+    local logo=header:CreateTexture(nil,"ARTWORK")
+    logo:SetPoint("LEFT",14+edge,-edge/2);logo:SetSize(30,30)
+    addon.Media:ApplyTexture(logo,"ModeLogo")
+    window.brandLogo=logo
+    window.title = W.Heading(header, "Play The Game Tools", T.fontSize.section, 0, 0, sidebarWidth, T.heading)
+    window.title:SetTextColor(unpack(T.primary))
+    window.title:ClearAllPoints();window.title:SetPoint("LEFT",logo,"RIGHT",8,0)
+    window.title:SetWidth(sidebarWidth+120)
     window.title:SetWordWrap(false)
     local controls = CreateFrame("Frame", nil, header)
-    controls:SetPoint("TOPRIGHT", -16 - edge, -14 - edge / 2)
-    controls:SetSize(464, 28)
-    window.headerReserved=720
+    controls:SetPoint("TOPRIGHT", -14 - edge, -10 - edge / 2)
+    controls:SetSize(124, 28)
     controls:SetFrameLevel(header:GetFrameLevel() + 1)
     controls:EnableMouse(false)
-    function self:UpdateConfigTitle(id)
-        -- The brand stays fixed; the page header below names the current page.
-        window.title:SetText("Play The Game Tools")
-    end
+    window.headerReserved=controls:GetWidth()+30+edge
     local drag = CreateFrame("Frame", nil, header)
     drag:SetPoint("TOPLEFT")
-    drag:SetPoint("BOTTOMRIGHT", controls, "BOTTOMLEFT", -16, -14)
+    drag:SetPoint("BOTTOMRIGHT", controls, "BOTTOMLEFT", -16, -10)
     drag:SetFrameLevel(header:GetFrameLevel() + 1)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -255,9 +291,9 @@ function addon:CreateConfig()
     local close = HeaderButton("X", 28)
     close:SetPoint("RIGHT")
     close:SetScript("OnClick", function() window:Hide() end)
-    local edit = HeaderButton("Edit Mode", 92)
-    edit:SetPoint("RIGHT", close, "LEFT", -16, 0)
-    edit:SetScript("OnClick", function()
+    local layout = HeaderButton("Layout", 88)
+    layout:SetPoint("RIGHT", close, "LEFT", -8, 0)
+    layout:SetScript("OnClick", function()
         if self.editMode then self:SetEditMode(false); return end
         local page = window.selectedPage
         if not self:SetEditMode(true) then return end
@@ -268,74 +304,34 @@ function addon:CreateConfig()
             if element.module.id == page and element.editMode and element.module.enabled then PM:SelectElement(id); break end
         end
     end)
-    local preview = HeaderButton("Preview", 80)
-    preview:SetPoint("RIGHT", edit, "LEFT", -8, 0)
-    preview:SetScript("OnClick", function() self:SetPreviewMode(not self.previewMode) end)
-    local reload = HeaderButton("Reload", 72)
-    reload:SetPoint("RIGHT", preview, "LEFT", -8, 0)
-    reload:SetScript("OnClick", function()
-        local _,reason=self.ReloadManager:Reload()
-        print("Play The Game Tools: "..reason)
-    end)
-    window.reloadButton=reload
-    window.previewButton, window.editButton, window.closeButton = preview, edit, close
-    do
-        local profile=HeaderButton("Profile:",132)
-        profile:SetPoint("RIGHT",close,"LEFT",-8,0)
-        edit:ClearAllPoints();edit:SetPoint("RIGHT",profile,"LEFT",-8,0)
-        profile.label:ClearAllPoints();profile.label:SetPoint("LEFT",10,0)
-        profile.label:SetWidth(42);profile.label:SetJustifyH("LEFT");profile.label:SetWordWrap(false)
-        profile.profileName=W.Label(profile,self.ProfileManager.activeName,nil,0,0,68,T.primary)
-        profile.profileName:ClearAllPoints();profile.profileName:SetPoint("LEFT",56,0);profile.profileName:SetPoint("RIGHT",-8,0)
-        profile.profileName:SetWordWrap(false)
-        function profile:LayoutProfileText()
-            local function Measure(label)
-                local value=label:GetStringWidth()
-                if (issecretvalue and issecretvalue(value)) or type(value)~="number" or value~=value or value<=0 or value==math.huge then
-                    return #(label:GetText() or "")*7
-                end
-                return math.ceil(value)
-            end
-            local prefix=Measure(self.label)
-            local name=math.min(Measure(self.profileName),math.max(32,196-28-prefix-8))
-            local group=prefix+8+name
-            local width=math.max(132,math.min(196,group+28))
-            self:SetWidth(width)
-            self.label:ClearAllPoints();self.label:SetPoint("LEFT",(width-group)/2,0);self.label:SetWidth(prefix)
-            self.profileName:ClearAllPoints();self.profileName:SetPoint("LEFT",self.label,"RIGHT",8,0);self.profileName:SetWidth(name)
-            controls:SetWidth(width+312)
-            window.headerReserved=math.max(window.headerReserved or 720,controls:GetWidth()+232)
-        end
-        self.Media:RegisterFontListener(profile,function(owner) owner:LayoutProfileText() end)
-        local refresh=profile.RefreshAppearance
-        function profile:RefreshAppearance()
-            refresh(self)
-            self.label:SetTextColor(unpack(T.secondary));self.label:SetShadowColor(0,0,0,0);self.label:SetShadowOffset(0,0)
-            self.profileName:SetTextColor(unpack(self:IsEnabled() and T.primary or T.unavailable))
-            self.profileName:SetShadowColor(T.primary[1],T.primary[2],T.primary[3],self:IsEnabled() and self.hovered and 0.55 or 0)
-            self.profileName:SetShadowOffset(0,-1)
-        end
-        profile:RefreshAppearance()
-        profile:LayoutProfileText()
-        profile:SetScript("OnClick",function()
-            self:SelectConfigPage("globalSettings")
-            window.pages.globalSettings:SelectSectionTab(2)
-        end)
-        window.profileButton=profile
-    end
+    -- editButton names the same control for older consumers.
+    window.layoutButton, window.editButton, window.closeButton = layout, layout, close
 
     local sidebar = CreateFrame("Frame", nil, window)
     sidebar:SetPoint("TOPLEFT", 12 + edge, -HEADER_HEIGHT - 4)
     sidebar:SetPoint("BOTTOMLEFT", 12 + edge, 12 + edge)
     sidebar:SetWidth(sidebarWidth - 22 - edge)
+    window.sidebar = sidebar
+    -- Settings is pinned below the module list, under a hairline.
+    local settingsButton = W.Button(sidebar, "Settings", sidebarWidth - 22 - edge, NAV_ROW_HEIGHT, "tab")
+    settingsButton:SetPoint("BOTTOMLEFT"); settingsButton:SetPoint("BOTTOMRIGHT")
+    local footerLine = W.Fill(sidebar, T.line, "ARTWORK")
+    footerLine:ClearAllPoints(); footerLine:SetPoint("BOTTOMLEFT", 0, NAV_ROW_HEIGHT + 8)
+    footerLine:SetPoint("BOTTOMRIGHT", 0, NAV_ROW_HEIGHT + 8); footerLine:SetHeight(1)
+    window.sidebarFooterLine = footerLine
     local navigation = W.Page(sidebar, 0)
     navigation:ClearAllPoints()
-    navigation:SetPoint("TOPLEFT", 0, 0)
-    navigation:SetPoint("BOTTOMRIGHT")
+    navigation:SetPoint("TOPLEFT", 0, -40)
+    navigation:SetPoint("BOTTOMRIGHT", settingsButton, "TOPRIGHT", 0, 16)
+    -- A narrow gutter for the thin scroll thumb leaves room for full titles.
+    navigation.scroll:ClearAllPoints()
+    navigation.scroll:SetPoint("TOPLEFT"); navigation.scroll:SetPoint("BOTTOMRIGHT", -10, 0)
+    navigation.scrollbar:ClearAllPoints()
+    navigation.scrollbar:SetPoint("TOPRIGHT", 0, -2); navigation.scrollbar:SetPoint("BOTTOMRIGHT", 0, 2)
 
     local body = CreateFrame("Frame", nil, window)
     local contentGap=24
-    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", contentGap, -16)
+    body:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", contentGap, -12)
     window.contentLeft=sidebarWidth-10+contentGap
     body:SetPoint("BOTTOMRIGHT", -28, 16 + edge)
     if art then
@@ -343,48 +339,56 @@ function addon:CreateConfig()
         window.bodyDetail=W.ModePageDetail(body,-12)
         window.bodySheen=W.ModeSheen(body,-12)
     end
-    local moduleHeader = W.ModuleHeader(body)
+    local moduleHeader = PageHeader(body)
     window.moduleHeader = moduleHeader
+    local banner = ReloadBanner(body)
+    banner:SetPoint("TOPLEFT", 0, -W.PAGE_HEADER_HEIGHT)
+    banner:SetPoint("TOPRIGHT", 0, -W.PAGE_HEADER_HEIGHT)
+    window.reloadBanner = banner
     local pageHost = CreateFrame("Frame", nil, body)
-    pageHost:SetPoint("TOPLEFT", 0, -W.PAGE_HEADER_HEIGHT)
-    pageHost:SetPoint("BOTTOMRIGHT")
     local pages, navigationButtons = {}, {}
-    local selected = "dashboard"
-    local RefreshSidebar
-    -- Session-local disclosure state: categories start expanded on reload.
-    local collapsed = {}
-    window.collapsedCategories = collapsed
+    local selected
+    local function AnchorPageHost()
+        local top = W.PAGE_HEADER_HEIGHT + (banner:IsShown() and BANNER_HEIGHT + BANNER_GAP or 0)
+        pageHost:ClearAllPoints()
+        pageHost:SetPoint("TOPLEFT", 0, -top)
+        pageHost:SetPoint("BOTTOMRIGHT", 0, 0)
+    end
+    AnchorPageHost()
+    banner.reloadButton:SetScript("OnClick", function()
+        local ok, reason = self.ReloadManager:Reload()
+        if not ok then banner.reason:SetText(reason) end
+        print("Play The Game Tools: " .. reason)
+    end)
+    function self:RefreshReloadBanner()
+        local R = self.ReloadManager
+        local pending = R:IsPending()
+        if pending then banner.reason:SetText(R:GetReason()) end
+        if pending == banner:IsShown() then return end
+        banner:SetShown(pending)
+        AnchorPageHost()
+        local current = selected and pages[selected]
+        if current and current:IsShown() then current:Layout() end
+    end
 
     function self:RefreshConfig()
-        if window.profileButton then
-            window.profileButton.profileName:SetText(self.ProfileManager.activeName)
-            window.profileButton:LayoutProfileText()
-        end
         moduleHeader:Refresh()
-        preview:SetSelected(self.previewMode)
-        edit:SetSelected(self.editMode)
+        layout:SetSelected(self.editMode)
         self.ReloadManager:Refresh()
         for id, button in pairs(navigationButtons) do
-            local selectedModule = self.modules[selected]
-            button:SetSelected(id == selected or (self.categories[id] ~= nil and selectedModule and selectedModule.category == id) or false)
-            if button.status then
-                local enabled = self.modules[id].enabled
-                button.status:SetText(enabled and "On" or "Off")
-                button.status:SetTextColor(unpack(W.StateColor(enabled)))
-            end
+            button:SetSelected(id == selected)
             if button.RefreshModuleState then button:RefreshModuleState() end
         end
         -- Only the visible page refreshes; a cached page refreshes when it is
         -- selected or the window reopens (both run this function again).
-        local current = pages[selected]
+        local current = selected and pages[selected]
         if current and window:IsShown() then current:Refresh() end
     end
     function self:EnsureConfigPage(id)
         if not pages[id] then
             local module = self.modules[id]
             pageHost.ptgMediaScope=module and id or nil
-            if id == "dashboard" then pages[id] = Dashboard(pageHost)
-            elseif id == "globalSettings" then pages[id] = self:CreateGlobalSettingsPage(pageHost)
+            if id == "globalSettings" then pages[id] = self:CreateGlobalSettingsPage(pageHost)
             elseif module.CreateConfigPage then pages[id] = module:CreateConfigPage(pageHost)
             else pages[id] = GenericPage(pageHost, module) end
             if W.ApplyModeModuleLayout and module then W.ApplyModeModuleLayout(pages[id],id) end
@@ -394,36 +398,33 @@ function addon:CreateConfig()
         end
         return pages[id]
     end
-    local function Select(id, preserveDisclosure)
-        if addon.FrameAnchors and selected~=id then addon.FrameAnchors:Stop() end
-        if selected~=id and addon.PreviewStates then addon.PreviewStates:Stop(selected) end
+    -- Keep the selected sidebar row inside the list's scroll view.
+    local function RevealNavigation(id)
+        local button = navigationButtons[id]
+        if not button or not button.listed then return end
+        local offset = button.offset or 0
+        local value = navigation.scrollbar:GetValue()
+        local visible = navigation.scroll:GetHeight()
+        if offset < value then navigation.scrollbar:SetValue(offset)
+        elseif offset + button:GetHeight() > value + visible then navigation.scrollbar:SetValue(offset + button:GetHeight() - visible) end
+    end
+    local function Select(id)
+        -- Categories are module data only; a category id opens its first module.
         local category = self.categories[id]
-        if category then id = category.selectedModule or category.modules[1] end
+        if category then id = category.modules[1] end
+        if addon.FrameAnchors and selected~=id then addon.FrameAnchors:Stop() end
+        if selected and selected~=id and addon.PreviewStates then addon.PreviewStates:Stop(selected) end
         local module = self.modules[id]
-        category = module and module.category and self.categories[module.category] or nil
-        if category then category.selectedModule = id end
         if self.CloseSettingsSearch then self:CloseSettingsSearch() end
         if selected ~= id and self.CloseTimerColorPicker then self:CloseTimerColorPicker() end
         if selected ~= id and self.CloseFontDropdown then self:CloseFontDropdown() end
-        if selected ~= id then self:CloseModulePreview() end
+        if selected ~= id and self.CloseModulePreview then self:CloseModulePreview() end
         for _, page in pairs(pages) do page:Hide() end
         selected = id
-        self:UpdateConfigTitle(id)
         window.selectedPage = id
-        window.selectedCategory = category and category.id or nil
-        if category and not preserveDisclosure then collapsed[category.id] = nil end
-        if RefreshSidebar then RefreshSidebar(category, id) end
-        moduleHeader:ClearAllPoints()
-        moduleHeader:SetPoint("TOPLEFT", 0, 0)
-        moduleHeader:SetPoint("TOPRIGHT", 0, 0)
-        pageHost:ClearAllPoints()
-        pageHost:SetPoint("TOPLEFT", 0, -W.PAGE_HEADER_HEIGHT)
-        pageHost:SetPoint("BOTTOMRIGHT", 0, 0)
-        moduleHeader:SetModule(module)
-        if id=="globalSettings" then
-            moduleHeader.title:SetText("Global Settings")
-            moduleHeader.description:SetText("Shared appearance defaults for the entire addon suite.")
-        end
+        AnchorPageHost()
+        if id == "globalSettings" then moduleHeader:SetModule(nil, self.SETTINGS_PAGE)
+        else moduleHeader:SetModule(module) end
         self:EnsureConfigPage(id)
         if not pages[id].UpdatePreviewLayout then
             pages[id]:ClearAllPoints();pages[id]:SetPoint("TOPLEFT");pages[id]:SetPoint("BOTTOMRIGHT")
@@ -432,162 +433,105 @@ function addon:CreateConfig()
         pages[id]:Show()
         pages[id]:Layout()
         self:RefreshConfig()
+        RevealNavigation(id)
     end
     function self:SelectConfigPage(id)
-        assert(id == "dashboard" or id == "globalSettings" or self.modules[id] or (self.categories[id] and #self.categories[id].modules > 0), "Play The Game Tools: unknown settings page.")
+        assert(id == "globalSettings" or self.modules[id] or (self.categories[id] and #self.categories[id].modules > 0), "Play The Game Tools: unknown settings page.")
         Select(id)
     end
-    local function AddNavigation(id, label, developer)
-        local isHeading = self.categories[id] ~= nil
-        local button = W.Button(developer and sidebar or navigation.content, label, developer and sidebarWidth - 22 - edge or 184, 34, isHeading and "categoryHeading" or "tab")
-        button.categoryID = isHeading and id or nil
-        if developer then button:SetPoint("BOTTOMLEFT", sidebar, "BOTTOMLEFT", 0, 0)
-        else button:SetPoint("TOPLEFT", 0, -navigation.cursor) end
+
+    -- Shrinks the font only when a title would not fit on one line. Measures a
+    -- separate unbounded label so the visible label's anchors stay intact.
+    local probe = navigation:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    probe:Hide(); probe:SetWidth(0); probe:SetWordWrap(false)
+    navigation.fontProbe = probe
+    local function FitText(button)
+        addon.Media:BindInterfaceFont(probe, GameFontHighlight, T.fontSize.body)
+        probe:SetText(button.label:GetText())
+        local measured = probe:GetStringWidth()
+        local available = math.max(1, button:GetWidth() - button.textReserve)
+        local size = T.fontSize.body
+        if not (issecretvalue and issecretvalue(measured)) and type(measured) == "number" and measured > available and measured < math.huge then
+            size = math.max(1, math.floor(size * available / measured * 4) / 4)
+        end
+        addon.Media:BindInterfaceFont(button.label, GameFontHighlight, size)
+        if button.selectionEdge then W.AlignTextLine(button, button.selectionEdge) end
+    end
+    local function NavigationRow(parent, id, title, width)
+        local button = W.Button(parent, title, width, NAV_ROW_HEIGHT, "tab")
+        button.modeLeftAligned = true
         button.label:ClearAllPoints()
-        button.label:SetPoint("LEFT", 12, 0)
-        button.label:SetPoint("RIGHT", -54, 0)
-        button.label:SetJustifyH("LEFT")
-        do
-            button.modeLeftAligned=true
-            button.label:ClearAllPoints()
-            button.label:SetPoint("LEFT", 10, 0)
-            button.label:SetPoint("RIGHT", -10, 0)
-            button.label:SetWordWrap(false)
-            addon.Media:BindInterfaceFont(button.label, GameFontHighlight, isHeading and T.fontSize.group or T.fontSize.body, nil, isHeading and "heading" or nil)
-            if isHeading then
-                button:SetLabelColor(T.heading)
-                button.gapBefore = 10
-            end
-        end
-        button:SetScript("OnClick", function()
-            if isHeading then
-                collapsed[id] = not collapsed[id]
-                RefreshSidebar(self.categories[window.selectedCategory], selected)
-            else Select(id) end
-        end)
-        if self.modules[id] and not self.modules[id].developer then
-            button.status = W.Label(button, "", nil, 0, 0, 24, T.muted)
-            button.status:ClearAllPoints()
-            button.status:SetPoint("RIGHT", -10, 0)
-            button.status:SetJustifyH("RIGHT")
-            addon.Media:BindInterfaceFont(button.status, GameFontHighlight, T.fontSize.small)
-        end
-        navigationButtons[id] = button
-        if not developer then
-            navigation.rows[#navigation.rows + 1] = button
-            navigation.cursor = navigation.cursor + 36
-        else
-            navigation:SetPoint("BOTTOMRIGHT", button, "TOPRIGHT", 0, 12)
-            local line = W.Fill(sidebar, T.line, "ARTWORK")
-            line:ClearAllPoints(); line:SetPoint("BOTTOMLEFT", 0, 40); line:SetPoint("BOTTOMRIGHT", 0, 40); line:SetHeight(1)
-        end
-    end
-    local sidebarRoots = {}
-    AddNavigation("dashboard", "Dashboard")
-    AddNavigation("globalSettings", "Global Settings")
-    for _, id in ipairs(self.categoryOrder) do
-        if #self.categories[id].modules > 0 then AddNavigation(id, self.categories[id].title) end
-    end
-    for _, id in ipairs(self.moduleOrder) do
-        if not self.modules[id].developer and not self.modules[id].category then AddNavigation(id, self.modules[id].title) end
-    end
-    for _, id in ipairs(self.moduleOrder) do
-        if self.modules[id].developer then AddNavigation(id, self.modules[id].title, true) end
-    end
-    for _,row in ipairs(navigation.rows) do sidebarRoots[#sidebarRoots+1]=row end
-    local nested = {}
-    window.sidebarModuleButtons = nested
-    local function NestedButton(id)
-        if nested[id] then return nested[id] end
-        local module=addon.modules[id]
-        local title = module.tabTitle or module.title
-        local button=W.Button(navigation.content,"· " .. title,184,32,"tab")
-        button.modeLeftAligned=true
-        button.atelierNested=true
-        button.label:ClearAllPoints()
-        button.label:SetPoint("LEFT",16,0)
-        if module.classIcon then
-            button.classIcon=button:CreateTexture(nil,"ARTWORK");button.classIcon:SetPoint("LEFT",24,0);button.classIcon:SetSize(18,18);button.classIcon:SetTexture(module.classIcon)
-            button.label:ClearAllPoints();button.label:SetPoint("LEFT",48,0)
-        end
-        button.label:SetPoint("RIGHT",-10,0)
+        button.label:SetPoint("LEFT", 10, 0)
         button.label:SetJustifyH("LEFT")
         button.label:SetWordWrap(false)
-        addon.Media:BindInterfaceFont(button.label,GameFontHighlight,T.fontSize.body)
-        if module.classIcon then
-            -- Keep class identity while giving every child the same dot prefix.
-            button.classIcon:ClearAllPoints();button.classIcon:SetPoint("RIGHT",-8,0)
-            button.label:ClearAllPoints();button.label:SetPoint("LEFT",16,0);button.label:SetPoint("RIGHT",-32,0)
-        end
-        do
-            -- Measure against a separate unbounded label: the visible label's
-            -- anchors must stay intact, and truncation must not hide its width.
-            local probe=navigation.fontProbe
-            if not probe then
-                probe=navigation:CreateFontString(nil,"OVERLAY","GameFontHighlight")
-                probe:Hide();probe:SetWidth(0);probe:SetWordWrap(false);navigation.fontProbe=probe
-            end
-            function button:FitNavigationText()
-                addon.Media:BindInterfaceFont(probe,GameFontHighlight,T.fontSize.body)
-                probe:SetText(self.label:GetText())
-                local measured=probe:GetStringWidth()
-                local available=math.max(1,self:GetWidth()-(module.classIcon and 48 or 26))
-                local size=T.fontSize.body
-                if not (issecretvalue and issecretvalue(measured)) and type(measured)=="number" and measured>available and measured<math.huge then
-                    size=math.max(1,math.floor(size*available/measured*4)/4)
-                end
-                addon.Media:BindInterfaceFont(self.label,GameFontHighlight,size)
-                W.AlignTextLine(self,self.selectionEdge)
-            end
-            button:HookScript("OnSizeChanged",function(owner) owner:FitNavigationText() end)
-            addon.Media:RegisterFontListener(button,function(owner) owner:FitNavigationText() end)
-        end
-        button:SetScript("OnClick",function() Select(id) end)
-        nested[id]=button
+        button.textReserve = 20
+        button:SetScript("OnClick", function() Select(id) end)
+        button:HookScript("OnSizeChanged", FitText)
+        addon.Media:RegisterFontListener(button, FitText)
+        navigationButtons[id] = button
         return button
     end
-    RefreshSidebar=function(category,id)
-        for _,button in pairs(nested) do button:Hide() end
-        navigation.rows={}
-        for _,root in ipairs(sidebarRoots) do
-            navigation.rows[#navigation.rows+1]=root
-            local group = root.categoryID and self.categories[root.categoryID] or nil
-            local expanded = group and not collapsed[group.id]
-            if group then root.expanded = expanded == true end
-            if expanded then
-                for _,moduleID in ipairs(group.modules) do
-                    local button=NestedButton(moduleID)
-                    button:SetSelected(moduleID==id)
-                    navigation.rows[#navigation.rows+1]=button
-                end
-            end
+    local function ModuleRow(id)
+        local module = self.modules[id]
+        local button = NavigationRow(navigation.content, id, module.title, sidebarWidth - 32 - edge)
+        button.listed = true
+        -- A small dot carries the module's on/off state: accent on, dim off.
+        local dot = button:CreateTexture(nil, "OVERLAY")
+        dot:SetSize(8, 8); dot:SetPoint("RIGHT", -10, 0)
+        dot.modeAsset = "ModeThumb"
+        button.stateDot = dot
+        local right = -26
+        if module.classIcon then
+            button.classIcon = button:CreateTexture(nil, "ARTWORK")
+            button.classIcon:SetSize(14, 14); button.classIcon:SetPoint("RIGHT", dot, "LEFT", -6, 0)
+            button.classIcon:SetTexture(module.classIcon)
+            right = -46
         end
-        navigation:Layout()
-        for _,button in pairs(nested) do if button:IsShown() then button:FitNavigationText() end end
-        -- Reveal the clicked/search-routed module in the same existing scroll view.
-        local button=nested[id]
-        if button and category and not collapsed[category.id] then
-            local offset=button.offset or 0
-            local value=navigation.scrollbar:GetValue()
-            local visible=navigation.scroll:GetHeight()
-            if offset<value then navigation.scrollbar:SetValue(offset)
-            elseif offset+button:GetHeight()>value+visible then navigation.scrollbar:SetValue(offset+button:GetHeight()-visible) end
+        button.label:SetPoint("RIGHT", right, 0)
+        button.textReserve = 10 - right
+        function button:RefreshModuleState()
+            self.moduleOn = module.enabled == true
+            W.Paint(dot, self.moduleOn and T.primary or T.lineStrong)
         end
+        button:RefreshModuleState()
+        return button
     end
+    for _, id in ipairs(self:ListedConfigPages()) do
+        local button = ModuleRow(id)
+        button:SetPoint("TOPLEFT", 0, -navigation.cursor)
+        button.gapAfter = NAV_ROW_STEP - NAV_ROW_HEIGHT
+        navigation.rows[#navigation.rows + 1] = button
+        navigation.cursor = navigation.cursor + NAV_ROW_STEP
+    end
+    navigationButtons.globalSettings = settingsButton
+    settingsButton.modeLeftAligned = true
+    settingsButton.label:ClearAllPoints()
+    settingsButton.label:SetPoint("LEFT", 10, 0); settingsButton.label:SetPoint("RIGHT", -10, 0)
+    settingsButton.label:SetJustifyH("LEFT")
+    settingsButton.label:SetWordWrap(false)
+    addon.Media:BindInterfaceFont(settingsButton.label, GameFontHighlight, T.fontSize.body)
+    settingsButton:SetScript("OnClick", function() Select("globalSettings") end)
     navigation:Finish()
+    for _, button in pairs(navigationButtons) do if button.textReserve then FitText(button) end end
     window.navigation = navigation
+    window.settingsButton = settingsButton
+    -- Module rows by id; the list itself is navigation.rows.
+    window.sidebarModuleButtons = {}
+    for id, button in pairs(navigationButtons) do if button.listed then window.sidebarModuleButtons[id] = button end end
     window.navigationButtons, window.pages = navigationButtons, pages
-    self:CreateSettingsSearch(sidebar)
+    self:CreateSettingsSearch(sidebar, navigation)
     window:RegisterEvent("UI_SCALE_CHANGED")
     window:RegisterEvent("DISPLAY_SIZE_CHANGED")
     window:SetScript("OnEvent", function()
         self:FinishWindowInteraction(); self:UpdateWindowBounds()
-        self:UpdateModulePreviewBounds()
+        if self.UpdateModulePreviewBounds then self:UpdateModulePreviewBounds() end
         if self.EditMode then self.EditMode:ViewportChanged() end
     end)
     window:SetScript("OnShow", function()
         if self.ReloadManager.prompt then self.ReloadManager.prompt:Hide() end
-        self:UpdateWindowBounds(); Select(selected, true)
+        self:UpdateWindowBounds()
+        -- The last page used this session, or the first module on first open.
+        Select(selected or self:ListedConfigPages()[1] or "globalSettings")
         -- Fills in labels left blank by a font still loading on a fresh launch.
         addon.Media:ScheduleTextRedraw()
     end)
@@ -597,7 +541,7 @@ function addon:CreateConfig()
         self:FinishWindowInteraction()
         if self.CloseTimerColorPicker then self:CloseTimerColorPicker() end
         if self.CloseFontDropdown then self:CloseFontDropdown() end
-        self:CloseModulePreview()
+        if self.CloseModulePreview then self:CloseModulePreview() end
         if self.CloseSettingsSearch then self:CloseSettingsSearch() end
         if window.editSuspended then return end
         self:ResetDisplayModes()
@@ -606,6 +550,20 @@ function addon:CreateConfig()
     -- Opening settings closes the addon's other windows; Escape closes it.
     self.Dialogs:Register(window, { group = "settings" })
     self:UpdateWindowBounds(true)
+end
+
+-- Developer Mode is not in the sidebar; /ptg dev opens its page.
+function addon:OpenDeveloperPage()
+    local id
+    for _, moduleID in ipairs(self.moduleOrder) do
+        if self.modules[moduleID].developer then id = moduleID; break end
+    end
+    if not id then return false end
+    if self.editMode then self:SetEditMode(false) end
+    if not self.configWindow then self:CreateConfig() end
+    self.configWindow:Show()
+    self:SelectConfigPage(id)
+    return true
 end
 
 function addon:NotifyConfigClosed()

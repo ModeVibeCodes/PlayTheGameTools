@@ -1,7 +1,8 @@
 local _, addon = ...
 
--- Shared media service. Global Font styles this addon's own text only; Blizzard
--- FontObjects and other addons' fonts are never rewritten.
+-- Shared media service. The interface theme decides the font, surfaces and
+-- edges of this addon's own windows and displays; Blizzard FontObjects and
+-- other addons' fonts are never rewritten.
 local M = {
     gameFont = GameFontHighlight:GetFont(), chatFont = ChatFontNormal:GetFont(),
     regions = setmetatable({}, { __mode = "k" }),
@@ -178,17 +179,18 @@ function M:RefreshBorders()
     for owner, callback in pairs(self.borderListeners) do callback(owner) end
 end
 
-function M:GetInterfaceFont(fallbackPath, scope, weight)
-    local theme = addon.InterfaceTheme
-    local selection = self:GlobalStyle("font", scope)
-    if theme and theme.id == "mode" and (selection == nil or selection == "game" or selection == "media:PTG Lato") then
+-- Each predefined theme has one interface font: mode uses the bundled Lato,
+-- Modern and Blizzard the stock game font. Theme previews ask for any theme.
+function M:ThemeFont(themeID, weight)
+    if themeID == "mode" then
         return "Interface\\AddOns\\PlayTheGameTools\\Media\\Fonts\\Lato-" .. (weight == "heading" and "Bold" or "Regular") .. ".ttf"
     end
-    local inherited=self:ResolveFont(self:GlobalStyle("font",scope))
-    if inherited then return inherited end
-    -- The Blizzard theme keeps the stock game fonts its artwork is drawn for.
-    if theme and theme.blizzardArt then return fallbackPath or GameFontHighlight:GetFont() end
-    return self:GetFont("Expressway") or fallbackPath or GameFontHighlight:GetFont()
+    return self.gameFont
+end
+
+function M:GetInterfaceFont(fallbackPath, scope, weight)
+    local theme = addon.InterfaceTheme
+    return self:ThemeFont(theme and theme.id, weight) or fallbackPath or GameFontHighlight:GetFont()
 end
 
 local function InCombat()
@@ -250,11 +252,9 @@ function M:GetGlobalFont()
     local name=self.library and self.library:GetGlobal("font")
     if type(name)=="string" then return self:GetFont(name) end
 end
-function M:GetDisplayFont(appearance, respectGlobal, scope)
-    if (appearance.fontMedia or "")=="" and appearance.font~="chat" then
-        local inherited=self:ResolveFont(self:GlobalStyle("font", scope or appearance))
-        if inherited then return inherited end
-    end
+-- A display without a font choice of its own uses the game font.
+function M:GetDisplayFont(appearance, respectGlobal)
+    if (appearance.fontMedia or "")=="" and appearance.font~="chat" then return self.gameFont end
     return (respectGlobal and self:GetGlobalFont()) or self:GetFont(appearance.fontMedia or "")
         or (appearance.font == "chat" and self.chatFont or self.gameFont)
 end
@@ -363,26 +363,23 @@ function M:RefreshSounds()
 end
 
 
--- Addon-local defaults. Never use LSM:SetGlobal to change other addons' media.
--- Local custom media wins; old game/flat defaults inherit without rewriting them.
+-- Never use LSM:SetGlobal to change other addons' media.
 function M:FrameScope(frame)
     while frame do
         if frame.ptgMediaScope then return frame.ptgMediaScope end
         frame=frame.GetParent and frame:GetParent()
     end
 end
+-- Themes are predefined, so the addon's own windows and displays share one
+-- built-in font, surface and edge. Saved globalMedia choices stay untouched in
+-- SavedVariables and profile strings, but nothing reads them any more.
+local BUILTIN_STYLE = { font = "game", texture = "default", border = "thin" }
 function M:GlobalStyle(kind)
-    local db=addon.db and addon.db.globalMedia
-    return db and db[kind]
+    return BUILTIN_STYLE[kind]
 end
 
-function M:ResolveFont(key)
-    if key=="game" then return self.gameFont end
-    if key=="chat" then return self.chatFont end
-    if type(key)=="string" and key:sub(1,6)=="media:" then return self:GetFont(key:sub(7)) end
-end
 function M:GetSurfaceTexture(scope, key)
-    key=key or self:GlobalStyle("texture",scope) or "default"
+    key=key or self:GlobalStyle("texture") or "default"
     local kind,name=key:match("^([^:]+):(.+)$")
     kind=kind=="background" and "background" or "statusbar"
     if name and self.library then
@@ -392,20 +389,6 @@ function M:GetSurfaceTexture(scope, key)
     end
     return self.defaultStatusBar
 end
-function M:GetTextures()
-    local choices={{key="default",label="Flat"}}
-    if self.library then
-        for _,kind in ipairs({"statusbar","background"}) do
-            local entries=self.library:HashTable(kind) or {}
-            for _,name in ipairs(self.library:List(kind) or {}) do
-                if type(entries[name])=="string" and entries[name]~="" then
-                    choices[#choices+1]={key=(kind=="statusbar" and "media:" or "background:")..name,label=self:MediaLabel(name)}
-                end
-            end
-        end
-    end
-    return choices
-end
 function M:PaintSurface(texture,color,alpha,scope)
     scope=scope or self:FrameScope(texture)
     if texture:SetTexture(self:GetSurfaceTexture(scope))==false then texture:SetTexture(self.defaultStatusBar) end
@@ -414,31 +397,17 @@ end
 function M:ApplyBackdrop(frame, backdrop, scope, preserveBackground)
     scope=scope or self:FrameScope(frame)
     local copy={};for k,v in pairs(backdrop) do copy[k]=v end
-    local border=self:GetBorder(self:GlobalStyle("border",scope) or "thin") or {kind="thin",edgeSize=1}
+    local border=self:GetBorder(self:GlobalStyle("border")) or {kind="thin",edgeSize=1}
     copy.edgeFile=border.path or self.defaultStatusBar
     if border.kind=="none" then copy.edgeFile=nil end
     local thickness=backdrop.edgeSize
     if thickness==nil or thickness==1 then thickness=border.edgeSize or 1 end
     copy.edgeSize=math.max(1,math.min(thickness,12))
     if copy.insets then copy.insets={left=1,right=1,top=1,bottom=1} end
-    -- Settings popups keep native theme artwork; displays inherit Global Texture.
+    -- Settings popups keep native theme artwork; displays take the built-in surface.
     if copy.bgFile and not preserveBackground then copy.bgFile=self:GetSurfaceTexture(scope) end
     frame:SetBackdrop(copy)
 end
-function M:SetGlobalStyle(kind,value,scope)
-    if InCombatLockdown() or UnitAffectingCombat("player") then return false end
-    if kind~="font" and kind~="texture" and kind~="border" then return false end
-    if scope then return false end
-    local choices=kind=="font" and self:GetFonts() or kind=="border" and self:GetBorders() or self:GetTextures()
-    local valid=false
-    for _,choice in ipairs(choices) do if choice.key==value then valid=true end end
-    if not valid then return false end
-    local db=addon.db.globalMedia
-    db[kind]=value
-    addon.ReloadManager:Request("globalMedia","Apply Global Settings media changes.")
-    return true
-end
-
 function M:RegisterBundledMedia()
     local library=self.library
     if not library or type(library.Register)~="function" then return end

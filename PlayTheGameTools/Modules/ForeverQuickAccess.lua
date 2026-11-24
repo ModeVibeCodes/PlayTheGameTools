@@ -1,7 +1,8 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local D=addon.ForeverQuickAccessData
-local M={title="Quick Access Bars",category="qualityOfLife",defaultEnabled=false,
+local M={title="Profession & Food Bars",category="qualityOfLife",defaultEnabled=false,
+    searchAliases={"quick access bars","profession bar","food bar"},
     configDescription="Movable profession shortcuts and an out-of-combat food bar."}
 addon.ForeverQuickAccess=M
 addon:RegisterModule("foreverQuickAccess",M)
@@ -64,6 +65,7 @@ function M:RegisterPosition()
         label="Profession Bar",defaultX=0,defaultY=-180,
         canDrag=function() return self.active==true end,
         onHighlight=function() self:UpdateVisibility() end,
+        onStyleChanged=function() self:Render() end,
         onRegistered=function() self:Render();addon.PositionManager:RefreshSelection() end})
     if ok then element.editMode=self.active and self.db.showProfessionBar and ((self.visibleCount or 0)>0 or self.editing==true) or false end
 end
@@ -94,7 +96,9 @@ function M:CreateBar()
         button.label=button:CreateFontString(nil,"OVERLAY","GameFontHighlight")
         button.label:SetPoint("TOP",button,"BOTTOM",0,-3)
         button:SetScript("OnClick",function()
-            if not self.editing and button.profession then self:OpenProfession(button.profession.id) end
+            -- In Layout a click opens the bar's Style card instead.
+            if self.editing then addon.PositionManager:SelectElement(ELEMENT)
+            elseif button.profession then self:OpenProfession(button.profession.id) end
         end)
         button:SetScript("OnEnter",function()
             enter()
@@ -113,7 +117,8 @@ end
 function M:Render()
     if not self.active then return end
     self:CreateBar()
-    local f,db=self.bar,self.db
+    -- Layout's Style card: Text size scales the names, Background hides the fill and border.
+    local f,db=self.bar,addon.PositionManager:StyleView(ELEMENT,self.db,{text={"fontSize"},background={"backgroundOpacity","borderOpacity"}})
     local visible={}
     for _,p in ipairs(self.professions) do if not db.hidden[p.id] then visible[#visible+1]=p end end
     self.visibleCount=#visible

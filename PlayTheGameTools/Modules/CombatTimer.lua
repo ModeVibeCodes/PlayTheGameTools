@@ -31,9 +31,7 @@ end
 function timer:SetAppearance(key, value)
     local layout = key == "font" or key == "fontMedia" or key == "fontSize" or key == "outline" or key == "scale"
     if layout and not self:CanConfigure() then return false end
-    if key == "format" then
-        if value ~= "plain" and value ~= "square" and value ~= "round" then return false end
-    elseif key == "font" then
+    if key == "font" then
         if value ~= "game" and value ~= "chat" then return false end
         self.db.appearance.fontMedia = ""
     elseif key == "fontMedia" then
@@ -63,8 +61,11 @@ function timer:SetAppearance(key, value)
     return true
 end
 
+-- Layout's Style card: Text size scales the timer text, Background hides its fill and border.
+local STYLE_KEYS = { text = { "fontSize" }, background = { "backgroundOpacity" } }
+
 function timer:ApplyAppearance(layout)
-    local a = self.db.appearance
+    local a = addon.PositionManager:StyleView(self.positionElementId, self.db.appearance, STYLE_KEYS)
     addon.CombatTimerDisplay.Apply(self, a, layout)
     if layout ~= false then
         addon.PositionManager:ApplyPosition(self.positionElementId)
@@ -83,7 +84,7 @@ function timer:UpdatePresentationLayer()
 end
 
 function timer:SetPreviewMode(show)
-    if InCombat() or addon.editMode or addon.previewMode then self.testing=false end
+    if InCombat() or addon.editMode then self.testing=false end
     self.preview = self.active and (show or self.testing) or false
     self.lastSecond = nil
     self:UpdatePresentationLayer()
@@ -93,10 +94,10 @@ end
 
 -- Reuse the existing presentation sample on the owned display; clock logic stays unchanged.
 function timer:SetTestDisplay(enabled)
-    if enabled and (not self.active or InCombat() or addon.previewMode or addon.editMode or not addon.configWindow
+    if enabled and (not self.active or InCombat() or addon.editMode or not addon.configWindow
         or not addon.configWindow:IsShown() or addon.configWindow.selectedPage~=self.id) then return false end
     self.testing=enabled
-    self:SetPreviewMode(enabled or addon.previewMode)
+    self:SetPreviewMode(enabled or addon.editMode)
     if addon.RefreshModulePreviewLayout then addon:RefreshModulePreviewLayout() end
     return true
 end
@@ -154,7 +155,7 @@ function timer:UpdateText()
     local seconds = self.running and math.floor(math.max(0, GetTime() - self.startedAt)) or ((self.preview or self.editing) and 83 or 0)
     if (self.preview or self.editing or self.testing) and not self.running then seconds=addon.PreviewStates:Sample(self.id) or seconds end
     if seconds ~= self.lastSecond then
-        self.text:SetText(addon.CombatTimerDisplay.Format(seconds, self.db.appearance.format))
+        self.text:SetText(addon.CombatTimerDisplay.Format(seconds))
         self.lastSecond = seconds
     end
 end
@@ -249,6 +250,7 @@ function timer:OnInitialize()
         defaultPosition = { target = "screen", placement = "center", x = 0, y = -240 },
         canDrag = function() return self.active and self.placement end,
         onHighlight = function(_, selected, show) self:SetEditHighlight(selected, show) end,
+        onStyleChanged = function() self:ApplyAppearance() end,
     })
     assert(registered, "Play The Game Tools: Combat Timer position registration failed: " .. tostring(reason))
     self:ApplyAppearance()

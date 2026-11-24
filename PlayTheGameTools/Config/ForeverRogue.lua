@@ -178,6 +178,9 @@ function M:CreateConfigPage(parent)
     end
     page.settingsButtons=Buttons({{"Refresh Poisons",function() self:Refresh() end},{"Restore Dismissed",function() self:RestoreReminders() end},{"Dismiss Quick Access",function() self:DismissQuickAccess() end}})
     local status=Note("",52);page.poisonStatus=status
+    -- Shown only for a real message, never to repeat the module switch.
+    local function StatusText() return not self.isRogue and "Rogue characters only." or self.active and (self.lastMessage or self.status) or nil end
+    status:GetParent().row.visibleWhen=function() return StatusText()~=nil end
     page.refreshers[#page.refreshers+1]=function()
         local selected=self.byKey[self.db.quickApply];local family=selected and selected.family or D.FamilyForKey(self.db.quickApply)
         for i,b in ipairs(page.poisonGrid) do
@@ -194,7 +197,7 @@ function M:CreateConfigPage(parent)
         page.settingsButtons[2]:SetEnabled(self.active and (next(self.dismissed)~=nil or self.quickDismissed==true))
         page.settingsButtons[3]:SetEnabled(self.active and self.db.flyout and not self.quickDismissed and not self.editing and not self.previewing)
         page.displayButtons[1]:SetEnabled(self.db.watcher);page.displayButtons[2]:SetEnabled(self.db.flyout)
-        status:SetText(not self.isRogue and "Rogue characters only." or not self.active and "Enable Rogue Tools using the header switch." or (self.lastMessage or self.status or "Ready."))
+        status:SetText(StatusText() or "")
         page:Layout()
     end
     page:Finish();return page

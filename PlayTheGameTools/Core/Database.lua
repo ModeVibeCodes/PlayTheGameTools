@@ -43,8 +43,7 @@ if addon.Edition and addon.Edition.name == "Forever" then
         modules = { combatTimer = defaults.modules.combatTimer,
             foreverAutomation = { enabled = false, autoLoot = false,
                 autoAccept = true, autoTurnIn = true, bypassModifier = "shift",
-                sellJunk = true, sellGrayEquipment = false, repair = true, maxRepairCostPercent = 35,
-                autoGossip = true } }, window = { x = 0, y = 0, theme = "modern" } }
+                sellJunk = true, sellGrayEquipment = false, repair = true, maxRepairCostPercent = 35 } }, window = { x = 0, y = 0, theme = "modern" } }
 end
 
 defaults.globalMedia = {font = "game", texture = "default", border = "thin", overrides = {}}
