@@ -128,6 +128,14 @@ CM.module.active=campOn;camp:Refresh()
 local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
 for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
 assert(labels['Show Food Bar'] and not labels['Enable Food Bar'],'one Food Bar switch')
+-- Per-bar information switches: tooltips and names (real keys only).
+local QAm=addon.ForeverQuickAccess
+for label,target in pairs({['Show Tooltips']={QAm.db,'showTooltips'},['Show Profession Names']={QAm.db,'showNames'},
+ ['Food Tooltips']={addon.ForeverFoodBar.db,'showTooltips'},['Show Food Names']={addon.ForeverFoodBar.db,'showNames'}}) do
+ local cell=assert(labels[label],'missing switch '..label);local db,key=target[1],target[2];local was=db[key]
+ cell.button.scripts.OnClick();assert(db[key]==not was,label);cell.button.scripts.OnClick();assert(db[key]==was)
+end
+assert(labels['Reveal on Hover'] and not labels['Icons Per Row'],'hover reveal kept; columns has no control')
 F.db.enabled,F.db.shown=true,false;assert(not F:IsOn(),'old hidden bar reads off')
 assert(F:SetShown(true) and F.db.enabled and F.db.shown and F:IsOn())
 assert(F:SetShown(false) and not F.db.enabled and not F.db.shown and not F.active)
@@ -149,7 +157,7 @@ timer.scroll:SetWidth(1000);timer:Layout()
 assert(#timer.sections==1 and timer.sections[1].title=='Behavior' and timer.sections[1].header:IsShown(),'the Display section left with its styling rows; Behavior stays')
 assert(timer.sections[1].header.offset==0,'the first shown group starts the scroll')
 assert(not timer.fontSizeSlider and not timer.fontDropdown and (not timer.settingsColors or #timer.settingsColors==0),'no Combat Timer styling rows')
-for _,result in ipairs(addon:SearchSettings('Display')) do assert(not (result.module.id=='combatTimer' and result.kind=='section'),'no search hit for a heading that never shows') end
+for _,result in ipairs(addon:SearchSettings('Display')) do assert(not (result.module.id=='combatTimer' and result.kind=='section' and result.title=='Display'),'no search hit for the removed Display heading') end
 local clear=timer.scroll.ClearAllPoints
 function timer.scroll:ClearAllPoints() self.modeResizeCalls=(self.modeResizeCalls or 0)+1;timer:Layout();clear(self) end
 timer:UpdatePreviewLayout();assert(not timer.updatingPreview,'native viewport callbacks cannot recurse through the layout')

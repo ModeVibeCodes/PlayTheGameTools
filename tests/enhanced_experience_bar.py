@@ -155,6 +155,22 @@ assert(M.db.restedOverlayColor[1]==0.9 and M.db.questColor[2]==0.8,'overlay colo
 local p=addon.PositionManager:GetPosition(M.id);assert(p.x==125 and p.y==-210)
 SlashCmdList.PLAYTHEGAMETOOLS();addon:SelectConfigPage(M.id)
 assert(M.page and not M.page.resetPositionButton and not M.page.xPositionInput,'placement lives in Edit Mode')
+-- Information switches (v2 mockup "Show session progress" and the bar's pieces).
+local cells={}
+for _,grid in ipairs(M.page.toggleGrids) do for _,cell in ipairs(grid) do cells[cell.label:GetText()]=cell end end
+for label,key in pairs({['Show XP percent']='showXP',['Show XP amounts']='showValues',['Show rested XP']='showRested',
+ ['Show quest log XP']='showQuests',['Rested overlay']='showRestedOverlay',['Quest log overlay']='showQuestOverlay',
+ ['Show session progress']='showSession',['Show XP per hour']='showRate'}) do
+ local cell=assert(cells[label],'missing switch '..label);local was=M.db[key]
+ cell.button.scripts.OnClick();assert(M.db[key]==not was,label..' saves '..key)
+ cell.button.scripts.OnClick();assert(M.db[key]==was)
+end
+cells['Show XP per hour'].button.scripts.OnClick();cells['Show session progress'].button.scripts.OnClick()
+assert(not M.tick,'session ticker stops when both session switches are off')
+cells['Show XP per hour'].button.scripts.OnClick();cells['Show session progress'].button.scripts.OnClick()
+for _,label in ipairs({'Bar Text Vertical Offset','Bar Text Separator','Quest Log XP Format','Session Text Above Bar'}) do
+ for _,entry in ipairs(M.page.searchEntries) do assert(entry.label~=label,'layout/format keys have no control: '..label) end
+end
 ''')
 legacy, _ = load(before=SETUP)
 legacy.execute('''

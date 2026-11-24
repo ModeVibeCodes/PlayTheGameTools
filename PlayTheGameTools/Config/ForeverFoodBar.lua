@@ -31,5 +31,6 @@ function F:AddConfig(page)
         page:Layout()
     end
     -- Food bar styling lives in Layout (the Style card).
-    Toggle("Food Tooltips","showTooltips")
+    page:ToggleGrid({{label="Food Tooltips",get=function() return self.db.showTooltips end,set=function(v) self:SetOption("showTooltips",v) end},
+        {label="Show Food Names",get=function() return self.db.showNames end,set=function(v) self:SetOption("showNames",v) end}})
 end

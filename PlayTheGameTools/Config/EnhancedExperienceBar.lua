@@ -22,9 +22,15 @@ function M:CreateConfigPage(parent)
     page.searchEntries[#page.searchEntries].available = page.ellesmereRow.visibleWhen
     page.refreshers[#page.refreshers + 1] = function() page:Layout() end
     -- At maximum level the bar hides itself; there is no switch for it.
-    -- Texture, size, fonts and colors are styled in Layout (the Style card);
-    -- session tracking is the one session control left on the page.
+    -- Texture, size, fonts and colors are styled in Layout (the Style card).
+    -- What the bar shows: each switch turns one piece of information on or off.
+    -- Separators, offsets, the quest XP format and the session text's place stay
+    -- saved, without a control.
+    page:Section("Bar")
+    Toggles({{"Show XP percent", "showXP"}, {"Show XP amounts", "showValues"}, {"Show rested XP", "showRested"},
+        {"Show quest log XP", "showQuests"}, {"Rested overlay", "showRestedOverlay"}, {"Quest log overlay", "showQuestOverlay"}})
     page:Section("Session Text")
+    Toggles({{"Show session progress", "showSession"}, {"Show XP per hour", "showRate"}})
     local reset = W.Button(page:Row("Session Tracking", 48), "Reset Session", 180, 28); reset:SetPoint("LEFT")
     reset:SetScript("OnClick", function() self:ResetSession() end)
     page:Finish(); return page

@@ -37,7 +37,8 @@ function M:CreateConfigPage(parent)
         end
     end
     -- Icon size, fonts and colors are styled in Layout (the Style card).
-    Toggle("Show Tooltips","showTooltips")
+    page:ToggleGrid({{label="Show Tooltips",get=function() return self.db.showTooltips end,set=function(v) self:SetOption("showTooltips",v) end},
+        {label="Show Profession Names",get=function() return self.db.showNames end,set=function(v) self:SetOption("showNames",v) end}})
     page:Section("Visibility")
     Slider("Out of Combat Opacity","outOpacity","%")
     Slider("In Combat Opacity","combatOpacity","%")

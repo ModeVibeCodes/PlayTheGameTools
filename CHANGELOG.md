@@ -12,6 +12,13 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   module switches and show/hide options are kept. If anything was reset, one
   chat line and a banner in the settings window say so; **Dismiss** hides the
   banner for good. New or unchanged profiles show nothing.
+- Switches that only turned information on or off came back as plain rows:
+  Experience Bar **Show XP percent**, **Show XP amounts**, **Show rested XP**,
+  **Show quest log XP**, **Rested overlay**, **Quest log overlay**, **Show
+  session progress** and **Show XP per hour**; **Show Profession Names** and
+  **Show Food Names**; and Rogue Tools' new **Poison Reminder** and **Quick
+  Poisons** groups with **Show reminder**, **When**, **Show quick poisons**,
+  **Menu opens** and the label, name, time, count and tooltip switches.
 - Searching "rogue" no longer lists empty "Rogue Tools > Display >" results,
   and the Guild page's **Open Guild** result now outlines the page header's
   **Open Guild** button.

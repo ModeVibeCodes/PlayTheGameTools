@@ -16,13 +16,16 @@ function M:CreateConfigPage(parent)
         if text and text~="" then page:FooterNote(t) end
         return t
     end
+    -- e = {label, key[, style group]}: a group key is one display part's
+    -- information switch (saved in that part's style table).
     local function Toggles(entries)
         local items={}
-        for _,e in ipairs(entries) do local key=e[2]
-            items[#items+1]={label=e[1],get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
+        for _,e in ipairs(entries) do local key,group=e[2],e[3]
+            items[#items+1]={label=e[1],get=function() return (group and self.db[group] or self.db)[key] end,
+                set=function(v) if group then self:SetStyle(group,key,v) else self:SetOption(key,v) end end}
         end
         local cells=page:ToggleGrid(items,{maxColumns=2,minimumCellWidth=190})
-        for i,e in ipairs(entries) do page.poisonControls[e[2]]=cells[i] end
+        for i,e in ipairs(entries) do page.poisonControls[e[3] and (e[3]..":"..e[2]) or e[2]]=cells[i] end
     end
     local function Sliders(entries)
         for first=1,#entries,2 do
@@ -58,19 +61,37 @@ function M:CreateConfigPage(parent)
         end
         return buttons
     end
-    page:Section("Display",nil,false)
-    Toggles({{"Poison Reminder","watcher"},{"Quick Access Poisons","flyout"}})
+    local function Visible(predicate) page.rows[#page.rows].visibleWhen=predicate end
+    -- Two groups, as in the v2 mockup. Styling lives in Layout: Customize opens
+    -- the display there. Layout-only keys (vertical, columns, label/timer
+    -- positions, label text, visible menu rows) stay saved without a control.
+    page:Section("Poison Reminder",nil,false)
+    local function Reminder() return self.db.watcher end
+    Toggles({{"Show reminder","watcher"}})
     local choices={{id="needed",label="When Needed"},{id="neededOOC",label="When Needed (OOC)"},{id="alwaysOOC",label="Always Outside Combat"},{id="always",label="Always, Including Combat"}}
-    page.reminderVisibility=Select("Reminder Visibility",choices,function() for _,c in ipairs(choices) do if c.id==self.db.reminderVisibility then return c.id,c.label end end end,function(v) self:SetOption("reminderVisibility",v) end)
-    page.quickVisibility=Select("Quick Access Visibility",{{id="needed",label="When Needed"},{id="always",label="Always Outside Combat"}},function()
+    page.reminderVisibility=Select("When",choices,function() for _,c in ipairs(choices) do if c.id==self.db.reminderVisibility then return c.id,c.label end end end,function(v) self:SetOption("reminderVisibility",v) end)
+    Visible(Reminder)
+    Toggles({{"Use Time Threshold","timeReminder"},{"Use Charge Threshold","chargeReminder"}});Visible(Reminder)
+    Sliders({{"Reminder Threshold (min)","threshold"," min"},{"Charge Threshold","chargeThreshold"," charges"}});Visible(Reminder)
+    Toggles({{"Show weapon hands","showHands","watchStyle"},{"Show poison names","showNames","watchStyle"},
+        {"Show time left","showTimers","watchStyle"},{"Show item counts","showCounts","watchStyle"},
+        {"Show poison charges","showPoisonCharges"},{"Right-click to dismiss","dismissOnRightClick"}});Visible(Reminder)
+    page.displayButtons={Buttons({{"Customize Reminder",function() addon:EditElementAppearance("roguePoisonReminder") end}})[1]}
+    page:Section("Quick Poisons",nil,false)
+    local function Quick() return self.db.flyout end
+    Toggles({{"Show quick poisons","flyout"}})
+    page.quickVisibility=Select("When",{{id="needed",label="When Needed"},{id="always",label="Always Outside Combat"}},function()
         return self.db.alwaysShow and "always" or "needed",self.db.alwaysShow and "Always Outside Combat" or "When Needed"
     end,function(v) self:SetOption("alwaysShow",v=="always") end)
-    Toggles({{"Use Time Threshold","timeReminder"},{"Use Charge Threshold","chargeReminder"}})
-    Sliders({{"Reminder Threshold (min)","threshold"," min"},{"Charge Threshold","chargeThreshold"," charges"}})
-    Toggles({{"Right-click to Dismiss Reminders","dismissOnRightClick"},{"Show Poison Charges","showPoisonCharges"}})
-    -- Customize opens the display itself in Layout, where its styling lives.
-    page.displayButtons=Buttons({{"Customize Reminder",function() addon:EditElementAppearance("roguePoisonReminder") end},
-        {"Customize Quick Access",function() addon:EditElementAppearance("rogueQuickPoisons") end}})
+    Visible(Quick)
+    local directions={{label="Up",value="UP",width=72},{label="Down",value="DOWN",width=72},{label="Left",value="LEFT",width=72},{label="Right",value="RIGHT",width=72}}
+    local menu,refreshMenu=W.Exclusive(page:Row("Menu opens",44,{"direction","menu direction"}),directions,
+        function() return self.db.direction end,function(v) self:SetOption("direction",v);page:Refresh() end)
+    page.directionButtons=menu;page.refreshers[#page.refreshers+1]=refreshMenu;Visible(Quick)
+    Toggles({{"Show icon label","showNames","launcherStyle"},{"Show icon count","showCounts","launcherStyle"},
+        {"Icon tooltip","tooltips","launcherStyle"},{"Show menu names","showNames","flyoutStyle"},
+        {"Show menu counts","showCounts","flyoutStyle"},{"Menu tooltips","tooltips","flyoutStyle"}});Visible(Quick)
+    page.displayButtons[2]=Buttons({{"Customize Quick Access",function() addon:EditElementAppearance("rogueQuickPoisons") end}})[1]
     page:Section("Settings",nil,false)
     local c,gridRow=FullRow("Poison Refresh Quick Apply",92)
     for i=1,6 do

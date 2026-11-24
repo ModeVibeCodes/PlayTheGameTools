@@ -23,7 +23,7 @@ your existing settings. A new file was added: restart the client once.
 This update resets each display's old font, color and size settings once per
 profile (approved by the user) and shows a one-time notice. **Close WoW and
 copy `WTF\Account\<account>\SavedVariables\PlayTheGameTools.lua` first.**
-Use checks R1–R8 in the repository's TESTING.md ("v2 styling reset"); do R1
+Use checks R1–R11 in the repository's TESTING.md ("v2 styling reset"); do R1
 on your existing settings first, and R3 for a fresh profile. One file was
 added and one removed: restart the client once.
 

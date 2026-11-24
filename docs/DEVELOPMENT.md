@@ -35,7 +35,16 @@ label (the "Rogue Tools > Display >" empty results came from unlabelled Rogue
 rows). Rogue's **Customize Reminder** / **Customize Quick Access** call
 `addon:EditElementAppearance` directly. Module APIs (`SetAppearance`,
 `SetStyle`, `SetOption`, `MinimalReminder`) and all validators stay: displays
-read these values. Still 126 Lua chunks. `tests/style_reset.py` covers it.
+read these values. Follow-up: kept keys that turn a whole piece of information
+on or off got plain switches again, as in the v2 mockup: Experience Bar
+**Bar** (showXP, showValues, showRested, showQuests, showRestedOverlay,
+showQuestOverlay) and **Session Text** (showSession "Show session progress",
+showRate); the bars' showNames beside their tooltips switches; Rogue Tools is
+now **Poison Reminder** / **Quick Poisons** / **Settings**, with **Menu opens**
+(`direction`, `W.Exclusive`) and per-part switches saved through `M:SetStyle`
+(`page.poisonControls["group:key"]`). Rows under **Show reminder** / **Show
+quick poisons** hide while it is off. Layout/format keys keep no control.
+Still 126 Lua chunks. `tests/style_reset.py` covers it.
 Native confirmation is pending; new TOC file: restart the client once.
 
 v2 window shell (branch `t3/v2-window-shell`): `Config/Window.lua` is now
