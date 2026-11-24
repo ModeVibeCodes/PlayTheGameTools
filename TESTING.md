@@ -24,6 +24,72 @@ such as "Timers → Combat Timer" means the **Combat Timer** row in the A–Z li
 "Global Settings" means the **Settings** row pinned at the bottom. Header
 **Reload** is now the **Reload now** button in the banner above the page.
 
+Browser windows (v2 wave 2): Dungeon Loot's dungeon index, Boss Loot and Quests,
+and Class Training's Upcoming Abilities and Available & Known, now open in their
+own movable windows. Run `tests/browser_windows.py` with the full suite. New TOC
+file `Config/BrowserWindow.lua`: restart the client once, then `/reload` OOC.
+Mock tests only; native confirmation pending.
+
+1. **Navigation:** `/ptg` → **Class Training** row in the sidebar.
+   **Action:** Read the page header, then click **Open Class Training**.
+   **Required state:** OOC, Class Training on.
+   **Confirmation:** The page shows General, Level Up Window and Shortcut Icon &
+   Menu only, no ability lists. The button opens a **Class Training** window with
+   **Upcoming Abilities** and **Available & Known** tabs, the training total at
+   the top and level headings; the settings window closes.
+2. **Navigation:** **Class Training** window.
+   **Action:** Switch between **Upcoming Abilities** and **Available & Known**;
+   learn a rank at a trainer with the window open.
+   **Required state:** OOC, at a class trainer.
+   **Confirmation:** Each tab shows its list; the learned rank moves to Known
+   without a reload or a Refresh button.
+3. **Navigation:** `/ptg` → **Dungeon Loot** row.
+   **Action:** Read the page, then click **Open Dungeon Loot**.
+   **Required state:** OOC, Dungeon Loot on.
+   **Confirmation:** The page shows Quick Icon (Icon Size, Icon Opacity),
+   Keybinding (**Set Keybinding**, **Clear Keybinding**) and Dungeon Data
+   (source, license, **Refresh**). The button opens a **Dungeon Loot** window with
+   **Dungeons**, **Boss Loot** and **Quests** tabs and no General tab.
+4. **Navigation:** Quick Actions ring → Dungeon Loot icon; then your Dungeon Loot
+   keybinding.
+   **Action:** Click the icon; close the window; press the key.
+   **Required state:** Dungeon Loot on, a key bound with **Set Keybinding**.
+   **Confirmation:** Both open the Dungeon Loot window on the dungeon index.
+5. **Navigation:** Either window.
+   **Action:** Drag it by its body to a new place, close it with **Close**, reopen
+   it; then press Escape.
+   **Required state:** OOC, same session.
+   **Confirmation:** It reopens where you left it (after a `/reload` it starts
+   centered again); Escape closes it before the game menu would open.
+6. **Navigation:** Dungeon Loot window → a dungeon → **Quests** → a quest →
+   **View on Map**.
+   **Action:** Close the world map.
+   **Required state:** OOC.
+   **Confirmation:** The window hides while the map is open and returns when the
+   map closes.
+7. **Navigation:** Your Dungeon Loot keybinding (set with **Set Keybinding**).
+   **Action:** Enter combat with a training dummy, press the Dungeon Loot key,
+   browse, then press Escape.
+   **Required state:** In combat, Dungeon Loot on.
+   **Confirmation:** The window opens, scrolls and closes with no Lua error or
+   blocked-action message.
+8. **Navigation:** Either window → **Settings** button.
+   **Action:** Click it.
+   **Required state:** OOC.
+   **Confirmation:** The settings window opens on that module's page and the tool
+   window closes.
+9. **Navigation:** `/ptg` → **Settings** row → Interface Theme.
+   **Action:** Switch between mode, Modern and Blizzard (reload when asked) and
+   open both windows each time.
+   **Required state:** OOC.
+   **Confirmation:** Each window takes the theme's window surface, like the
+   Recruiter: Blizzard draws the stock dialog border with content clear of it.
+10. **Navigation:** `/ptg` → **Dungeon Loot** row.
+    **Action:** Turn the module off with the header switch.
+    **Required state:** OOC, Dungeon Loot window open beforehand.
+    **Confirmation:** **Open Dungeon Loot** greys out and the window closes; your
+    keybinding then opens the settings page instead and does not turn it on.
+
 Record PASS / FAIL / NOT TESTED for each item, with version, client build, class
 and level. These instructions do not claim native acceptance. Do one chunk at a
 time; start with A. Stop and report startup/errors/settings loss before continuing.
@@ -65,9 +131,9 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training →
+1. **Navigation:** `/ptg` → **Class Training** row → **Open Class Training** →
    Upcoming Abilities / Available & Known tabs.
-   **Action:** Learn a rank at a trainer (or level up), return to the page without
+   **Action:** Learn a rank at a trainer (or level up), return to the window without
    reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.
@@ -290,6 +356,7 @@ python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
 python tests/dungeon_loot_shortcut.py
 python tests/dungeon_loot_quick_icon.py
+python tests/browser_windows.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -340,7 +407,7 @@ Use the exact revised checklist in docs/DUNGEON_LOOT.md; `/reload` applies these
 Lua-only edits once the initial PR's files are loaded. Native review pending.
 
 Binding-field refinement: verify an already-bound key can replace its previous
-action using General -> Keybinding -> Set Keybinding; the adjacent field shows
+action using the Dungeon Loot page -> Keybinding -> Set Keybinding (General before v2 wave 2); the adjacent field shows
 its key or Not bound after Clear Keybinding. Automated coverage includes occupied
 key capture, failed-save restoration of the overwritten action and previous
 Dungeon Loot keys, and live field updates. The Quick Icon revision has positive

@@ -48,6 +48,28 @@ PLAYER_REGEN_ENABLED). Grid is session-only (`EditMode.grid`), off by default,
 snaps screen-centred drops to 32 units. No TOC or new files besides
 `tests/layout_style.py`; `tests/edit_mode.py` covers the mode. Native
 confirmation is pending; `/reload` OOC.
+Browser windows (branch `t3/v2w2-browsers`, v2 wave 2): `Config/BrowserWindow.lua`
+(new TOC entry after `Config\EditMode.lua`, 124 Lua chunks) provides
+`W.BrowserWindow(spec)`: an unprotected, movable, clamped DIALOG frame drawn
+with `W.Texture(f,"Window")` (theme surface, as the Recruiter), Close and
+Settings buttons, a `body`, session-only centre positions
+(`addon.BrowserWindowPositions`, never saved) and its own Dialogs group (the
+module id), so Escape closes it and opening it closes Settings. The page header
+(`Config/Window.lua` `PageHeader`) shows `module.openLabel` as a button that
+calls `module:OpenWindow()` while the module is on (`header.openButton`).
+Dungeon Loot: `M:CreateBrowser(parent)` is the old in-page browser minus its
+General tab, parented to `PlayTheGameToolsDungeonLootWindow`; `M.page` still
+names it and `M:BrowserShown()` gates item/quest events. `M:CreateConfigPage`
+is now a plain `W.Page` (Quick Icon, Keybinding, Dungeon Data; `M.settingsPage`)
+and owns binding capture. `OpenDungeonLoot` (ring, binding, header) opens the
+window, in combat too; with the module off it still opens the settings page OOC.
+The map hand-off hides/restores the window. `W.SetupModeBrowser` was removed from
+`Config/ModeLayout.lua` (its only caller is gone). Class Training:
+`M:CreateTrainingBrowser` holds the moved row pool and summary under two local
+tabs in `PlayTheGameToolsClassTrainingWindow`; `M:OpenTrainingWindow(tab)`;
+the settings page refresher is `page:RenderSettings()`. `OpenTraining(section)`
+still opens settings tabs 1–3. `tests/browser_windows.py` guards it. Native
+confirmation is pending; restart the client once for the new TOC file.
 v2 module cuts (branch `t3/v2-module-cuts`, 2026-11-23): part of the approved
 v2 settings redesign. Display titles only: Map Labels (`cityLabels`), Experience
 Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and

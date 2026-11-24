@@ -41,9 +41,9 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training →
-   Upcoming Abilities / Available & Known tabs.
-   **Action:** Learn a rank at a trainer (or level up), return to the page without
+1. **Navigation:** `/ptg` → **Class Training** row → **Open Class Training** →
+   Upcoming Abilities / Available & Known tabs (their own window since v2).
+   **Action:** Learn a rank at a trainer (or level up), return to the window without
    reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.

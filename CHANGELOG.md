@@ -4,6 +4,17 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Dungeon Loot and Class Training browsers have their own windows. The page
+  header's **Open Dungeon Loot** and **Open Class Training** buttons (usable while
+  the module is on) open them; the Quick Actions Dungeon Loot icon and its
+  keybinding open the Dungeon Loot window too, and the level-up popup's
+  Training button opens Class Training on Available & Known. Each window moves
+  freely, remembers its place for the session, closes with Escape, follows the
+  Interface Theme and can be opened in combat; **Settings** returns to the
+  module's page. The settings pages keep only settings: Dungeon Loot's former
+  General tab (Quick Icon, Keybinding, Dungeon Data) is its page, and Class
+  Training's ability lists left its page. No saved settings change.
+
 - Threat Meter: your row's marker now sits in its own gap left of your bar, so
   it no longer blends into your class color. When you are close to pulling
   aggro the marker turns red (it was amber, which matched the Blizzard theme's

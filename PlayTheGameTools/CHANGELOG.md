@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Dungeon Loot and Class Training browsers have their own windows. The page
+  header's **Open Dungeon Loot** and **Open Class Training** buttons (usable while
+  the module is on) open them; the Quick Actions Dungeon Loot icon and its
+  keybinding open the Dungeon Loot window too, and the level-up popup's
+  Training button opens Class Training on Available & Known. Each window moves
+  freely, remembers its place for the session, closes with Escape, follows the
+  Interface Theme and can be opened in combat; **Settings** returns to the
+  module's page. The settings pages keep only settings: Dungeon Loot's former
+  General tab (Quick Icon, Keybinding, Dungeon Data) is its page, and Class
+  Training's ability lists left its page. No saved settings change.
+
 - Layout replaces Preview and Edit Mode. Every enabled display shows its sample
   data with its name, and can be dragged. The bar along the top reads Layout,
   "Click a display to style it", Drag to move, a Grid switch and Done. Grid
