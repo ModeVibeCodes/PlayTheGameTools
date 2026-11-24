@@ -236,7 +236,9 @@ function A:Layout(count,footer)
     local e=PM.elements.campfireContributions
     local dragging=f.dragging or (e and e.dragging)
     if not dragging then
-        f:SetWidth(width);f:SetScale(math.max(0.25,math.min(db.contributionScale/100,(UIParent:GetHeight()-40)/height,(UIParent:GetWidth()-40)/width)));f:SetHeight(height)
+        -- The Style card multiplies this scale, so fit the screen after that factor.
+        local styleScale=PM:GetStyle("campfireContributions").scale/100
+        f:SetWidth(width);f:SetScale(math.max(0.25/styleScale,math.min(db.contributionScale/100,(UIParent:GetHeight()-40)/height/styleScale,(UIParent:GetWidth()-40)/width/styleScale)));f:SetHeight(height)
     end
     f:Show()
     -- Both registration and subsequent re-anchoring need the shown rectangle.

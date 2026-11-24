@@ -174,7 +174,9 @@ function M:RegisterPositions()
         end
         e.editMode=self.active and self.db[f.enableKey] or false
         self.db[f.xKey],self.db[f.yKey]=math.floor(e.position.x+0.5),math.floor(e.position.y+0.5)
-        PM:ApplyPosition(f.elementId)
+        -- Layout() hand-anchors with only the module scale; force the manager to
+        -- re-anchor with the full (module x Style card) scale.
+        PM:ApplyPosition(f.elementId, true)
     end
 end
 function M:SyncEditElements()
