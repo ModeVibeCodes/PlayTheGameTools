@@ -10,8 +10,11 @@ function F:AddConfig(page)
         page.refreshers[#page.refreshers+1]=W.Slider(page:Row(label,48),r[1],r[2],r[3],function() return self.db[key] end,function(v) self:SetOption(key,v) end,suffix,true)
     end
     page:Section("Food Bar")
-    Toggle("Enable Food Bar","enabled");Toggle("Show Food Bar","shown");Toggle("Include Bandages","includeBandages")
+    -- One switch for the bar: the saved enabled and shown flags turn on and off together.
+    page:ToggleGrid({{label="Show Food Bar",get=function() return self:IsOn() end,set=function(v) self:SetShown(v) end}})
+    Toggle("Include Bandages","includeBandages")
     local text=W.Label(page:Row("Food Bar Status",100),"",nil,0,-4,280,addon.Theme.muted);text:SetWordWrap(true)
+    text:GetParent().row.visibleWhen=function() return self.active==true end
     local refresh=W.Button(page:Row("Carried Items",48),"Refresh Bags",180,28);refresh:SetPoint("LEFT")
     refresh:SetScript("OnClick",function() if D.OutsideCombat() then self:Scan();self:Render();page:Refresh() end end)
     page.foodCells={}

@@ -21,6 +21,13 @@
 - Automation: the Dialogue group is gone. Its Auto Gossip switch could never be
   turned on, and its explanation is removed with it. Gossip dialogue stays
   manual, as before.
+- Status text no longer repeats a switch. Loot Sparkles Status, Rogue Tools'
+  status line, Campfire Status and the Food Bar status now show only when they
+  have something to say (a conflict, a rejected setting, a poison message,
+  nearby-campfire state, your carried food), and Class Training's summary no
+  longer reads "Disabled". Food Bar's Enable Food Bar and Show Food Bar are now
+  one Show Food Bar switch; the bar's own Hide button turns it off. Enable Loot
+  Sparkles stays: the page switch also covers Campfire Monitor.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

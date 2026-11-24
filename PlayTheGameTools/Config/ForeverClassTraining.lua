@@ -167,7 +167,7 @@ function M:CreateConfigPage(parent)
         end
         self.visibleCount, self.levelVisible = 0, {}
         local stale = M.dirty or not M:OutsideCombat()
-        self.statusLabel:SetText(not M.active and "Disabled" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
+        self.statusLabel:SetText(not M.active and "" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
         self.totalLabel:SetText("Training total  " .. (M.rows and M:MoneyText(P.TrainingTotal(M.rows)) or "—"))
         self.refreshButton:SetEnabled(M.active == true and M:OutsideCombat())
         self.popupPreviewButton:SetEnabled(M.active and M.db.levelAlerts~=false and M:OutsideCombat())

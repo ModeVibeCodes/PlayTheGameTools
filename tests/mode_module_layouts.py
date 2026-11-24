@@ -114,7 +114,7 @@ for _,id in ipairs(addon.moduleOrder) do
 end
 local spark=addon:EnsureConfigPage('lootSparkles')
 spark:SelectModePanel('Loot Sparkles','options');spark:Layout()
-assert(spark.sparkleStatus:GetText()==(addon.LootSparkles.status or 'Disabled.'),'live status keeps its text')
+assert(spark.sparkleStatus:GetText()==(addon.LootSparkles:StatusNotice() or ''),'live status keeps its text')
 local A=addon.ForeverAutomation;local automation=addon:EnsureConfigPage('foreverAutomation')
 automation:SelectModePanel('Quests','options');automation:Refresh();automation:Layout()
 local questRow
@@ -129,6 +129,31 @@ for _,row in ipairs(automation.rows) do
  for _,cell in ipairs(row.settingsToggles or {}) do assert(cell.label:GetText()~='Auto Gossip','no Auto Gossip switch') end
 end
 assert(not A:SetOption('autoGossip',true) and A.GossipCapability==nil)
+-- Status rows never just repeat a switch; real notices still show.
+local LS=addon.LootSparkles;local sparkRow=spark.sparkleStatus:GetParent().row
+LS.status='Loot Sparkles disabled. Previous owned settings restored.';spark:Refresh()
+assert(not sparkRow:IsShown() and LS:StatusNotice()==nil,'no on/off echo')
+LS.status='Client rejected setting: SoftTargetInteract';spark:Refresh()
+assert(sparkRow:IsShown() and spark.sparkleStatus:GetText():find('rejected',1,true),'real notice shown')
+LS.status=nil;spark:Refresh();assert(not sparkRow:IsShown())
+local found=false
+for _,cells in ipairs(spark.toggleGrids) do for _,cell in ipairs(cells) do found=found or cell.label:GetText()=='Enable Loot Sparkles' end end
+assert(found,'Loot Sparkles keeps its own switch: the page switch also covers Campfire Monitor')
+local Ro=addon.ForeverRogue;local rogue=addon:EnsureConfigPage('foreverRogue');local was=Ro.active
+Ro.active=false;rogue:Refresh();assert(not rogue.poisonStatus:GetParent().row:IsShown(),'no disabled echo')
+Ro.active=was;rogue:Refresh()
+local CM=addon.CampfireMonitor;local campOn=CM.db.enabled
+CM.db.enabled=false;spark:Refresh();spark:Layout();assert(not spark.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
+CM.db.enabled=campOn;spark:Refresh()
+-- Food Bar: one switch for the two saved flags.
+local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
+for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
+assert(labels['Show Food Bar'] and not labels['Enable Food Bar'],'one Food Bar switch')
+F.db.enabled,F.db.shown=true,false;assert(not F:IsOn(),'old hidden bar reads off')
+assert(F:SetShown(true) and F.db.enabled and F.db.shown and F:IsOn())
+assert(F:SetShown(false) and not F.db.enabled and not F.db.shown and not F.active)
+qa:Refresh();qa:Layout()
+for _,row in ipairs(qa.rows) do if row.settingsTitle=='Food Bar Status' then assert(not row:IsShown(),'no Food Bar status while off') end end
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
 assert(timer.modeLayout.panel=='options','timer styling is edited in Edit Mode')

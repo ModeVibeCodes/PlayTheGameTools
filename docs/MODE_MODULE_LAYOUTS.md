@@ -159,10 +159,12 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
     and color editors; edited module values and profile data persist.
 12. **Navigation:** PTG Tools → Questing & Leveling → Gameplay Enhancements →
     **Loot Sparkles** → **Options**. **Action:** `/reload`, reopen the page,
-    inspect **Loot Sparkles Status**, then read **How It Works** at the bottom;
+    check that no **Loot Sparkles Status** row shows while sparkles are simply on
+    or off (it appears only for a conflict or a rejected or pending client
+    setting), then read **How It Works** at the bottom;
     narrow/shorten the window and search **How It Works** from Appearance.
     **Required state:** OOC, Mode selected. **Confirmation:** settings and live
-    status stay above the explanation, with original status text and category
+    notices stay above the explanation, with original notice text and category
     subheadings unchanged. Footer text uses the page width, wraps without
     clipping, scrolls after controls when needed and remains searchable. Inspect
     Campfire **Camp Buffs → Options** and **General** for the same footer flow,
