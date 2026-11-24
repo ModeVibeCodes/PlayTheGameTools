@@ -115,7 +115,9 @@ assert(Reads(page.aboutBugs)=='Bug reports Discord NoJumperMike','bug reports go
 addon:SelectConfigPage('cityLabels')
 local notice=w.pages.cityLabels.cityLabelSource:GetText()
 addon:SelectConfigPage('globalSettings')
-assert(page.dataSourcesNotice:GetText()==notice,'full Points of Interest notice, copied exactly')
+assert(page.dataSourcesNotice:GetText()==notice,'full Map Labels notice, copied exactly')
+assert(page.dataSourcesTitle:GetText()==addon.modules.cityLabels.title,'names the module as the sidebar does')
+assert(addon:SearchSettings('points of interest')[1].module.id=='cityLabels','an old name finds Map Labels before its notice')
 -- Profile: one dropdown plus Manage.
 assert(addon.PositionManager:SetOffsets('combatTimer',123,-87))
 page:SelectSectionTab(3);assert(page.selectedSection.title=='Profile' and page.scrollbar:GetValue()>0,'indexes follow the page order')

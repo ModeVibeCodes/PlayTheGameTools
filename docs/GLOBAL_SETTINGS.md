@@ -206,8 +206,10 @@ define LOOT_READY's boolean. This does not establish native action acceptance.
 ## About
 
 **Version** (from the TOC), **Created by** Mode and Prox, **Bug reports**
-Discord NoJumperMike, and **Data sources**: the full Points of Interest Labels
+Discord NoJumperMike, and **Data sources**: the full Map Labels
 license notice, copied exactly from that module's page (which is unchanged).
+Its search keywords are license, attribution, Efficient Games and CMaNGOS; the
+module's old names (Points of Interest Labels, City Labels) find Map Labels.
 
 ## Validation and native checklist
 
@@ -269,7 +271,7 @@ this is native confirmation.
 10. **Navigation:** `/ptg` → Settings → About. **Action:** read the rows.
     **Required state:** none. **Confirmation:** Version matches the installed
     version; Created by Mode and Prox; Bug reports Discord NoJumperMike; Data
-    sources matches the Points of Interest Labels page notice word for word.
+    sources names Map Labels and matches the Map Labels page notice word for word.
 
 Media-pack checks still apply to per-display font, texture and border choices on
 module pages: with SharedMedia or a cataloged disabled provider installed, those

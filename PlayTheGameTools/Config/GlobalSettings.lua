@@ -276,15 +276,16 @@ function addon:CreateGlobalSettingsPage(parent)
     page.aboutVersion=Fact(page,"Version",self.buildVersion or "unknown",{"version","about"})
     page.aboutCredits=Fact(page,"Created by","Mode and Prox",{"credits","author","about"})
     page.aboutBugs=Fact(page,"Bug reports","Discord NoJumperMike",{"bugs","discord","support","about"})
-    local sources=page:Row("Data sources",96,{"license","licence","attribution","efficient games","cmangos","points of interest","city labels"})
+    local sources=page:Row("Data sources",96,{"license","licence","attribution","efficient games","cmangos"})
     local source=addon.CityLabelsData and addon.CityLabelsData.source
-    local poi=W.Label(sources,"Points of Interest Labels",nil,0,-7,420,T.secondary)
-    -- Same notice as the Points of Interest Labels page.
+    local poi=W.Label(sources,addon.modules.cityLabels and addon.modules.cityLabels.title or "Map Labels",nil,0,-7,420,T.secondary)
+    -- Same notice as the Map Labels page. Map Labels' old names are that
+    -- module's search aliases, so they are not keywords here.
     local notice=W.Label(sources,"Data from Efficient Games (efficient.games), licensed CC BY 4.0, from WoW: Forever client builds "
         ..(source and source.builds or "?").."; each label marks where players stood to use the service. Where they have not recorded one yet, "
         .."the Classic spawn position from CMaNGOS classic-db (GPL-3.0) is shown and its tooltip says so.",nil,0,-27,420,T.muted)
     notice:SetWordWrap(true)
-    page.dataSourcesNotice=notice
+    page.dataSourcesNotice,page.dataSourcesTitle=notice,poi
     function sources.row:layoutChildren(width)
         local textWidth=math.max(80,width-198)
         poi:SetWidth(textWidth);notice:SetWidth(textWidth)
