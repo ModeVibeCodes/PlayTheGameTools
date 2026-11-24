@@ -6,7 +6,8 @@ lua.execute('''
     function UnitFactionGroup() return "Horde" end
     local M=addon.DungeonLoot
     assert(not M.enabled and M.category=='questingLeveling')
-    addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    -- The browser is the Dungeon Loot window; off, it shows how to turn it on.
+    M:CreateBrowserWindow():Show()
     local page=M.page
     local function Clean(text) return (text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") end
     local function Texts(pane)
@@ -54,9 +55,12 @@ lua.execute('''
     snapshot.bosses[1].items[1].name='Changed copy'
     assert(source.DB['Shadowfang Keep'].bosses[1].loot[1][2]=='Fixture Item')
     SetPortraitTextureFromCreatureDisplayID=function(texture,id) assert(id==1234);texture.displayID=id end
-    page.general:GetScript('OnClick')(page.general)
-    assert(page.reload:GetWidth()==86 and page.reload:GetHeight()==28)
-    page.reload:GetScript('OnClick')(page.reload)
+    -- Dungeon Data Refresh is a setting: it is on the settings page, not in the window.
+    assert(page.general==nil and page.reload==nil,'no General tab in the window')
+    if not addon.configWindow then addon:CreateConfig() end
+    local settings=addon:EnsureConfigPage('dungeonLoot');assert(settings==M.settingsPage)
+    assert(settings.reload:GetWidth()==86 and settings.reload:GetHeight()==28)
+    settings.reload:GetScript('OnClick')(settings.reload)
     page.home:GetScript('OnClick')(page.home)
     local _,card=Find('Shadowfang Keep')
     assert(card.art:IsShown() and card.row:GetHeight()==180)
@@ -137,9 +141,10 @@ lua.execute('''
     C_TooltipInfo.GetItemByID=function() error('unavailable') end
     page:Refresh();assert(Contains('Hover for full item details.',page.detailPane))
     C_TooltipInfo=nil;M:SyncEvents();assert(not M.events.events.TOOLTIP_DATA_UPDATE)
-    page:Hide();assert(next(M.events.events)==nil)
-    page:Show();assert(M.events.events.GET_ITEM_INFO_RECEIVED)
-    addon:SetModuleEnabled('dungeonLoot',false);assert(Contains('Enable Dungeon Loot') and next(M.events.events)==nil)
+    M.window:Hide();assert(next(M.events.events)==nil)
+    M.window:Show();assert(M.events.events.GET_ITEM_INFO_RECEIVED)
+    addon:SetModuleEnabled('dungeonLoot',false);assert(not M.window:IsShown() and next(M.events.events)==nil,'turning the module off closes its window')
+    M.window:Show();assert(Contains('Enable Dungeon Loot') and next(M.events.events)==nil)
     addon:SetModuleEnabled('dungeonLoot',true)
 ''')
 state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')

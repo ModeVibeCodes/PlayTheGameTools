@@ -139,7 +139,12 @@ cvars.outlineModeShowLootEffectWhenDisabled='0';FireEvent('CVAR_UPDATE','graphic
 Advance(1.1);assert(cvars.outlineModeShowLootEffectWhenDisabled=='1')
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
 assert(M.page==addon.configWindow.pages.lootSparkles and M.page.sparkleControls.ore and M.page.sparkleStatus)
-assert(addon.modules.lootSparkles.category=='questingLeveling')
+assert(addon.modules.lootSparkles.category=='questingLeveling' and addon.modules.lootSparkles.title=='Loot Sparkles')
+-- Sparkle On is a chips row; no inner Enable switch since the split.
+local chip=M.page.sparkleControls.ore
+assert(chip.mark and chip.selected and M.page.sparkleControls.sparklesEnabled==nil and M.db.sparklesEnabled==nil)
+chip.scripts.OnClick();assert(M.db.ore==false and not chip.selected,'a chip drives its saved key')
+chip.scripts.OnClick();assert(M.db.ore==true and chip.selected)
 local exported=addon.ProfileManager:Export(addon.ProfileManager.root.defaultProfile)
 assert(exported and not addon.ProfileCodec.Decode(exported).lootSparkleCVars)
 local candidate=addon.ProfileCodec.Copy(addon.db);candidate.modules.lootSparkles.size=500

@@ -346,7 +346,8 @@ function P:PrepareImport(text,name)
     for key in pairs(envelope.profile) do if not allowed[key] then return nil,nil,"Unexpected account or runtime data." end end
     if not SettingsOnly(envelope.profile,true) then return nil,nil,"Unexpected account, identity or runtime history data." end
     if envelope.profile.modules~=nil and type(envelope.profile.modules)~="table" then return nil,nil,"Invalid modules table." end
-    for id in pairs(envelope.profile.modules or {}) do if not addon.modules[id] then return nil,nil,"Unknown module in profile." end end
+    -- A retired module ID (folded into another module) still imports; its table is kept, unread.
+    for id in pairs(envelope.profile.modules or {}) do if not addon.modules[id] and not (addon.retiredModules and addon.retiredModules[id]) then return nil,nil,"Unknown module in profile." end end
     local candidate,reason=addon.ProfileValidation:Validate(envelope.profile)
     if not candidate then return nil,nil,reason end
     return candidate,name

@@ -43,6 +43,7 @@ def load(encoded=None, project=18, variable='PTGToolsDB', before=None):
 files, order, _ = payload()
 lua, addon = load()
 lua.execute('''
+    -- Campfire Monitor split from Loot Sparkles (+1); Guild Roster folded into Guild (-1): 13 modules.
     assert(addon.initialized and #addon.moduleOrder==13 and #addon.categoryOrder==5)
     assert(addon.Edition.name=='Forever' and addon.developmentPhase=='Forever Beta')
     assert(addon.PartyCooldownSessions==nil and addon.InterruptTracking==nil)

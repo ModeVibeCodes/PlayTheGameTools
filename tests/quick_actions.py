@@ -69,8 +69,9 @@ lua.execute(r'''
     -- Clicking an icon closes the ring and runs that icon's action.
     Click(b);assert(ring:IsShown())
     Click(DL.shortcut)
-    assert(not ring:IsShown() and addon.configWindow:IsShown() and DL.page:IsShown())
-    addon.configWindow:Hide()
+    -- The ring icon opens the standalone Dungeon Loot window, not settings.
+    assert(not ring:IsShown() and DL.window:IsShown() and DL.page:IsShown() and not (addon.configWindow and addon.configWindow:IsShown()))
+    DL.window:Hide()
 
     -- Class Training's popout survives the ring closing and anchors to the launcher.
     Click(b);Click(CT.shortcut)

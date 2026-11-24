@@ -23,7 +23,7 @@ function addon.PositionManager:RegisterElement(id,frame,options)
  end
  return register(self,id,frame,options)
 end
-function Enable() addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true) end
+function Enable() addon:SetModuleEnabled('campfireMonitor',true) end
 function Tick()
  local callback=A.positionDriver and A.positionDriver:GetScript('OnUpdate')
  assert(callback,'expected one deferred registration');callback(A.positionDriver,0.016)

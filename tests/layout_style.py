@@ -16,15 +16,15 @@ function Near(a,b) return math.abs(a-b)<0.0001 end
 
 lua, _ = load(before=FIXTURE + EXTRA)
 lua.execute(COMMON + r'''
-for _,id in ipairs({'combatTimer','threatMeter','enhancedExperienceBar','foreverQuickAccess','lootSparkles'}) do addon:SetModuleEnabled(id,true) end
-C:SetOption('enabled',true);C:SetOption('alwaysShow',true)
+for _,id in ipairs({'combatTimer','threatMeter','enhancedExperienceBar','foreverQuickAccess','campfireMonitor'}) do addon:SetModuleEnabled(id,true) end
+C:SetOption('alwaysShow',true)
 local F=addon.ForeverFoodBar;F:SetOption('enabled',true);F:SetOption('shown',true)
 addon:ToggleConfig()
 local T,TM,X,Q=addon.modules.combatTimer,addon.ThreatMeter,addon.EnhancedExperienceBar,addon.ForeverQuickAccess
 
 -- The old per-display styling rows stay off settings pages and out of search
 -- (a later pass removes them); Layout no longer borrows them either.
-for _,id in ipairs({'combatTimer','enhancedExperienceBar','foreverQuickAccess','lootSparkles'}) do
+for _,id in ipairs({'combatTimer','enhancedExperienceBar','foreverQuickAccess','campfireMonitor'}) do
  local page=addon:EnsureConfigPage(id)
  for _,row in ipairs(page.rows) do
   if row.editAppearance then assert(not row:IsShown() and not row.editBorrowed,'styling row shown on '..id) end
@@ -34,7 +34,7 @@ for _,query in ipairs({'Font Size','Background opacity','Frame scale','Bar Textu
  for _,result in ipairs(addon:SearchSettings(query)) do
   local entry=result.entry
   if entry then
-   local row=entry.modeBaseRow or entry.campfireBaseRow or entry.row
+   local row=entry.row
    assert(not row.editAppearance,'search offers a removed styling row: '..result.label)
   end
  end
@@ -178,9 +178,9 @@ assert(PM:GetStyle('threatMeter').opacity==70 and Near(TM.frame.alpha,0.7),'thre
 
 camp, _ = load(before=FIXTURE + EXTRA)
 camp.execute(COMMON + r'''
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page;page.sectionTabs.buttons[2].scripts.OnClick()
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local page=C.module.page
+addon:SetModuleEnabled('campfireMonitor',true)
 page.contributionPreview.scripts.OnClick()
 assert(A.window:IsShown())
 assert(addon:SetEditMode(true) and PM:SelectElement('campfireContributions'))

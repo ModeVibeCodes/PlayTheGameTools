@@ -1,4 +1,4 @@
-"""Quick Icon appearance, shared Edit Mode and General's hardware binding editor."""
+"""Quick Icon appearance, shared Edit Mode and the settings page's hardware binding editor."""
 from smoke import load
 
 lua,_=load()
@@ -17,22 +17,28 @@ lua.execute(r'''
     function IsShiftKeyDown() return false end
     function IsControlKeyDown() return true end
     function IsAltKeyDown() return false end
-    addon:SetModuleEnabled('dungeonLoot',true);addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
-    M:Navigate(nil,'general')
+    -- The settings page holds the former General content; the lists are a window.
+    local function Settings()
+        if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
+        addon:SelectConfigPage('dungeonLoot')
+        return M.settingsPage
+    end
+    addon:SetModuleEnabled('dungeonLoot',true)
+    local S=Settings()
     local b=M.shortcut;local e=pm.elements.quickActionsLauncher;local launcher=addon.QuickActions.launcher
     assert(b and e and b.mouse and launcher.mouse and b.icon and #b.ring==48)
     assert(b.icon.texture=='Interface\\Buttons\\UI-GroupLoot-Dice-Up' and b.icon:GetWidth()>0,'native loot icon is explicitly sized')
     assert(e.label=='Quick Actions' and e.draggable and e.editMode and not e.supportsAnchoring)
     assert(not pm.elements.dungeonLootShortcut,'only the launcher is an Edit Mode element')
     local function Click(label)
-        if label=='Set Keybinding' then M.page.bindingControl.set.scripts.OnClick(M.page.bindingControl.set);return end
-        for _,slot in ipairs(M.page.rootPane.slots) do if slot.visible and slot.button.label:GetText()==label then
-            if slot.callback then slot.button.scripts.OnClick(slot.button) end;return slot
-        end end
-        error('Missing '..label)
+        local button=({['Set Keybinding']=S.bindingControl.set,['Clear Keybinding']=S.clearBinding})[label]
+        if not button then error('Missing '..label) end
+        button.scripts.OnClick(button)
     end
-    Click('Quick Icon');Click('Keybinding');assert(M.page.bindingControl.field:GetText()=='Not bound')
-    M.page.iconSize.slider:SetValue(64);M.page.iconOpacity.slider:SetValue(60)
+    local titles={};for _,section in ipairs(S.sections) do titles[#titles+1]=section.title end
+    assert(table.concat(titles,'|')=='Quick Icon|Keybinding|Dungeon Data','settings sections')
+    assert(S.bindingControl.field:GetText()=='Not bound')
+    S.iconSize.slider:SetValue(64);S.iconOpacity.slider:SetValue(60)
     assert(M.db.shortcutSize==64 and b:GetWidth()==64 and b.alpha==.6)
     assert(not M:SetShortcutOption('shortcutSize',73) and not M:SetShortcutOption('shortcutOpacity',0))
     assert(M:EditShortcutPosition() and addon.editMode and pm.selected=='quickActionsLauncher')
@@ -45,15 +51,15 @@ lua.execute(r'''
     launcher.scripts.OnDragStart(launcher);assert(e.dragging)
     launcher.scripts.OnDragStop(launcher);assert(not e.dragging)
     addon:SetEditMode(false);assert(launcher.mouse,'shared Edit Mode must not leave the launcher mouse-disabled')
-    M:Navigate(nil,'general')
+    Settings()
     Click('Set Keybinding')
     local capture=M.bindingCapture
     assert(capture:IsShown() and capture.keyboard and capture.propagate==false)
     capture.scripts.OnKeyDown(capture,'LSHIFT');assert(saved==0)
     capture.scripts.OnKeyDown(capture,'D')
     assert(bindings['CTRL-D']==action and saved==1 and not capture:IsShown() and not capture.keyboard and capture.propagate)
-    assert(M.page.bindingControl.field:GetText()=='CTRL-D' and not M.page.bindingControl.field.keyboard and not M.page.bindingControl.field.mouse)
-    bindings['ALT-D']=action;FireEvent('UPDATE_BINDINGS');assert(M.page.bindingControl.field:GetText()=='ALT-D, CTRL-D');bindings['ALT-D']=nil
+    assert(S.bindingControl.field:GetText()=='CTRL-D' and not S.bindingControl.field.keyboard and not S.bindingControl.field.mouse)
+    bindings['ALT-D']=action;FireEvent('UPDATE_BINDINGS');assert(S.bindingControl.field:GetText()=='ALT-D, CTRL-D');bindings['ALT-D']=nil
     local ok,reason=M:SaveShortcutBinding('F1')
     assert(ok and bindings.F1==action and not bindings['CTRL-D'],'chosen key overrides its previous action')
     assert(M:SaveShortcutBinding('CTRL-D') and not bindings.F1);bindings.F1='UNRELATED'
@@ -69,15 +75,16 @@ lua.execute(r'''
     assert(not M:SaveShortcutBinding('F1') and bindings['CTRL-D']==action and bindings.F1=='UNRELATED','failed save restores overwritten action and previous shortcut')
     SaveBindings=save
     Click('Set Keybinding');capture.scripts.OnKeyDown(capture,'ESCAPE');assert(not capture.keyboard and bindings['CTRL-D']==action)
-    Click('Set Keybinding');M:Navigate(nil,'loot');assert(not capture:IsShown() and not capture.keyboard)
-    M:Navigate(nil,'general');Click('Set Keybinding')
+    -- Opening the Dungeon Loot window cancels a capture on the settings page.
+    Click('Set Keybinding');assert(M:OpenDungeonLoot());assert(not capture:IsShown() and not capture.keyboard)
+    M.window:Hide();Settings();Click('Set Keybinding')
     testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
     assert(not capture:IsShown() and not capture.keyboard and not M:SaveShortcutBinding('F4'))
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
-    M:Navigate(nil,'general');bindings['ALT-D']=action;Click('Clear Keybinding')
-    assert(not bindings['CTRL-D'] and not bindings['ALT-D'] and bindings.F1=='UNRELATED' and M:ShortcutBindingLabel()=='Not bound' and M.page.bindingControl.field:GetText()=='Not bound')
-    Click('Set Keybinding');M.page:Hide();assert(not capture:IsShown() and not capture.keyboard)
-    M.page:Show();Click('Set Keybinding');addon:SetModuleEnabled('dungeonLoot',false)
+    Settings();bindings['ALT-D']=action;Click('Clear Keybinding')
+    assert(not bindings['CTRL-D'] and not bindings['ALT-D'] and bindings.F1=='UNRELATED' and M:ShortcutBindingLabel()=='Not bound' and S.bindingControl.field:GetText()=='Not bound')
+    Click('Set Keybinding');S:Hide();assert(not capture:IsShown() and not capture.keyboard)
+    S:Show();Click('Set Keybinding');addon:SetModuleEnabled('dungeonLoot',false)
     assert(not capture.keyboard and not b:IsShown())
 ''')
 encoded=lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')

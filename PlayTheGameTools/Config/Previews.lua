@@ -94,7 +94,7 @@ function addon:ShowModulePreview(module)
     return true
 end
 
--- Fixed preview header/body above the section tabs and scrolling settings.
+-- Fixed preview header/body above the page's one scroll of settings.
 function W.Preview(page, module, options)
     if not module.CreateConfigPreview then return end
     page:ClearAllPoints();page:SetPoint("TOPLEFT");page:SetPoint("BOTTOMRIGHT")
@@ -175,12 +175,6 @@ function W.Preview(page, module, options)
         if module.CanTestDisplay then permitted=module:CanTestDisplay() end
         test:SetEnabled(module.testing==true or permitted==true)
         local top=h+12
-        if self.sectionTabs then
-            self.sectionTabs:ClearAllPoints(); self.sectionTabs:SetPoint("TOPLEFT",0,-h-6)
-            self.sectionTabs:SetPoint("TOPRIGHT",-24,-h-6)
-            top=h+46
-        end
-        if self.LayoutSectionPanel then top=self:LayoutSectionPanel(top) end
         self.scroll:ClearAllPoints(); self.scroll:SetPoint("TOPLEFT",0,-top); self.scroll:SetPoint("BOTTOMRIGHT",-24,0)
         self.scrollbar:ClearAllPoints(); self.scrollbar:SetPoint("TOPRIGHT",-4,-top-4); self.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
         self:Layout()

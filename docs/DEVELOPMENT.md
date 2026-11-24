@@ -26,6 +26,73 @@ page and flashes the row. No new TOC files, SavedVariables or frame names.
 `tests/window_shell.py` guards the shell. Native confirmation is pending;
 `/reload` OOC.
 
+One scroll per module (branch `t3/v2w2-pages`, v2 wave 2): every module page
+is one vertical scroll: the page header, then each section as a titled group, top
+to bottom. Gone: ModeLayout's feature pills, Options/Text/Appearance panel tabs,
+panel headers and the left checkbox gutter; `W.SectionTabs` and the section strip;
+the Campfire element pills/panels/summary column (`campfirePilot`,
+`SelectCampfirePanel`); module-page Collapse buttons (only `Section(..., true)`
+folds, used by Developer Mode); the `underline` button style. `page:Layout`
+(Config/Pages.lua) hides a section or `Group` heading while nothing under it
+shows, so a section holding only Layout styling (Combat Timer's Display) has no
+heading. `page:ShowSection(section|index|title)` replaces `SelectSectionTab`: it
+scrolls to the heading (section 1 = top) and sets `selectedSection`; the window
+calls `ShowSection(1)` on open. `page:Reveal(entry)` (search) scrolls to the row
+and flashes it; search skips a section hit whose rows are all Layout styling.
+`W.ApplyModeModuleLayout` keeps only the routes that tag `row.editAppearance`
+(still hidden; headings are never tagged), compact rows and color pairing.
+Class Training listed upcoming abilities under Upcoming Abilities and the rest
+under Available & Known (since the browsers merge those lists are in the Class
+Training window); Level Up Window rows show while that window is on and
+Shortcut Icon & Menu while the module is on (the old tab gating). Guild Roster
+and Loot Sparkles drop their tab strips; Campfire preview now stops when the
+page hides, not on a section change (since the split, when leaving the Campfire
+Monitor page). Kept: the Dungeon Loot browser's own pills (`W.LayoutModePills`
+in Config/SectionTabs.lua); since the browsers merge its Options/Appearance/Data
+sub-tabs and `W.SetupModeBrowser` are gone (General became its settings page). No TOC, SavedVariables or frame-name changes;
+`tests/mode_module_layouts.py` and `tests/campfire_mode_layout.py` guard it.
+Native confirmation is pending; `/reload` OOC.
+
+Guild (branch `t3/v2w2-guild`, v2 wave 2, 2026-11-24): Guild Roster and
+Guild Recruitment merged into one module. **ID choice:** the Guild module keeps
+`foreverRecruitment` (title "Guild"), because that saved table holds everything
+worth keeping: `history` (invite times and never-invite list), `records`
+(statistics), `message`, `minLevel`/`maxLevel`/`chunkSize`, `classes` and
+`reinviteDays`. The roster stored only `enabled`, so `foreverGuildRoster` is
+retired as a module (`Modules/ForeverGuildRoster.lua` is now
+`addon.ForeverGuildRoster`, driven by Guild's `OnInitialize`/`SetActive`). Its
+table is never written or removed. Adoption is one-time and non-destructive:
+`M:AdoptRoster` runs in `OnInitialize` (before the saved switch is applied) and,
+unless `db.rosterAdopted` is set, turns Guild on when the old Roster table had
+`enabled=true`, then sets `rosterAdopted=true` in the Guild table; so Guild is
+on if either old module was on, and turning it off later sticks. Profiles
+adopt when they are next loaded. `addon.retiredModules.foreverGuildRoster`
+lets `ProfileManager:PrepareImport` accept old exported profiles that carry the
+retired ID (one-line change; unknown IDs are still refused); exports carry only
+registered modules. `addon.ForeverGuild` aliases `addon.ForeverRecruitment`.
+Window: `Config/ForeverGuild.lua` (one new TOC entry, 124 Lua chunks) builds
+the Guild window (old frame name `PlayTheGameToolsRecruitmentFrame`, Dialogs
+group `recruiter`, 536×712) with the module switch, **Roster**/**Recruit** tabs
+(`M:SelectTab`, session-only `M.tab`, default Roster; `/ptgr` opens Recruit) and
+the settings page: a note; **Open Guild** is the shared page-header button
+(`openLabel="Open Guild"` on the module, `header.openButton` in
+`Config/Window.lua`, the same path as Open Dungeon Loot and Open Class
+Training): left of the switch, disabled (dimmed) while off, calling
+`M:OpenWindow()`. The page carries an "Open Guild" search entry whose keywords are the old
+names so they rank Guild first. `Config/ForeverRecruitment.lua` builds the
+Recruit tab (`M:BuildRecruitTab`) with one **History** menu (`W.Popup`) for
+`M.HISTORY_ACTIONS`; `Config/ForeverGuildRoster.lua` builds the Roster tab
+(`Roster:BuildView`) as one stacked, scrolling column instead of a settings page
+with pills. The roster reads members and registers events only while the
+Roster tab is visible (`Roster:SetViewShown`, from the window's OnShow/OnHide
+and tab changes). Quick Actions keeps the `recruitment` action key, titled
+"Guild", shown whenever the module is on. Mode: `foreverRecruitment` has an
+empty plan (no route: the page is only compacted; it has no sections); the Roster plan is gone. Recruit guards are unchanged: `Ready()`
+(switch and `InCombatLockdown`), Who only from clicks with the 5 s cooldown, the
+copy box instead of an invite API, `CanGuildInvite`, `ADDON_ACTION_BLOCKED`
+reporting. No new game APIs. `tests/guild.py` and `tests/guild_roster.py` cover
+it. Native confirmation is pending; new TOC file: restart the client once.
+
 Layout (branch `t3/v2-layout-mode`, v2 redesign): one on-screen mode replaces
 Preview and Edit Mode. `addon:SetEditMode(true/false)` is still the way in and
 out and `addon.editMode` its only flag; `addon:SetPreviewMode`/`previewMode` are
@@ -48,6 +115,79 @@ PLAYER_REGEN_ENABLED). Grid is session-only (`EditMode.grid`), off by default,
 snaps screen-centred drops to 32 units. No TOC or new files besides
 `tests/layout_style.py`; `tests/edit_mode.py` covers the mode. Native
 confirmation is pending; `/reload` OOC.
+v2 Gameplay Enhancements split (branch `t3/v2w2-split`, 2026-11-24, wave 2):
+the old `lootSparkles` module ("Gameplay Enhancements") is now two modules and
+two sidebar entries, each with its own switch. Decision, for compatibility:
+- **Loot Sparkles** keeps the ID `lootSparkles`, its saved table and its CVar
+  ownership record (`lootSparkleCVars`); turning it off still restores the
+  client settings it changed (unchanged `Configure`/`Restore` path).
+- **Campfire Monitor** is the new module `campfireMonitor`
+  (`Modules/CampfireMonitor.lua`, `addon.CampfireMonitor.module`). Its own saved
+  table holds only `enabled` and `adoptedSplit`. Every Campfire and Camp
+  Contributions setting is read in place from `modules.lootSparkles.campfire`;
+  nothing is moved or erased, and `LootSparkles.Initialize` still validates it.
+- First switch states: `LootSparkles.AdoptSplit` (run by profile validation, so
+  also on imports and inactive profiles) records the old master once as
+  `lootSparkles.splitMasterEnabled` and sets `lootSparkles.enabled` = old master
+  AND `sparklesEnabled`. `campfireMonitor:OnInitialize` sets its switch once to
+  `splitMasterEnabled` AND `campfire.enabled`, then marks `adoptedSplit`. Later
+  choices are never re-adopted. Missing old inner flags count as their old
+  defaults (sparkles on, campfire off).
+- The inner "Enable Loot Sparkles" (`sparklesEnabled`) and "Enable Campfire
+  Monitor" (`campfire.enabled`) switches are gone; both values stay saved, unread
+  and out of the defaults.
+- Display element IDs `campfireMonitor`, `campfireBuffs`, `campfireContributions`
+  are unchanged, so saved positions and Style card styles apply; they now name
+  `campfireMonitor` as their module. Their media scope stays `lootSparkles`.
+- Search aliases: both modules answer "gameplay enhancements"; Campfire Monitor
+  also "campfire", "camp contributions", "camp buffs".
+- Campfire Monitor's page is one scroll (merged with the one-scroll pages
+  branch in `t3/v2-wave2`): no pills or panel tabs, and no section either; its
+  General / Campfire Icon / Camp Buffs / Camp Contributions groups are the
+  headings, routed by its own `C:ApplyModeConfigLayout`. Loot Sparkles is one
+  scroll of Sparkle On / Options / Appearance / Availability groups.
+  `Config/ModePlans.lua` routes Loot Sparkles as one feature (`sparkles`) and
+  points the Campfire `EditAppearance` entries at page `campfireMonitor`.
+Chips (`Config/Chips.lua`, new TOC entry after `Config/Widgets.lua`, 124 Lua
+chunks): `W.Chips(page, items)` is one wrapping row of toggle chips, one per
+saved boolean key, each its own search entry. Used for Loot Sparkles "Sparkle
+On" (questSparkles, ore, herbs, questObjects, corpses) and Map Labels
+"Services" (the ten service keys plus otherFaction); Map Labels' Show Names
+moved to its Appearance group. The Map Labels page shows one source line
+(`CityLabels.SOURCE_LINE`) and **Full notice in About**, which opens Settings
+and flashes the About "Data sources" row (`CityLabels:ShowDataSources`). The
+full notice stays word for word in Settings → About and in the notice files.
+`tests/gameplay_split.py` covers adoption; the campfire, Map Labels and
+Settings suites cover the pages. Native confirmation pending; new TOC file:
+restart the client once.
+
+Browser windows (branch `t3/v2w2-browsers`, v2 wave 2): `Config/BrowserWindow.lua`
+(new TOC entry after `Config\EditMode.lua`, 124 Lua chunks) provides
+`W.BrowserWindow(spec)`: an unprotected, movable, clamped DIALOG frame drawn
+with `W.Texture(f,"Window")` (theme surface, as the Recruiter), Close and
+Settings buttons, a `body`, session-only centre positions
+(`addon.BrowserWindowPositions`, never saved) and its own Dialogs group (the
+module id), so Escape closes it and opening it closes Settings. The page header
+(`Config/Window.lua` `PageHeader`) shows `module.openLabel` as a button that
+calls `module:OpenWindow()` while the module is on (`header.openButton`).
+Dungeon Loot: `M:CreateBrowser(parent)` is the old in-page browser minus its
+General tab, parented to `PlayTheGameToolsDungeonLootWindow`; `M.page` still
+names it and `M:BrowserShown()` gates item/quest events. `M:CreateConfigPage`
+is now a plain `W.Page` (Quick Icon, Keybinding, Dungeon Data; `M.settingsPage`)
+and owns binding capture. `OpenDungeonLoot` (ring, binding, header) opens the
+window, in combat too; with the module off it still opens the settings page OOC.
+The map hand-off hides/restores the window. `W.SetupModeBrowser` was removed from
+`Config/ModeLayout.lua` (its only caller is gone). Class Training:
+`M:CreateTrainingBrowser` holds the moved row pool and summary under two local
+tabs in `PlayTheGameToolsClassTrainingWindow`; `M:OpenTrainingWindow(tab)`;
+the settings page refresher is `page:RenderSettings()`. Merged into
+`t3/v2-wave2` with the one-scroll pages: the Class Training settings page has
+no tab strip; Level Up Window rows show while that window is on and Shortcut
+Icon & Menu rows while the module is on, and `OpenTraining(section)` scrolls to
+sections 1–3 with `page:ShowSection`. The browser window keeps its own two
+pills, as the Dungeon Loot window keeps its own. Guild's Open Guild uses the
+same `openLabel` hook. `tests/browser_windows.py` guards it. Native
+confirmation is pending; restart the client once for the new TOC file.
 v2 module cuts (branch `t3/v2-module-cuts`, 2026-11-23): part of the approved
 v2 settings redesign. Display titles only: Map Labels (`cityLabels`), Experience
 Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and
@@ -72,7 +212,7 @@ Echoes: `LootSparkles:StatusNotice()` drops the two on/off status strings; the
 Rogue, Campfire and Food Bar status rows hide while they would only restate a
 switch. Food Bar: `F:IsOn()` = `enabled and shown`, `F:SetShown(v)` sets both, and
 `SyncEnabled` follows `IsOn()`. Enable Loot Sparkles and Enable Campfire Monitor
-stay: both are independent features under the one Gameplay Enhancements switch.
+stayed here; the v2 split above removed them.
 Refresh buttons: Spellbook Refresh, Update Learned List and Refresh Bags are gone.
 Their modules already re-read on SPELLS_CHANGED / LEARNED_SPELL_IN_SKILL_LINE
 (SpellBookDocumentation), SKILL_LINES_CHANGED (SkillInfoDocumentation) and

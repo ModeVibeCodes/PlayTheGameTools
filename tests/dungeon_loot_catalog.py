@@ -40,7 +40,7 @@ lua.execute(r'''
     assert(not L:FindRecorded('Fixture',L:RecordedIndex(source)),'no substring match')
     assert(not L:Interior('Inside a different inn','Fixture Burrow',source.DB['Fixture Burrow'].entrance))
     LibQuestieDB=nil
-    addon:SetModuleEnabled('dungeonLoot',true);addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    addon:SetModuleEnabled('dungeonLoot',true);assert(M:OpenDungeonLoot() and M.window:IsShown())
     local page=M.page
     local function Plain(s) return (s or ''):gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','') end
     local function Find(pane,name)
@@ -82,7 +82,7 @@ native.execute(r'''
     LibQuestieDB=nil;QuestieLoader=nil
     local original={}
     for _,instance in ipairs(C.Data.Instances) do original[instance.key]=addon.ProfileCodec.Encode(instance) end
-    addon:SetModuleEnabled('dungeonLoot',true);addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    addon:SetModuleEnabled('dungeonLoot',true);assert(M:OpenDungeonLoot() and M.window:IsShown())
     local initial=P:Read()
     assert(#initial.cards==35)
     local active,preview,bosses,quests,pickups,returns,maxSlots=0,0,0,0,0,0,0

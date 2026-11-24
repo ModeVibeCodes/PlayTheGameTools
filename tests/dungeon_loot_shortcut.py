@@ -1,4 +1,4 @@
-"""Dungeon Loot icon/keybinding routing, drag persistence and combat/lifecycle guards."""
+"""Dungeon Loot icon/keybinding routing to its window, drag persistence and combat/lifecycle guards."""
 import xml.etree.ElementTree as ET
 from smoke import load
 from build_release import payload
@@ -20,35 +20,35 @@ lua.execute(r'''
     addon:SetModuleEnabled('dungeonLoot',true)
     local b=M.shortcut
     assert(b and b:IsShown() and b:GetWidth()==40 and b:GetParent()==addon.QuickActions.ring)
+    -- The ring icon opens the Dungeon Loot window on its index, not settings.
     M:Navigate('Shadowfang Keep','quests')
     b:GetScript('OnClick')(b)
-    assert(M.view.dungeon==nil and M.view.tab=='loot' and M.page:IsShown())
-    addon.configWindow:Hide();b:GetScript('OnClick')(b)
-    assert(addon.configWindow:IsShown() and M.page:IsShown())
+    assert(M.view.dungeon==nil and M.view.tab=='loot' and M.window:IsShown() and M.page:GetParent()==M.window.body)
+    assert(not addon.configWindow:IsShown(),'the window replaces the settings window')
+    M.window:Hide();b:GetScript('OnClick')(b)
+    assert(M.window:IsShown() and not addon.configWindow:IsShown())
     assert(b:GetScript('OnDragStart')==nil,'ring icons do not move on their own')
-    testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
-    assert(not PlayTheGameToolsOpenDungeonLoot())
+    -- An unprotected window: it opens in combat, and Escape closes it.
+    M.window:Hide();testCombat=true;FireEvent('PLAYER_REGEN_DISABLED')
+    assert(PlayTheGameToolsOpenDungeonLoot() and M.window:IsShown() and not addon.editMode,'opens in combat')
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
+    PlayTheGameToolsEscapeHandler:Hide();assert(not M.window:IsShown(),'Escape closes the window')
     -- An old saved showShortcut=false is not read: a module that is on is in the ring.
     M.db.showShortcut=false;M:SyncShortcut();assert(b:IsShown())
     M.db.showShortcut=nil
-    assert(PlayTheGameToolsOpenDungeonLoot() and M.view.dungeon==nil,'keybind opens Dungeon Loot')
-    M:Navigate(nil,'general')
-    local function Click(label)
-        for _,slot in ipairs(M.page.rootPane.slots) do
-            if slot.visible and slot.button.label:GetText()==label then slot.button:GetScript('OnClick')(slot.button);return end
-        end
-        error('Missing '..label)
+    assert(PlayTheGameToolsOpenDungeonLoot() and M.view.dungeon==nil and M.window:IsShown(),'keybind opens Dungeon Loot')
+    M.window:Hide();addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    local S=M.settingsPage
+    assert(S:IsShown() and addon.configWindow.moduleHeader.openButton:IsShown())
+    local function Titles()
+        local out={};for _,row in ipairs(S.rows) do out[#out+1]=row.settingsTitle or '' end;return table.concat(out,'|')
     end
-    for _,slot in ipairs(M.page.rootPane.slots) do
-        local text=slot.visible and slot.button.label:GetText() or ''
-        assert(not text:find('Lock Shortcut',1,true),'lock row removed')
-        assert(not text:find('Show Shortcut',1,true),'no Quick Actions switch')
-    end
+    assert(not Titles():find('Lock Shortcut',1,true),'lock row removed')
+    assert(not Titles():find('Show Shortcut',1,true),'no Quick Actions switch')
     local launcher=addon.PositionManager.elements.quickActionsLauncher
     assert(addon.PositionManager:SetOffsets(launcher.id,12,34))
     assert(M:ResetShortcutPosition() and launcher.position.x==-180 and launcher.position.y==-140,'module API resets; the page leaves placement to Edit Mode')
-    for _,slot in ipairs(M.page.rootPane.slots) do assert(not (slot.visible and slot.button.label:GetText():find('Position',1,true)),'no page position rows') end
+    assert(not Titles():find('Position',1,true),'no page position rows')
     M.db.shortcutPosition={x=70,y=-90};M.db.shortcutLocked=true
     addon:SetModuleEnabled('dungeonLoot',false)
     assert(not b:IsShown() and next(M.shortcutEvents.events)==nil)

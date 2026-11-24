@@ -382,11 +382,8 @@ local BUTTON = {
         label = "secondary", hoverFill = "surface", hoverLabel = "text",
         selectedFill = "surface", selectedLabel = "text", edge = true,
     },
-    underline = {
-        label = "muted", hoverLabel = "text", selectedLabel = "text",
-    },
-    -- Navigation pills and panel sub-tabs exist in every theme; only colors,
-    -- borders and textures differ.
+    -- Dungeon Loot's browser pills and panel sub-tabs exist in every theme;
+    -- only colors, borders and textures differ.
     roundedTab = {
         fill = "surface", line = "line", label = "secondary",
         hoverFill = "hover", hoverLabel = "text", selectedLine = "primary", selectedLabel = "primary",
@@ -421,9 +418,6 @@ local MODERN_BUTTON = {
     tab = {
         label = "secondary", hoverFill = "hover", hoverLabel = "text",
         selectedFill = "surface", selectedLabel = "text", edge = true,
-    },
-    underline = {
-        label = "secondary", hoverLabel = "text", selectedLabel = "text",
     },
     roundedTab = {
         fill = "surface", line = "lineStrong", label = "secondary",
@@ -574,11 +568,11 @@ function W.Button(parent, text, width, height, style)
         local color = self.labelColor or Color(label) or T.text
         if not available then color = T.unavailable end
         self.label:SetTextColor(color[1], color[2], color[3], color[4] or 1)
-        self.activeGlow:SetShown(selected and style ~= "primary" and style ~= "underline")
+        self.activeGlow:SetShown(selected and style ~= "primary")
         if T.id == "mode" then
             -- Hover lights text only. A separate etched line marks selection;
             -- resting fills and borders never brighten with hover/selection.
-            local plain=style=="tab" or style=="underline" or style=="categoryHeading"
+            local plain=style=="tab" or style=="categoryHeading"
             Paint(self.fill, plain and T.background or T.surface, plain and 0 or 1)
             self.outline:SetShown(not plain)
             if not plain then self.outline:SetColor(T.line,0.8) end

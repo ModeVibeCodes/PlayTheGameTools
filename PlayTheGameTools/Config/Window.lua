@@ -138,10 +138,23 @@ local function PageHeader(parent)
     toggle:SetScript("OnClick", function()
         if header.module then addon:SetModuleEnabled(header.module.id, not header.module.enabled) end
     end)
+    -- A module whose browser is its own window names it with openLabel and
+    -- opens it with OpenWindow(); the button works while the module is on.
+    local open = W.Button(header, "", 160, 24, "primary")
+    open:SetPoint("RIGHT", toggle, "LEFT", -12, 0)
+    open:Hide()
+    open:SetScript("OnClick", function()
+        if header.module and header.module.enabled and header.module.OpenWindow then header.module:OpenWindow() end
+    end)
     function header:Refresh()
         local gameplay = self.module ~= nil and not self.module.developer
         toggle:SetShown(gameplay)
         if gameplay then toggle:SetSelected(self.module.enabled) end
+        local label = gameplay and self.module.openLabel or nil
+        open:SetShown(label ~= nil)
+        if label then open.label:SetText(label); open:SetEnabled(self.module.enabled == true) end
+        local right = label and -(64 + 172) or -64
+        title:SetPoint("TOPRIGHT", right, -2); description:SetPoint("TOPRIGHT", right, -30)
     end
     -- module is nil for the Settings page, which has no switch.
     function header:SetModule(module, info)
@@ -152,6 +165,7 @@ local function PageHeader(parent)
         self:Refresh()
     end
     header.title, header.description, header.toggle, header.divider = title, description, toggle, divider
+    header.openButton = open
     return header
 end
 
@@ -429,7 +443,7 @@ function addon:CreateConfig()
         if not pages[id].UpdatePreviewLayout then
             pages[id]:ClearAllPoints();pages[id]:SetPoint("TOPLEFT");pages[id]:SetPoint("BOTTOMRIGHT")
         end
-        if pages[id].SelectSectionTab then pages[id]:SelectSectionTab(1) end
+        if pages[id].ShowSection then pages[id]:ShowSection(1) end
         pages[id]:Show()
         pages[id]:Layout()
         self:RefreshConfig()

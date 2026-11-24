@@ -47,15 +47,16 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   houses, inns, flight masters and more, with faction, size and name options.
   Locations: Efficient Games data (CC BY 4.0), with Classic positions from CMaNGOS
   classic-db (GPL-3.0) filling gaps; see [Map Labels](docs/CITY_LABELS.md).
-- **Guild Roster:** opt-in page under Guild Tools. **Members** lists every guild
-  member by class with levels, an online marker and hover details, plus a search
-  (name, class, race, zone, rank, notes or level) and Class/Status filters.
-  **Analytics** totals each class and breaks the guild down by level, rank, race,
-  last online and zone. Read-only; nothing about the roster or searches is saved.
-- **Guild Recruitment:** opt-in Who sweeps by level range and class (capped
-  ranges are split and searched again), a Recruiter window (`/ptgr`) with a
+- **Guild:** opt-in; **Open Guild** (or `/ptgr` for Recruit) opens one Guild
+  window with two tabs. **Roster** totals each class, lists every guild member
+  by class with levels, an online marker and hover details, plus a search
+  (name, class, race, zone, rank, notes or level) and Class/Status filters, and
+  breaks the guild down by level, rank, race, last online and zone. Read-only;
+  nothing about the roster or searches is saved. **Recruit** runs Who sweeps by
+  level range and class (capped ranges are split and searched again), with a
   copy-name box for Guild > Add Member, per-player recruitment whisper button,
-  a re-invite window, a never-invite list and invite/join/decline statistics.
+  a re-invite window, and a **History** menu for the never-invite list, invite
+  history and invite/join/decline statistics.
 - **Loot Sparkles:** opt-in Gameplay Enhancements under Questing & Leveling; clearer quest objects, herbs, ore and lootable corpses with optional names and range text. Custom indicators pause in combat.
 - **Campfire Monitor:** Gameplay Enhancements tab with an optional native nearby-fire icon/text display, compact earned bonuses in a joined or separately movable window, appearance/position controls and a profession reference guide. Campfire monitoring starts off. Includes a movable Camp Contributions popup for ready carried profession kits, with native click-to-place actions, detected-kit summary, safe sample preview and shared Edit Mode positioning. Text colors use the native picker; gradients are optional. Contributions has independent window, icon, row and text styling; quick jumps link the three campfire elements.
 - **Shared configuration:** independent module switches, saved settings, appearance

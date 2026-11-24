@@ -141,6 +141,7 @@ function methods:IsEnabled() return self.enabled ~= false end
 function methods:RegisterForDrag(button) assert(button == "LeftButton") end
 function methods:RegisterForClicks(button) self.clickRegistration = button end
 function methods:StartMoving() self.moving = true end
+function methods:Raise() self.raised = (self.raised or 0) + 1 end
 function methods:StopMovingOrSizing() self.moving = false; self.sizing = false end
 function methods:SetText(text)
     local changed = self.text ~= text

@@ -5,9 +5,9 @@ from smoke import load
 
 lua,_=load(before=FIXTURE+EXTRA)
 lua.execute(r'''
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page;page.sectionTabs.buttons[2].scripts.OnClick()
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local page=C.module.page
+addon:SetModuleEnabled('campfireMonitor',true)
 page.contributionPreview.scripts.OnClick()
 assert(A.window:IsShown())
 -- Native-style hidden rectangles: a re-open must be shown before re-anchoring.

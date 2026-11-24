@@ -112,16 +112,26 @@ assert(page.aboutVersion:GetText()==addon.buildVersion and addon.buildVersion~='
 local function Reads(value) return value:GetParent().rowLabel:GetText()..' '..value:GetText() end
 assert(Reads(page.aboutCredits)=='Created by Mode and Prox','credits')
 assert(Reads(page.aboutBugs)=='Bug reports Discord NoJumperMike','bug reports go to Discord NoJumperMike')
+-- The full notice stays here word for word; Map Labels shows one source line.
+local builds=addon.CityLabelsData.source.builds
+assert(type(builds)=='string' and builds~='')
+assert(page.dataSourcesNotice:GetText()=="Data from Efficient Games (efficient.games), licensed CC BY 4.0, from WoW: Forever client builds "
+    ..builds.."; each label marks where players stood to use the service. Where they have not recorded one yet, "
+    .."the Classic spawn position from CMaNGOS classic-db (GPL-3.0) is shown and its tooltip says so.",'full Map Labels notice, word for word')
 addon:SelectConfigPage('cityLabels')
-local notice=w.pages.cityLabels.cityLabelSource:GetText()
-addon:SelectConfigPage('globalSettings')
-assert(page.dataSourcesNotice:GetText()==notice,'full Map Labels notice, copied exactly')
+local mapPage=w.pages.cityLabels
+assert(mapPage.cityLabelSource:GetText()=='Locations: Efficient Games (CC BY 4.0), with CMaNGOS classic-db (GPL-3.0) where none is recorded yet.','one source line on Map Labels')
+local sourcesRow=page.dataSourcesNotice:GetParent().row
+assert(sourcesRow.searchHighlight==nil and mapPage.cityLabelSourceButton.label:GetText()=='Full notice in About')
+mapPage.cityLabelSourceButton.scripts.OnClick()
+assert(w.selectedPage=='globalSettings' and page:IsShown() and sourcesRow:IsShown() and sourcesRow.searchHighlight,'the button opens Settings and flashes Data sources')
+assert(sourcesRow.offset>0 and page.scrollbar:GetValue()>0,'scrolled down to the About row')
 assert(page.dataSourcesTitle:GetText()==addon.modules.cityLabels.title,'names the module as the sidebar does')
 assert(addon:SearchSettings('points of interest')[1].module.id=='cityLabels','an old name finds Map Labels before its notice')
 -- Profile: one dropdown plus Manage.
 assert(addon.PositionManager:SetOffsets('combatTimer',123,-87))
-page:SelectSectionTab(3);assert(page.selectedSection.title=='Profile' and page.scrollbar:GetValue()>0,'indexes follow the page order')
-page:SelectSectionTab(1);assert(page.selectedSection.title=='Appearance' and page.scrollbar:GetValue()==0,'section 1 is the top')
+page:ShowSection(3);assert(page.selectedSection.title=='Profile' and page.scrollbar:GetValue()>0,'indexes follow the page order')
+page:ShowSection(1);assert(page.selectedSection.title=='Appearance' and page.scrollbar:GetValue()==0,'section 1 is the top')
 local hub=page.profileHub
 assert(hub.select and hub.manage and not hub.specToggle,'Forever has no spec controls')
 testCombat=true;hub.manage.scripts.OnClick();assert(not hub.menu:IsShown());testCombat=false

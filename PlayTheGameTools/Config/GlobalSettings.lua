@@ -294,20 +294,8 @@ function addon:CreateGlobalSettingsPage(parent)
         self:SetHeight(math.max(52,47+height))
     end
 
-    -- No section tabs: the page scrolls. Opening the page selects section 1,
-    -- which scrolls back to the top.
-    function page:ShowSection(title)
-        local target
-        for _,section in ipairs(self.sections) do if section.title==title then target=section end end
-        self.selectedSection=target or self.sections[1]
-        self:Layout()
-        local offset=target and target~=self.sections[1] and target.header.offset or 0
-        self.scrollbar:SetValue(math.max(0,offset-8))
-    end
-    function page:SelectSectionTab(section)
-        if type(section)~="table" then section=self.sections[section] or self.sections[1] end
-        self:ShowSection(section.title)
-    end
+    -- One scroll like every page: opening it shows section 1, the top
+    -- (page:ShowSection in Config/Pages.lua).
     -- Rows that appear, disappear or rewrap on refresh.
     page.refreshers[#page.refreshers+1]=function() page:Layout() end
     page:Finish();return page

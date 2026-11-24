@@ -1,9 +1,10 @@
-"""Guild Tools -> Roster: class grouping, search/filters, analytics and tabs; not WoW."""
+"""Guild window -> Roster tab: class grouping, search/filters, analytics and visibility; not WoW."""
 from smoke import load
 
 lua, _ = load()
 lua.execute(r'''
     R=addon.ForeverGuildRoster
+    G=addon.ForeverGuild
     local CLASS={[1]='WARRIOR',[8]='MAGE',[11]='DRUID'}
     local RACE={[1]='Human',[2]='Orc',[4]='Night Elf'}
     raceReads=0
@@ -35,8 +36,8 @@ lua.execute(r'''
         return table.concat(out,',')
     end
     function Open()
-        addon:ToggleConfig();addon:SelectConfigPage('foreverGuildRoster')
-        page=R.page
+        G:OpenWindow('roster')
+        page=R.view
     end
     function Watching()
         local n=0;if R.events then for _ in pairs(R.events.events) do n=n+1 end end;return n
@@ -49,15 +50,15 @@ lua.execute(r'''
 ''')
 
 lua.execute(r'''
-    -- Off by default, and silent until turned on.
-    assert(R.category=='guildTools' and R.defaultEnabled==false and not R.enabled)
+    -- Part of the Guild module: off by default, and silent until turned on.
+    assert(addon.modules.foreverGuildRoster==nil and G.category=='guildTools' and G.defaultEnabled==false and not G.enabled)
     Open()
-    assert(addon.configWindow.pages.foreverGuildRoster==page)
+    assert(G.window:IsShown() and G.tab=='roster' and G.window.panels.roster:IsShown() and not G.window.panels.recruit:IsShown())
     assert(requests==0 and reads==0 and Watching()==0,'disabled page reads nothing')
     assert(page.statusLabel:GetText():find('switch',1,true) and page.totalLabel:GetText()=='Total Members: 0')
 
     -- Every member appears once, under their class, alphabetically.
-    addon:SetModuleEnabled('foreverGuildRoster',true)
+    addon:SetModuleEnabled('foreverRecruitment',true)
     assert(requests==1 and reads==1 and Watching()>0,'roster requested once while visible')
     assert(R.status==nil and page.totalLabel:GetText()=='Total Members: 4')
     assert(Visible()=='Bob,Alice,zed,Noclass','warrior before mage before unknown; names sorted: '..Visible())
@@ -126,22 +127,25 @@ lua.execute(r'''
     assert(R.status==R.STATUS.noGuild and R.snapshot.total==0 and Visible()=='' and page.totalLabel:GetText()=='Total Members: 0')
     inGuild=true;members={{name='Fay',classID=8}};R:Rescan()
 
-    -- Events stop with the page, and restart with it.
-    page:Hide();assert(Watching()==0 and not R.watching,'hidden page listens to nothing')
+    -- Events stop with the window, and restart with it.
+    G.window:Hide();assert(Watching()==0 and not R.watching,'closed window listens to nothing')
     local before=reads
     FireEvent('GUILD_ROSTER_UPDATE',true);assert(reads==before)
-    requests=0;page:Show();assert(requests==1 and Watching()>0,'reopening requests a fresh roster')
+    requests=0;Open();assert(requests==1 and Watching()>0,'reopening requests a fresh roster')
+    -- The Recruit tab does not read the roster either.
+    G:SelectTab('recruit');assert(Watching()==0 and not R.watching and not G.window.panels.roster:IsShown(),'recruit tab listens to nothing')
+    requests=0;G:SelectTab('roster');assert(requests==1 and R.watching,'back on Roster requests a fresh roster')
 
-    -- A rescan that was queued before the page closed does nothing.
+    -- A rescan that was queued before the window closed does nothing.
     local held;C_Timer.After=function(_,fn) held=fn end
-    FireEvent('GUILD_ROSTER_UPDATE',true);page:Hide();before=reads;held()
+    FireEvent('GUILD_ROSTER_UPDATE',true);G.window:Hide();before=reads;held()
     assert(reads==before,'stale rescan dropped');C_Timer.After=realAfter
-    page:Show()
+    Open()
 
     -- Turning it off clears the list and the switch still works afterwards.
-    addon:SetModuleEnabled('foreverGuildRoster',false)
+    addon:SetModuleEnabled('foreverRecruitment',false)
     assert(Watching()==0 and R.snapshot.total==0 and R.status==R.STATUS.off and Visible()=='')
-    addon:SetModuleEnabled('foreverGuildRoster',true)
+    addon:SetModuleEnabled('foreverRecruitment',true)
     assert(R.watching and R.snapshot.total==1 and Visible()=='Fay')
 
     -- Unavailable client API degrades to a message.
@@ -196,14 +200,17 @@ lua.execute(r'''
     assert(R:LastOnlineText({lastOnline={0,0,0,0}})=='Last online less than an hour ago')
     assert(R:LastOnlineText({lastOnline={0,0,0,1}})=='Last online 1 hour ago' and R:LastOnlineText({})=='Offline')
 
-    -- A tooltip left open follows the roster, and closes with the page.
+    -- A tooltip left open follows the roster, and closes with the window or tab.
     Cell('Bob').scripts.OnEnter(Cell('Bob'))
     members[2].zone='Booty Bay';R:Rescan()
     assert(GameTooltip.shown and GameTooltip.lines[4]=='Online in Booty Bay','open tooltip refreshed')
-    page:Hide();assert(not GameTooltip.shown,'closing the page closes its tooltip')
-    GameTooltip:Show();page:Show();page:Hide()
-    assert(GameTooltip.shown,'a tooltip the page did not open is left alone')
-    GameTooltip:Hide();page:Show()
+    G.window:Hide();assert(not GameTooltip.shown,'closing the window closes its tooltip')
+    Open();Cell('Bob').scripts.OnEnter(Cell('Bob'))
+    G:SelectTab('recruit');assert(not GameTooltip.shown,'leaving the tab closes its tooltip')
+    G:SelectTab('roster')
+    GameTooltip:Show();G.window:Hide()
+    assert(GameTooltip.shown,'a tooltip the tab did not open is left alone')
+    GameTooltip:Hide();Open()
 
     -- Search matches name, class, race, zone, rank and notes, ignoring case.
     local box=page.searchBox
@@ -245,7 +252,7 @@ lua.execute(r'''
     Choose(page.classFilter,'All Classes')
 
     -- The filters drop below the search box on a narrow page.
-    local toolbar=page.searchBox:GetParent().row
+    local toolbar=page.toolbarRow
     toolbar:layoutChildren(800);local wide=toolbar:GetHeight()
     assert(page.classFilter.points[1][5]==-8,'inline on a wide page')
     toolbar:layoutChildren(320)
@@ -283,32 +290,38 @@ lua.execute(r'''
     assert(not page.charts.zone.bars[1].label:IsShown(),'stale bars are hidden')
     assert(Bars('lastOnline'):find('Unknown=1',1,true),'offline without a time is unknown')
 
-    -- Two tabs: Members and Analytics; the status line shows above both.
-    local tabs=page.sectionTabs
-    assert(#tabs.buttons==2 and tabs.buttons[1].label:GetText()=='Members' and tabs.buttons[2].label:GetText()=='Analytics')
-    page:SelectSectionTab(1)
-    assert(page.membersRow:IsShown() and not page.charts.level.row:IsShown())
-    page:SelectSectionTab(2)
-    assert(not page.membersRow:IsShown() and page.charts.level.row:IsShown() and page.summaryCells[1].name:IsShown())
+    -- One scrolling column: status, Class Summary, Members by Class, then the breakdowns.
+    local function Index(frame) for i,row in ipairs(page.rows) do if row==frame then return i end end end
+    local summary=Index(page.summaryCells[1].name:GetParent())
+    local membersHeading
+    for i,row in ipairs(page.rows) do if row.heading and row.heading:GetText()=='Members by Class' then membersHeading=i end end
+    assert(Index(page.statusLabel:GetParent())==1 and page.rows[summary-1].heading:GetText()=='Class Summary')
+    assert(summary<membersHeading and membersHeading<Index(page.toolbarRow) and Index(page.toolbarRow)<Index(page.membersRow))
+    assert(Index(page.membersRow)<Index(page.charts.level.row),'breakdowns follow the members')
+    assert(page.membersRow:IsShown() and page.charts.level.row:IsShown() and page.summaryCells[1].name:IsShown())
+    local y=-1;for _,row in ipairs(page.rows) do if row:IsShown() then assert(-row.points[#row.points][5]>y,'blocks stack downward');y=-row.points[#row.points][5] end end
+    assert(page.content:GetHeight()>=y,'the column scrolls to its last block')
     inGuild=false;R:Rescan()
-    assert(page.statusLabel:GetParent().row:IsShown(),'status shows on the Analytics tab')
-    assert(not page.charts.level.row:IsShown(),'no breakdowns without members')
-    page:SelectSectionTab(1)
-    assert(page.statusLabel:GetParent().row:IsShown() and not page.resultLabel:GetParent().row:IsShown())
+    assert(page.statusLabel:GetParent():IsShown(),'status shows above the summary')
+    assert(not page.charts.level.row:IsShown() and not page.resultLabel:GetParent():IsShown(),'no breakdowns or result line without members')
+    assert(page.summaryCells[1].name:GetParent():IsShown(),'the summary stays, with zeros')
     inGuild=true;members={{name='Fay',classID=8,level=60}};R:Rescan()
 
-    -- Search reaches the page; roster names and searches never reach saved or exported settings.
-    for _,query in ipairs({'guild roster','member search','last online'}) do
+    -- Search reaches the Guild page; roster names and searches never reach saved or exported settings.
+    addon:ToggleConfig();assert(not G.window:IsShown(),'settings replaces the Guild window')
+    for _,query in ipairs({'guild roster','roster','member search','last online','class summary'}) do
         local found=addon:SearchSettings(query)
-        assert(found[1] and found[1].module==R,'search routes to the Roster page: '..query)
+        assert(found[1] and found[1].module==G,'search routes to the Guild page: '..query)
     end
     page.searchBox:SetText('Searchterm')
     local encoded=addon.ProfileCodec.Encode(PTGToolsDB)
     for _,text in ipairs({'Fay','Alice','Searchterm','Orgrimmar','Raid lead'}) do
         assert(not encoded:find(text,1,true),'no roster data persisted: '..text)
     end
-    local keys=0;for key in pairs(R.db) do assert(key=='enabled','only the switch is stored: '..tostring(key));keys=keys+1 end
-    assert(keys==1)
+    assert(R.db==nil,'the roster stores nothing of its own')
+    for key in pairs(G.db) do
+        assert(key~='filter' and key~='snapshot' and key~='roster','no roster data in the Guild table: '..tostring(key))
+    end
     page.searchBox:SetText('')
 ''')
-print('PASS guild roster: class grouping, search/filters, tooltips, analytics, tabs, restricted handling, no persistence')
+print('PASS guild roster tab: class grouping, search/filters, tooltips, analytics, one column, tab/window visibility, restricted handling, no persistence')

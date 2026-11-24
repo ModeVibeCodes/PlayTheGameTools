@@ -11,12 +11,13 @@ function M:MoneyText(copper, full)
     return text .. coin(copper%100,"Copper")
 end
 
+-- Scrolls the Class Training settings page to a section; the ability lists are in the window.
 function M:OpenTraining(section)
     if not self:OutsideCombat() then return end
     if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
     addon:SelectConfigPage("foreverClassTraining")
     local page=addon.configWindow and addon.configWindow.pages.foreverClassTraining
-    if page and section then page:SelectSectionTab(section) end
+    if page and section then page:ShowSection(section) end
 end
 
 function M:CreateShortcut()
@@ -205,7 +206,7 @@ function M:ShowDing(level, rows, preview)
         close:SetScript("OnClick",function() frame:Hide() end)
         local open=W.Button(frame,"Training",120,30,"button");open:SetPoint("BOTTOMLEFT",20,14)
         open:SetSelected(true)
-        open:SetScript("OnClick",function() self:OpenTraining(5);frame:Hide() end)
+        open:SetScript("OnClick",function() self:OpenTrainingWindow("Available & Known");frame:Hide() end)
         local guild=W.Button(frame,"Guild Message",122,30,"secondary")
         guild:SetScript("OnClick",function() self:PrepareGuildDing() end)
         self.dingClose,self.dingTraining,self.dingGuild=close,open,guild

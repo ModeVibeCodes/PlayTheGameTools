@@ -1,23 +1,23 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 
--- Read-only guild roster: members by class with search and filters, plus
--- breakdowns by level, rank, race, last online and zone. Members come from the
--- same C_Club calls Blizzard's Forever member list uses, and are held for the
--- session only: nothing about the roster, the search or the filters is written
--- to SavedVariables.
-local M={title="Roster",category="guildTools",defaultEnabled=false,
-    configDescription="Search your guild and see it broken down by class, level, rank, race, zone and last online.",
-    searchAliases={"guild roster","guild members","class totals","class summary","member search","roster search",
-        "guild analytics","last online","guild ranks","online members"}}
+-- Read-only guild roster, the Roster tab of the Guild window: members by class
+-- with search and filters, plus breakdowns by level, rank, race, last online
+-- and zone. Members come from the same C_Club calls Blizzard's Forever member
+-- list uses, and are held for the session only: nothing about the roster, the
+-- search or the filters is written to SavedVariables.
+-- This is not a module of its own. The Guild module (ID foreverRecruitment, in
+-- ForeverRecruitment.lua) owns the switch and calls Initialize/SetActive. The
+-- retired foreverGuildRoster ID keeps its saved table, which Guild reads once.
+local M={}
 addon.ForeverGuildRoster=M
-addon:RegisterModule("foreverGuildRoster",M)
+M.LEGACY_ID="foreverGuildRoster"
 
 M.CLASSES={"WARRIOR","PALADIN","HUNTER","ROGUE","PRIEST","SHAMAN","MAGE","WARLOCK","DRUID"}
 M.UNKNOWN="UNKNOWN" -- members whose class the client has not supplied, so totals stay complete
 M.RESCAN_DELAY=0.5  -- roster events arrive in bursts; one read covers each burst
 M.STATUS={
-    off="Turn on the switch at the top of this page to view your guild.",
+    off="Turn Guild on with the switch above to view your guild.",
     noGuild="You are not in a guild.",
     loading="Loading guild members...",
     restricted="Guild data is restricted right now. The list updates when it is available again.",
@@ -318,7 +318,7 @@ function M:Describe(member)
     return lines
 end
 function M:RenderPage()
-    if self.page and self.page.RenderRoster then self.page:RenderRoster() end
+    if self.view and self.view.RenderRoster then self.view:RenderRoster() end
 end
 function M:Rescan()
     local ok,snapshot,status=pcall(ReadMembers)
@@ -336,9 +336,9 @@ function M:ScheduleRescan()
     end)
 end
 
--- Events and roster requests run only while the page can be seen.
+-- Events and roster requests run only while the Roster tab can be seen.
 function M:Start()
-    if self.watching or not self.active or not self.pageShown then return end
+    if self.watching or not self.active or not self.viewShown then return end
     self.watching=true
     if not self.events then
         self.events=CreateFrame("Frame")
@@ -352,25 +352,35 @@ function M:Stop()
     self.watching=false
     if self.events then self.events:UnregisterAllEvents() end
 end
-function M:SetPageShown(shown)
-    self.pageShown=shown
-    if shown then self:Start() else self:Stop() end
+function M:SetViewShown(shown)
+    shown=shown==true
+    if self.viewShown==shown then return end
+    self.viewShown=shown
+    if shown then
+        self:Start()
+        if not self.watching then self:RenderPage() end
+    else
+        self:Stop()
+        if self.view and self.view.OnHidden then self.view:OnHidden() end
+    end
 end
 
-function M:OnInitialize()
+-- Called by the Guild module: once at startup, then with its switch.
+function M:Initialize()
     self.snapshot=EmptySnapshot()
     self.status=M.STATUS.off
     self:ResetFilter()
 end
-function M:OnEnable()
-    self.active=true
-    self.status=nil
-    self:Start()
-end
-function M:OnDisable()
-    self.active=false
-    self:Stop()
-    self.snapshot=EmptySnapshot()
-    self.status=M.STATUS.off
-    self:RenderPage()
+function M:SetActive(active)
+    if active then
+        self.active=true
+        self.status=nil
+        self:Start()
+    else
+        self.active=false
+        self:Stop()
+        self.snapshot=EmptySnapshot()
+        self.status=M.STATUS.off
+        self:RenderPage()
+    end
 end

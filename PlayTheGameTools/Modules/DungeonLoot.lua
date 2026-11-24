@@ -1,7 +1,9 @@
 local _, addon = ...
 if not addon.Edition or addon.Edition.name ~= "Forever" then return end
 local M = { title = "Dungeon Loot", category = "questingLeveling", defaultEnabled = false,
-    configDescription = "Find dungeon loot and plan your quests." }
+    configDescription = "Find dungeon loot and plan your quests.",
+    -- The page header button; the index and lists live in their own window.
+    openLabel = "Open Dungeon Loot" }
 addon.DungeonLoot = M
 addon:RegisterModule("dungeonLoot", M)
 
@@ -13,20 +15,24 @@ function M:OnInitialize()
     self.events = CreateFrame("Frame")
     self.events:SetScript("OnEvent", function(_, event, id)
         if event=="QUEST_LOG_UPDATE" then
-            if self.active and self.page and self.page:IsShown() and self.data then
+            if self.active and self:BrowserShown() and self.data then
                 if addon.DungeonLootProvider:UpdateQuestState(self.data) then self.page:Refresh() end
             end
             return
         end
         if Public(id) and type(id) == "number" and (event == "TOOLTIP_DATA_UPDATE" and self.tooltipInstances[id] or event == "GET_ITEM_INFO_RECEIVED" and self.requested[id]) then
             if event == "GET_ITEM_INFO_RECEIVED" then self.requested[id] = nil end
-            if self.active and self.page and self.page:IsShown() then self.page:Refresh() end
+            if self.active and self:BrowserShown() then self.page:Refresh() end
         end
     end)
 end
+-- The browser is open while its window is shown (Config/DungeonLoot.lua).
+function M:BrowserShown()
+    return self.window ~= nil and self.window:IsShown() == true and self.page ~= nil
+end
 function M:SyncEvents()
     self.events:UnregisterAllEvents()
-    if self.active and self.page and self.page:IsShown() then
+    if self.active and self:BrowserShown() then
         self.events:RegisterEvent("GET_ITEM_INFO_RECEIVED")
         self.events:RegisterEvent("QUEST_LOG_UPDATE")
         if C_TooltipInfo and type(C_TooltipInfo.GetItemByID) == "function" then self.events:RegisterEvent("TOOLTIP_DATA_UPDATE") end
@@ -36,10 +42,12 @@ function M:OnEnable()
     self.active = true
     self:SyncShortcut()
     self:SyncEvents()
+    if self:BrowserShown() then self:ReadData();self.page:Refresh() end
 end
 function M:OnDisable()
     self:CancelShortcutBinding()
     if self.coordinateFrame then self.coordinateFrame:Hide() end
+    if self.window then self.window:Hide() end
     if addon.DungeonLootMap then addon.DungeonLootMap:Clear() end
     self.active = false
     self:SyncShortcut()
@@ -61,7 +69,7 @@ function M:ItemInfo(item)
             if Public(texture) and (type(texture) == "number" or type(texture) == "string") then icon = texture end
         end
     end
-    if not name and self.active and self.page and self.page:IsShown() and not self.attempted[item.id] and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
+    if not name and self.active and self:BrowserShown() and not self.attempted[item.id] and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
         self.attempted[item.id], self.requested[item.id] = true, true
         local ok = pcall(C_Item.RequestLoadItemDataByID, item.id)
         if not ok then self.requested[item.id] = nil end
@@ -81,7 +89,7 @@ local function TooltipText(value, color)
     return value
 end
 function M:ItemDetails(item)
-    if not self.active or not self.page or not self.page:IsShown() then return nil end
+    if not self.active or not self:BrowserShown() then return nil end
     if not C_TooltipInfo or type(C_TooltipInfo.GetItemByID) ~= "function" then return nil end
     local ok, data = pcall(C_TooltipInfo.GetItemByID, item.id)
     if not ok or not Public(data) or type(data) ~= "table" then return nil end

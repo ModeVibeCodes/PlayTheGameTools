@@ -9,7 +9,7 @@ lua.execute(r'''
     local log,done={},{}
     C_QuestLog={IsOnQuest=function(id) return log[id]==true end,
         IsQuestFlaggedCompleted=function(id) return done[id]==true end}
-    addon:SetModuleEnabled('dungeonLoot',true);addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    addon:SetModuleEnabled('dungeonLoot',true);assert(M:OpenDungeonLoot() and M.window:IsShown())
     local page=M.page
     local function Plain(text) return (text or ''):gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','') end
     local function Find(pane,name)

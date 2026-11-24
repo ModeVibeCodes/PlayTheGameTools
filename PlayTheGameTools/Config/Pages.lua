@@ -4,8 +4,6 @@ local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 -- The same responsive scrolling and row layout is used on every page.
 function W.Page(parent, minimumWidth)
     local page = CreateFrame("Frame", nil, parent)
-    -- Module pages use pill sections in every theme.
-    page.modePillSections=parent.ptgMediaScope~=nil
     page:SetPoint("TOPLEFT", 0, -36)
     page:SetPoint("BOTTOMRIGHT")
     page.rows, page.refreshers, page.sections, page.searchEntries, page.cursor = {}, {}, {}, {}, 0
@@ -36,12 +34,13 @@ function W.Page(parent, minimumWidth)
     scroll:SetScript("OnMouseWheel",Wheel)
     content:EnableMouseWheel(true);content:SetScript("OnMouseWheel",Wheel)
     page:EnableMouseWheel(true);page:SetScript("OnMouseWheel",Wheel)
+    -- One vertical scroll: every section is a titled group, top to bottom.
+    -- A section or group heading shows only while something under it does.
     function page:Layout()
         local width = math.max(minimumWidth or 320, scroll:GetWidth() - 4)
         content:SetWidth(width)
-        local leftInset=self.contentInset+(self.layoutInsetLeft or 0)
-        width=math.max(1,width-leftInset-self.contentInset)
-        local cursor = self.layoutTopInset or 0
+        local leftInset=self.contentInset
+        width=math.max(1,width-leftInset*2)
         local footers={}
         local function Prepare(row,footer)
             if not footer and row.settingsFooterMoved and row.settingsFooterRestore then
@@ -68,18 +67,36 @@ function W.Page(parent, minimumWidth)
                 if row.divider then row.divider:Hide() end
             end
             local show = row.sectionHeader or not row.section or row.section.expanded
-            if self.sectionTabs then show = not row.sectionHeader and (not row.section or row.section == self.selectedSection) and (not row.section or row.section.expanded) end
             if self.ModeRowVisible then show=self:ModeRowVisible(row,show) end
             if row.visibleWhen then show=show and row.visibleWhen() end
             row:SetShown(show)
             return show
         end
+        local flow,shown={},{}
         for _, row in ipairs(self.rows) do
-            -- Rows on loan to the Edit Mode window belong to its layout until returned.
+            -- Rows on loan to another window belong to its layout until returned.
             if row.editBorrowed then
             elseif self.modeFooterLayout and row.settingsFooterNote and (not row.settingsFooterInlineWhen or not row.settingsFooterInlineWhen()) then footers[#footers+1]=row
-            elseif Prepare(row,false) then
-                cursor = cursor + (row.gapBefore or 0)
+            else flow[#flow+1]=row;shown[row]=Prepare(row,false) end
+        end
+        -- Collapsible sections (Developer) keep their heading as the way back in.
+        local filled,group,groupFilled={},nil,{}
+        for _,row in ipairs(flow) do
+            if row.sectionHeader then group=nil
+            elseif row.subsectionHeading then group=row
+            elseif shown[row] then
+                if row.section then filled[row.section]=true end
+                if group then groupFilled[group]=true end
+            end
+        end
+        for _,row in ipairs(flow) do
+            local empty=(row.sectionHeader and not row.section.button and not filled[row.section]) or (row.subsectionHeading and not groupFilled[row])
+            if shown[row] and empty then shown[row]=false;row:Hide() end
+        end
+        local cursor=0
+        for _,row in ipairs(flow) do
+            if shown[row] then
+                if cursor>0 then cursor = cursor + (row.gapBefore or 0) end
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", leftInset, -cursor)
                 row.offset = cursor
@@ -92,15 +109,15 @@ function W.Page(parent, minimumWidth)
         end
         if #visibleFooters>0 then
             -- Short pages rest their notes at the bottom; long pages scroll
-            -- naturally past controls. Never overlay fields or the toggle gutter.
-            cursor=math.max(cursor+12,self.layoutMinHeight or 0,scroll:GetHeight()-footerHeight-12)
+            -- naturally past controls. Never overlay fields.
+            cursor=math.max(cursor+12,scroll:GetHeight()-footerHeight-12)
             for _,row in ipairs(visibleFooters) do
                 row:ClearAllPoints();row:SetPoint("TOPLEFT",self.contentInset,-cursor);row.offset=cursor
                 cursor=cursor+row:GetHeight()+8
             end
         end
         self.cursor = cursor
-        content:SetHeight(math.max(cursor + 12,self.layoutMinHeight or 0))
+        content:SetHeight(cursor + 12)
         local maximum = math.max(0, content:GetHeight() - scroll:GetHeight())
         bar:SetMinMaxValues(0, maximum)
         bar:SetValue(math.min(bar:GetValue(), maximum))
@@ -133,17 +150,40 @@ function W.Page(parent, minimumWidth)
             end
         end
     end
+    -- Only collapsible sections (the Developer page) fold; module pages do not.
     function page:SetSectionExpanded(section, expanded)
         section.expanded = expanded
-        if expanded and self.sectionTabs then self:SelectSectionTab(section) end
         if section.button then section.button.label:SetText(expanded and "Collapse" or "Expand") end
         self:Layout()
         if addon.CloseTimerColorPicker then addon:CloseTimerColorPicker() end
         if addon.CloseFontDropdown then addon:CloseFontDropdown() end
     end
+    -- Scrolls to a section, given as a section, its index or its title. The
+    -- first section is the top of the page. selectedSection remembers it.
+    function page:ShowSection(section)
+        if type(section) ~= "table" then
+            local key = section
+            section = nil
+            for index, item in ipairs(self.sections) do
+                if index == key or item.title == key then section = item end
+            end
+        end
+        section = section or self.sections[1]
+        self.selectedSection = section
+        self:Layout()
+        local header = section and section.header
+        local offset = section and section ~= self.sections[1] and header:IsShown() and header.offset or 0
+        bar:SetValue(math.max(0, offset - 8))
+        if addon.CloseTimerColorPicker then addon:CloseTimerColorPicker() end
+        if addon.CloseFontDropdown then addon:CloseFontDropdown() end
+    end
+    -- A search hit: scroll the page to the row and flash it.
     function page:Reveal(entry)
         if entry.onReveal then entry.onReveal() end
-        if entry.section then self:SetSectionExpanded(entry.section, true) end
+        if entry.section then
+            self.selectedSection = entry.section
+            if not entry.section.expanded then self:SetSectionExpanded(entry.section, true) end
+        end
         self:Layout()
         local row = entry.row
         if row and row:IsShown() then
@@ -173,11 +213,12 @@ function W.Page(parent, minimumWidth)
         header.section, header.sectionHeader = section, true
         header.gapBefore = #self.sections > 1 and sectionGap or 0
         self.searchEntries[#self.searchEntries + 1] = { label = title, section = section, row = header, kind = "section" }
-        -- Plain heading on the canvas; rows below carry their own dividers.
+        -- Plain group heading on the canvas; rows below carry their own dividers.
+        -- Only an explicitly collapsible section (Developer) gets a button.
         local heading = W.Heading(header, title, T.fontSize.section, 0, -8, 360, T.text)
         heading:SetPoint("TOPRIGHT", -92, -8)
         header.heading = heading
-        if collapsible ~= false then
+        if collapsible == true then
             section.button = W.Button(header, "Collapse", 76, 24, "secondary")
             section.button:SetPoint("TOPRIGHT", 0, -4)
             section.button:SetScript("OnClick", function() self:SetSectionExpanded(section, not section.expanded) end)

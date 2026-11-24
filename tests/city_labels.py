@@ -217,15 +217,27 @@ lua.execute('''
     for _,group in ipairs({M.CATEGORIES,M.FILTERS}) do
         for _,entry in ipairs(group) do assert(page.cityLabelControls[entry.key].label:GetText()==entry.label) end
     end
-    page.cityLabelControls.mailboxes.frame.scripts.OnClick()
-    assert(M.db.mailboxes==true and page.cityLabelControls.mailboxes.button.selected)
+    -- Services are one wrapping row of chips, one per saved key (plus Other
+    -- Faction); Show Names stays a switch under Appearance.
+    local chips=page.cityLabelControls.mailboxes:GetParent()
+    for _,entry in ipairs(M.CATEGORIES) do assert(page.cityLabelControls[entry.key]:GetParent()==chips and page.cityLabelControls[entry.key].mark,'chip: '..entry.key) end
+    assert(page.cityLabelControls.otherFaction:GetParent()==chips and page.cityLabelControls.showNames.frame,'Other Faction is a chip, Show Names a switch')
+    assert(#chips.row.settingsChips==#M.CATEGORIES+1,'eleven service chips')
+    assert(not page.cityLabelControls.mailboxes.selected and M.db.mailboxes==false)
+    page.cityLabelControls.mailboxes.scripts.OnClick()
+    assert(M.db.mailboxes==true and page.cityLabelControls.mailboxes.selected,'a chip drives its saved key')
+    page.cityLabelControls.banks.scripts.OnClick();assert(M.db.banks==false and not page.cityLabelControls.banks.selected)
+    page.cityLabelControls.banks.scripts.OnClick();assert(M.db.banks==true)
+    local found
+    for _,result in ipairs(addon:SearchSettings('Mailboxes')) do if result.entry and result.entry.row==chips.row then found=true end end
+    assert(found,'search finds a chip and flashes its row')
     local professionButtons=page.cityLabelModes.professionTrainerMode
     assert(#professionButtons==3 and professionButtons[1].label:GetText()=='Mine' and professionButtons[1].selected)
     professionButtons[2].scripts.OnClick();page:Refresh()
     assert(M.db.professionTrainerMode=='all' and professionButtons[2].selected and not professionButtons[1].selected)
     page.cityLabelModes.classTrainerMode[3].scripts.OnClick()
     assert(M.db.classTrainerMode=='off')
-    assert(page.cityLabelSource:GetText():find('CC BY 4.0',1,true) and page.cityLabelSource:GetText():find('CMaNGOS',1,true))
+    assert(page.cityLabelSource:GetText()==M.SOURCE_LINE and M.SOURCE_LINE=='Locations: Efficient Games (CC BY 4.0), with CMaNGOS classic-db (GPL-3.0) where none is recorded yet.')
     M.db.vendors=false
 ''')
 reloaded, _ = load(lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)'))

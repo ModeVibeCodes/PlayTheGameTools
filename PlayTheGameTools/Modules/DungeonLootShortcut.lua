@@ -21,16 +21,28 @@ function M.InitializeShortcutSettings(db)
     if db.shortcutPosition==nil then db.shortcutPosition={x=-230,y=-140} end
     assert(type(db.shortcutPosition)=="table" and Number(db.shortcutPosition.x) and Number(db.shortcutPosition.y),"Invalid Dungeon Loot shortcut position.")
 end
+-- The ring icon, the binding and the page header open the Dungeon Loot
+-- window on the dungeon index. It is an unprotected frame, so it opens in
+-- combat too. A module that is off opens its settings page instead, outside
+-- combat, and is never turned on.
 function M:OpenDungeonLoot()
     if not addon.initialized then return false end
-    if not OutsideCombat() then print("Play The Game Tools: open Dungeon Loot outside combat.");return false end
-    if addon.editMode then addon:SetEditMode(false) end
-    if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
-    addon:SelectConfigPage("dungeonLoot")
-    if self.active then self:Navigate(nil)
-    else self.view.dungeon=nil;self.view.tab="loot";if self.page then self.page:Refresh() end end
+    if not self.active then
+        if not OutsideCombat() then print("Play The Game Tools: open Dungeon Loot outside combat.");return false end
+        if addon.editMode then addon:SetEditMode(false) end
+        if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
+        addon:SelectConfigPage("dungeonLoot")
+        self.view.dungeon=nil;self.view.tab="loot"
+        return true
+    end
+    if addon.editMode and OutsideCombat() then addon:SetEditMode(false) end
+    local window=self:CreateBrowserWindow()
+    window:Show()
+    self:Navigate(nil)
     return true
 end
+-- The page header's Open Dungeon Loot button.
+function M:OpenWindow() return self:OpenDungeonLoot() end
 -- Native bindings use this shared entry point, independent of icon visibility.
 BINDING_HEADER_PTGTOOLS="Play The Game Tools"
 BINDING_NAME_PTGTOOLS_DUNGEON_LOOT="Open Dungeon Loot"
@@ -87,7 +99,7 @@ function M:InitializeShortcut()
     self.shortcutEvents=CreateFrame("Frame")
     self.shortcutEvents:SetScript("OnEvent",function(_,event)
         if event=="UPDATE_BINDINGS" then
-            if not self.bindingWriting and self.page and self.page:IsShown() and self.view.tab=="general" then self.page:Refresh() end
+            if not self.bindingWriting and self.settingsPage and self.settingsPage:IsShown() then self.settingsPage:Refresh() end
         elseif event=="PLAYER_REGEN_DISABLED" then self:CancelShortcutBinding()
         else self:SyncShortcut() end
     end)
@@ -157,11 +169,12 @@ function M:CancelShortcutBinding()
     f:SetScript("OnKeyDown",nil);pcall(f.EnableKeyboard,f,false);pcall(f.SetPropagateKeyboardInput,f,true);f:Hide()
 end
 function M:CaptureShortcutBinding()
-    if not self.active or not OutsideCombat() or not self.page or not self.page:IsShown() or self.view.tab~="general" then return false end
+    local page=self.settingsPage
+    if not self.active or not OutsideCombat() or not page or not page:IsShown() then return false end
     if not self.bindingCapture then
         local W=addon.ConfigWidgets
-        local f=CreateFrame("Frame",nil,self.page);f:SetSize(380,124);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG")
-        f:SetFrameLevel(self.page:GetFrameLevel()+100);f:EnableMouse(true);W.Texture(f,"Window")
+        local f=CreateFrame("Frame",nil,page);f:SetSize(380,124);f:SetPoint("CENTER");f:SetFrameStrata("DIALOG")
+        f:SetFrameLevel(page:GetFrameLevel()+100);f:EnableMouse(true);W.Texture(f,"Window")
         f.title=W.Label(f,"Press a key for Dungeon Loot",nil,14,-14,350)
         f.hint=W.Label(f,"Modifiers allowed. Escape cancels.",nil,14,-42,350)
         f.hint:SetWordWrap(true)
@@ -186,7 +199,7 @@ function M:CaptureShortcutBinding()
         if Read(IsAltKeyDown)==true then key="ALT-"..key end
         local ok,message=self:SaveShortcutBinding(key)
         self.bindingStatus=message
-        if ok then self:CancelShortcutBinding();self.page:Refresh()
+        if ok then self:CancelShortcutBinding();page:Refresh()
         else f.hint:SetText(message) end
     end)
     f:Show()

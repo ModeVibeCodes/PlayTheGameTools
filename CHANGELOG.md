@@ -4,6 +4,38 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Gameplay Enhancements is now two modules with their own switches: Campfire
+  Monitor and Loot Sparkles. Each starts on only if Gameplay Enhancements and
+  its own Enable switch were both on. The Enable Loot Sparkles and Enable
+  Campfire Monitor switches are gone; the page switch is the switch. Campfire
+  settings, positions and styles carry over, and searching "gameplay
+  enhancements", "campfire" or "camp contributions" finds the right page.
+- Map Labels' services and Loot Sparkles' "Sparkle On" targets are now a row of
+  chips you click on and off. The Map Labels page shows one source line with a
+  **Full notice in About** button; the full notice is unchanged in Settings →
+  About.
+- Guild Roster and Guild Recruitment are now one module, **Guild**: one
+  sidebar entry and one switch. **Open Guild** in the page header (or the Guild
+  icon in Quick Actions) opens one Guild window with **Roster** and **Recruit**
+  tabs. Roster holds Class Summary, Members by Class with its search and
+  filters, and the breakdowns in one scrolling column. Recruit keeps Level
+  range, Levels per search, the class picks and the whisper box beside the
+  results they change; the three clear/reset buttons are now one **History**
+  menu there. `/ptgr` opens the window on Recruit. Guild is on after the
+  update if either old module was on, and your recruit history, statistics,
+  whisper text and level/class picks are kept. Searching "roster" or
+  "recruitment" finds Guild.
+- Dungeon Loot and Class Training browsers have their own windows. The page
+  header's **Open Dungeon Loot** and **Open Class Training** buttons (usable while
+  the module is on) open them; the Quick Actions Dungeon Loot icon and its
+  keybinding open the Dungeon Loot window too, and the level-up popup's
+  Training button opens Class Training on Available & Known. Each window moves
+  freely, remembers its place for the session, closes with Escape, follows the
+  Interface Theme and can be opened in combat; **Settings** returns to the
+  module's page. The settings pages keep only settings: Dungeon Loot's former
+  General tab (Quick Icon, Keybinding, Dungeon Data) is its page, and Class
+  Training's ability lists left its page. No saved settings change.
+
 - Threat Meter: your row's marker now sits in its own gap left of your bar, so
   it no longer blends into your class color. When you are close to pulling
   aggro the marker turns red (it was amber, which matched the Blizzard theme's

@@ -1,4 +1,4 @@
-"""Mode rollout: full settings inventory, route/search reachability and theme parity.
+"""One scroll per module: full settings inventory, reachability, search and theme parity.
 
 Mock UI geometry/callback checks are not in-game visual or API acceptance.
 """
@@ -28,79 +28,58 @@ lua.globals().expectedInventory=expected
 lua.execute(inventory+r'''
 addon:ToggleConfig()
 assert(Inventory()==expectedInventory,'all original module setting rows retained')
--- Native anchored viewports resolve after their strip. The mock normally gives
--- unsized frames 1024 units, which previously hid this startup ordering bug.
-for _,id in ipairs({'foreverGuildRoster','lootSparkles','foreverClassTraining'}) do
- local p=addon:EnsureConfigPage(id);local strip=p.sectionTabs;local viewport=strip.viewport
- local widths={};for i,button in ipairs(strip.buttons) do widths[i]=button:GetWidth() end
- viewport:SetWidth(0);strip:Layout()
- for i,button in ipairs(strip.buttons) do assert(button:GetWidth()==widths[i],'unresolved viewport must not shrink existing click targets '..id) end
- assert(viewport.scripts.OnSizeChanged,'resolved viewport needs its own layout notification '..id)
- for _,width in ipairs({900,720,1080}) do
-  viewport:SetWidth(width);viewport.scripts.OnSizeChanged(viewport,width,34)
-  for _,button in ipairs(strip.buttons) do
-   assert(button:GetWidth()==128 and button:GetHeight()==32,'primary pills have the same default size across pages '..id)
-   assert(button.tabX+button.tabWidth<=width,'pills stay inside their resolved viewport '..id)
-   assert(-button.points[1][5]+button:GetHeight()<strip:GetHeight(),'rounded border clears the clipping viewport '..id)
-  end
-  local first,last=strip.buttons[1],strip.buttons[#strip.buttons]
-  assert(math.abs((first.tabX+last.tabX+last.tabWidth)/2-width/2)<.001,'fixed-size pill group stays centered '..id)
-  assert(not strip.baseline:IsShown(),'no baseline touches the pill border '..id)
- end
- strip.buttons[1].scripts.OnClick();assert(p.selectedSection==p.sections[1],'recovered pill is clickable '..id)
-end
-local quick=addon:EnsureConfigPage('foreverQuickAccess');local quickBar=quick.modeLayout.bar
-quickBar:SetWidth(0);quick:Layout()
-for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()>100,'unresolved custom bar preserves usable pills') end
-quickBar:SetWidth(760);quickBar.scripts.OnSizeChanged(quickBar,760,78)
-for _,button in ipairs(quick.modeLayout.buttons) do assert(button:GetWidth()==128 and button:GetHeight()==32,'custom pills recover at the common size on their own size event') end
-local clearBar=quickBar.ClearAllPoints;local barAnchors=0
-function quickBar:ClearAllPoints() barAnchors=barAnchors+1;clearBar(self);self.scripts.OnSizeChanged(self,self:GetWidth(),self:GetHeight()) end
-quick:Layout();quick:Layout()
-assert(barAnchors==0 and not quick.modeLayout.layingOut,'unchanged bar anchors cannot create native size feedback')
-quickBar.ClearAllPoints=clearBar
-local panels={'options','text','appearance'}
+-- One scroll per module: no pills, panel tabs or section tabs; every section
+-- that holds a visible row is a titled group, in page order.
 for _,id in ipairs(addon.moduleOrder) do
  addon:SelectConfigPage(id)
  local p=addon:EnsureConfigPage(id)
- if id~='dungeonLoot' then assert(p.modeLayout,'Mode rollout missing '..id) else assert(p.modeBrowser) end
+ -- Campfire Monitor routes its own rows on its own page (CampfireMonitor.lua);
+ -- Dungeon Loot's page holds settings only, its browser is a window.
+ if id=='dungeonLoot' then assert(not p.modeBrowser and not p.rootPane and p==addon.DungeonLoot.settingsPage,'Dungeon Loot settings only; its browser is a window')
+ elseif id=='campfireMonitor' then assert(not p.campfirePilot and not p.modeLayout and p.modeFooterLayout)
+ else assert(p.modeLayout,'Mode rollout missing '..id) end
+ assert(not p.sectionTabs and not p.SelectSectionTab and not p.SelectModePanel,'no tab navigation '..id)
+ if p.modeLayout then assert(not p.modeLayout.bar and not p.modeLayout.buttons and not p.modeLayout.panels,'no pills or panel tabs '..id) end
  for _,color in ipairs(p.settingsColors or {}) do
   assert(not color.hex:IsShown() and (not color.apply or not color.apply:IsShown()),'native picker replaces redundant fields '..id)
   assert(color.pick:GetWidth()==80)
  end
  local s=p.modeLayout
- if s and not s.plan.decorateOnly then
+ if s then
   local saved=addon.ProfileCodec.Encode(PTGToolsDB)
   for _,size in ipairs({1000,560,1200}) do
-   p.scroll:SetWidth(size)
-   for _,feature in ipairs(s.features) do
-    for _,panel in ipairs(panels) do
-     p:SelectModePanel(feature[1],panel);p:Refresh();p:Layout()
-     for row,route in pairs(s.routes) do
-      -- Display styling (editAppearance) is reached in Edit Mode: edit_mode_appearance.py.
-      if route.feature==s.feature and route.panel==s.panel and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation and not row.modePaired and (not row.visibleWhen or row.visibleWhen()) then
-       assert(row:IsShown() or row.modeSide,'unreachable route '..id..' '..(row.settingsTitle or 'toggle'))
-      end
-     end
-     if not p.campfirePilot or p.selectedSection.title=='Loot Sparkles' then
-      assert(s.underline.modeAsset=='ModeHeaderLine' and s.underline:GetHeight()==1 and s.heading.font[2]==20)
-      assert(s.panelViewport:GetHeight()==34)
-      for panelID,button in pairs(s.panels) do
-       if button:IsShown() then
-        assert(button.skinStyle=='subTab' and button:GetHeight()==30)
-        assert(button.points[1][5]==(s.panel==panelID and -4 or -12),'tab tucks below clipped baseline')
-       end
-      end
-     end
+   p.scroll:SetWidth(size);p:Refresh();p:Layout()
+   for row,route in pairs(s.routes) do
+    -- Display styling (editAppearance) is reached in Layout: layout_style.py.
+    if not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation and not row.modePaired and (not row.visibleWhen or row.visibleWhen()) then
+     assert(row:IsShown(),'unreachable row '..id..' '..(row.settingsTitle or 'toggle'))
+     assert(row.points[1][4]==p.contentInset,'one column, no gutter '..id)
+     if row.section then assert(row.section.header:IsShown(),'a shown row has its section heading '..id..' '..row.section.title)
+assert(not row.section.header.editAppearance,'headings are never styling rows '..id) end
     end
+    if row.editAppearance then assert(not row:IsShown(),'styling stays in Layout '..id) end
+   end
+   local last=-1
+   for _,section in ipairs(p.sections) do
+    local header=section.header
+    if header:IsShown() then assert(header.offset>last,'sections run top to bottom '..id);last=header.offset;assert(id=='foundation' or not section.button,'plain group heading (Developer keeps its folds) '..id) end
    end
   end
-  assert(addon.ProfileCodec.Encode(PTGToolsDB)==saved,'navigation must not edit saved settings '..id)
+  assert(addon.ProfileCodec.Encode(PTGToolsDB)==saved,'layout must not edit saved settings '..id)
+  -- A search hit scrolls the one page to the row and flashes it.
   for _,entry in ipairs(p.searchEntries) do
-   local row=entry.modeBaseRow or entry.row
+   local row=entry.row
    if row.modeRoute and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeReplacedNavigation then
-    p:Reveal(entry)
-    if row.modeRoute.feature==s.feature and (not row.visibleWhen or row.visibleWhen()) then assert(entry.row:IsShown(),'search target not visible '..id..' '..entry.label) end
+    -- Hold the 1.5 s fade so the flash can be seen (mock timers fire at once).
+    local after,faded=C_Timer.After,nil;C_Timer.After=function(delay,callback) assert(delay==1.5);faded=callback end
+    p.scrollbar:SetValue(0);p:Reveal(entry);C_Timer.After=after
+    if not row.visibleWhen or row.visibleWhen() then
+     assert(row:IsShown(),'search target not visible '..id..' '..entry.label)
+     local maximum=select(2,p.scrollbar:GetMinMaxValues())
+     assert(p.scrollbar:GetValue()==math.min(math.max(0,row.offset-8),maximum),'search scrolls to the row '..id..' '..entry.label)
+     assert(row.searchHighlight:IsShown(),'search flashes the row '..id)
+     faded();assert(not row.searchHighlight:IsShown(),'the flash fades')
+    end
    end
   end
  end
@@ -113,10 +92,10 @@ for _,id in ipairs(addon.moduleOrder) do
  for _,row in ipairs(addon:EnsureConfigPage(id).rows or {}) do assert(not removed[row.settingsTitle or ''],'redundant note remains '..id..' '..tostring(row.settingsTitle)) end
 end
 local spark=addon:EnsureConfigPage('lootSparkles')
-spark:SelectModePanel('Loot Sparkles','options');spark:Layout()
+spark:Layout()
 assert(spark.sparkleStatus:GetText()==(addon.LootSparkles:StatusNotice() or ''),'live status keeps its text')
 local A=addon.ForeverAutomation;local automation=addon:EnsureConfigPage('foreverAutomation')
-automation:SelectModePanel('Quests','options');automation:Refresh();automation:Layout()
+automation:Refresh();automation:Layout()
 local questRow
 for _,row in ipairs(automation.rows) do if row.settingsTitle=='Quest Automation' then questRow=row end end
 assert(questRow and not questRow:IsShown(),'no quest status text while nothing is blocked')
@@ -138,13 +117,14 @@ assert(sparkRow:IsShown() and spark.sparkleStatus:GetText():find('rejected',1,tr
 LS.status=nil;spark:Refresh();assert(not sparkRow:IsShown())
 local found=false
 for _,cells in ipairs(spark.toggleGrids) do for _,cell in ipairs(cells) do found=found or cell.label:GetText()=='Enable Loot Sparkles' end end
-assert(found,'Loot Sparkles keeps its own switch: the page switch also covers Campfire Monitor')
+for _,chip in pairs(spark.sparkleControls) do found=found or chip.label:GetText()=='Enable Loot Sparkles' end
+assert(not found and #spark.chipRows==1,'own module since the split: the module switch is the only switch')
 local Ro=addon.ForeverRogue;local rogue=addon:EnsureConfigPage('foreverRogue');local was=Ro.active
 Ro.active=false;rogue:Refresh();assert(not rogue.poisonStatus:GetParent().row:IsShown(),'no disabled echo')
 Ro.active=was;rogue:Refresh()
-local CM=addon.CampfireMonitor;local campOn=CM.db.enabled
-CM.db.enabled=false;spark:Refresh();spark:Layout();assert(not spark.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
-CM.db.enabled=campOn;spark:Refresh()
+local CM=addon.CampfireMonitor;local camp=addon:EnsureConfigPage('campfireMonitor');local campOn=CM.module.active
+CM.module.active=false;camp:Refresh();camp:Layout();assert(not camp.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
+CM.module.active=campOn;camp:Refresh()
 -- Food Bar: one switch for the two saved flags.
 local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
 for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
@@ -166,87 +146,77 @@ for _,event in ipairs({'SKILL_LINES_CHANGED','SPELLS_CHANGED'}) do assert(QA.eve
 F:SetShown(true);for _,event in ipairs({'BAG_UPDATE_DELAYED','ITEM_DATA_LOAD_RESULT'}) do assert(F.events.events[event],'food listens to '..event) end
 F:SetShown(false)
 local timer=addon:EnsureConfigPage('combatTimer')
-timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
-assert(timer.modeLayout.panel=='options','timer styling is edited in Edit Mode')
-assert(timer.layoutInsetLeft==188 and timer.layoutTopInset==0,'wide plain forms keep the heading beside the fields')
+timer.scroll:SetWidth(1000);timer:Layout()
+assert(not timer.sections[1].header:IsShown() and timer.sections[2].header:IsShown(),'Display holds only Layout styling, so its heading hides; Behavior stays')
+assert(timer.sections[2].header.offset==0,'the first shown group starts the scroll')
 local paired
 for _,color in ipairs(timer.settingsColors) do
  if color.key=='textColor' then paired=color;assert(color.host.row==timer.fontSizeSlider:GetParent().row and color.host.row.editAppearance,'text size and picker share the original slider row') end
 end
 assert(paired)
+for _,result in ipairs(addon:SearchSettings('Display')) do assert(not (result.module.id=='combatTimer' and result.kind=='section'),'no search hit for a heading that never shows') end
 local clear=timer.scroll.ClearAllPoints
 function timer.scroll:ClearAllPoints() self.modeResizeCalls=(self.modeResizeCalls or 0)+1;timer:Layout();clear(self) end
-timer:UpdatePreviewLayout();assert(not timer.modeLayout.layingOut and not timer.updatingPreview,'native viewport callbacks cannot recurse through the new layout')
+timer:UpdatePreviewLayout();assert(not timer.updatingPreview,'native viewport callbacks cannot recurse through the layout')
 timer.scroll.ClearAllPoints=clear
--- Training keeps its original gating and can rebuild catalog rows after layout.
+-- Training: the old tab gating is section visibility; the catalog lists
+-- upcoming abilities and the rest under their own headings.
 local CT=addon.ForeverClassTraining;addon:SetModuleEnabled('foreverClassTraining',true)
 local training=addon:EnsureConfigPage('foreverClassTraining')
-training:SelectModePanel('Level Up Window','text')
-assert(training.selectedSection.title=='Level Up Window' and training.modeLayout.panel=='text')
-CT.db.levelAlerts=false;training:RenderTraining();assert(training.selectedSection.title=='General','disabled feature tab still falls back to General')
-CT.db.levelAlerts=true;training:SelectModePanel('Upcoming Abilities','options')
-training.catalogVersion=nil;training:RenderTraining();training:Layout()
-assert(training.selectedSection.title=='Upcoming Abilities' and not training.modeLayout.bar:IsShown(),'catalog rebuild stays independent of settings panels')
--- No Quick Actions switch: the shortcut tab follows the module switch alone,
+training:RenderSettings()
+assert(#training.sections==3 and training.sections[1].header:IsShown() and training.sections[2].header:IsShown() and training.sections[3].header:IsShown())
+CT.db.levelAlerts=false;training:RenderSettings()
+assert(not training.sections[2].header:IsShown() and not training.popupPreviewButton:GetParent().row:IsShown(),'Level Up Window hides with its switch')
+CT.db.levelAlerts=true;training:RenderSettings()
+assert(training.sections[2].header:IsShown())
+-- The ability lists are not settings: no section on the page, and the catalog
+-- rebuilds in the Class Training window, apart from the settings page.
+for _,section in ipairs(training.sections) do assert(section.title~='Upcoming Abilities' and section.title~='Available & Known','lists left the settings page') end
+assert(CT:OpenTrainingWindow('Upcoming Abilities') and CT.trainingWindow:IsShown())
+local browser=CT.trainingBrowser
+browser.catalogVersion=nil;browser:RenderTraining();browser:Layout()
+assert(browser.selectedTab=='Upcoming Abilities' and #browser.trainingRows>0,'catalog rebuild in the window')
+CT.trainingWindow:Hide()
+-- No Quick Actions switch: shortcut settings follow the module switch alone,
 -- whatever an old saved showShortcut says.
 for _,cells in ipairs(training.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.label:GetText()~='Shortcut Icon & Menu','no ring switch') end end
-CT.db.showShortcut=false;training:RenderTraining()
-assert(training.sectionTabs.buttons[3].enabled==true,'shortcut settings stay reachable while the module is on')
-training:SelectSectionTab(3);assert(training.selectedSection.title=='Shortcut Icon & Menu')
-CT.db.showShortcut=nil;training:SelectSectionTab(1)
--- Existing Rogue customization guards still apply, while the new feature pills
--- enter the original presentation state before showing its controls.
+CT.db.showShortcut=false;training:RenderSettings()
+assert(training.sections[3].header:IsShown(),'shortcut settings stay reachable while the module is on')
+training:ShowSection(3);assert(training.selectedSection.title=='Shortcut Icon & Menu')
+addon:SetModuleEnabled('foreverClassTraining',false);training:RenderSettings()
+assert(not training.sections[3].header:IsShown(),'shortcut settings hide with the module')
+addon:SetModuleEnabled('foreverClassTraining',true);CT.db.showShortcut=nil;training:ShowSection(1)
+-- Rogue: styling rows stay in Layout but keep their callbacks; toggles stay
+-- in their own rows at every width.
 local R=addon.ForeverRogue
 addon:SetModuleEnabled('foreverRogue',true);R:SetOption('flyout',true)
 local p=addon:EnsureConfigPage('foreverRogue')
-for _,feature in ipairs({'watchStyle','launcherStyle','flyoutStyle'}) do
- for _,panel in ipairs(panels) do
-  p:SelectModePanel(feature,panel);p:Refresh()
-  for row,route in pairs(p.modeLayout.routes) do
-   if route.feature==feature and route.panel==p.modeLayout.panel and not row.editAppearance and not row.subsectionHeading and (not row.visibleWhen or row.visibleWhen()) then assert(row:IsShown() or row.modeSide) end
-  end
- end
-end
-p:SelectModePanel('watchStyle','text')
 local slider=p.poisonSliders['watchStyle:fontSize'].slider
 slider:SetValue(19);assert(R.db.watchStyle.fontSize==19,'original slider callback retained')
 local outline=p.poisonStyles.watchStyle.outline
 local old=R.db.watchStyle.outline;outline.button.scripts.OnClick();assert(R.db.watchStyle.outline~=old,'original checkbox callback retained')
-p:SelectModePanel('general','options');p.scroll:SetWidth(1000);p:Layout()
-assert(p.modeLayout.mixed and p.layoutInsetLeft==188,'wide mixed settings use the approved left checkbox gutter')
-for _,group in ipairs(p.modeLayout.groups) do
- if group.row.modeSide then
-  assert(group.host:IsShown())
-  for i,cell in ipairs(group.cells) do assert(cell.frame:GetParent()==group.host and cell.frame.points[1][5]==-(i-1)*42) end
- end
+for _,width in ipairs({1000,560}) do
+ p.scroll:SetWidth(width);p:Layout()
+ for _,cells in ipairs(p.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.frame:GetParent().row,'toggle stays in its row') end end
 end
-p.scroll:SetWidth(560);p:Layout()
-assert(not p.modeLayout.mixed and p.layoutInsetLeft==0,'narrow layout restores in-flow toggles')
-for _,group in ipairs(p.modeLayout.groups) do for _,cell in ipairs(group.cells) do assert(cell.frame:GetParent()==group.original) end end
--- Source data-browser navigation and row recycling keep independent visibility.
+assert(p.sections[1].header:IsShown() and p.sections[2].header:IsShown() and p.sections[2].header.offset>p.sections[1].header.offset)
+-- Dungeon Loot: the settings page holds the former General content; the
+-- index and lists are the window's, which has no General tab.
 local D=addon.DungeonLoot;addon:SetModuleEnabled('dungeonLoot',true)
-addon:SelectConfigPage('dungeonLoot');D:Navigate(nil,'general')
-local d=D.page
-for _,panel in ipairs({'options','appearance','data'}) do
- d:SelectModeBrowserPanel(panel);d:Refresh()
- local visible=0
- for _,slot in ipairs(d.rootPane.slots) do
-  if slot.visible and slot.row.settingsBrowserPanel==panel then assert(slot.row:IsShown());visible=visible+1
-  elseif slot.visible and slot.row.settingsBrowserPanel then assert(not slot.row:IsShown()) end
- end
- assert(visible>0,'browser General panel has all its original content')
-end
-D:Navigate(nil);assert(not d.modeBrowser.viewport:IsShown(),'General panels hide in the catalog')
-D:Navigate(nil,'general');d:SelectModeBrowserPanel('appearance')
-d.iconSize.slider:SetValue(44);assert(D.db.shortcutSize==44,'browser slider keeps native setter')
--- Shared selection code never changes the Campfire pilot or its preview cleanup.
-addon:SelectConfigPage('lootSparkles');local c=addon:EnsureConfigPage('lootSparkles')
-for i=1,3 do
- c:SelectCampfirePanel('monitor','text');assert(c.campfirePilot.bar:IsShown() and not c.modeLayout.bar:IsShown())
- c:SelectSectionTab(1);c:SelectModePanel('Loot Sparkles','text');assert(c.modeLayout.header:IsShown() and not c.campfirePilot.bar:IsShown())
-end
+addon:SelectConfigPage('dungeonLoot')
+local d=D.settingsPage
+assert(d:IsShown() and d.bindingControl and d.reload and d.dataSource:GetText()~='','settings page has its original General content')
+assert(not d.sectionTabs and #d.sections==3 and d.sections[3].header:IsShown(),'one scroll: Quick Icon, Keybinding, Dungeon Data')
+d.iconSize.slider:SetValue(44);assert(D.db.shortcutSize==44,'settings slider keeps native setter')
+assert(D:OpenDungeonLoot() and D.window:IsShown() and D.page:IsShown() and D.page:GetParent()==D.window.body)
+assert(D.page.general==nil and D.page.modeBrowser==nil,'no General tab in the window')
+D.window:Hide()
+-- Campfire Monitor has its own one-scroll page since the split, with no pills.
+addon:SelectConfigPage('campfireMonitor');local c=addon:EnsureConfigPage('campfireMonitor')
+assert(not c.campfirePilot and not c.SelectCampfirePanel and not c.sectionTabs,'no Campfire element pills or panel tabs')
+assert(not addon:EnsureConfigPage('lootSparkles').campfireControls,'Loot Sparkles no longer hosts Campfire rows')
 testCombat=true;testLockdown=true
-p:SelectModePanel('launcherStyle','text');d:SelectModeBrowserPanel('options')
+p:Layout()
 testCombat=false;testLockdown=false
 addon.db.window.theme='blizzard'
 ''')
@@ -254,8 +224,8 @@ blizzard,_=load(lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)'),before=SETUP)
 blizzard.execute(inventory+'''
 addon:ToggleConfig();Inventory()
 for _,id in ipairs(addon.moduleOrder) do
- local p=addon:EnsureConfigPage(id);assert(p.modeLayout or p.modeBrowser,'Blizzard uses the same layout '..id)
+ local p=addon:EnsureConfigPage(id);assert(p.modeLayout or (id=='dungeonLoot' and p==addon.DungeonLoot.settingsPage) or (id=='campfireMonitor' and p.campfireControls and not p.campfirePilot),'Blizzard uses the same layout '..id)
  for _,color in ipairs(p.settingsColors or {}) do assert(not color.hex:IsShown() and color.pick:GetWidth()==80,'same picker-only color rows') end
 end
 ''')
-print('PASS Mode module inventory, responsive panels, search, gutter restore, callbacks, browser recycling and identical layout in every theme (mock only)')
+print('PASS one scroll per module: inventory, reachability, section order, search scroll/flash, callbacks, browser recycling and identical layout in every theme (mock only)')
