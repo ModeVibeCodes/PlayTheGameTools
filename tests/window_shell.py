@@ -88,6 +88,9 @@ for _,id in ipairs(addon.moduleOrder) do
 end
 addon:SelectConfigPage('foreverRogue')
 assert(h.title:IsShown() and h.title:GetText()=='Rogue Tools','class tools show their title')
+local W=addon.ConfigWidgets
+assert(h.description:GetText()==addon.modules.foreverRogue.configDescription and h.description.wordWrap and h.description.justifyV=='TOP','long descriptions wrap')
+assert(h.description.height==W.PAGE_DESCRIPTION_HEIGHT and h:GetHeight()==W.PAGE_HEADER_HEIGHT and 30+W.PAGE_DESCRIPTION_HEIGHT<=W.PAGE_HEADER_HEIGHT-12,'two description lines clear the divider')
 assert(w.navigationButtons.foreverRogue.classIcon.texture==addon.modules.foreverRogue.classIcon,'class icon in the sidebar row')
 Click(w.settingsButton)
 assert(w.selectedPage=='globalSettings' and h.title:GetText()=='Settings')

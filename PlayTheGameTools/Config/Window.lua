@@ -112,9 +112,9 @@ local function GenericPage(parent, module)
     return page
 end
 
--- Page header: title and one-line description on the left, the module's one
--- on/off switch on the right, closed by a hairline. The switch is the state;
--- no Enabled/Disabled text repeats it.
+-- Page header: title and a description of up to two lines on the left, the
+-- module's one on/off switch on the right, closed by a hairline. The switch
+-- is the state; no Enabled/Disabled text repeats it.
 local function PageHeader(parent)
     local header = CreateFrame("Frame", nil, parent)
     header:SetPoint("TOPLEFT")
@@ -126,7 +126,10 @@ local function PageHeader(parent)
     title:SetWordWrap(false)
     local description = W.Label(header, "", nil, 0, -30, 520, T.muted)
     description:SetPoint("TOPRIGHT", -64, -30)
-    description:SetWordWrap(false)
+    -- Long descriptions (Rogue Tools) wrap; the fixed height holds two lines.
+    description:SetHeight(W.PAGE_DESCRIPTION_HEIGHT)
+    description:SetJustifyV("TOP")
+    description:SetWordWrap(true)
     local toggle = W.Button(header, "", 44, 24, "toggle")
     toggle:SetPoint("TOPRIGHT", 0, -2)
     local divider = W.Fill(header, T.line, "BORDER")

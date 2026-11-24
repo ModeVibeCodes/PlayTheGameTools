@@ -782,7 +782,9 @@ function W.Exclusive(parent, choices, getter, setter)
     return buttons, Refresh
 end
 
-W.PAGE_HEADER_HEIGHT = 64
+-- Title, up to two lines of description and the divider below them.
+W.PAGE_HEADER_HEIGHT = 76
+W.PAGE_DESCRIPTION_HEIGHT = 28
 
 -- Page header: title and one-line description on the left, the module's
 -- enable switch on the right, closed by a hairline.

@@ -18,7 +18,8 @@ Dashboard, no category headings: categories stay registered as module data
 (`addon:IsConfigPageListed`). Developer Mode is not listed; `/ptg dev` opens it
 (`addon:OpenDeveloperPage`). The window opens on the last page used this
 session (not saved), or the first module. The page header is the title,
-description and the one switch, with no Enabled/Disabled text. Search
+description (wraps to two lines; header 76 tall) and the one switch, with no
+Enabled/Disabled text. Search
 (`Config/Search.lua`) sits at the top of the sidebar; its results replace the
 list while it holds text and include the Settings page; choosing one opens the
 page and flashes the row. No new TOC files, SavedVariables or frame names.
