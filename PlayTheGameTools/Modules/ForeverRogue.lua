@@ -2,7 +2,7 @@ local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 addon:RegisterCategory("classTools",{title="Class Tools"})
 local D=addon.ForeverRogueData
-local M={title="Rogue",category="classTools",classIcon="Interface\\Icons\\ClassIcon_Rogue",defaultEnabled=false,Data=D,Initialize=D.Initialize,
+local M={title="Rogue Tools",category="classTools",classIcon="Interface\\Icons\\ClassIcon_Rogue",defaultEnabled=false,Data=D,Initialize=D.Initialize,
     configDescription="Poison Reminder highlights weapons that need poison. Quick Access Poisons offers one-click applications outside combat."}
 addon.ForeverRogue=M;addon:RegisterModule("foreverRogue",M)
 function M:OnInitialize()

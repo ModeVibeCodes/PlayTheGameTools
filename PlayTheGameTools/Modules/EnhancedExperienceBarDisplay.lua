@@ -77,7 +77,8 @@ function M:Render()
     local db, data = self.db, self:ReadXP()
     local sample = self.preview or self.editing
     if sample then data = {xp = 4200, maximum = 10000, level = 20} end
-    if not data or (not sample and db.hideAtMax and data.capped) then self.frame:Hide(); return end
+    -- Always hidden at maximum level; an older saved hideAtMax is no longer read.
+    if not data or (not sample and data.capped) then self.frame:Hide(); return end
     local maxXP = data.maximum
     local rested, _, readable = self.Read(GetXPExhaustion)
     local restedKnown = readable and (rested == nil or self.Number(rested, 0, 1e12))

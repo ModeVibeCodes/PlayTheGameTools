@@ -17,11 +17,9 @@ function M:CreateConfigPage(parent)
         end
     end)
     summary.row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    -- No Refresh button: SPELLS_CHANGED, LEARNED_SPELL_IN_SKILL_LINE, trainer and
+    -- level events (and opening this page) re-read the spellbook outside combat.
     local general=page:Section("General")
-    local controls = page:Row("Spellbook", 42)
-    page.refreshButton = W.Button(controls, "Refresh", 90, 24, "secondary")
-    page.refreshButton:SetPoint("LEFT")
-    page.refreshButton:SetScript("OnClick", function() self:RefreshTraining(); page:Refresh() end)
     local function applyFeature(key,value)
         self.db[key]=value
         if key=="levelAlerts" and not value then
@@ -33,9 +31,9 @@ function M:CreateConfigPage(parent)
         elseif key=="levelAlerts" then self:RequestLevelPlayed() end
         self:SyncTrainingDisplays()
     end
+    -- While the module is on, its shortcut is in the Quick Actions ring.
     page:ToggleGrid({
         {label="Level Up Window",get=function() return self.db.levelAlerts~=false end,set=function(v) applyFeature("levelAlerts",v) end},
-        {label="Shortcut Icon & Menu",get=function() return self.db.showShortcut~=false end,set=function(v) applyFeature("showShortcut",v) end},
     },{maxColumns=2})
     page:Section("Level Up Window")
     local previewRow=page:Row("Level Up Window",42)
@@ -147,7 +145,7 @@ function M:CreateConfigPage(parent)
     function page:SelectSectionTab(section)
         local index=type(section)=="number" and section or nil
         if not index then for i,s in ipairs(self.sections) do if s==section then index=i end end end
-        if index==2 and (not M.active or M.db.levelAlerts==false) or index==3 and (not M.active or M.db.showShortcut==false) then return end
+        if index==2 and (not M.active or M.db.levelAlerts==false) or index==3 and not M.active then return end
         selectTab(self,section)
     end
     page.sectionTabs:SetPoint("TOPLEFT"); page.sectionTabs:SetPoint("TOPRIGHT", -24, 0)
@@ -159,16 +157,16 @@ function M:CreateConfigPage(parent)
         local lookup = {}
         for _, result in ipairs(M.rows or {}) do lookup[result.record.id] = result end
         local title = self.selectedSection and self.selectedSection.title
-        for i,key in pairs({[2]="levelAlerts",[3]="showShortcut"}) do
-            local enabled=M.active and M.db[key]~=false
+        -- Tab 3 (Shortcut Icon & Menu) follows the module switch alone.
+        for i,key in pairs({[2]="levelAlerts",[3]=true}) do
+            local enabled=M.active and (key==true or M.db[key]~=false)
             self.sectionTabs.buttons[i]:SetEnabled(enabled);self.sectionTabs.buttons[i]:SetAlpha(enabled and 1 or 0.4)
             if not enabled and self.selectedSection==self.sections[i] then self:SelectSectionTab(1);title="General" end
         end
         self.visibleCount, self.levelVisible = 0, {}
         local stale = M.dirty or not M:OutsideCombat()
-        self.statusLabel:SetText(not M.active and "Disabled" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
+        self.statusLabel:SetText(not M.active and "" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
         self.totalLabel:SetText("Training total  " .. (M.rows and M:MoneyText(P.TrainingTotal(M.rows)) or "—"))
-        self.refreshButton:SetEnabled(M.active == true and M:OutsideCombat())
         self.popupPreviewButton:SetEnabled(M.active and M.db.levelAlerts~=false and M:OutsideCombat())
         self.guildMessageStatus:SetText(M.guildDingStatus or "Manual guild draft after next level-up.")
         M:UpdateDingActions()

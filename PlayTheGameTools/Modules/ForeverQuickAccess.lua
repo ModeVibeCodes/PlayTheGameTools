@@ -1,7 +1,8 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local D=addon.ForeverQuickAccessData
-local M={title="Quick Access Bars",category="qualityOfLife",defaultEnabled=false,
+local M={title="Profession & Food Bars",category="qualityOfLife",defaultEnabled=false,
+    searchAliases={"quick access bars","profession bar","food bar"},
     configDescription="Movable profession shortcuts and an out-of-combat food bar."}
 addon.ForeverQuickAccess=M
 addon:RegisterModule("foreverQuickAccess",M)

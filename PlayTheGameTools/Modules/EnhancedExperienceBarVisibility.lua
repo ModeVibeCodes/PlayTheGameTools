@@ -53,8 +53,10 @@ local function Restore(record)
     if not ok then record.suppressed = true end
     return ok
 end
-function M:OtherBarsStatus()
-    return self.otherBarsStatus or "Other XP bars stay under their owners' control until you hide them here."
+-- EllesmereEAB_XPBar belongs to EllesmereUIActionBars; its hide switch is
+-- offered only while that addon is loaded.
+function M:EllesmereLoaded()
+    return self.Read(C_AddOns and C_AddOns.IsAddOnLoaded, "EllesmereUIActionBars") == true
 end
 local function Watch(self)
     if not self.otherBarEvents then
@@ -77,19 +79,13 @@ function M:SyncOtherBars()
     local manager = _G.StatusTrackingBarManager
     local info = _G.StatusTrackingBarInfo
     local xpIndex = info and info.BarsEnum and info.BarsEnum.Experience
-    local nativeCount, supportedNative, hiddenNative = 0, 0, 0
     if self.Public(manager) and manager and self.Public(manager.barContainers) and type(manager.barContainers) == "table" and self.Number(xpIndex, 0, 100) then
         for _, container in ipairs(manager.barContainers) do
             if self.Public(container) and container and self.Public(container.bars) and type(container.bars) == "table" then
                 local xpBar = container.bars[xpIndex]
                 if self.Public(xpBar) and xpBar then
-                    nativeCount = nativeCount + 1
                     local record = Track(container, "native", xpBar)
-                    if record and not record.blocked then supportedNative = supportedNative + 1 end
-                    if record and Wants("native") then
-                        Suppress(record)
-                        if record.suppressed and IsXP(record) then hiddenNative = hiddenNative + 1 end
-                    end
+                    if record and Wants("native") then Suppress(record) end
                 end
             end
         end
@@ -102,12 +98,6 @@ function M:SyncOtherBars()
         if not Wants(entry.kind) and not Restore(entry) then pending = true end
     end
     self.otherBarsPending = pending
-    local native = nativeCount == 0 and "not found" or supportedNative == 0 and "protected / unsupported"
-        or hiddenNative > 0 and "hidden by PTG" or Wants("native") and "hide enabled (XP not shown)" or "owner controlled"
-    local eui = not record and "not found / unsupported" or record.blocked and "blocked / unsupported"
-        or record.suppressed and "hidden by PTG" or "owner controlled"
-    self.otherBarsStatus = "Blizzard XP: " .. native .. ". Ellesmere XP: " .. eui .. "."
-    if pending then self.otherBarsStatus = self.otherBarsStatus .. " Restoration pending; /reload if the owner is unavailable." end
     local element = addon.PositionManager.elements[self.id]
     if element then element.editMode = self.active and self.db.barChoice == "ptg" or false end
     Watch(self)

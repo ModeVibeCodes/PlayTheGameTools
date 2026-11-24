@@ -17,10 +17,10 @@ W.ModeLayoutPlans={
         local section=row.section and row.section.title
         local label=Label(row)
         if textLabels[label] then return "timer","text" end
-        if section=="Display" and label~="Timer format" then return "timer","appearance" end
+        if section=="Display" then return "timer","appearance" end
         return "timer","options"
     end},
-    foreverAutomation={features={{"Quests","Quests"},{"Merchant","Merchant"},{"Dialogue","Dialogue"}},route=function(row)
+    foreverAutomation={features={{"Quests","Quests"},{"Merchant","Merchant"}},route=function(row)
         return row.settingsGroupTitle or row.settingsGroup or "Quests","options"
     end},
     foreverQuickAccess={features={{"professions","Professions"},{"food","Food Bar"}},route=function(row)
@@ -35,7 +35,7 @@ W.ModeLayoutPlans={
         return feature,"options"
     end},
     threatMeter={features={{"meter","Threat Meter"}},route=function() return "meter","options" end},
-    cityLabels={features={{"labels","Points of Interest Labels"}},route=function(row)
+    cityLabels={features={{"labels","Map Labels"}},route=function(row)
         return "labels",(row.settingsGroupTitle or row.settingsGroup)=="Appearance" and "appearance" or "options"
     end},
     enhancedExperienceBar={features={{"bar","XP Bar"},{"session","Session Text"}},route=function(row)
@@ -45,8 +45,6 @@ W.ModeLayoutPlans={
             return "session",(label=="Session Scope" or label=="Session Tracking") and "options" or "text"
         end
         if section=="Bar Text" then return "bar","text" end
-        -- Hiding the bar at maximum level is behavior, not styling.
-        if Label(row)=="Hide at Maximum Level" then return "bar","options" end
         if section=="Layout" or section=="Bar Appearance" or section=="Colors" then return "bar","appearance" end
         return "bar","options"
     end},

@@ -52,7 +52,7 @@ function F:Scan()
     for bag=0,bags do
         local slots=Read(C_Container.GetContainerNumSlots,bag)
         if not D.Number(slots,0,200) or slots%1~=0 then
-            self.inventory={};self.message="Bag data unavailable; try Refresh Bags outside combat.";return false
+            self.inventory={};self.message="Bag data unavailable; it updates when your bags change.";return false
         end
         for slot=1,slots do
             local info=Read(C_Container.GetContainerItemInfo,bag,slot)

@@ -106,6 +106,13 @@ function M:Configure(force)
     if self.nodes then self:Evaluate() else self:Restore(gateCVar) end
     self:UpdatePoller()
 end
+-- These two only restate the switches. Anything else (a conflict, a rejected or
+-- pending client setting, waiting for combat to end) is a notice worth showing.
+local ECHOES = {["Ready. One nearby interaction target; custom sparkles pause in combat."]=true,
+    ["Loot Sparkles disabled. Previous owned settings restored."]=true}
+function M:StatusNotice()
+    if self.status and not ECHOES[self.status] then return self.status end
+end
 function M:SetOption(key, value)
     if not self:OutsideCombat() or self.defaults[key] == nil or not self.Public(value) then return false end
     local candidate = addon.ProfileCodec.Copy(self.db); candidate[key]=value

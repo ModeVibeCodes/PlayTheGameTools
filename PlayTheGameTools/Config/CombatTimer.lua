@@ -97,7 +97,7 @@ function widgets.ColorRow(page, timer, title, key, enabledGetter, host, options)
     return pick, hex, apply, sample
 end
 
--- Shared existing timer controls; module-specific formats/behavior are supplied by callers.
+-- Shared existing timer controls; module-specific behavior is supplied by callers.
 function addon:CreateTimerOptions(parent, timer, options)
     options = options or {}
     local page = widgets.Page(parent)
@@ -117,19 +117,8 @@ function addon:CreateTimerOptions(parent, timer, options)
     end
 
     widgets.Preview(page, timer)
+    -- The timer always reads MM:SS, so there is no format choice.
     page:Section("Display")
-    local formats = options.formats or { { "plain", "MM:SS" }, { "square", "[MM:SS]" }, { "round", "(MM:SS)" } }
-    local formatRow = page:Row(options.formatTitle or "Timer format")
-    local offset = 0
-    for index, choice in ipairs(formats) do
-        local key, label = choice[1], choice[2]
-        local width = choice[3] or 78
-        local button = Action(formatRow, label, width, function() timer:SetAppearance("format", key) end)
-        button:ClearAllPoints()
-        button:SetPoint("LEFT", offset, 0)
-        offset = offset + width + 8
-        page.refreshers[#page.refreshers + 1] = function() button:SetSelected(timer.db.appearance.format == key) end
-    end
     local font, refreshFont = widgets.FontDropdown(page:Row("Font", nil, { "font selection", "typeface" }), timer)
     page.fontDropdown = font
     page.refreshers[#page.refreshers + 1] = refreshFont
@@ -185,7 +174,7 @@ function addon:CreateTimerConfigPreview(timer, parent, renderer)
     view.text = view.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     view.text:SetPoint("CENTER")
     function view:Refresh()
-        -- Existing combat-safe color/format updates still refresh the sample.
+        -- Existing combat-safe color updates still refresh the sample.
         local layout = not (InCombatLockdown() or UnitAffectingCombat("player")) or not self.ready
         renderer.Apply(self, timer.db.appearance, layout)
         if layout then
@@ -195,10 +184,10 @@ function addon:CreateTimerConfigPreview(timer, parent, renderer)
             self.frame:SetScale(scale)
         end
         local seconds=addon.PreviewStates:Sample(timer.id)
-        self.text:SetText(seconds and renderer.Format(seconds,timer.db.appearance.format) or (renderer.Sample and renderer.Sample(timer.db) or renderer.Format(84, timer.db.appearance.format)))
+        self.text:SetText(seconds and renderer.Format(seconds) or (renderer.Sample and renderer.Sample(timer.db) or renderer.Format(84)))
         self.ready = true
     end
-    function view:RenderSimulation() local seconds=addon.PreviewStates:Sample(timer.id);self.text:SetText(renderer.Format(seconds or 84,timer.db.appearance.format)) end
+    function view:RenderSimulation() local seconds=addon.PreviewStates:Sample(timer.id);self.text:SetText(renderer.Format(seconds or 84)) end
     return view
 end
 

@@ -24,10 +24,14 @@ function M:CreateConfigPage(parent)
         page.refreshers[#page.refreshers+1]=W.Slider(page:Row(entry[1],48),range[1],range[2],range[3],
             function() return self.db[key] end,function(v) self:SetOption(key,v) end,key=="opacity" and "%" or nil,true)
     end
+    -- Shown only for a real notice, never to repeat the on/off switches.
     page:Group("Availability")
     local status=W.Label(page:Row("Loot Sparkles Status",80),"",nil,0,-4,440,T.muted)
     status:SetWordWrap(true); page.sparkleStatus=status
-    page.refreshers[#page.refreshers+1]=function() status:SetText(self.status or "Disabled.") end
+    local availability=page.rows[#page.rows-1]
+    status:GetParent().row.visibleWhen=function() return self:StatusNotice()~=nil end
+    availability.visibleWhen=status:GetParent().row.visibleWhen
+    page.refreshers[#page.refreshers+1]=function() status:SetText(self:StatusNotice() or "");page:Layout() end
     local campSection=page:Section("Campfire Monitor",nil,false)
     addon.CampfireMonitor:AddConfig(page)
     W.SectionTabs(page)

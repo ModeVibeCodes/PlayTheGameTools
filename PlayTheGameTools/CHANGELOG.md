@@ -12,6 +12,37 @@
   display's style and default position) and Settings (its module page).
   Styles are saved with each display's position. Older per-display font, color
   and border settings are kept, but are no longer shown in Layout.
+- Renamed four modules to the names people use: Points of Interest Labels is
+  now Map Labels, Enhanced Experience Bar is now Experience Bar, Quick Access
+  Bars is now Profession & Food Bars (so it isn't confused with the Quick
+  Actions ring) and Rogue is now Rogue Tools. Only the names changed: your
+  saved settings, keybindings and positions carry over. Searching settings for
+  an old name still finds the module.
+- Quick Actions ring: the "show in Quick Actions" switches are gone (Class
+  Training's Shortcut Icon & Menu checkbox and Dungeon Loot's Show Shortcut Icon
+  row). While a module is on, its icon is in the ring; turning the module off
+  takes it out. Icon size, opacity and the popout options stay. Old saved
+  switch values are left in your profile but no longer read.
+- Combat Timer: the Timer format choice is gone. The timer always reads plain
+  MM:SS (for example 00:42); a saved [MM:SS] or (MM:SS) choice is ignored.
+- Experience Bar: the bar always hides at maximum level, so the Hide at
+  Maximum Level switch is gone. Hide Ellesmere XP Bar appears only while
+  EllesmereUIActionBars is loaded, and the Detected XP Bars status row is gone.
+- Automation: the Dialogue group is gone. Its Auto Gossip switch could never be
+  turned on, and its explanation is removed with it. Gossip dialogue stays
+  manual, as before.
+- Status text no longer repeats a switch. Loot Sparkles Status, Rogue Tools'
+  status line, Campfire Status and the Food Bar status now show only when they
+  have something to say (a conflict, a rejected setting, a poison message,
+  nearby-campfire state, your carried food), and Class Training's summary no
+  longer reads "Disabled". Food Bar's Enable Food Bar and Show Food Bar are now
+  one Show Food Bar switch; the bar's own Hide button turns it off. Enable Loot
+  Sparkles stays: the page switch also covers Campfire Monitor.
+- Removed three manual refresh buttons whose data already updates on its own:
+  Class Training's Spellbook Refresh (it re-reads when your spellbook changes,
+  you train, level up or open the page), Profession & Food Bars' Update Learned
+  List (professions re-read when your skills change) and Refresh Bags (food
+  re-reads when your bags change). Each waits until combat ends, as before.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

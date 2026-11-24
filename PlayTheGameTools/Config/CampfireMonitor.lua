@@ -109,6 +109,8 @@ function C:AddConfig(page)
     page:Group("General")
     Toggles({{"Enable Campfire Monitor","enabled"},{"Show In Combat","showInCombat"}})
     local status=Note("Campfire Status","",42);page.campfireStatus=status
+    -- Live proximity only; hidden while it would just repeat a switch.
+    status:GetParent().row.visibleWhen=function() return self.previewing or (self.owner.active and self.db.enabled) end
     local tools=page:Row("Tools",34)
     page.campfirePreview=Button(tools,"Preview",0,function() self:TogglePreview() end)
     page.campfireRefresh=Button(tools,"Refresh Status",190,function()
@@ -119,9 +121,8 @@ function C:AddConfig(page)
     page.refreshers[#page.refreshers+1]=function()
         local s=self.snapshot or {}
         status:SetText(self.previewing and "Preview only." or
-            (not self.owner.active and "Enable Gameplay Enhancements using its header toggle." or
-            (not self.db.enabled and "Campfire Monitor disabled." or
-            (s.nearby and "Campfire Nearby" or (s.known and "No Nearby Campfire" or "Campfire status unavailable.")))))
+            ((not self.owner.active or not self.db.enabled) and "" or
+            (s.nearby and "Campfire Nearby" or (s.known and "No Nearby Campfire" or "Campfire status unavailable."))))
         page.campfirePreview.label:SetText(self.previewing and "Stop Preview" or "Preview")
     end
     WindowGroup("monitor","Campfire Icon")

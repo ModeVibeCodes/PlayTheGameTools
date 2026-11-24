@@ -322,7 +322,7 @@ end
 function M:SyncTrainingDisplays()
     if not self.active or not self:OutsideCombat() then return end
     if self.snapshot and self.snapshot.class==P.class then
-        self:CreateShortcut();self:ApplyShortcutSize();self:SetShortcutAvailable(self.db.showShortcut~=false)
+        self:CreateShortcut();self:ApplyShortcutSize();self:SetShortcutAvailable(true)
     else self:SetShortcutAvailable(false) end
     if self.trainingFlyout and self.trainingFlyout:IsShown() then self:RenderTrainingFlyout() end
     -- The level event owns the celebration; readable training data only supplies optional rows.

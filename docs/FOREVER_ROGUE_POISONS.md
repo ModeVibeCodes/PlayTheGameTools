@@ -183,26 +183,26 @@ establish native rendering, target acceptance, input routing or event-order safe
    Settings and Position. **Required state:** Rogue, OOC, module enabled.
    **Confirmation:** three sections in order; default reminder has icons and hand
    text without background/border/countdown/counts; customized old styles persist.
-2. **Navigation:** Rogue -> **Display** -> **Poison Reminder**, **Reminder
+2. **Navigation:** Rogue Tools -> **Display** -> **Poison Reminder**, **Reminder
    Visibility**, **Right-click to Dismiss Reminders**; on-screen **Main Hand** / **Off Hand**.
    **Action:** right-click one due reminder, wait/tick or change bags, then refresh
    that poison or click Settings -> **Restore Dismissed**. **Required state:** real
    equipped poison or missing poison, no Preview/Edit Mode. **Confirmation:** one
    hand hides without consuming poison; other hand remains; refresh/restore rearms.
    Repeat during combat: right-click can dismiss, left click cannot apply.
-3. **Navigation:** Rogue -> **Settings** -> **Recent** / a poison-family icon.
+3. **Navigation:** Rogue Tools -> **Settings** -> **Recent** / a poison-family icon.
    **Action:** select an available type; inspect the grey unstocked types; click a
    reminder separately, then return to Recent. **Required state:** OOC, actual
    carried poisons, positions locked, no Preview/Edit Mode. **Confirmation:** grid
    selection consumes nothing; reminder applies chosen available family to the
    correct hand; Recent restores last-use behavior; counts/availability refresh.
-4. **Navigation:** Rogue -> **Display** -> **Customize Reminder** / **Customize
+4. **Navigation:** Rogue Tools -> **Display** -> **Customize Reminder** / **Customize
    Quick Access** -> **Customize** -> **Icon and Label** / **Expanded Menu**.
    **Action:** adjust paired size/opacity fields, font/color/border, label text ->
    **Apply**, label placement and optional counts; select **Minimal** for reminder.
    **Required state:** OOC. **Confirmation:** elements style independently, controls
    wrap at narrower sizes, Minimal removes reminder chrome/extras; reload persists.
-5. **Navigation:** Rogue -> **Position** -> **Poison Reminder** or **Quick Access
+5. **Navigation:** Rogue Tools -> **Position** -> **Poison Reminder** or **Quick Access
    Poisons** -> **Enter Edit Mode**. **Action:** inspect both highlights, select and
    drag each handle, change X/Y, then use shared **Exit**. Back in Position, test
    **Lock Position**, X/Y and **Reset Position** independently. **Required state:**
@@ -211,21 +211,21 @@ establish native rendering, target acceptance, input routing or event-order safe
    normal locks do not block Edit Mode; disabled elements lose Position controls
    and Edit Mode eligibility. Reload retains positions; combat ends editing.
 
-6. **Navigation:** Rogue -> **Display** -> **Poison Reminder Icons** -> **Icon
+6. **Navigation:** Rogue Tools -> **Display** -> **Poison Reminder Icons** -> **Icon
    Gap**, **Icon Size**, **Icon Border Size** / **Icon Border
    Color**. **Action:** change each numeric field; choose a border color using
    **Pick**. **Required state:** OOC, Poison Reminder enabled; use Enter Edit Mode
    from Position if reminders are currently healthy/hidden. **Confirmation:**
    the real space between icon buttons changes (0 touches, larger values separate); both reminder icons resize
    and gain individually colored borders; the outer window stays at its saved style.
-7. **Navigation:** Rogue -> **Display** -> **Quick Access Poisons Icon** -> **Icon
+7. **Navigation:** Rogue Tools -> **Display** -> **Quick Access Poisons Icon** -> **Icon
    Size**, **Icon Border Size**, **Icon Opacity**. **Action:** change
    values and border color, then /reload. **Required state:** OOC, Quick Access
    enabled; choose Quick Access Visibility -> Always Outside Combat to view it.
    **Confirmation:** stock Quick Access/menu borders are absent, custom borders can be enabled, and size/border/opacity persist,
    and its saved Edit Mode position and poison applications still work.
 
-8. **Navigation:** Rogue -> **Display** -> **Use Charge Threshold**, **Charge
+8. **Navigation:** Rogue Tools -> **Display** -> **Use Charge Threshold**, **Charge
    Threshold**, **Show Poison Charges**, **Use Time Threshold**. **Action:** enable
    charge detection, set 5-25 around the native remaining charge count, optionally
    show charges; observe a real poison cross the value with ample time remaining.
@@ -262,20 +262,20 @@ close, independent Reminder visibility, restore with Reminder disabled, reload,
 combat transitions, Always visibility, preview/Edit Mode and left-click preservation.
 Native behavior still needs owner confirmation.
 
-**Navigation:** `/ptg` -> Class Tools -> Rogue -> Display -> **Quick Access Poisons** (on), **Quick Access Visibility** -> **Always Outside Combat**.
+**Navigation:** `/ptg` -> Class Tools -> Rogue Tools -> Display -> **Quick Access Poisons** (on), **Quick Access Visibility** -> **Always Outside Combat**.
 **Action:** `/reload`; left-click the launcher to open its menu, then right-click
 the launcher. **Required state:** Rogue, module enabled, OOC, normal locked display,
 Preview/Edit Mode off. **Confirmation:** icon and menu disappear, Reminder hands
 remain independently visible, no poison is consumed; neither timer ticks nor bag
 updates bring the launcher back.
 
-**Navigation:** `/ptg` -> Class Tools -> Rogue -> Settings -> **Restore Dismissed**.
+**Navigation:** `/ptg` -> Class Tools -> Rogue Tools -> Settings -> **Restore Dismissed**.
 **Action:** click **Restore Dismissed**. **Required state:** OOC, launcher dismissed.
 **Confirmation:** launcher returns and left-click opens its menu. Repeat dismissal
 and `/reload` to confirm reload also restores it; turn **Right-click to Dismiss Reminders**
 off in Display and confirm Quick Access right-click still dismisses the launcher.
 
-**Navigation:** `/ptg` -> Class Tools -> Rogue -> Settings -> **Dismiss Quick Access**.
+**Navigation:** `/ptg` -> Class Tools -> Rogue Tools -> Settings -> **Dismiss Quick Access**.
 **Action:** restore the launcher, then click **Dismiss Quick Access**. **Required
 state:** OOC, Preview/Edit Mode off. **Confirmation:** icon and open menu disappear
 without poison use, even with no poisons applied; Restore Dismissed becomes enabled.

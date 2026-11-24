@@ -9,10 +9,11 @@ local function OutsideCombat()
     local valid,combat=pcall(UnitAffectingCombat,"player")
     return ok and valid and lock==false and combat==false
 end
+-- An older showShortcut switch may remain in saved profiles; it is no longer
+-- read. While the module is on, its shortcut is in the Quick Actions ring.
 function M.InitializeShortcutSettings(db)
-    if db.showShortcut==nil then db.showShortcut=true end
     if db.shortcutLocked==nil then db.shortcutLocked=false end
-    assert(type(db.showShortcut)=="boolean" and type(db.shortcutLocked)=="boolean","Invalid Dungeon Loot shortcut preference.")
+    assert(type(db.shortcutLocked)=="boolean","Invalid Dungeon Loot shortcut preference.")
     if db.shortcutSize==nil then db.shortcutSize=40 end
     if db.shortcutOpacity==nil then db.shortcutOpacity=100 end
     assert(Number(db.shortcutSize) and db.shortcutSize>=24 and db.shortcutSize<=72 and db.shortcutSize%2==0,"Invalid Dungeon Loot icon size.")
@@ -46,7 +47,6 @@ function M:SetShortcutOption(key,value)
     if not OutsideCombat() then return false end
     local valid=(key=="shortcutSize" and Number(value) and value>=24 and value<=72 and value%2==0)
         or (key=="shortcutOpacity" and Number(value) and value>=25 and value<=100 and value%5==0)
-        or (key=="showShortcut" and type(value)=="boolean")
     if not valid then return false end
     self.db[key]=value;self:SyncShortcut();return true
 end
@@ -56,7 +56,7 @@ function M:ResetShortcutPosition()
     return addon.QuickActions:ResetPosition()
 end
 function M:EditShortcutPosition()
-    if not self.active or not self.db.showShortcut or not OutsideCombat() then return false end
+    if not self.active or not OutsideCombat() then return false end
     self:SyncShortcut()
     return addon.QuickActions:EditPosition()
 end
@@ -74,7 +74,7 @@ function M:SyncShortcut()
         self.shortcutEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
         self.shortcutEvents:RegisterEvent("UPDATE_BINDINGS")
     end
-    if not self.active or not self.db.showShortcut then
+    if not self.active then
         self:CancelShortcutBinding()
         addon.QuickActions:SetAvailable(QUICK_ACTION,false)
         return

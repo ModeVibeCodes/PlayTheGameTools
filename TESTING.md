@@ -15,7 +15,7 @@ Test providers already disabled; PTG must not change their enabled state.
 
 Global Settings: use the exact [four-tab native checklist](docs/GLOBAL_SETTINGS.md). Run tests/global_settings.py for bundled LSM/media, standard game font inheritance and local overrides, account-wide profile selection/import/export/positions, class picker, native loot-session cancellation, camera/scale readback and combat guards.
 
-Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)
+Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE_BAR.md#validation-and-exact-native-checks)
 on its local feature branch. Enable under Questing & Leveling; native acceptance
 is pending.
 
@@ -45,7 +45,7 @@ installation procedure instead of changing it manually.
    **Required state:** Candidate installed with game closed, fresh client start.
    **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and Prox, and version
    0.3.0; configuration opens without a Lua error or wrong-edition message.
-2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut.
+2. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training → General → Level Up Window.
    **Action:** Record its current value, change it, reload using `/reload`, then
    reopen the same page. Restore your preferred value afterward.
    **Required state:** OOC, Class Training enabled; retain existing settings.
@@ -65,16 +65,16 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Spellbook row
-   → Refresh button; tabs To Learn / Upcoming / Learned / Directory.
-   **Action:** Refresh and inspect known/unknown ranks against your spellbook and
+1. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training →
+   Upcoming Abilities / Available & Known tabs.
+   **Action:** Learn a rank at a trainer (or level up), return to the page without
+   reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.
    **Confirmation:** Only your class appears; learned/superseded ranks are handled
    sensibly, estimates remain estimates, uncertain entries are not guaranteed offers.
-2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut;
-   Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
-   **Action:** Turn Show Shortcut on, click the book, scroll, minimize, reopen,
+2. **Navigation:** Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
+   **Action:** With Class Training on (its icon is always in the ring then), click the book, scroll, minimize, reopen,
    click Jump to Settings; move the Quick Actions button near screen edges in Edit Mode.
    **Required state:** OOC, enabled module; preserve preferred final position.
    **Confirmation:** Bounded translucent list scrolls, glow follows open state,
@@ -148,10 +148,11 @@ game state. Leave a feature off if you are not ready to exercise it.
    funds; inspect options before opening merchant. No developer item injector exists.
    **Confirmation:** Eligible junk only sells; gray equipment remains; repair uses
    personal funds once within threshold; disabled features leave actions manual.
-4. **Navigation:** Play The Game Tools → Quality of Life → Automation → Dialogue → Auto Gossip.
-   **Action:** Inspect the disabled control and Auto Gossip Availability note.
+4. **Navigation:** Play The Game Tools → Quality of Life → Automation.
+   **Action:** Scroll the whole page.
    **Required state:** OOC.
-   **Confirmation:** Explicitly unavailable/deferred; dialogue stays manual.
+   **Confirmation:** Only Quests and Merchant groups appear; there is no Dialogue
+   group, Auto Gossip switch or Auto Gossip Availability note. Dialogue stays manual.
 
 ## E. Guild Recruitment
 
@@ -204,7 +205,7 @@ these checks need the game client. The page has two tabs, **Members** and
 | R9 Breakdowns | `/ptg` → Guild Tools → Roster → **Analytics** | Scroll through **Level**, **Rank**, **Race**, **Last Online** and **Online By Zone** | R1 done | Each line shows a bar and **count (share%)**; the longest bar is the largest count; **Rank** follows the guild's rank order; **Last Online** starts with **Online Now** equal to **Online Now** above; **Online By Zone** counts only online members, or reads **Nobody is online right now.** |
 | R10 Nothing saved | `/ptg` → Guild Tools → Roster → **Members** | Type a search and choose a class filter, then `/reload` and reopen the page | R1 done | The search box is empty and the filters read **All Classes** and **All Members** |
 
-## Points of Interest Labels
+## Map Labels
 
 Run `python tests/city_labels.py`. Mocks model the inspected Forever map canvas
 but do not establish native rendering, icon files or profession reading. City
@@ -213,14 +214,14 @@ Labels adds new TOC files: restart the client once. Data, coverage and limits:
 
 | Check | Navigation | Action | Required state | Confirmation |
 | --- | --- | --- | --- | --- |
-| L1 Turn on | `/ptg` → Quality of Life → Points of Interest Labels | Click the switch at the top right of the page, then open the world map (M) on your capital (Stormwind, Orgrimmar, Thunder Bluff or Undercity) | Out of combat | Switch reads **Enabled**; **Class Trainers** and **Profession Trainers** both read **Mine**; icons with names mark **Bank**, **Auction House**, **Flight Master**, **Inn**, your class's trainer and trainers for professions you know only; no Lua error |
+| L1 Turn on | `/ptg` → Quality of Life → Map Labels | Click the switch at the top right of the page, then open the world map (M) on your capital (Stormwind, Orgrimmar, Thunder Bluff or Undercity) | Out of combat | Switch reads **Enabled**; **Class Trainers** and **Profession Trainers** both read **Mine**; icons with names mark **Bank**, **Auction House**, **Flight Master**, **Inn**, your class's trainer and trainers for professions you know only; no Lua error |
 | L2 Icons | World map on your capital, zoomed in | Look at each label | L1 done | Each label is a game icon in a thin colored edge: your class icon on your class trainer, your profession's icon on its trainer, a bag on **Bank**, coins on **Auction House**, a hearthstone on **Inn**; a plain colored dot appears only if an icon file is missing |
 | L3 Undercity gaps | World map on Undercity (Horde, or **Other Faction** ticked) | Set **Profession Trainers** to **All**, then find **Alchemy**; set **Class Trainers** to **All**, then find **Warlock Trainer** | Out of combat | **Alchemy** labels near 47, 75 and 51, 75; **Warlock Trainer** near 87, 16 in the Rogues' Quarter, whose tooltip reads **Classic position: may differ where Forever moved an NPC.** and **Location: CMaNGOS classic-db (GPL-3.0)** |
 | L4 Tooltip | World map on your capital | Hover the **Bank** icon | L1 done | Tooltip lists the bankers and **Guild Vault**, then **Approximate: where players stood to use it.** and **Locations: Efficient Games (CC BY 4.0)** |
 | L5 Clicks pass through | World map zoomed into your capital | Left-click an icon, then right-click it | L1 done | The map zooms in and out as if the icon were not there |
-| L6 Trainer modes and filters | `/ptg` → Quality of Life → Points of Interest Labels | Set **Class Trainers** and **Profession Trainers** to **All**, then **Off**, then back to **Mine**; under **Labels** tick **Mailboxes**; under **Filters** tick **Other Faction**; reopen the map each time | Out of combat | **All** adds every class's and profession's trainers, **Off** removes them, **Mine** restores yours; mailbox icons without names and the other faction's labels appear while ticked |
-| L7 Appearance | `/ptg` → Quality of Life → Points of Interest Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Icon Size** to 24 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Filters** | Out of combat | Icons and names are larger; with **Show Names** off only icons remain |
-| L8 Turn off and combat start | `/ptg` → Quality of Life → Points of Interest Labels; later a fresh login | Click the switch at the top right of the page and open the map; switch it back on, log in again, enter combat before first opening the map, and open it after combat | Combat, then out of combat | Switch reads **Disabled** and no Points of Interest Labels icons show; after re-enabling, labels appear once combat has ended; no Lua error |
+| L6 Trainer modes and filters | `/ptg` → Quality of Life → Map Labels | Set **Class Trainers** and **Profession Trainers** to **All**, then **Off**, then back to **Mine**; under **Labels** tick **Mailboxes**; under **Filters** tick **Other Faction**; reopen the map each time | Out of combat | **All** adds every class's and profession's trainers, **Off** removes them, **Mine** restores yours; mailbox icons without names and the other faction's labels appear while ticked |
+| L7 Appearance | `/ptg` → Quality of Life → Map Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Icon Size** to 24 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Filters** | Out of combat | Icons and names are larger; with **Show Names** off only icons remain |
+| L8 Turn off and combat start | `/ptg` → Quality of Life → Map Labels; later a fresh login | Click the switch at the top right of the page and open the map; switch it back on, log in again, enter combat before first opening the map, and open it after combat | Combat, then out of combat | Switch reads **Disabled** and no Map Labels icons show; after re-enabling, labels appear once combat has ended; no Lua error |
 
 ## F. Reporting and release gate
 

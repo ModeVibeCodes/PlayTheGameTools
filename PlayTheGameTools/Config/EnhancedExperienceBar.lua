@@ -10,7 +10,7 @@ function M:CreateConfigPage(parent)
             items[#items + 1] = {label = entry[1], get = function() return self.db[key] end,
                 set = function(v) self:SetOption(key, v) end}
         end
-        page:ToggleGrid(items)
+        return page:ToggleGrid(items)
     end
     local function Slider(label, key, suffix)
         local r = self.ranges[key]
@@ -34,13 +34,16 @@ function M:CreateConfigPage(parent)
     local separators = {{id = "dash", label = "Dash (-)"}, {id = "dot", label = "Dot (·)"}}
     page:Section("General")
     page:Section("Other XP Bars")
-    local status = W.Label(page:Row("Detected XP Bars", 70), "", nil, 0, -4, 360, addon.Theme.muted)
-    status:SetWordWrap(true)
-    page.refreshers[#page.refreshers + 1] = function() status:SetText(self:OtherBarsStatus()) end
     -- The module switch chooses the PTG bar; these hide the other bars.
-    Toggles({{"Hide Blizzard XP Bar", "hideBlizzardXP"}, {"Hide Ellesmere XP Bar", "hideEllesmereXP"}})
+    Toggles({{"Hide Blizzard XP Bar", "hideBlizzardXP"}})
+    -- Only offered while Ellesmere's action bars (which own its XP bar) are loaded.
+    Toggles({{"Hide Ellesmere XP Bar", "hideEllesmereXP"}})
+    page.ellesmereRow = page.rows[#page.rows]
+    page.ellesmereRow.visibleWhen = function() return self:EllesmereLoaded() end
+    page.searchEntries[#page.searchEntries].available = page.ellesmereRow.visibleWhen
+    page.refreshers[#page.refreshers + 1] = function() page:Layout() end
+    -- At maximum level the bar hides itself; there is no switch for it.
     page:Section("Bar Appearance")
-    Toggles({{"Hide at Maximum Level", "hideAtMax"}})
     local texture = W.Select(page:Row("Bar Texture", 48), 280, function() return self:GetTextureChoices() end,
         function()
             for _, choice in ipairs(self:GetTextureChoices()) do

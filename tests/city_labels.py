@@ -1,4 +1,4 @@
-"""Points of Interest Labels: bundled data, trainer modes, icons, map provider lifecycle and settings (mock only).
+"""Map Labels: bundled data, trainer modes, icons, map provider lifecycle and settings (mock only).
 
 The map canvas below models the inspected Forever Blizzard_MapCanvas contract
 (AcquirePin/RemoveAllPinsByTemplate, data provider callbacks); it is not proof
@@ -21,7 +21,7 @@ for path in ('THIRD_PARTY_NOTICES.md', 'PlayTheGameTools/THIRD_PARTY_NOTICES.md'
 lua, _ = load()
 lua.execute('''
     local M,Map,D,C=addon.CityLabels,addon.CityLabelsMap,addon.CityLabelsData,addon.CityLabelsClassicData
-    assert(M and Map and D and C and M.title=='Points of Interest Labels' and M.category=='qualityOfLife')
+    assert(M and Map and D and C and M.title=='Map Labels' and M.category=='qualityOfLife')
     assert(not M.enabled and addon.db.modules.cityLabels.enabled==false,'opt-in')
     -- Every bundled row is well formed and uses a known kind.
     local kinds={};for _,c in ipairs(M.CATEGORIES) do kinds[c.kind]=true end
@@ -114,7 +114,7 @@ lua.execute('''
     assert(D.maps[999999][1][2]==.5,'entries are copies')
 
     -- Enabling before the map addon loads waits for it; nothing is force-loaded.
-    C_AddOns.LoadAddOn=function() error('Points of Interest Labels must not force-load the map') end
+    C_AddOns.LoadAddOn=function() error('Map Labels must not force-load the map') end
     WorldMapFrame=nil
     addon:SetModuleEnabled('cityLabels',true)
     assert(M.active and not Map.provider and Map.events.events.ADDON_LOADED)
@@ -243,5 +243,5 @@ first.execute('''
     assert(addon.CityLabels.enabled and db.classTrainerMode=='all' and db.professionTrainerMode=='mine')
     assert(db.iconSize==12 and db.banks==false and db.classTrainers==true and db.allClasses==true,'saved values kept')
 ''')
-print('PASS Points of Interest Labels data/attribution (Efficient Games + CMaNGOS), Undercity gaps, Mine/All/Off trainer modes with profession detection, '
+print('PASS Map Labels data/attribution (Efficient Games + CMaNGOS), Undercity gaps, Mine/All/Off trainer modes with profession detection, '
       'icons with fallback, Classic tooltip, first-release settings, combat-safe map attach, settings and persistence (mock only)')

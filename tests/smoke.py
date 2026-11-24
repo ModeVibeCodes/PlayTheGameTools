@@ -75,6 +75,12 @@ lua.execute('''
     addon.db.window.x=123; addon.db.window.y=45
     addon:SetModuleEnabled('combatTimer',true)
     assert(addon.modules.combatTimer.enabled)
+    -- Combat Timer always reads plain MM:SS; an old bracket format is ignored.
+    local timer=addon.modules.combatTimer
+    assert(not timer:SetAppearance('format','square'),'no format setting')
+    timer.db.appearance.format='square';timer.lastSecond=nil;timer:UpdateText()
+    assert(timer.text:GetText()=='00:00' and addon.CombatTimerDisplay.Format(83)=='01:23')
+    for _,entry in ipairs(addon.configWindow.pages.combatTimer.searchEntries) do assert(entry.label~='Timer format','no format row') end
 ''')
 state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored, _ = load(state)

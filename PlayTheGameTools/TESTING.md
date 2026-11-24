@@ -21,7 +21,7 @@ installation procedure instead of changing it manually.
    **Required state:** Candidate installed with game closed, fresh client start.
    **Confirmation:** AddOns metadata reports Play The Game Tools, author Mode and Prox, and version
    0.2.0-beta.1; configuration opens without a Lua error or wrong-edition message.
-2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut.
+2. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training → General → Level Up Window.
    **Action:** Record its current value, change it, reload using `/reload`, then
    reopen the same page. Restore your preferred value afterward.
    **Required state:** OOC, Class Training enabled; retain existing settings.
@@ -41,16 +41,16 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Spellbook row
-   → Refresh button; tabs To Learn / Upcoming / Learned / Directory.
-   **Action:** Refresh and inspect known/unknown ranks against your spellbook and
+1. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training →
+   Upcoming Abilities / Available & Known tabs.
+   **Action:** Learn a rank at a trainer (or level up), return to the page without
+   reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.
    **Confirmation:** Only your class appears; learned/superseded ranks are handled
    sensibly, estimates remain estimates, uncertain entries are not guaranteed offers.
-2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut;
-   Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
-   **Action:** Turn Show Shortcut on, click the book, scroll, minimize, reopen,
+2. **Navigation:** Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
+   **Action:** With Class Training on (its icon is always in the ring then), click the book, scroll, minimize, reopen,
    click Jump to Settings; move the Quick Actions button near screen edges in Layout.
    **Required state:** OOC, enabled module; preserve preferred final position.
    **Confirmation:** Bounded translucent list scrolls, glow follows open state,
@@ -124,10 +124,11 @@ game state. Leave a feature off if you are not ready to exercise it.
    funds; inspect options before opening merchant. No developer item injector exists.
    **Confirmation:** Eligible junk only sells; gray equipment remains; repair uses
    personal funds once within threshold; disabled features leave actions manual.
-4. **Navigation:** Play The Game Tools → Quality of Life → Automation → Dialogue → Auto Gossip.
-   **Action:** Inspect the disabled control and Auto Gossip Availability note.
+4. **Navigation:** Play The Game Tools → Quality of Life → Automation.
+   **Action:** Scroll the whole page.
    **Required state:** OOC.
-   **Confirmation:** Explicitly unavailable/deferred; dialogue stays manual.
+   **Confirmation:** Only Quests and Merchant groups appear; there is no Dialogue
+   group, Auto Gossip switch or Auto Gossip Availability note. Dialogue stays manual.
 
 ## E. Guild Recruitment
 
