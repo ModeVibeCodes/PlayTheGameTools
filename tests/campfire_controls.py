@@ -17,7 +17,7 @@ lua,_=load(before=FIXTURE+EXTRA+NATIVE_GEOMETRY)
 lua.execute(r'''
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
 local page=M.page
-page.sectionTabs.buttons[2].scripts.OnClick()
+page:ShowSection(2)
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
 assert(not C.snapshot.nearby and #A.items==0)
 -- Exercise the actual settings buttons, without a fire or carried ready kit.
@@ -73,8 +73,8 @@ assert(not C:SetOption('headerColor',{9,0,0}),'invalid picker/profile colors rej
 assert(C:SetOption('headerGradient',true) and C:HeaderText('Camp Buffs'):find('|r|cff',1,true))
 for _,entry in ipairs(page.searchEntries) do assert(entry.label~='Native Camp Data' and entry.label~='Timer Color') end
 page.contributionPreview.scripts.OnClick()
-page.sectionTabs.buttons[1].scripts.OnClick();assert(not A.previewing and not A.window:IsShown())
-page.sectionTabs.buttons[2].scripts.OnClick();page.contributionPreview.scripts.OnClick()
+page:Hide();assert(not A.previewing and not A.window:IsShown(),'leaving the page ends the preview')
+page:Show();page.contributionPreview.scripts.OnClick()
 testCombat=true;testLockdown=true;FireEvent('PLAYER_REGEN_DISABLED')
 assert(not A.previewing and not A.window:IsShown() and #macroCalls==0)
 testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED')

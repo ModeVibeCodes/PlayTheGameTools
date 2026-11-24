@@ -97,7 +97,7 @@ mode.execute(r'''
     b.label:SetText(oldText);b:SetWidth(oldWidth);b.scripts.OnSizeChanged(b)
     local page=w.pages.combatTimer
     assert(page.contentInset==12)
-    for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12+(page.layoutInsetLeft or 0),'visible rows preserve border padding after the optional heading/checkbox gutter') end end
+    for _,row in ipairs(page.rows) do if row:IsShown() then assert(row.points[1][4]==12,'visible rows keep the border padding; there is no checkbox gutter') end end
     assert(page.scrollbar.thumbTexture:GetWidth()==4,'one scroll thumb size in every theme')
     local check=addon.ConfigWidgets.Button(UIParent,'',18,18,'checkbox')
     assert(check.fill.modeAsset=='ModeCheckSurface' and check.switchOutline.rounded)

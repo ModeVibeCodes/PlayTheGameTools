@@ -295,10 +295,6 @@ function M:CreateConfigPage(parent)
         self:Layout()
     end
 
-    W.SectionTabs(page)
-    page.sectionTabs:SetPoint("TOPLEFT",0,0);page.sectionTabs:SetPoint("TOPRIGHT",-24,0)
-    page.scroll:ClearAllPoints();page.scroll:SetPoint("TOPLEFT",0,-40);page.scroll:SetPoint("BOTTOMRIGHT",-24,0)
-    page.scrollbar:ClearAllPoints();page.scrollbar:SetPoint("TOPRIGHT",-4,-44);page.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
     page:HookScript("OnShow",function() M:SetPageShown(true) end)
     page:HookScript("OnHide",function() M:SetPageShown(false);HideMemberTooltip() end)
     page:Finish()

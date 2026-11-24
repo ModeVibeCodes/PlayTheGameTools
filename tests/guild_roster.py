@@ -1,4 +1,4 @@
-"""Guild Tools -> Roster: class grouping, search/filters, analytics and tabs; not WoW."""
+"""Guild Tools -> Roster: class grouping, search/filters, analytics on one scroll; not WoW."""
 from smoke import load
 
 lua, _ = load()
@@ -283,17 +283,17 @@ lua.execute(r'''
     assert(not page.charts.zone.bars[1].label:IsShown(),'stale bars are hidden')
     assert(Bars('lastOnline'):find('Unknown=1',1,true),'offline without a time is unknown')
 
-    -- Two tabs: Members and Analytics; the status line shows above both.
-    local tabs=page.sectionTabs
-    assert(#tabs.buttons==2 and tabs.buttons[1].label:GetText()=='Members' and tabs.buttons[2].label:GetText()=='Analytics')
-    page:SelectSectionTab(1)
-    assert(page.membersRow:IsShown() and not page.charts.level.row:IsShown())
-    page:SelectSectionTab(2)
-    assert(not page.membersRow:IsShown() and page.charts.level.row:IsShown() and page.summaryCells[1].name:IsShown())
+    -- One scroll: Members, then Analytics, each a titled group; the status line heads the page.
+    assert(not page.sectionTabs and #page.sections==2 and page.sections[1].title=='Members' and page.sections[2].title=='Analytics')
+    page:ShowSection(1)
+    assert(page.scrollbar:GetValue()==0 and page.sections[1].header:IsShown() and page.sections[2].header:IsShown())
+    assert(page.membersRow:IsShown() and page.charts.level.row:IsShown() and page.summaryCells[1].name:IsShown())
+    assert(page.charts.level.row.offset>page.membersRow.offset,'Analytics follows Members')
+    page:ShowSection(2);assert(page.selectedSection==page.sections[2])
     inGuild=false;R:Rescan()
-    assert(page.statusLabel:GetParent().row:IsShown(),'status shows on the Analytics tab')
+    assert(page.statusLabel:GetParent().row:IsShown(),'status shows without a guild')
     assert(not page.charts.level.row:IsShown(),'no breakdowns without members')
-    page:SelectSectionTab(1)
+    page:ShowSection(1)
     assert(page.statusLabel:GetParent().row:IsShown() and not page.resultLabel:GetParent().row:IsShown())
     inGuild=true;members={{name='Fay',classID=8,level=60}};R:Rescan()
 
@@ -311,4 +311,4 @@ lua.execute(r'''
     assert(keys==1)
     page.searchBox:SetText('')
 ''')
-print('PASS guild roster: class grouping, search/filters, tooltips, analytics, tabs, restricted handling, no persistence')
+print('PASS guild roster: class grouping, search/filters, tooltips, analytics, one-scroll sections, restricted handling, no persistence')

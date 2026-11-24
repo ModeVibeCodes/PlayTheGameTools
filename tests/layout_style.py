@@ -34,7 +34,7 @@ for _,query in ipairs({'Font Size','Background opacity','Frame scale','Bar Textu
  for _,result in ipairs(addon:SearchSettings(query)) do
   local entry=result.entry
   if entry then
-   local row=entry.modeBaseRow or entry.campfireBaseRow or entry.row
+   local row=entry.row
    assert(not row.editAppearance,'search offers a removed styling row: '..result.label)
   end
  end
@@ -179,7 +179,7 @@ assert(PM:GetStyle('threatMeter').opacity==70 and Near(TM.frame.alpha,0.7),'thre
 camp, _ = load(before=FIXTURE + EXTRA)
 camp.execute(COMMON + r'''
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page;page.sectionTabs.buttons[2].scripts.OnClick()
+local page=M.page;page:ShowSection(2)
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
 page.contributionPreview.scripts.OnClick()
 assert(A.window:IsShown())

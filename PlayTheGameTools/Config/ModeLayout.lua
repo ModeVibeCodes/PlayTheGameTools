@@ -1,7 +1,6 @@
 local _,addon=...
 local W,T=addon.ConfigWidgets,addon.InterfaceTheme
--- Placement is never a settings panel: every display is positioned in Edit Mode.
-local panels={{"options","Options"},{"text","Text"},{"appearance","Appearance"}}
+-- Placement is never a settings row: every display is positioned in Layout.
 
 local function Measure(label)
     local width=label:GetStringWidth()
@@ -104,41 +103,29 @@ local function PairColors(page)
     end
 end
 
+-- Every module page is one vertical scroll of its sections (Config/Pages.lua).
 -- Existing rows, controls, callbacks, search entries and visibility predicates
--- remain the owners of their behavior. This layer only routes and lays them out.
+-- remain the owners of their behavior. This layer only routes rows so display
+-- styling stays in Layout, and compacts rows for the shared form rhythm.
 function W.ApplyModeModuleLayout(page,id)
     if page.modeLayout then return end
     local plan=W.ModeLayoutPlans[id]
     if not plan then return end
     page.modeFooterLayout=true
     CompactColors(page)
-    local state={plan=plan,features=plan.features or {},routes={},buttons={},panels={},groups={},last={}}
+    local state={plan=plan,routes={}}
     page.modeLayout=state
-    -- Styling of a placeable display lives in Edit Mode, not in these panels.
-    local owned=W.EditOwnedFeatures and W.EditOwnedFeatures(id) or {}
+    -- Styling of a placeable display lives in Layout, not on this page.
+    local owned=W.EditOwnedFeatures(id)
     state.editOwned=owned
-    if plan.decorateOnly then
-        for _,row in ipairs(page.rows) do
-            local heading=row.subsectionHeading or (row.sectionHeader and row.heading)
-            if heading then
-                addon.Media:BindInterfaceFont(heading,GameFontNormalLarge,20,nil,"heading")
-                local _,align=W.ModeHeadingRule(row,heading);row:HookScript("OnSizeChanged",align)
-            end
-        end
-        return
-    end
-    if plan.preserveSections then
-        local previousTabs=page.sectionTabs
-        W.SectionTabs(page)
-        if page.sectionTabs and not previousTabs then page.sectionTabs:SetPoint("TOPLEFT");page.sectionTabs:SetPoint("TOPRIGHT",-24,0) end
-        for _,section in ipairs(page.sections) do state.features[#state.features+1]={section.title,section.title} end
-    elseif page.sectionTabs then page.sectionTabs:Hide() end
     for _,row in ipairs(page.rows) do
         local feature,panel
         if plan.route then feature,panel=plan.route(row) end
         if feature then
             row.modeRoute={feature=feature,panel=panel or "options"};state.routes[row]=row.modeRoute
-            if owned[feature] and W.EditAppearancePanels[row.modeRoute.panel] then row.editAppearance=row.modeRoute end
+            -- Headings are never styling: they show while a row under them does.
+            local heading=row.sectionHeader or row.subsectionHeading
+            if not heading and owned[feature] and W.EditAppearancePanels[row.modeRoute.panel] then row.editAppearance=row.modeRoute end
             if row.divider then row.divider:Hide() end
             row.gapBefore=0;row.gapAfter=2
             if row.settingsStandaloneToggle and not row.settingsToggles then
@@ -154,233 +141,21 @@ function W.ApplyModeModuleLayout(page,id)
                 function row:layoutChildren(width) self:SetHeight(42);cell:ClearAllPoints();cell:SetPoint("TOPLEFT");cell:SetSize(width,42);label:SetWidth(math.max(1,width-36)) end
             end
             if row.settingsTitle and row.settingsTitle~="" and not row.layoutChildren and row:GetHeight()<=52 then row:SetHeight(math.min(row:GetHeight(),48)) end
-            if row.settingsToggles then
-                local host=CreateFrame("Frame",nil,page.content);host:Hide()
-                state.groups[#state.groups+1]={row=row,host=host,original=row.settingsHost,cells=row.settingsToggles}
-            end
         end
     end
     PairColors(page)
-    state.feature=state.features[1] and state.features[1][1];state.panel="options"
-    local bar=CreateFrame("Frame",nil,page);state.bar=bar;bar:SetHeight(78)
-    local viewport=CreateFrame("ScrollFrame",nil,bar);state.panelViewport=viewport
-    viewport:SetHeight(34)
-    local tabContent=CreateFrame("Frame",nil,viewport);tabContent:SetSize(600,42);viewport:SetScrollChild(tabContent);state.panelContent=tabContent
-    local rule=W.Fill(bar,T.line,"BACKGROUND");rule:ClearAllPoints();rule:SetPoint("BOTTOMLEFT");rule:SetPoint("BOTTOMRIGHT");rule:SetHeight(1);state.rule=rule
-    local header=CreateFrame("Frame",nil,page.content);header:SetHeight(40);state.header=header
-    state.heading=W.Heading(header,"Options",20,0,0,100,T.text)
-    state.separator=W.Label(header,"·",nil,0,0,8,T.muted)
-    addon.Media:BindInterfaceFont(state.separator,GameFontHighlight,14)
-    state.separator:ClearAllPoints();state.separator:SetPoint("LEFT",state.heading,"RIGHT",8,0)
-    state.description=W.Label(header,"",nil,0,0,300,T.muted)
-    state.description:ClearAllPoints();state.description:SetPoint("LEFT",state.separator,"RIGHT",8,0);state.description:SetWordWrap(true)
-    state.underline,state.alignUnderline=W.ModeHeadingRule(header,state.heading)
-    local function Available(feature,panel)
-        for row,route in pairs(state.routes) do
-            if route.feature==feature and route.panel==panel and not row.editAppearance and not row.sectionHeader and not row.subsectionHeading then return true end
-        end
-        return false
-    end
-    state.available=Available
-    -- A display feature whose every row moved to Edit Mode keeps no pill here.
-    if not plan.preserveSections then
-        local kept={}
-        for _,entry in ipairs(state.features) do
-            for _,panel in ipairs(panels) do
-                if Available(entry[1],panel[1]) then kept[#kept+1]=entry;break end
-            end
-        end
-        state.features=kept;state.feature=kept[1] and kept[1][1]
-    end
-    function page:SelectModePanel(feature,panel)
-        feature=feature or state.feature
-        state.last[state.feature]=state.panel
-        if plan.preserveSections then
-            for _,section in ipairs(self.sections) do
-                if section.title==feature and section~=self.selectedSection then self:SelectSectionTab(section) end
-            end
-            if self.selectedSection then feature=self.selectedSection.title end
-        end
-        state.feature=feature;state.panel=panel or state.last[feature] or "options"
-        if not Available(feature,state.panel) then
-            for _,entry in ipairs(panels) do if Available(feature,entry[1]) then state.panel=entry[1];break end end
-        end
-        if plan.select then plan.select(self,feature) end
-        state.last[feature]=state.panel
-        self.scrollbar:SetValue(0)
-        addon:CloseTimerColorPicker();if addon.CloseFontDropdown then addon:CloseFontDropdown() end
-        self:Layout()
-    end
-    if not plan.preserveSections then
-        for _,entry in ipairs(state.features) do
-            local feature=entry[1]
-            local button=W.Button(bar,entry[2],120,36,"roundedTab");state.buttons[#state.buttons+1]=button
-            button:SetScript("OnClick",function() page:SelectModePanel(feature) end)
-        end
-    end
     if id=="foreverRogue" then
-        -- Customize opens the display itself in Edit Mode, where its styling lives.
+        -- Customize opens the display itself in Layout, where its styling lives.
         for i,button in ipairs(page.displayButtons) do
             local element=i==1 and "roguePoisonReminder" or "rogueQuickPoisons"
             button:HookScript("OnClick",function() if button:IsEnabled() then addon:EditElementAppearance(element) end end)
         end
     end
-    for _,entry in ipairs(panels) do
-        local panel=entry[1]
-        local button=W.Button(tabContent,entry[2],112,30,"subTab");state.panels[panel]=button
-        button:SetScript("OnClick",function() page:SelectModePanel(nil,panel) end)
-    end
     local originalVisible=page.ModeRowVisible
     function page:ModeRowVisible(row,original)
-        local route=row.modeRoute
-        if route then
-            return not row.editAppearance and not row.sectionHeader and not row.subsectionHeading and not row.modeSide and not row.modeReplacedNavigation and not row.modePaired and route.feature==state.feature and route.panel==state.panel
-        end
+        if row.editAppearance or row.modeReplacedNavigation or row.modePaired then return false end
         if originalVisible then return originalVisible(self,row,original) end
         return original
     end
-    -- Search continues to reveal the original setting and runs existing gates.
-    for _,entry in ipairs(page.searchEntries) do
-        local route=entry.row.modeRoute
-        if route and not entry.row.editAppearance then
-            local reveal=entry.onReveal
-            entry.onReveal=function()
-                if reveal then reveal() end
-                page:SelectModePanel(route.feature,route.panel)
-            end
-        end
-    end
-    local oldExpand=page.SetSectionExpanded
-    function page:SetSectionExpanded(section,expanded)
-        if not plan.preserveSections then
-            section.expanded=expanded;self:Layout()
-        else oldExpand(self,section,expanded) end
-    end
-    local oldPanel=page.LayoutSectionPanel
-    function page:LayoutSectionPanel(top)
-        if oldPanel then top=oldPanel(self,top) end
-        state.previewTop=top
-        return top -- Layout below owns its own viewport offsets.
-    end
-    local layout=page.Layout
-    function page:Layout()
-        if state.layingOut then return end
-        state.layingOut=true
-        if plan.preserveSections and self.selectedSection then
-            local feature=self.selectedSection.title
-            if feature~=state.feature then state.last[state.feature]=state.panel;state.feature=feature;state.panel=state.last[feature] or "options" end
-            if not Available(feature,state.panel) then
-                for _,entry in ipairs(panels) do if Available(feature,entry[1]) then state.panel=entry[1];break end end
-            end
-        end
-        local hasSettings=false;local panelCount=0
-        for _,entry in ipairs(panels) do
-            local available=Available(state.feature,entry[1]);state.panels[entry[1]]:SetShown(available)
-            if available then hasSettings=true;panelCount=panelCount+1 end
-        end
-        local dataHeader=plan.preserveSections and not hasSettings and not self.campfirePilot
-        local top
-        if self.previewArea then top=(state.previewTop or 46)-(not plan.preserveSections and self.sectionTabs and 40 or 0)
-        else top=plan.preserveSections and 40 or 0 end
-        local owned=not self.campfirePilot or (self.selectedSection and self.selectedSection.title=="Loot Sparkles")
-        if not owned then state.viewportTop=nil end
-        local mainHeight=not plan.preserveSections and #state.features>1 and 44 or 0
-        local barHeight=hasSettings and mainHeight+(panelCount>1 and 34 or 0)+8 or 0
-        bar:SetShown(owned and barHeight>0)
-        if state.barTop~=top then
-            state.barTop=top
-            bar:ClearAllPoints();bar:SetPoint("TOPLEFT",0,-top);bar:SetPoint("TOPRIGHT",-24,-top)
-        end
-        if bar:GetHeight()~=math.max(1,barHeight) then bar:SetHeight(math.max(1,barHeight)) end
-        local width=bar:GetWidth()
-        if width<64 then width=state.tabWidth or math.max(480,self.scroll:GetWidth())
-        else state.tabWidth=width end
-        W.LayoutModePills(state.buttons,width)
-        for i,button in ipairs(state.buttons) do
-            button:SetShown(mainHeight>0)
-            button:SetSelected(state.features[i][1]==state.feature)
-        end
-        viewport:ClearAllPoints();viewport:SetPoint("TOPLEFT",0,-mainHeight);viewport:SetPoint("TOPRIGHT",0,-mainHeight)
-        viewport:SetShown(panelCount>1);tabContent:SetWidth(width)
-        local x=0;local tabWidth=math.min(112,math.max(1,(width-6*math.max(0,panelCount-1))/math.max(1,panelCount)))
-        for _,entry in ipairs(panels) do
-            local button=state.panels[entry[1]];local active=state.panel==entry[1]
-            button:SetShown(panelCount>1 and Available(state.feature,entry[1]));button:SetSelected(active)
-            if Available(state.feature,entry[1]) then
-                button:ClearAllPoints();button:SetPoint("TOPLEFT",x,active and -4 or -12);button:SetSize(tabWidth,30)
-                button.label:ClearAllPoints();button.label:SetPoint("CENTER",0,active and 0 or 4);button.label:SetWidth(math.max(1,tabWidth-16));button.label:SetWordWrap(false)
-                x=x+tabWidth+6
-            end
-        end
-        rule:ClearAllPoints();rule:SetPoint("TOPLEFT",0,-mainHeight-(panelCount>1 and 34 or 0));rule:SetPoint("TOPRIGHT",0,-mainHeight-(panelCount>1 and 34 or 0))
-        rule:SetShown(panelCount>1)
-        header:SetShown(owned and (hasSettings or dataHeader))
-        local sliderCount,toggleCount=0,0
-        for row,route in pairs(state.routes) do
-            local active=route.feature==state.feature and route.panel==state.panel and (not row.visibleWhen or row.visibleWhen())
-            if active and row.settingsHasSlider then sliderCount=sliderCount+1 end
-            if active and row.settingsToggles then toggleCount=toggleCount+#row.settingsToggles end
-        end
-        local wide=self.scroll:GetWidth()>=800
-        local mixed=owned and hasSettings and wide and sliderCount>0 and toggleCount>0
-        local summary=owned and hasSettings and wide and not mixed and state.feature~="general" and state.feature~="General"
-        local leftY=42
-        for _,group in ipairs(state.groups) do
-            local row=group.row;local route=row.modeRoute
-            local move=mixed and route.feature==state.feature and route.panel==state.panel and (not row.visibleWhen or row.visibleWhen())
-            row.modeSide=move;group.host:SetShown(move)
-            for _,cell in ipairs(group.cells) do if cell.frame:GetParent()~=(move and group.host or group.original) then cell.frame:SetParent(move and group.host or group.original) end end
-            if move then
-                group.host:ClearAllPoints();group.host:SetPoint("TOPLEFT",self.contentInset,-leftY);group.host:SetSize(172,#group.cells*42);group.host.offset=leftY
-                for i,cell in ipairs(group.cells) do
-                    cell.frame:ClearAllPoints();cell.frame:SetPoint("TOPLEFT",0,-(i-1)*42);cell.frame:SetSize(172,42);cell.label:SetWidth(136)
-                end
-                leftY=leftY+#group.cells*42
-            end
-        end
-        if owned then
-            self.layoutInsetLeft=(mixed or summary) and 188 or 0
-            self.layoutTopInset=summary and 0 or ((hasSettings or dataHeader) and (wide and 44 or 72) or 0)
-            self.layoutMinHeight=mixed and leftY+12 or (summary and 112 or 0)
-            local viewportTop=top+barHeight
-            if state.viewportTop~=viewportTop then
-                state.viewportTop=viewportTop
-                self.scroll:ClearAllPoints();self.scroll:SetPoint("TOPLEFT",0,-viewportTop);self.scroll:SetPoint("BOTTOMRIGHT",-24,0)
-                self.scrollbar:ClearAllPoints();self.scrollbar:SetPoint("TOPRIGHT",-4,-viewportTop-4);self.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
-            end
-        end
-        header:ClearAllPoints();header:SetPoint("TOPLEFT",self.contentInset,-4);header:SetWidth(summary and 172 or math.max(1,self.scroll:GetWidth()-self.contentInset*2-4))
-        local title="Options";for _,entry in ipairs(panels) do if entry[1]==state.panel then title=entry[2] end end
-        if dataHeader then title=state.feature end
-        state.heading:SetText(title);state.heading:SetWidth(Measure(state.heading));state.alignUnderline()
-        local descriptionText=W.ModePanelDescriptions[state.panel] or ""
-        if descriptionText=="" and state.panel=="options" and state.editOwned[state.feature] then descriptionText="Text and appearance are styled in Edit Mode." end
-        state.separator:SetShown(wide and not summary and descriptionText~="")
-        state.description:ClearAllPoints()
-        if summary then state.description:SetPoint("TOPLEFT",state.heading,"BOTTOMLEFT",0,-12)
-        elseif wide then state.description:SetPoint("LEFT",state.separator,"RIGHT",8,0)
-        else state.description:SetPoint("TOPLEFT",0,-30) end
-        state.description:SetWidth(math.max(1,header:GetWidth()-((wide and not summary) and state.heading:GetWidth()+32 or 0)))
-        state.description:SetText(dataHeader and "" or descriptionText);state.mixed=mixed
-        layout(self)
-        for _,group in ipairs(state.groups) do
-            if group.row.modeSide then
-                for i,cell in ipairs(group.cells) do
-                    cell.frame:ClearAllPoints();cell.frame:SetPoint("TOPLEFT",0,-(i-1)*42);cell.frame:SetSize(172,42);cell.label:SetWidth(136)
-                end
-            end
-        end
-        -- Search highlights the host that is actually visible after a gutter move.
-        for _,entry in ipairs(self.searchEntries) do
-            local base=entry.modeBaseRow or entry.row;entry.modeBaseRow=base
-            if base.modeRoute and base.modeSide then
-                for _,group in ipairs(state.groups) do if group.row==base then entry.row=group.host end end
-            elseif base.modeRoute then entry.row=base end
-        end
-        state.layingOut=false
-    end
-    bar:SetScript("OnSizeChanged",function() page:Layout() end)
-    addon.Media:RegisterFontListener(bar,function() page:Layout() end)
-    page:SelectModePanel(state.feature,"options")
-    if page.UpdatePreviewLayout then page:UpdatePreviewLayout() end
+    page:Layout()
 end

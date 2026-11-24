@@ -429,7 +429,7 @@ function addon:CreateConfig()
         if not pages[id].UpdatePreviewLayout then
             pages[id]:ClearAllPoints();pages[id]:SetPoint("TOPLEFT");pages[id]:SetPoint("BOTTOMRIGHT")
         end
-        if pages[id].SelectSectionTab then pages[id]:SelectSectionTab(1) end
+        if pages[id].ShowSection then pages[id]:ShowSection(1) end
         pages[id]:Show()
         pages[id]:Layout()
         self:RefreshConfig()

@@ -42,11 +42,19 @@ function addon:SearchSettings(query, limit)
             results[#results + 1] = { module = module, label = module.title, score = score, kind = "module",
                 title = module.title, context = module.configDescription or module.description or "" }
         end
-        for _, entry in ipairs(page and page.searchEntries or {}) do
-            -- Display styling is edited in Edit Mode, not on this page.
-            local base = entry.modeBaseRow or entry.campfireBaseRow or entry.row
+        -- Display styling is edited in Layout, not on this page; a section
+        -- holding only such rows has no heading on the page to scroll to.
+        local entries, styledOnly = page and page.searchEntries or {}, {}
+        for _, entry in ipairs(entries) do
+            if entry.kind ~= "section" and entry.section then
+                local styled = entry.row and entry.row.editAppearance and true or false
+                styledOnly[entry.section] = styled and styledOnly[entry.section] ~= false
+            end
+        end
+        for _, entry in ipairs(entries) do
             -- An entry may name a condition under which its control exists at all.
-            if not (base and base.editAppearance) and (not entry.available or entry.available()) then
+            if not (entry.row and entry.row.editAppearance) and not (entry.kind == "section" and styledOnly[entry.section])
+                and (not entry.available or entry.available()) then
                 local rank = Match(entry.label, query)
                 for _, alias in ipairs(entry.keywords or {}) do
                     local aliasRank = Match(alias, query)
@@ -76,8 +84,8 @@ function addon:SearchSettings(query, limit)
 end
 
 -- The search field heads the sidebar. While it holds text, its results take
--- the place of the module list; choosing one opens the page and flashes the
--- setting.
+-- the place of the module list; choosing one opens the page, scrolls its one
+-- scroll to the setting and flashes it (page:Reveal in Config/Pages.lua).
 function addon:CreateSettingsSearch(sidebar, list)
     local input = CreateFrame("EditBox", nil, sidebar)
     input:SetPoint("TOPLEFT", 0, 0)

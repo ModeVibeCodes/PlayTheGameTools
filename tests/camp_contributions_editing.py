@@ -6,7 +6,7 @@ from smoke import load
 lua,_=load(before=FIXTURE+EXTRA)
 lua.execute(r'''
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page;page.sectionTabs.buttons[2].scripts.OnClick()
+local page=M.page;page:ShowSection(2)
 addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
 page.contributionPreview.scripts.OnClick()
 assert(A.window:IsShown())

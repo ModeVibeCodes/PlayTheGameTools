@@ -138,31 +138,51 @@ function M:CreateConfigPage(parent)
     end
     page.emptyControl = page:Row("", 48); page.emptyControl.rowLabel:Hide()
     page.emptyLabel = W.Label(page.emptyControl.row, "", nil, 10, -12, 440, T.muted)
-    page.emptyControl.row.visibleWhen = function() return page.visibleCount==0 and page.selectedSection and
-        (page.selectedSection.title=="Upcoming Abilities" or page.selectedSection.title=="Available & Known") end
-    W.SectionTabs(page)
-    local selectTab=page.SelectSectionTab
-    function page:SelectSectionTab(section)
-        local index=type(section)=="number" and section or nil
-        if not index then for i,s in ipairs(self.sections) do if s==section then index=i end end end
-        if index==2 and (not M.active or M.db.levelAlerts==false) or index==3 and not M.active then return end
-        selectTab(self,section)
+    page.emptyControl.row.visibleWhen = function() return page.visibleCount==0 end
+    -- One scroll: Level Up Window shows while its window is on, and Shortcut
+    -- Icon & Menu follows the module switch alone.
+    local upcomingSection, knownSection = page.sections[4], page.sections[5]
+    for _,row in ipairs(page.baseRows) do
+        local index
+        for i,section in ipairs(page.sections) do if row.section==section then index=i end end
+        local visible=row.visibleWhen
+        if index==2 then row.visibleWhen=function() return M.active and M.db.levelAlerts~=false and (not visible or visible()) end
+        elseif index==3 then row.visibleWhen=function() return M.active and (not visible or visible()) end end
     end
-    page.sectionTabs:SetPoint("TOPLEFT"); page.sectionTabs:SetPoint("TOPRIGHT", -24, 0)
-    page.scroll:ClearAllPoints(); page.scroll:SetPoint("TOPLEFT", 0, -38); page.scroll:SetPoint("BOTTOMRIGHT", -24, 0)
-    page.scrollbar:ClearAllPoints(); page.scrollbar:SetPoint("TOPRIGHT", -4, -42); page.scrollbar:SetPoint("BOTTOMRIGHT", -4, 4)
+    -- Upcoming abilities list under their heading and the rest under
+    -- Available & Known; each level heading goes with its first ability.
+    local function PlaceCatalog(self)
+        local lists, levelSection, headed = {[upcomingSection]={}, [knownSection]={}}, {}, {}
+        for i, record in ipairs(P.records) do
+            local item = self.trainingRows[i]
+            if item and item.visible and not levelSection[record.level] then
+                levelSection[record.level] = item.upcoming and upcomingSection or knownSection
+            end
+        end
+        for i, record in ipairs(P.records) do
+            local item = self.trainingRows[i]
+            local heading = self.levelHeaders[record.level]
+            local section = item and item.upcoming and upcomingSection or knownSection
+            if heading and not headed[record.level] then
+                headed[record.level] = true
+                local target = levelSection[record.level] or knownSection
+                heading.row.section = target; table.insert(lists[target], heading.row)
+            end
+            if item then item.control.row.section = section; table.insert(lists[section], item.control.row) end
+        end
+        self.emptyControl.row.section = knownSection
+        table.insert(lists[knownSection], self.emptyControl.row)
+        self.rows = {}
+        for _, row in ipairs(self.baseRows) do
+            self.rows[#self.rows+1] = row
+            for _, listed in ipairs(row.sectionHeader and lists[row.section] or {}) do self.rows[#self.rows+1] = listed end
+        end
+    end
     function page:RenderTraining()
         if self.buildingRows then return end
         self:EnsureCatalogRows()
         local lookup = {}
         for _, result in ipairs(M.rows or {}) do lookup[result.record.id] = result end
-        local title = self.selectedSection and self.selectedSection.title
-        -- Tab 3 (Shortcut Icon & Menu) follows the module switch alone.
-        for i,key in pairs({[2]="levelAlerts",[3]=true}) do
-            local enabled=M.active and (key==true or M.db[key]~=false)
-            self.sectionTabs.buttons[i]:SetEnabled(enabled);self.sectionTabs.buttons[i]:SetAlpha(enabled and 1 or 0.4)
-            if not enabled and self.selectedSection==self.sections[i] then self:SelectSectionTab(1);title="General" end
-        end
         self.visibleCount, self.levelVisible = 0, {}
         local stale = M.dirty or not M:OutsideCombat()
         self.statusLabel:SetText(not M.active and "" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
@@ -173,7 +193,7 @@ function M:CreateConfigPage(parent)
         for _, item in ipairs(self.trainingRows) do
             local result = item.record and lookup[item.record.id]
             local upcoming=result and result.tab~="Learned" and M.snapshot and M.snapshot.level and result.record.level>M.snapshot.level
-            item.result,item.visible=result,result~=nil and ((title=="Upcoming Abilities" and upcoming) or (title=="Available & Known" and not upcoming))
+            item.result,item.visible,item.upcoming=result,result~=nil,upcoming and true or false
             if item.visible then
                 self.visibleCount = self.visibleCount + 1; self.levelVisible[item.record.level] = true
                 local name, icon = M:SpellPresentation(item.record)
@@ -183,11 +203,11 @@ function M:CreateConfigPage(parent)
             end
         end
         self.emptyLabel:SetText(not M.active and "Enable Class Training to view your abilities." or
-            (M.rows and "No abilities in this tab." or (M.message or "No spellbook data.")))
+            (M.rows and "No abilities to show." or (M.message or "No spellbook data.")))
+        PlaceCatalog(self)
         self:Layout()
     end
     page.refreshers[#page.refreshers+1] = function() page:RenderTraining() end
-    page.OnSectionTabChanged = function() page:RenderTraining() end
     page:SetScript("OnShow", function() if self.active then self:RefreshTraining() end end)
     self.trainingPage = page
     page:Finish()

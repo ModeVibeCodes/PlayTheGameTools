@@ -40,7 +40,7 @@ assert(C:SetOption('separateBenefits',true))
 assert(not C.frame:IsShown() and C.benefitsFrame:IsShown())
 assert(Plain(C.benefitsFrame.text:GetText())=='2% Crit\n8% Stats')
 assert(not C.benefitsFrame.icon:IsShown(),'separate buff window stays simple')
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles');M.page:SelectSectionTab(2)
+addon:ToggleConfig();addon:SelectConfigPage('lootSparkles');M.page:ShowSection(2)
 local page=M.page
 local PM=addon.PositionManager
 local function Dragging(id) return PM.elements[id].dragging==true end

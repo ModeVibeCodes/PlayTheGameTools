@@ -34,10 +34,13 @@ assert(not C.active and not C.db.enabled and not C.frame and not next(C.events.e
 assert(M.db.sparklesEnabled==true,'preserve existing sparkle enable semantics')
 addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
 local page=M.page
-assert(#page.sections==2 and page.sectionTabs and #page.sectionTabs.buttons==2)
+assert(#page.sections==2 and not page.sectionTabs,'one scroll, no section tabs')
 assert(page.sections[1].title=='Loot Sparkles' and page.sections[2].title=='Campfire Monitor')
-page.sectionTabs.buttons[2].scripts.OnClick()
+assert(page.sections[1].header:IsShown() and page.sections[2].header:IsShown(),'both sections are titled groups on the page')
+assert(page.sections[2].header.offset>page.sections[1].header.offset,'Campfire Monitor follows Loot Sparkles')
+page:ShowSection(2)
 assert(page.selectedSection==page.sections[2] and page.campfireControls.enabled.frame:IsShown())
+assert(page.scrollbar:GetValue()==math.min(page.sections[2].header.offset-8,select(2,page.scrollbar:GetMinMaxValues())),'showing a section scrolls to its heading')
 assert(page.sparkleControls.sparklesEnabled.row==nil) -- cell stays a toggle grid, not another navigation page
 assert(C:SetOption('enabled',true) and not C.active,'master still off')
 addon:SetModuleEnabled('lootSparkles',true)
@@ -106,8 +109,8 @@ addon:SetEditMode(false);assert(addon.configWindow:IsShown());addon:SelectConfig
 assert(C:TogglePreview() and C.previewing and ShownText(C.frame):find('Preview:',1,true))
 page.campfireRefresh.scripts.OnClick();assert(not C.previewing,'Refresh Status returns to native data')
 C:TogglePreview()
-page:SelectSectionTab(1);assert(not C.previewing,'tab navigation ends preview')
-page:SelectSectionTab(2);C:TogglePreview();page:Hide();assert(not C.previewing,'closing page ends preview')
+page:ShowSection(1);assert(C.previewing,'scrolling the page keeps the preview')
+page:Hide();assert(not C.previewing,'closing page ends preview')
 addon:SetModuleEnabled('lootSparkles',false)
 assert(not C.active and not C.frame:IsShown() and not next(C.events.events))
 assert(C:TogglePreview() and not C.active and C.frame:IsShown(),'explicit preview works with master off')
@@ -142,4 +145,4 @@ C_TooltipInfo=nil;C:Refresh();assert(ShownText(C.frame):find('Native benefit det
 C_UnitAuras.GetAuraDataByIndex=function() return {spellId=7} end
 C:Refresh();assert(not C.snapshot.known,'bounded scan cannot prove absence without terminator')
 ''')
-print('PASS Campfire Monitor tabs, independent switches, native proximity/earned details, unknown and secret data, combat, preview, position, persistence and profile validation (mock only)')
+print('PASS Campfire Monitor one-scroll sections, independent switches, native proximity/earned details, unknown and secret data, combat, preview, position, persistence and profile validation (mock only)')

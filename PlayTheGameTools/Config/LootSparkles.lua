@@ -32,15 +32,8 @@ function M:CreateConfigPage(parent)
     status:GetParent().row.visibleWhen=function() return self:StatusNotice()~=nil end
     availability.visibleWhen=status:GetParent().row.visibleWhen
     page.refreshers[#page.refreshers+1]=function() status:SetText(self:StatusNotice() or "");page:Layout() end
-    local campSection=page:Section("Campfire Monitor",nil,false)
+    page:Section("Campfire Monitor",nil,false)
     addon.CampfireMonitor:AddConfig(page)
-    W.SectionTabs(page)
-    page.sectionTabs:SetPoint("TOPLEFT",0,0);page.sectionTabs:SetPoint("TOPRIGHT",-24,0)
-    page.scroll:ClearAllPoints();page.scroll:SetPoint("TOPLEFT",0,-40);page.scroll:SetPoint("BOTTOMRIGHT",-24,0)
-    page.scrollbar:ClearAllPoints();page.scrollbar:SetPoint("TOPRIGHT",-4,-44);page.scrollbar:SetPoint("BOTTOMRIGHT",-4,4)
-    page.OnSectionTabChanged=function(_,section)
-        if section~=campSection then addon.CampfireMonitor:StopPreview() end
-    end
     page:SetScript("OnHide",function() addon.CampfireMonitor:StopPreview() end)
     page:Finish(); return page
 end

@@ -149,7 +149,6 @@ function addon:CreateTimerOptions(parent, timer, options)
     page.visibilityButtons = visibility
     page.refreshers[#page.refreshers + 1] = refreshVisibility
     end
-    widgets.SectionTabs(page)
     page:SetScript("OnHide",function() if timer.OnConfigClosed then timer:OnConfigClosed() end end)
     page:Finish()
     return page

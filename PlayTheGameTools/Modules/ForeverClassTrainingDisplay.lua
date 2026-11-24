@@ -16,7 +16,7 @@ function M:OpenTraining(section)
     if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
     addon:SelectConfigPage("foreverClassTraining")
     local page=addon.configWindow and addon.configWindow.pages.foreverClassTraining
-    if page and section then page:SelectSectionTab(section) end
+    if page and section then page:ShowSection(section) end
 end
 
 function M:CreateShortcut()
