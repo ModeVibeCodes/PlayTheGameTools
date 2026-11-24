@@ -18,6 +18,9 @@ function A:RegisterWindow()
             moduleId=self.camp.owner.id,
             defaultPosition={target="screen",placement="center",x=self.db.contributionX,y=self.db.contributionY},
             canDrag=function() return self.active end,
+            onStyleChanged=function()
+                if self.window and self.window:IsShown() and self.layoutArgs then self:Layout(self.layoutArgs[1],self.layoutArgs[2]) end
+            end,
             onPositionChanged=function(element,position)
                 element.position.x=math.max(-10000,math.min(10000,math.floor(position.x+0.5)))
                 element.position.y=math.max(-10000,math.min(10000,math.floor(position.y+0.5)))
@@ -151,6 +154,9 @@ function A:Render()
     end
     self:Layout(#self.items,#self.items>self.db.contributionVisibleRows and "Scroll for more kits. Native placement rules apply." or "Native placement rules apply.")
 end
+-- Layout's Style card: Text size scales every label, Background hides the window's fill and border.
+local STYLE={text={"contributionNameSize","contributionInfoSize","contributionActionSize","contributionTitleSize","contributionDismissSize","contributionHintSize","contributionFooterSize"},background={"contributionBackgroundOpacity","contributionBorderOpacity"}}
+function A:StyledDB() return PM:StyleView("campfireContributions",self.db,STYLE) end
 function A:StyleLabel(label,size,color)
     local db=self.db
     local font=db.contributionUseInterfaceFont and addon.Media:GetInterfaceFont(nil,"lootSparkles") or
@@ -160,7 +166,7 @@ function A:StyleLabel(label,size,color)
     label:SetTextColor(unpack(color))
 end
 function A:StyleRow(row,index,preview,width,height,pitch)
-    local db=self.db;row:SetSize(width,height);row:ClearAllPoints();row:SetPoint("TOPLEFT",0,-(index-1)*pitch)
+    local db=self:StyledDB();row:SetSize(width,height);row:ClearAllPoints();row:SetPoint("TOPLEFT",0,-(index-1)*pitch)
     addon.Media:PaintSurface(row.bg,db.contributionRowColor,1,"lootSparkles");row.bg:SetAlpha(db.contributionRowOpacity/100)
     if row.highlight then row.highlight:SetColorTexture(unpack(db.contributionHoverColor));row.highlight:SetAlpha(db.contributionHoverOpacity/100) end
     row.icon:SetSize(db.contributionIconSize,db.contributionIconSize);row.icon:SetAlpha(db.contributionIconOpacity/100)
@@ -187,7 +193,8 @@ local function TextHeight(label,size)
     return D.Number(h,1,500) and math.max(size+4,h) or (size+4)
 end
 function A:Layout(count,footer)
-    local f,db=self.window,self.db;local pad=db.contributionPadding;local width=db.contributionWidth
+    self.layoutArgs={count,footer}
+    local f,db=self.window,self:StyledDB();local pad=db.contributionPadding;local width=db.contributionWidth
     local inner=width-pad*2;local names=db.contributionShowNames or not db.contributionShowIcons
     local info=db.contributionShowProfession or db.contributionShowCount
     local textHeight=(names and db.contributionNameSize+4 or 0)+(info and db.contributionInfoSize+4 or 0)+8

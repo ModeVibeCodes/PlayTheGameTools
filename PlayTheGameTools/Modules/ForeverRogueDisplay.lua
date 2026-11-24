@@ -183,13 +183,18 @@ local function Height(s,names,timers,handHeight)
     return s.iconSize+(s.showHands and (handHeight or s.fontSize)+s.labelGap or 0)+(names and s.showNames and s.fontSize+s.labelGap or 0)+
         (timers and s.showTimers and s.timerPosition~="CENTER" and s.timerSize+s.labelGap or 0)
 end
+-- Layout's Style card: Text size scales labels and timers, Background hides each
+-- panel's fill and border. The Quick Access Poisons menu also follows its
+-- launcher's Scale and Opacity, since it is a separate window.
+local STYLE={text={"fontSize","timerSize"},background={"backgroundOpacity","borderOpacity"}}
+local MENU_STYLE={text=STYLE.text,background=STYLE.background,scale={"scale"},opacity={"opacity"}}
 function M:Layout()
     if not self.watcher or not D.OutsideCombat() then return end
     local PM=addon.PositionManager
     if self.layingOut or self.dragging or (PM.elements.roguePoisonReminder and PM.elements.roguePoisonReminder.dragging) or
         (PM.elements.rogueQuickPoisons and PM.elements.rogueQuickPoisons.dragging) then return end
     self.layingOut=true
-    local db=self.db;local s=db.watchStyle;local cell=s.iconSize
+    local db=self.db;local s=PM:StyleView("roguePoisonReminder",db.watchStyle,STYLE);local cell=s.iconSize
     local height=0
     for _,b in ipairs(self.watchButtons) do Cell(b,s,true);height=math.max(height,Height(s,true,true,b.handHeight)) end
     local top=s.showTimers and s.timerPosition=="TOP" and s.timerSize+s.labelGap or 0
@@ -199,7 +204,7 @@ function M:Layout()
         b:ClearAllPoints()
         b:SetPoint("TOP",self.watcher,"TOPLEFT",s.padding+cell/2+(not s.vertical and (i-1)*(cell+s.iconGap) or 0),-s.padding-top-(s.vertical and (i-1)*(height+s.iconGap) or 0))
     end
-    s=db.launcherStyle;Paint(self.launcher,s);self.launcher:ClearAllPoints()
+    s=PM:StyleView("rogueQuickPoisons",db.launcherStyle,STYLE);Paint(self.launcher,s);self.launcher:ClearAllPoints()
     self.launcher:SetPoint("CENTER",UIParent,"CENTER",db.menuX/(s.scale/100),db.menuY/(s.scale/100));self.launcher:SetSize(s.iconSize+s.padding*2,s.iconSize+s.padding*2)
     self.openButton:SetAllPoints();PaintIcon(self.openButton,s,s.padding)
     local profession=D.Spell(2842);self.openButton.icon:SetTexture(profession and profession.icon or "Interface\\Icons\\Trade_BrewPoison")
@@ -210,7 +215,7 @@ function M:Layout()
     self.openButton.label:SetText(s.labelText);self.openButton.label:SetShown(s.showNames)
     local countInset=s.padding+math.max(2,s.iconBorderSize+1)
     self.openButton.count:ClearAllPoints();self.openButton.count:SetPoint("BOTTOMRIGHT",-countInset,countInset)
-    s=db.flyoutStyle;Paint(self.menu,s)
+    s=PM:StyleView("rogueQuickPoisons",db.flyoutStyle,MENU_STYLE);Paint(self.menu,s)
     local width=math.max(s.cellWidth,s.iconSize*2+s.spacing);local nameHeight=s.showNames and s.fontSize+s.labelGap or 0
     local rowHeight=Height(s,false,false)+nameHeight+s.spacing
     local rows=math.max(1,math.ceil(#self.choices/s.columns));local visible=math.min(rows,db.visibleRows)

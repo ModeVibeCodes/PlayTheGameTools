@@ -63,8 +63,11 @@ function timer:SetAppearance(key, value)
     return true
 end
 
+-- Layout's Style card: Text size scales the timer text, Background hides its fill and border.
+local STYLE_KEYS = { text = { "fontSize" }, background = { "backgroundOpacity" } }
+
 function timer:ApplyAppearance(layout)
-    local a = self.db.appearance
+    local a = addon.PositionManager:StyleView(self.positionElementId, self.db.appearance, STYLE_KEYS)
     addon.CombatTimerDisplay.Apply(self, a, layout)
     if layout ~= false then
         addon.PositionManager:ApplyPosition(self.positionElementId)
@@ -83,7 +86,7 @@ function timer:UpdatePresentationLayer()
 end
 
 function timer:SetPreviewMode(show)
-    if InCombat() or addon.editMode or addon.previewMode then self.testing=false end
+    if InCombat() or addon.editMode then self.testing=false end
     self.preview = self.active and (show or self.testing) or false
     self.lastSecond = nil
     self:UpdatePresentationLayer()
@@ -93,10 +96,10 @@ end
 
 -- Reuse the existing presentation sample on the owned display; clock logic stays unchanged.
 function timer:SetTestDisplay(enabled)
-    if enabled and (not self.active or InCombat() or addon.previewMode or addon.editMode or not addon.configWindow
+    if enabled and (not self.active or InCombat() or addon.editMode or not addon.configWindow
         or not addon.configWindow:IsShown() or addon.configWindow.selectedPage~=self.id) then return false end
     self.testing=enabled
-    self:SetPreviewMode(enabled or addon.previewMode)
+    self:SetPreviewMode(enabled or addon.editMode)
     if addon.RefreshModulePreviewLayout then addon:RefreshModulePreviewLayout() end
     return true
 end
@@ -249,6 +252,7 @@ function timer:OnInitialize()
         defaultPosition = { target = "screen", placement = "center", x = 0, y = -240 },
         canDrag = function() return self.active and self.placement end,
         onHighlight = function(_, selected, show) self:SetEditHighlight(selected, show) end,
+        onStyleChanged = function() self:ApplyAppearance() end,
     })
     assert(registered, "Play The Game Tools: Combat Timer position registration failed: " .. tostring(reason))
     self:ApplyAppearance()

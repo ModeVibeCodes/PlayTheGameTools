@@ -1,12 +1,15 @@
 local _, addon = ...
 
--- Session-only coordination. Never store these modes in SavedVariables.
-addon.previewMode = false
+-- Session-only coordination. Never store this mode in SavedVariables.
+-- Layout is the one on-screen mode: every enabled display shows its sample
+-- data (the module's preview) and can be dragged and styled. It replaced the
+-- separate Preview and Edit Mode states; addon.editMode is its flag.
 addon.editMode = false
 
 function addon:SyncModuleDisplayModes(module)
-    if module.SetPreviewMode then module:SetPreviewMode(module.enabled and self.previewMode or false) end
-    if module.SetEditMode then module:SetEditMode(module.enabled and self.editMode or false) end
+    local layout = module.enabled and self.editMode or false
+    if module.SetPreviewMode then module:SetPreviewMode(layout) end
+    if module.SetEditMode then module:SetEditMode(layout) end
 end
 
 function addon:RefreshDisplayModes()
@@ -17,17 +20,9 @@ end
 
 local function CanEnterMode(enabled)
     if enabled and (InCombatLockdown() or UnitAffectingCombat("player")) then
-        print("Play The Game Tools: Preview and Edit Mode are available outside combat.")
+        print("Play The Game Tools: Layout is available outside combat.")
         return false
     end
-    return true
-end
-
-function addon:SetPreviewMode(enabled)
-    assert(type(enabled) == "boolean", "Play The Game Tools: Preview requires a boolean.")
-    if not CanEnterMode(enabled) then return false end
-    self.previewMode = enabled
-    self:RefreshDisplayModes()
     return true
 end
 
@@ -39,8 +34,9 @@ local function RefreshAndFinishEditing(self)
     if not ok then error(message, 0) end
 end
 
+-- The way in and out of Layout.
 function addon:SetEditMode(enabled)
-    assert(type(enabled) == "boolean", "Play The Game Tools: Edit Mode requires a boolean.")
+    assert(type(enabled) == "boolean", "Play The Game Tools: Layout requires a boolean.")
     if not CanEnterMode(enabled) then return false end
     if self.editMode == enabled then return true end
     if enabled then
@@ -54,14 +50,14 @@ function addon:SetEditMode(enabled)
         local ok, message = pcall(self.CommitEditInputs, self)
         if not ok then print("Play The Game Tools: typed position failed: " .. tostring(message)) end
     end
-    self.editMode, self.previewMode = false, false
+    self.editMode = false
     RefreshAndFinishEditing(self)
     return true
 end
 
 function addon:ResetDisplayModes()
     local editing = self.editMode
-    self.previewMode, self.editMode = false, false
+    self.editMode = false
     if editing then RefreshAndFinishEditing(self) else self:RefreshDisplayModes() end
 end
 

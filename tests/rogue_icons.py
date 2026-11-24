@@ -1,4 +1,4 @@
-"""Icon controls show in Edit Mode without Customize; real per-icon geometry is styled.
+"""Layout shows the shared Style card for Rogue displays; real per-icon geometry is styled.
 Static UI mocks do not establish in-game rendering or native action acceptance.
 """
 from rogue_poisons import SETUP
@@ -14,13 +14,14 @@ local function Visible(frame)
  while frame do if not frame:IsShown() then return false end;frame=frame:GetParent() end
  return true
 end
--- Icon styling lives in Edit Mode's column for the selected display.
+-- Layout's shared Style card replaced the borrowed styling column. The page's
+-- own icon rows stay off screen (removed in a later pass) and still save below.
 assert(addon:SetEditMode(true) and addon.PositionManager:SelectElement('roguePoisonReminder'))
-assert(Visible(p.poisonSliders['watchStyle:iconSize']) and Visible(p.poisonSliders['watchStyle:iconGap']),'icon controls need no Customize step')
+assert(addon.editWindow.styleCard:IsShown() and not Visible(p.poisonSliders['watchStyle:iconSize']),'only the Style card in Layout')
 assert(not p.poisonSliders['watchStyle:iconPadding'] and not p.poisonSliders['launcherStyle:iconPadding'] and not p.poisonSliders['flyoutStyle:iconPadding'])
 assert(not p.poisonSliders['watchStyle:spacing'] and not p.poisonSliders['watchStyle:cellWidth'])
 assert(addon.PositionManager:SelectElement('rogueQuickPoisons'))
-assert(Visible(p.poisonSliders['launcherStyle:iconBorderSize']))
+assert(addon.editWindow.styleCard.title:GetText()=='Rogue: Quick Access Poisons')
 addon:SetEditMode(false)
 assert(not M.watchButtons[1].globalIconBorder.iconBorder:IsShown() and not M.watchButtons[1].iconBackground:IsShown(),'Default reminder remains bare')
 local a,b=M.watchButtons[1],M.watchButtons[2]

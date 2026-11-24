@@ -51,7 +51,7 @@ separate result from the existing-settings upgrade check above.
 2. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Show Shortcut;
    Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
    **Action:** Turn Show Shortcut on, click the book, scroll, minimize, reopen,
-   click Jump to Settings; move the Quick Actions button near screen edges in Edit Mode.
+   click Jump to Settings; move the Quick Actions button near screen edges in Layout.
    **Required state:** OOC, enabled module; preserve preferred final position.
    **Confirmation:** Bounded translucent list scrolls, glow follows open state,
    Minimize closes it and Jump to Settings opens the Class Training page.

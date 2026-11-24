@@ -90,8 +90,10 @@ function Q:RegisterLauncher()
     if self.element or not self.launcher or not OutsideCombat() then return end
     local b,pm=self.launcher,addon.PositionManager
     local x,y=SeedPosition()
+    -- Layout's Style card: the launcher has no text; Background hides its dark backing disc.
     local ok,e=pm:RegisterElement(ELEMENT,b,{owner=self,anchoring=false,allowedTargets={"screen"},
         defaultPosition={target="screen",placement="center",x=x,y=y},
+        styleText=false,onStyleChanged=function() self:ApplyLauncherStyle() end,
         canDrag=function() return self.count>0 end,
         onHighlight=function()
             -- The manager disables the mouse outside Edit Mode; this button must stay clickable.
@@ -103,8 +105,13 @@ function Q:RegisterLauncher()
     self.element=e
     e.label="Quick Actions"
     e.defaults={target="screen",placement="center",x=DEFAULT_X,y=DEFAULT_Y}
+    self:ApplyLauncherStyle()
     b:HookScript("OnDragStart",function() if e.dragging then b.wasDragged=true end end)
     b:HookScript("OnDragStop",function() if b.wasDragged then C_Timer.After(0,function() b.wasDragged=nil end) end end)
+end
+
+function Q:ApplyLauncherStyle()
+    if self.launcher then self.launcher.backing:SetShown(addon.PositionManager:StyleBackground(ELEMENT)) end
 end
 
 function Q:EnsureLauncher()

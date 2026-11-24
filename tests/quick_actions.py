@@ -98,12 +98,16 @@ lua.execute(r'''
     Click(b);assert(not ring:IsShown(),'no ring in combat')
     testCombat=false;FireEvent('PLAYER_REGEN_ENABLED')
 
-    -- Edit Mode closes the ring; clicks select and drags do not open it.
+    -- Layout closes the ring; clicks select (opening the Style card) and drags do not open it.
     Click(b);assert(ring:IsShown())
     assert(addon:SetEditMode(true) and not ring:IsShown())
     local e=pm.elements.quickActionsLauncher
-    assert(pm.selected==e.id and e.decoration.handle:IsShown())
-    Click(b);assert(not ring:IsShown())
+    assert(pm.selected==nil and e.decoration.handle:IsShown(),'Layout starts with no Style card open')
+    Click(b);assert(not ring:IsShown() and pm.selected==e.id)
+    assert(addon.editWindow.styleCard:IsShown() and addon.editWindow.styleCard.title:GetText()=='Quick Actions')
+    assert(not addon.editWindow.styleCard.sliders.text.slider:IsEnabled(),'the launcher has no text to size')
+    assert(pm:SetStyle(e.id,'background',false) and not b.backing:IsShown(),'Background hides the backing disc')
+    assert(pm:SetStyle(e.id,'background',true) and b.backing:IsShown())
     local timer=C_Timer.After;local queued={};C_Timer.After=function(_,fn) queued[#queued+1]=fn end
     b.centerX=800;b.centerY=300
     b.scripts.OnDragStart(b);assert(e.dragging and b.wasDragged)
@@ -113,11 +117,11 @@ lua.execute(r'''
     for _,fn in ipairs(queued) do fn() end;C_Timer.After=timer
     assert(addon.db.positions.quickActionsLauncher.x==e.position.x)
     Click(b);assert(ring:IsShown());Click(b)
-    -- The panel's module-settings button has no page to open for the launcher.
-    assert(addon:SetEditMode(true) and pm.selected==e.id)
-    local settings=addon.editWindow.settingsButton
+    -- The Style card's Settings button has no page to open for the launcher.
+    assert(addon:SetEditMode(true) and pm.selected==nil and pm:SelectElement(e.id))
+    local settings=addon.editWindow.styleCard.settingsButton
     assert(not settings:IsEnabled())
-    Click(settings);assert(addon.editMode,'stays in Edit Mode instead of opening a missing page')
+    Click(settings);assert(addon.editMode,'stays in Layout instead of opening a missing page')
     addon:SetEditMode(false)
     CT.db.shortcutPosition={x=11,y=22}
 ''')

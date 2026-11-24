@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Layout replaces Preview and Edit Mode. Every enabled display shows its sample
+  data with its name, and can be dragged. The bar along the top reads Layout,
+  "Click a display to style it", Drag to move, a Grid switch and Done. Grid
+  (off by default, this session only) draws guide lines and snaps a display
+  dropped on the screen to them. Clicking a display opens its Style card:
+  Scale, Opacity, Text size and Background, the same for every display, a
+  folded Position section (Anchor To, Attach, X/Y Offset), Reset (this
+  display's style and default position) and Settings (its module page).
+  Styles are saved with each display's position. Older per-display font, color
+  and border settings are kept, but are no longer shown in Layout.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

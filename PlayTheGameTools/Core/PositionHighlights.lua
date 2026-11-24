@@ -4,6 +4,7 @@ local function Combat() return InCombatLockdown() or UnitAffectingCombat("player
 
 -- Decoration is attached to actual owned bounds, including module icon/layout bounds.
 -- Only the visible handle intercepts input; no invisible full-frame input overlay.
+-- In Layout every display shows its name tag; the selected one is lit.
 function PM:UpdateEditDecoration(element, selected, show)
     local active = show and element.draggable and not Combat()
     if not element.decoration and active then
@@ -21,20 +22,24 @@ function PM:UpdateEditDecoration(element, selected, show)
         handle:SetPoint("BOTTOMLEFT",frame,"TOPLEFT",0,3)
         handle:SetSize(math.min(200,math.max(88,#(element.label or element.module.title)*6+18)),20)
         handle:EnableMouse(true);handle:RegisterForClicks("LeftButtonUp");handle:RegisterForDrag("LeftButton")
-        local background=handle:CreateTexture(nil,"BACKGROUND");background:SetAllPoints();background:SetColorTexture(0.08,0.1,0.12,0.94)
+        local background=handle:CreateTexture(nil,"BACKGROUND");background:SetAllPoints()
         local label=handle:CreateFontString(nil,"OVERLAY","GameFontHighlight")
         label:SetPoint("CENTER");label:SetText(element.label or element.module.title)
         addon.Media:BindInterfaceFont(label,GameFontHighlight,10)
         handle:SetScript("OnMouseDown",function() if self:CanDrag(element) then self:SelectElement(element.id) end end)
         handle:SetScript("OnDragStart",function() self:StartDragging(element.id) end)
         handle:SetScript("OnDragStop",function() self:StopDragging(element.id) end)
-        element.decoration={frame=frame,handle=handle,label=label,edges=edges}
+        element.decoration={frame=frame,handle=handle,label=label,edges=edges,background=background}
     end
     local d=element.decoration
     if not d then return end
     local color=selected and addon.Theme.primary or addon.Theme.muted
     for _,edge in ipairs(d.edges) do edge:SetColorTexture(color[1],color[2],color[3],selected and 0.9 or 0.5) end
-    d.label:SetTextColor(color[1],color[2],color[3])
+    if selected then
+        d.background:SetColorTexture(color[1],color[2],color[3],0.94);d.label:SetTextColor(0.05,0.06,0.08)
+    else
+        d.background:SetColorTexture(0.08,0.1,0.12,0.94);d.label:SetTextColor(0.92,0.93,0.95)
+    end
     d.handle:EnableMouse(active and self:CanDrag(element) or false)
     d.frame:SetShown(active and true or false)
 end
