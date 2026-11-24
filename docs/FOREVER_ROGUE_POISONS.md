@@ -4,12 +4,12 @@
 > **Poison Reminder:** **Show reminder**, **When** (When Needed / When Needed
 > (OOC) / Always Outside Combat / Always, Including Combat), **Use Time
 > Threshold** / **Use Charge Threshold**, **Reminder Threshold (min)** /
-> **Charge Threshold**, **Show weapon hands**, **Show poison names**, **Show time
+> **Charge Threshold**, **Show icons**, **Show weapon hands**, **Show poison names**, **Show time
 > left**, **Show item counts**, **Show poison charges**, **Right-click to
 > dismiss**, **Customize Reminder**. **Quick Poisons:** **Show quick poisons**,
 > **When** (When Needed / Always Outside Combat), **Menu opens** (Up / Down /
-> Left / Right), **Show icon label**, **Show icon count**, **Icon tooltip**,
-> **Show menu names**, **Show menu counts**, **Menu tooltips**, **Customize Quick
+> Left / Right), **Show icon**, **Show icon label**, **Show icon count**, **Icon tooltip**,
+> **Show menu icons**, **Show menu names**, **Show menu counts**, **Menu tooltips**, **Customize Quick
 > Access**. **Settings:** the six poison tiles, **Refresh Poisons**, **Restore
 > Dismissed**, **Dismiss Quick Access**. Each group's rows below its switch show
 > only while that switch is on. Styling (sizes, fonts, colors, borders) lives in

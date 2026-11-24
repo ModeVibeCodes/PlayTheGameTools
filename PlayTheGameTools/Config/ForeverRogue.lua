@@ -73,7 +73,7 @@ function M:CreateConfigPage(parent)
     Visible(Reminder)
     Toggles({{"Use Time Threshold","timeReminder"},{"Use Charge Threshold","chargeReminder"}});Visible(Reminder)
     Sliders({{"Reminder Threshold (min)","threshold"," min"},{"Charge Threshold","chargeThreshold"," charges"}});Visible(Reminder)
-    Toggles({{"Show weapon hands","showHands","watchStyle"},{"Show poison names","showNames","watchStyle"},
+    Toggles({{"Show icons","showIcons","watchStyle"},{"Show weapon hands","showHands","watchStyle"},{"Show poison names","showNames","watchStyle"},
         {"Show time left","showTimers","watchStyle"},{"Show item counts","showCounts","watchStyle"},
         {"Show poison charges","showPoisonCharges"},{"Right-click to dismiss","dismissOnRightClick"}});Visible(Reminder)
     page.displayButtons={Buttons({{"Customize Reminder",function() addon:EditElementAppearance("roguePoisonReminder") end}})[1]}
@@ -88,8 +88,8 @@ function M:CreateConfigPage(parent)
     local menu,refreshMenu=W.Exclusive(page:Row("Menu opens",44,{"direction","menu direction"}),directions,
         function() return self.db.direction end,function(v) self:SetOption("direction",v);page:Refresh() end)
     page.directionButtons=menu;page.refreshers[#page.refreshers+1]=refreshMenu;Visible(Quick)
-    Toggles({{"Show icon label","showNames","launcherStyle"},{"Show icon count","showCounts","launcherStyle"},
-        {"Icon tooltip","tooltips","launcherStyle"},{"Show menu names","showNames","flyoutStyle"},
+    Toggles({{"Show icon","showIcons","launcherStyle"},{"Show icon label","showNames","launcherStyle"},{"Show icon count","showCounts","launcherStyle"},
+        {"Icon tooltip","tooltips","launcherStyle"},{"Show menu icons","showIcons","flyoutStyle"},{"Show menu names","showNames","flyoutStyle"},
         {"Show menu counts","showCounts","flyoutStyle"},{"Menu tooltips","tooltips","flyoutStyle"}});Visible(Quick)
     page.displayButtons[2]=Buttons({{"Customize Quick Access",function() addon:EditElementAppearance("rogueQuickPoisons") end}})[1]
     page:Section("Settings",nil,false)

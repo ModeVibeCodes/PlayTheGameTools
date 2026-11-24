@@ -119,6 +119,36 @@ if `/reload` does not discover them. This does not publish a release.
 
 ## Validation and exact native checks
 
+> **v2 (current page):** sidebar **Questing & Leveling** → **Experience Bar**
+> is one scroll. The header switch turns the module on or off. **Other XP
+> Bars:** **Hide Blizzard XP Bar**, **Hide Ellesmere XP Bar** (only while
+> Ellesmere's bars are loaded). **Bar:** **Show XP percent**, **Show XP
+> amounts**, **Show rested XP**, **Show quest log XP**, **Rested overlay**,
+> **Quest log overlay**. **Session Text:** **Show session progress**, **Show XP
+> per hour**, **Session Tracking** → **Reset Session**. Texture, fonts, colors
+> and sizes are gone from this page; the bar is styled in the header's
+> **Layout** → click the bar → **Scale**, **Opacity**, **Text size**,
+> **Background**. Separators, offsets, the quest XP format and the session
+> text's place stay saved with no control. Manual checks for v2:
+>
+> - **Navigation:** `/ptg` → **Questing & Leveling** → **Experience Bar** →
+>   **Bar** → **Show XP percent** / **Show XP amounts** / **Show rested XP** /
+>   **Show quest log XP** / **Rested overlay** / **Quest log overlay**;
+>   **Action:** turn each off and back on; **Required state:** OOC, module on,
+>   below max level with rested XP and quests; **Confirmation:** only that piece
+>   of the bar hides and returns, and the choice persists after `/reload`.
+> - **Navigation:** same page → **Session Text** → **Show session progress** /
+>   **Show XP per hour**; **Action:** toggle each, earn XP; **Required state:**
+>   OOC, module on; **Confirmation:** the session text shows or hides each part.
+> - **Navigation:** `/ptg` header → **Layout** → click the Experience Bar →
+>   **Scale** / **Opacity** / **Text size** / **Background**; **Action:** change
+>   each, close Layout, `/reload`; **Required state:** OOC, module on;
+>   **Confirmation:** the bar follows each value and keeps it after reload.
+>
+> The numbered checks below describe the earlier layout; their Bar Appearance,
+> Bar Texture, font and Colors paths no longer exist.
+
+
 Run `python tests/enhanced_experience_bar.py` (also smoke),
 `python tests/enhanced_experience_visibility.py` for provider choice/restoration,
 `python tests/campfire_editmode.py`, `python tests/camp_contributions_startup.py`,

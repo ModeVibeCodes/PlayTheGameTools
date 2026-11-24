@@ -57,7 +57,7 @@ assert(n:IsShown() and n.message:GetText()==R.MESSAGE and n.hint:GetText()=='Use
 assert(n.dismissButton.label:GetText()=='Dismiss')
 -- Dismissal is stored; the page moves back up.
 n.dismissButton.scripts.OnClick()
-assert(not n:IsShown() and not R:Pending() and PTGToolsDB.styleResetNotice.dismissed==true)
+assert(not n:IsShown() and not R:Pending() and PTGToolsDB.styleResetNotice[addon.ProfileManager.activeName].dismissed==true)
 R:Announce();local again=0;for _,m in ipairs(messages) do if m:find(R.MESSAGE,1,true) then again=again+1 end end
 assert(again==1,'no second chat line')
 -- Idempotent: running the clear again changes nothing.
@@ -72,6 +72,12 @@ assert(addon.db.modules.combatTimer.appearance.fontSize==33,'cleared once per pr
 assert(addon.db.v2StyleReset.cleared==true and not addon.StyleReset:Pending(),'dismissed stays dismissed')
 addon:ToggleConfig();assert(not addon.configWindow.styleNotice:IsShown())
 for _,m in ipairs(messages) do assert(not m:find(addon.StyleReset.MESSAGE,1,true),'no chat line after dismissal') end
+-- Dismissal is per profile: a later reset of another profile still gets its notice.
+local P,R=addon.ProfileManager,addon.StyleReset;local name=P.activeName
+P.activeName='Other';assert(R:Pending(),'another reset profile still shows its notice')
+R:Announce();local seen=0;for _,m in ipairs(messages) do if m:find(R.MESSAGE,1,true) then seen=seen+1 end end
+assert(seen==1,'its own chat line');R:Dismiss();assert(not R:Pending())
+P.activeName=name;assert(not R:Pending() and PTGToolsDB.styleResetNotice[name].dismissed)
 ''')
 
 # A brand-new profile shows nothing.
@@ -99,4 +105,4 @@ assert(again.v2StyleReset.cleared==false,'a v2 export imports without a reset')
 -- A malformed marker is refused like any other invalid setting.
 assert(not addon.ProfileValidation:Validate({v2StyleReset='yes'}))
 ''')
-print('PASS v2 styling reset: listed keys only, kept behaviour/positions/Style card, once per profile, idempotent, one chat line, dismissible notice stored, fresh/default profiles silent, import/export (mock only)')
+print('PASS v2 styling reset: listed keys only, kept behaviour/positions/Style card, once per profile, idempotent, one chat line, dismissible notice stored per profile, fresh/default profiles silent, import/export (mock only)')

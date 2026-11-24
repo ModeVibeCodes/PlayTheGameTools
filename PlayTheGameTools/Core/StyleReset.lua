@@ -20,8 +20,9 @@ R.HINT="Use Layout to restyle displays."
 R.MARKER="v2StyleReset"
 
 -- Rogue Tools: one style table per display part. Kept for all three:
--- showIcons, showHands, showNames, showCounts, showTimers, tooltips, vertical,
--- columns, labelText, labelPosition, timerPosition, iconPadding (no control).
+-- showIcons, showHands, showNames, showCounts, showTimers, tooltips (switches
+-- on the page), vertical, columns, labelText, labelPosition, timerPosition,
+-- iconPadding (no control).
 local ROGUE_SHARED={"iconSize","iconBorderSize","iconBorderOpacity","iconBorderColor","scale","opacity","padding",
     "iconBackgroundOpacity","iconBackgroundColor","fontSize","labelGap","outline","font","fontMedia","textColor",
     "iconColor","backgroundOpacity","borderOpacity","borderSize","backgroundColor","borderColor"}
@@ -103,12 +104,18 @@ function R.Clear(profile,template)
     return cleared
 end
 
--- Account-wide notice state, outside every profile: { announced, dismissed }.
+-- Notice state, outside every profile, kept per profile name:
+-- { [profile] = { announced, dismissed } }. Dismissing one profile's notice
+-- does not hide the notice of another profile reset later.
 local function Notice()
-    local root=addon.ProfileManager and addon.ProfileManager.root
-    if type(root)~="table" then return {} end
+    local manager=addon.ProfileManager
+    local root=manager and manager.root
+    local name=manager and manager.activeName
+    if type(root)~="table" or type(name)~="string" then return {} end
     if type(root.styleResetNotice)~="table" then root.styleResetNotice={} end
-    return root.styleResetNotice
+    local notices=root.styleResetNotice
+    if type(notices[name])~="table" then notices[name]={} end
+    return notices[name]
 end
 -- The notice shows only when the active profile actually lost styling.
 function R:Pending()

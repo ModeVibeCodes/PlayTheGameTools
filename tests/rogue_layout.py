@@ -48,6 +48,10 @@ hands.button.scripts.OnClick();assert(M.db.watchStyle.showHands==false and not M
 hands.button.scripts.OnClick();assert(M.db.watchStyle.showHands==true)
 local menuNames=p.poisonControls['flyoutStyle:showNames'];local was=M.db.flyoutStyle.showNames
 menuNames.button.scripts.OnClick();assert(M.db.flyoutStyle.showNames==not was);menuNames.button.scripts.OnClick()
+for _,part in ipairs({'watchStyle','launcherStyle','flyoutStyle'}) do
+    local icons=p.poisonControls[part..':showIcons'];assert(icons,'Show icons switch for '..part)
+    icons.button.scripts.OnClick();assert(M.db[part].showIcons==false);icons.button.scripts.OnClick();assert(M.db[part].showIcons==true)
+end
 p.poisonControls.flyout.button.scripts.OnClick();assert(not M.db.flyout and not p.quickVisibility:GetParent().row:IsShown(),'Quick Poisons rows hide with their switch')
 p.poisonControls.flyout.button.scripts.OnClick();assert(M.db.flyout and p.quickVisibility:GetParent().row:IsShown())
 local h=addon.configWindow.moduleHeader

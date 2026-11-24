@@ -16,9 +16,10 @@ selected, imported and exported profiles behave alike: a profile without the
 `R.Clear(profile,template)` copies the template default into each listed key
 whose saved value differs (numbers within 1e-6) and records `cleared`. The
 marker is never exported, so an import re-runs the (idempotent) clear: an old
-export string is reset, a v2 one is not. The notice state is account-wide in
-`PTGToolsDB.styleResetNotice` (`announced`, `dismissed`), outside every
-profile: one chat line at login (`R:Announce` from `Core/Init.lua`) and a
+export string is reset, a v2 one is not. The notice state lives outside every
+profile in `PTGToolsDB.styleResetNotice[profileName]` (`announced`,
+`dismissed`), so dismissing one profile's notice leaves a later reset of another
+profile visible: one chat line at login (`R:Announce` from `Core/Init.lua`) and a
 banner under the reload banner (`window.styleNotice`, **Dismiss** =
 `R:Dismiss()`) while the active profile's marker says `cleared` and nothing was
 dismissed. A new or never-customised profile shows neither. Dead code removed
