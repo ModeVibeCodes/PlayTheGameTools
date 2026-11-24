@@ -38,10 +38,10 @@ mode.execute(r'''
     assert(surface.texture==addon.Media:GetTexture('ModeSurface'),'detached configuration popups keep mode material')
     local display=CreateFrame('Frame',nil,UIParent):CreateTexture(nil,'BACKGROUND')
     addon.Media:PaintSurface(display,T.panel,1,'combatTimer')
-    assert(display.texture==addon.Media.library:HashTable('background')['PTG Graphite'],'module display still inherits selected global texture')
+    assert(display.texture==addon.Media.defaultStatusBar,'a saved Global Texture is no longer applied to module displays')
     local moduleFrame=CreateFrame('Frame',nil,UIParent)
     addon.Media:ApplyBackdrop(moduleFrame,{bgFile='original'},'lootSparkles')
-    assert(moduleFrame.backdrop.bgFile==display.texture,'module backdrop still inherits global texture')
+    assert(moduleFrame.backdrop.bgFile==display.texture,'module backdrops take the built-in surface')
     assert(w.title:GetText()=='Play The Game Tools' and w.sidebarWidth==212,'one brand text in every theme')
     assert(w.title.color[1]==0 and w.title.color[2]==240/255 and w.title.color[3]==1,'cyan branding')
     assert(w.brandLogo and not w.headerArt:IsShown() and not w.columnEdge:IsShown())
@@ -143,7 +143,7 @@ mode.execute(r'''
     local media=addon.Media
     local original=addon.db.globalMedia.font
     addon.db.globalMedia.font='media:PTG JetBrains Mono';media:RefreshFonts()
-    assert(w.title.font[1]:find('JetBrainsMono%-Regular.ttf'),'explicit font customization retained')
+    assert(w.title.font[1]:find('Lato%-Bold.ttf'),'a saved Global Font no longer overrides the theme font')
     addon.db.globalMedia.font=original;media:RefreshFonts()
     assert(w.title.font[1]:find('Lato%-Bold.ttf'))
     local t=CreateFrame('Frame',nil,UIParent):CreateTexture(nil,'BACKGROUND')
@@ -162,7 +162,8 @@ mode.execute(r'''
     testMissingFonts=nil;media:RefreshFonts()
     addon:SelectConfigPage('globalSettings')
     local page=w.pages.globalSettings
-    assert(#page.sections==4 and page.themeButtons[3].selected and page.mediaControls['global:font'])
+    assert(#page.sections==4 and page.themeButtons[3].selected and not page.mediaControls,'theme cards, no media pickers')
+    assert(page.themeButtons[3].current:IsShown() and not page.themeButtons[1].current:IsShown(),'applied theme marked Current')
     reloads=0;C_UI.Reload=function() reloads=reloads+1 end
     page.themeButtons[2].scripts.OnClick()
     local reload=w.reloadBanner.reloadButton

@@ -16,7 +16,9 @@ local function Read(fn,...)
 end
 function G:ValidateOptions(db)
     assert(type(db)=="table","Global options must be a table; retained.")
-    for key,default in pairs({autoLoot=false,adoptAutoLoot=false,fastLoot=false,cameraZoom=4,hideErrors=false}) do
+    -- Retired autoLoot/adoptAutoLoot keys stay in saved profiles, unread; the
+    -- game's own Auto Loot option is left to the player.
+    for key,default in pairs({fastLoot=false,cameraZoom=4,hideErrors=false}) do
         if db[key]==nil then db[key]=default end
         assert(type(db[key])==type(default),"Invalid global option: "..key)
     end
@@ -29,11 +31,7 @@ function G:ValidateOptions(db)
     end
 end
 function G:Prepare(profile)
-    if profile.globalOptions==nil then
-        local old=profile.modules and profile.modules.foreverAutomation
-        local optedIn=old and old.enabled==true and old.autoLoot==true or false
-        profile.globalOptions={autoLoot=optedIn,adoptAutoLoot=not optedIn}
-    end
+    if profile.globalOptions==nil then profile.globalOptions={} end
     self:ValidateOptions(profile.globalOptions)
 end
 function G:GetClassColor(class)
@@ -54,6 +52,15 @@ function G:SetClassColor(class,color)
         color={color[1],color[2],color[3]}
     end
     addon.db.globalOptions.classColors[class]=color
+    addon.ReloadManager:Request("classColors","Apply custom class colors throughout the addon.")
+    return true
+end
+-- Returns every class to its native color; true when anything changed.
+function G:ResetClassColors()
+    if Combat() then return false end
+    local colors=addon.db.globalOptions.classColors
+    if next(colors)==nil then return false end
+    for class in pairs(colors) do colors[class]=nil end
     addon.ReloadManager:Request("classColors","Apply custom class colors throughout the addon.")
     return true
 end
@@ -92,19 +99,13 @@ function G:Apply()
     self.pending=false
     local ok,value=self:WriteCVar("cameraDistanceMaxZoomFactor",self.db.cameraZoom)
     if ok and Number(value,1,4) then self.db.cameraZoom=value end
-    if self.db.adoptAutoLoot then
-        local native=Read(C_CVar and C_CVar.GetCVarBool,"autoLootDefault")
-        if type(native)=="boolean" then self.db.autoLoot=native;self.db.adoptAutoLoot=false end
-    end
-    if not self.db.adoptAutoLoot then self:WriteCVar("autoLootDefault",self.db.autoLoot and 1 or 0) end
     self:ApplyErrors()
 end
 function G:SetOption(key,value)
-    if Combat() or not ({autoLoot=true,fastLoot=true,cameraZoom=true,hideErrors=true})[key] then return false end
+    if Combat() or not ({fastLoot=true,cameraZoom=true,hideErrors=true})[key] then return false end
     local candidate=addon.ProfileCodec.Copy(self.db);candidate[key]=value
     if not pcall(self.ValidateOptions,self,candidate) then return false end
     self.db[key]=value
-    if key=="autoLoot" then self.db.adoptAutoLoot=false;self:WriteCVar("autoLootDefault",value and 1 or 0) end
     if key=="fastLoot" then self:ConfigureLoot() end
     self:Apply()
     if addon.configWindow then addon:RefreshConfig() end
