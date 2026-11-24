@@ -22,7 +22,7 @@ lua.execute(r'''
     source.QUEST_PREREQ_DETAILS={[20]={faction='Both'},[21]={faction='Alliance'},[22]={classOnly='MAGE'}}
     local original=addon.ProfileCodec.Encode(source)
     local read=C.Read;C.Read=function() return source end
-    addon:SetModuleEnabled('dungeonLoot',true);addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    addon:SetModuleEnabled('dungeonLoot',true);assert(M:OpenDungeonLoot() and M.window:IsShown())
     local page=M.page
     local function Plain(text) return (text or ''):gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','') end
     local function Card()
@@ -79,8 +79,8 @@ lua.execute(r'''
     isolated.cards[1].questHeaders[6].classes[1]='WARRIOR'
     assert(original==addon.ProfileCodec.Encode(source),'exposed restriction metadata cannot mutate the source')
     assert(M.events.events.QUEST_LOG_UPDATE)
-    page:Hide();assert(not M.events.events.QUEST_LOG_UPDATE)
-    page:Show();assert(M.events.events.QUEST_LOG_UPDATE)
+    M.window:Hide();assert(not M.events.events.QUEST_LOG_UPDATE,'closing the window stops list events')
+    M.window:Show();assert(M.events.events.QUEST_LOG_UPDATE)
     addon:SetModuleEnabled('dungeonLoot',false);assert(not M.events.events.QUEST_LOG_UPDATE)
     -- Real bundled class metadata, including SFK's collection-stage aliases.
     C.Read=read

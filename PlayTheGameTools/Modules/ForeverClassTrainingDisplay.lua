@@ -11,6 +11,7 @@ function M:MoneyText(copper, full)
     return text .. coin(copper%100,"Copper")
 end
 
+-- Opens a Class Training settings tab; the ability lists are in the window.
 function M:OpenTraining(section)
     if not self:OutsideCombat() then return end
     if not addon.configWindow or not addon.configWindow:IsShown() then addon:ToggleConfig() end
@@ -205,7 +206,7 @@ function M:ShowDing(level, rows, preview)
         close:SetScript("OnClick",function() frame:Hide() end)
         local open=W.Button(frame,"Training",120,30,"button");open:SetPoint("BOTTOMLEFT",20,14)
         open:SetSelected(true)
-        open:SetScript("OnClick",function() self:OpenTraining(5);frame:Hide() end)
+        open:SetScript("OnClick",function() self:OpenTrainingWindow("Available & Known");frame:Hide() end)
         local guild=W.Button(frame,"Guild Message",122,30,"secondary")
         guild:SetScript("OnClick",function() self:PrepareGuildDing() end)
         self.dingClose,self.dingTraining,self.dingGuild=close,open,guild

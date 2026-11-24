@@ -145,7 +145,9 @@ function Map:Open(target,kind)
             provider.OnCanvasScaleChanged=provider.RefreshAllData
             provider.OnHide=function()
                 local restore=self.returnToConfig;self:Clear()
-                if restore and OOC() and addon.DungeonLoot.active and addon.configWindow then addon.configWindow:Show() end
+                -- Closing the map returns to the Dungeon Loot window it came from.
+                local window=addon.DungeonLoot.window
+                if restore and OOC() and addon.DungeonLoot.active and window then window:Show() end
             end
             map:AddDataProvider(provider);self.provider=provider
         end
@@ -171,8 +173,9 @@ function Map:Open(target,kind)
                 end)
             end
         end
-        if addon.configWindow and addon.configWindow:IsShown() then
-            self.returnToConfig=true;addon.configWindow:Hide()
+        local window=addon.DungeonLoot.window
+        if window and window:IsShown() then
+            self.returnToConfig=true;window:Hide()
         end
     end)
     if not ok then self:Clear();return false,self.lastError or "The client could not open this quest location." end
