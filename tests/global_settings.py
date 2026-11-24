@@ -115,7 +115,8 @@ addon:SelectConfigPage('globalSettings')
 assert(page.dataSourcesNotice:GetText()==notice,'full Points of Interest notice, copied exactly')
 -- Profile: one dropdown plus Manage.
 assert(addon.PositionManager:SetOffsets('combatTimer',123,-87))
-page:SelectSectionTab(2);assert(page.selectedSection.title=='Profile','header shortcut lands on Profile')
+page:SelectSectionTab(3);assert(page.selectedSection.title=='Profile' and page.scrollbar:GetValue()>0,'indexes follow the page order')
+page:SelectSectionTab(1);assert(page.selectedSection.title=='Appearance' and page.scrollbar:GetValue()==0,'section 1 is the top')
 local hub=page.profileHub
 assert(hub.select and hub.manage and not hub.specToggle,'Forever has no spec controls')
 testCombat=true;hub.manage.scripts.OnClick();assert(not hub.menu:IsShown());testCombat=false

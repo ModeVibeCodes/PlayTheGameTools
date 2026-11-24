@@ -293,10 +293,8 @@ function addon:CreateGlobalSettingsPage(parent)
         self:SetHeight(math.max(52,47+height))
     end
 
-    -- No section tabs: the page scrolls. The header Profile shortcut still
-    -- names the old tab index, so indexes map to the sections that took over
-    -- those tabs (1 Appearance, 2 Profiles, 3 Optimizations, 4 Class Colors).
-    local legacy={"Appearance","Profile","Game","Appearance"}
+    -- No section tabs: the page scrolls. Opening the page selects section 1,
+    -- which scrolls back to the top.
     function page:ShowSection(title)
         local target
         for _,section in ipairs(self.sections) do if section.title==title then target=section end end
@@ -306,7 +304,8 @@ function addon:CreateGlobalSettingsPage(parent)
         self.scrollbar:SetValue(math.max(0,offset-8))
     end
     function page:SelectSectionTab(section)
-        self:ShowSection(type(section)=="table" and section.title or legacy[section] or "Appearance")
+        if type(section)~="table" then section=self.sections[section] or self.sections[1] end
+        self:ShowSection(section.title)
     end
     -- Rows that appear, disappear or rewrap on refresh.
     page.refreshers[#page.refreshers+1]=function() page:Layout() end
