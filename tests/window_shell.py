@@ -87,7 +87,7 @@ for _,id in ipairs(addon.moduleOrder) do
     end
 end
 addon:SelectConfigPage('foreverRogue')
-assert(h.title:IsShown() and h.title:GetText()=='Rogue','class tools show their title')
+assert(h.title:IsShown() and h.title:GetText()=='Rogue Tools','class tools show their title')
 assert(w.navigationButtons.foreverRogue.classIcon.texture==addon.modules.foreverRogue.classIcon,'class icon in the sidebar row')
 Click(w.settingsButton)
 assert(w.selectedPage=='globalSettings' and h.title:GetText()=='Settings')
@@ -140,9 +140,9 @@ local input=w.searchInput
 local results=addon:SearchSettings('threat meter')
 assert(results[1].kind=='module' and results[1].module.id=='threatMeter' and results[1].title=='Threat Meter')
 assert(not results[1].label:find('Quality of Life',1,true),'no category names in results')
-local font=addon:SearchSettings('global font')
-assert(font[1] and font[1].module.id=='globalSettings' and font[1].entry and font[1].context:find('^Settings'),'Settings page is searchable')
-input:SetFocus();input:SetText('global font')
+local font=addon:SearchSettings('fast loot')
+assert(font[1] and font[1].module.id=='globalSettings' and font[1].entry and font[1].context:find('^Settings') and font[1].title=='Fast loot','Settings page is searchable')
+input:SetFocus();input:SetText('fast loot')
 assert(w.searchResults:IsShown() and not w.navigation:IsShown(),'results replace the list while typing')
 local first=input.buttons[1]
 assert(first:IsShown() and first.label:GetText()==font[1].title and first.context:GetText()==font[1].context)
@@ -176,7 +176,7 @@ warrior.execute(r'''
 SlashCmdList.PLAYTHEGAMETOOLS()
 local w=addon.configWindow
 assert(not addon:IsConfigPageListed('foreverRogue') and w.navigationButtons.foreverRogue==nil,'no Rogue row for a Warrior')
-for _,row in ipairs(w.navigation.rows) do assert(row.label:GetText()~='Rogue') end
+for _,row in ipairs(w.navigation.rows) do assert(row.label:GetText()~='Rogue Tools') end
 for _,result in ipairs(addon:SearchSettings('rogue')) do assert(result.module.id~='foreverRogue') end
 for _,result in ipairs(addon:SearchSettings('poison')) do assert(result.module.id~='foreverRogue') end
 assert(#w.navigation.rows==#addon.moduleOrder-2)
