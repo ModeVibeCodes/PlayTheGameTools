@@ -26,6 +26,31 @@ page and flashes the row. No new TOC files, SavedVariables or frame names.
 `tests/window_shell.py` guards the shell. Native confirmation is pending;
 `/reload` OOC.
 
+One scroll per module (branch `t3/v2w2-pages`, v2 wave 2): every module page
+is one vertical scroll: the page header, then each section as a titled group, top
+to bottom. Gone: ModeLayout's feature pills, Options/Text/Appearance panel tabs,
+panel headers and the left checkbox gutter; `W.SectionTabs` and the section strip;
+the Campfire element pills/panels/summary column (`campfirePilot`,
+`SelectCampfirePanel`); module-page Collapse buttons (only `Section(..., true)`
+folds, used by Developer Mode); the `underline` button style. `page:Layout`
+(Config/Pages.lua) hides a section or `Group` heading while nothing under it
+shows, so a section holding only Layout styling (Combat Timer's Display) has no
+heading. `page:ShowSection(section|index|title)` replaces `SelectSectionTab`: it
+scrolls to the heading (section 1 = top) and sets `selectedSection`; the window
+calls `ShowSection(1)` on open. `page:Reveal(entry)` (search) scrolls to the row
+and flashes it; search skips a section hit whose rows are all Layout styling.
+`W.ApplyModeModuleLayout` keeps only the routes that tag `row.editAppearance`
+(still hidden; headings are never tagged), compact rows and color pairing.
+Class Training lists upcoming abilities under Upcoming Abilities and the rest
+under Available & Known; Level Up Window rows show while that window is on and
+Shortcut Icon & Menu while the module is on (the old tab gating). Guild Roster
+and Loot Sparkles drop their tab strips; Campfire preview now stops when the
+page hides, not on a section change. Kept: the Dungeon Loot browser's own pills
+and Options/Appearance/Data sub-tabs (`W.SetupModeBrowser`, `W.LayoutModePills`
+in Config/SectionTabs.lua). No TOC, SavedVariables or frame-name changes;
+`tests/mode_module_layouts.py` and `tests/campfire_mode_layout.py` guard it.
+Native confirmation is pending; `/reload` OOC.
+
 Layout (branch `t3/v2-layout-mode`, v2 redesign): one on-screen mode replaces
 Preview and Edit Mode. `addon:SetEditMode(true/false)` is still the way in and
 out and `addon.editMode` its only flag; `addon:SetPreviewMode`/`previewMode` are
