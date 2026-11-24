@@ -98,8 +98,9 @@ lua.execute(r'''
     assert(window.pages.foreverRecruitment==page and window.moduleHeader.title:GetText()=='Guild')
     assert(window.moduleHeader.description:GetText()=='Search your guild, and find guildless players to invite.')
     assert(page.note:GetText()==G.PAGE_NOTE and #page.sections==0,'no settings sections on the page')
-    local open=page.openButton
-    assert(open.label:GetText()=='Open Guild')
+    -- The shared page-header button (openLabel), as Dungeon Loot and Class Training use.
+    local open=window.moduleHeader.openButton
+    assert(G.openLabel=='Open Guild' and page.openButton==nil and open:IsShown() and open.label:GetText()=='Open Guild')
     local anchor=open.points[#open.points]
     assert(anchor[1]=='RIGHT' and anchor[2]==window.moduleHeader.toggle and anchor[3]=='LEFT','Open Guild sits left of the switch')
     assert(open.enabled==false,'Open Guild waits for the switch')

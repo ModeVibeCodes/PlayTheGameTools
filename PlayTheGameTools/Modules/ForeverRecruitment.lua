@@ -14,6 +14,8 @@ if not addon.Edition or addon.Edition.name~="Forever" then return end
 addon:RegisterCategory("guildTools",{title="Guild Tools"})
 local M={title="Guild",category="guildTools",defaultEnabled=false,
     configDescription="Search your guild, and find guildless players to invite.",
+    -- The page header button (Config/Window.lua) calls OpenWindow().
+    openLabel="Open Guild",
     -- The old module names and the settings that live only in the Guild window
     -- still route search here.
     searchAliases={"roster","guild roster","recruitment","guild recruitment","recruiter","recruiter window",

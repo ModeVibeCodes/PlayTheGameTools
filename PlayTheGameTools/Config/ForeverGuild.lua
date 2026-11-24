@@ -106,7 +106,9 @@ SlashCmdList.PLAYTHEGAMETOOLSRECRUIT=function()
 end
 
 ---------------------------------------------------------------------------
--- Settings page: the header opens the window; everything else lives there.
+-- Settings page: the page header's Open Guild button (openLabel, the shared
+-- header hook in Config/Window.lua) opens the window; everything else lives
+-- there.
 ---------------------------------------------------------------------------
 function M:CreateConfigPage(parent)
     local page=W.Page(parent,320);self.page=page
@@ -122,20 +124,6 @@ function M:CreateConfigPage(parent)
     -- The old module names find this page first, as "Guild > Open Guild".
     page.searchEntries[#page.searchEntries+1]={label="Open Guild",row=row,kind="setting",
         keywords={"roster","guild roster","recruitment","guild recruitment","recruiter","recruiter window"}}
-
-    -- Open Guild sits in the page header, left of the module switch, while this page shows.
-    local open=W.Button(page,"Open Guild",120,24)
-    open:SetScript("OnClick",function() if M.enabled then M:OpenWindow() end end)
-    page.openButton=open
-    local function Anchor()
-        local header=addon.configWindow and addon.configWindow.moduleHeader
-        open:ClearAllPoints()
-        if header and header.toggle then open:SetPoint("RIGHT",header.toggle,"LEFT",-12,0)
-        else open:SetPoint("TOPRIGHT",0,0) end
-    end
-    page:HookScript("OnShow",Anchor)
-    page.refreshers[#page.refreshers+1]=function() open:SetEnabled(M.enabled==true) end
     page:Finish()
-    Anchor()
     return page
 end
