@@ -17,11 +17,9 @@ function M:CreateConfigPage(parent)
         end
     end)
     summary.row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    -- No Refresh button: SPELLS_CHANGED, LEARNED_SPELL_IN_SKILL_LINE, trainer and
+    -- level events (and opening this page) re-read the spellbook outside combat.
     local general=page:Section("General")
-    local controls = page:Row("Spellbook", 42)
-    page.refreshButton = W.Button(controls, "Refresh", 90, 24, "secondary")
-    page.refreshButton:SetPoint("LEFT")
-    page.refreshButton:SetScript("OnClick", function() self:RefreshTraining(); page:Refresh() end)
     local function applyFeature(key,value)
         self.db[key]=value
         if key=="levelAlerts" and not value then
@@ -169,7 +167,6 @@ function M:CreateConfigPage(parent)
         local stale = M.dirty or not M:OutsideCombat()
         self.statusLabel:SetText(not M.active and "" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
         self.totalLabel:SetText("Training total  " .. (M.rows and M:MoneyText(P.TrainingTotal(M.rows)) or "—"))
-        self.refreshButton:SetEnabled(M.active == true and M:OutsideCombat())
         self.popupPreviewButton:SetEnabled(M.active and M.db.levelAlerts~=false and M:OutsideCombat())
         self.guildMessageStatus:SetText(M.guildDingStatus or "Manual guild draft after next level-up.")
         M:UpdateDingActions()

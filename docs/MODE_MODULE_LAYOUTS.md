@@ -113,8 +113,9 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
    control. Disabled Class Training windows keep their original tab gating and
    do not raise a Lua error.
 5. **Navigation:** PTG Tools → Quality of Life → Profession & Food Bars → **Food Bar**
-   → **Options** → **Carried Items** row → **Refresh Bags**. **Action:** refresh
-   carried items; visit Text, Appearance and Position, then return to Options.
+   → **Options** food choices. **Action:** loot, buy or eat food so your bags
+   change, then visit Text, Appearance and Position and return to Options.
+   There is no Refresh Bags or Update Learned List button.
    **Required state:** OOC; Food Bar enabled for a populated list.
    **Confirmation:** carried-item rows still refresh, show the original
    selections and remain selectable; no food or profession choices are reset.

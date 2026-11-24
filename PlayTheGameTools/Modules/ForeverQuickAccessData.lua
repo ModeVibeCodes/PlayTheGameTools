@@ -70,7 +70,7 @@ function D.ReadProfessions()
                 not D.Public(maxRank) or not D.Number(id,1,2147483647) or id%1~=0 or
                 type(name)~="string" or name=="" or
                 not ((type(icon)=="number" and D.Number(icon,1,2147483647)) or (type(icon)=="string" and icon~="")) then
-                return nil,"Profession details are unavailable. Try Refresh Professions outside combat."
+                return nil,"Profession details are unavailable. They update when your professions change or combat ends."
             end
             if not seen[id] then
                 seen[id]=true

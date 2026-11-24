@@ -28,6 +28,11 @@
   longer reads "Disabled". Food Bar's Enable Food Bar and Show Food Bar are now
   one Show Food Bar switch; the bar's own Hide button turns it off. Enable Loot
   Sparkles stays: the page switch also covers Campfire Monitor.
+- Removed three manual refresh buttons whose data already updates on its own:
+  Class Training's Spellbook Refresh (it re-reads when your spellbook changes,
+  you train, level up or open the page), Profession & Food Bars' Update Learned
+  List (professions re-read when your skills change) and Refresh Bags (food
+  re-reads when your bags change). Each waits until combat ends, as before.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

@@ -25,6 +25,14 @@ Rogue, Campfire and Food Bar status rows hide while they would only restate a
 switch. Food Bar: `F:IsOn()` = `enabled and shown`, `F:SetShown(v)` sets both, and
 `SyncEnabled` follows `IsOn()`. Enable Loot Sparkles and Enable Campfire Monitor
 stay: both are independent features under the one Gameplay Enhancements switch.
+Refresh buttons: Spellbook Refresh, Update Learned List and Refresh Bags are gone.
+Their modules already re-read on SPELLS_CHANGED / LEARNED_SPELL_IN_SKILL_LINE
+(SpellBookDocumentation), SKILL_LINES_CHANGED (SkillInfoDocumentation) and
+BAG_UPDATE_DELAYED (ContainerDocumentation) / ITEM_DATA_LOAD_RESULT
+(ItemDocumentation), all in Blizzard's published Forever API docs
+(Gethe/wow-ui-source, `forever` branch), and on PLAYER_REGEN_ENABLED after combat.
+Not in scope and kept: Dungeon Loot's Dungeon Data Refresh, Campfire's Refresh
+Status and Rogue Tools' Refresh Poisons. Native confirmation is pending; `/reload` OOC.
 
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,

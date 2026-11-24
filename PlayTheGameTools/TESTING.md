@@ -41,9 +41,10 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** Play The Game Tools → Quality of Life → Class Training → Spellbook row
-   → Refresh button; tabs To Learn / Upcoming / Learned / Directory.
-   **Action:** Refresh and inspect known/unknown ranks against your spellbook and
+1. **Navigation:** Play The Game Tools → Questing & Leveling → Class Training →
+   Upcoming Abilities / Available & Known tabs.
+   **Action:** Learn a rank at a trainer (or level up), return to the page without
+   reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.
    **Confirmation:** Only your class appears; learned/superseded ranks are handled

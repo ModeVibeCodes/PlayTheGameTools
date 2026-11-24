@@ -154,6 +154,17 @@ assert(F:SetShown(true) and F.db.enabled and F.db.shown and F:IsOn())
 assert(F:SetShown(false) and not F.db.enabled and not F.db.shown and not F.active)
 qa:Refresh();qa:Layout()
 for _,row in ipairs(qa.rows) do if row.settingsTitle=='Food Bar Status' then assert(not row:IsShown(),'no Food Bar status while off') end end
+-- Manual refresh buttons are gone: game events update this data.
+addon:SetModuleEnabled('foreverClassTraining',true)
+local CTm,trainingPage=addon.ForeverClassTraining,addon:EnsureConfigPage('foreverClassTraining')
+local manual={Spellbook=true,['Update Learned List']=true,['Carried Items']=true}
+for _,page in ipairs({trainingPage,qa}) do for _,row in ipairs(page.rows) do assert(not manual[row.settingsTitle or ''],'manual refresh remains: '..tostring(row.settingsTitle)) end end
+assert(trainingPage.refreshButton==nil)
+for _,event in ipairs({'SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE'}) do assert(CTm.eventFrame.events[event],'training listens to '..event) end
+local QA=addon.ForeverQuickAccess;addon:SetModuleEnabled('foreverQuickAccess',true)
+for _,event in ipairs({'SKILL_LINES_CHANGED','SPELLS_CHANGED'}) do assert(QA.events.events[event],'professions listen to '..event) end
+F:SetShown(true);for _,event in ipairs({'BAG_UPDATE_DELAYED','ITEM_DATA_LOAD_RESULT'}) do assert(F.events.events[event],'food listens to '..event) end
+F:SetShown(false)
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
 assert(timer.modeLayout.panel=='options','timer styling is edited in Edit Mode')
