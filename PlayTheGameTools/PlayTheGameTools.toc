@@ -101,6 +101,7 @@ Modules\ForeverRogueDisplay.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
+Config\Chips.lua
 Config\Pages.lua
 Config\SectionTabs.lua
 Config\ModePlans.lua
