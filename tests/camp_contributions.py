@@ -68,7 +68,7 @@ local count,professions=0,{}
 for id,profession in pairs(A.catalog) do count=count+1;professions[profession]=true end
 assert(count==36 and not A.catalog[279981] and not A.catalog[279961] and not A.catalog[279974])
 local n=0;for _ in pairs(professions) do n=n+1 end;assert(n==12)
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:SetModuleEnabled('campfireMonitor',true)
 assert(A.active and not A.window and bagReads==0,'no bag scan before proximity')
 auras={{spellId=C.NEARBY,auraInstanceID=101}};FireEvent('UNIT_AURA','player')
 assert(#A.items==2 and A.window:IsShown() and #macroCalls==0)
@@ -124,7 +124,7 @@ addon:SetEditMode(false)
 C:SetOption('showContributionPopup',false)
 assert(C.active and not A.active and not next(A.events.events) and not A.window:IsShown())
 C:SetOption('showContributionPopup',true);assert(A.active and A.window:IsShown())
-addon:SetModuleEnabled('lootSparkles',false)
+addon:SetModuleEnabled('campfireMonitor',false)
 local before=bagReads
 for _,timer in ipairs(timers) do if timer.delay>=60 then timer.callback() end end
 assert(not A.active and not A.window:IsShown() and bagReads==before and #macroCalls==1)
@@ -137,7 +137,7 @@ denied,_=load(before=FIXTURE+EXTRA)
 denied.execute('''
 rejectTemplate=true
 auras={{spellId=C.NEARBY,auraInstanceID=101}}
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:SetModuleEnabled('campfireMonitor',true)
 assert(A.blocked and not A.window:IsShown() and #macroCalls==0)
 ''')
 print('PASS camp contribution profession/bag/readiness filters, native-template click intent, cache/cooldown wake, dismissal/rearm, metadata, combat, preview/Edit Mode, persistence and template rejection (mock only)')

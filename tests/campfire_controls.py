@@ -15,10 +15,9 @@ end
 '''
 lua,_=load(before=FIXTURE+EXTRA+NATIVE_GEOMETRY)
 lua.execute(r'''
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page
-page:ShowSection(2)
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local page=C.module.page
+addon:SetModuleEnabled('campfireMonitor',true)
 assert(not C.snapshot.nearby and #A.items==0)
 -- Exercise the actual settings buttons, without a fire or carried ready kit.
 bag={};page.contributionPreview.scripts.OnClick()
@@ -56,8 +55,9 @@ assert(page.contributionStatus:GetText():find('Mana Well x2',1,true) and not A.w
 -- Multi-option groups share their row rather than allocating one row per toggle.
 local function SameGrid(a,b) return a.frame:GetParent()==b.frame:GetParent() end
 assert(SameGrid(page.campfireControls.showIcon,page.campfireControls.showText))
-assert(SameGrid(page.sparkleControls.herbs,page.sparkleControls.ore))
-assert(SameGrid(page.campfireControls.enabled,page.campfireControls.showInCombat))
+local spark=addon:EnsureConfigPage('lootSparkles')
+assert(spark.sparkleControls.herbs:GetParent()==spark.sparkleControls.ore:GetParent(),'sparkle targets share one chips row')
+assert(page.campfireControls.enabled==nil and page.campfireControls.showInCombat,'no inner Enable switch beside Show In Combat')
 -- Native color wheel: apply, cancel, dynamic colors, and optional gradients.
 local pick=page.campfireColors.headerColor.pick
 pick.scripts.OnClick();assert(ColorPickerFrame:IsShown())
@@ -73,8 +73,8 @@ assert(not C:SetOption('headerColor',{9,0,0}),'invalid picker/profile colors rej
 assert(C:SetOption('headerGradient',true) and C:HeaderText('Camp Buffs'):find('|r|cff',1,true))
 for _,entry in ipairs(page.searchEntries) do assert(entry.label~='Native Camp Data' and entry.label~='Timer Color') end
 page.contributionPreview.scripts.OnClick()
-page:Hide();assert(not A.previewing and not A.window:IsShown(),'leaving the page ends the preview')
-page:Show();page.contributionPreview.scripts.OnClick()
+addon:SelectConfigPage('lootSparkles');assert(not A.previewing and not A.window:IsShown(),'leaving the page ends the preview')
+addon:SelectConfigPage('campfireMonitor');page.contributionPreview.scripts.OnClick()
 testCombat=true;testLockdown=true;FireEvent('PLAYER_REGEN_DISABLED')
 assert(not A.previewing and not A.window:IsShown() and #macroCalls==0)
 testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED')

@@ -30,20 +30,22 @@ end}
 
 lua,_=load(before=FIXTURE)
 lua.execute(r'''
-assert(not C.active and not C.db.enabled and not C.frame and not next(C.events.events))
-assert(M.db.sparklesEnabled==true,'preserve existing sparkle enable semantics')
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles')
-local page=M.page
-assert(#page.sections==2 and not page.sectionTabs,'one scroll, no section tabs')
-assert(page.sections[1].title=='Loot Sparkles' and page.sections[2].title=='Campfire Monitor')
-assert(page.sections[1].header:IsShown() and page.sections[2].header:IsShown(),'both sections are titled groups on the page')
-assert(page.sections[2].header.offset>page.sections[1].header.offset,'Campfire Monitor follows Loot Sparkles')
-page:ShowSection(2)
-assert(page.selectedSection==page.sections[2] and page.campfireControls.enabled.frame:IsShown())
-assert(page.scrollbar:GetValue()==math.min(page.sections[2].header.offset-8,select(2,page.scrollbar:GetMinMaxValues())),'showing a section scrolls to its heading')
-assert(page.sparkleControls.sparklesEnabled.row==nil) -- cell stays a toggle grid, not another navigation page
-assert(C:SetOption('enabled',true) and not C.active,'master still off')
-addon:SetModuleEnabled('lootSparkles',true)
+local CM=addon.modules.campfireMonitor
+assert(not C.active and not C.frame and not next(C.events.events))
+-- Its own module and switch; settings stay in the lootSparkles saved table.
+assert(CM==C.module and CM.title=='Campfire Monitor' and CM.category=='questingLeveling' and not CM.enabled)
+assert(C.db==addon.db.modules.lootSparkles.campfire and C.store==addon.db.modules.lootSparkles)
+assert(addon.db.modules.campfireMonitor.adoptedSplit==true and C.db.enabled==nil,'no inner switch written')
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local page=CM.page
+assert(page==addon.configWindow.pages.campfireMonitor and not page.sectionTabs and #page.sections==0,'one page, no section strip')
+assert(not page.campfirePilot and not page.SelectCampfirePanel,'one scroll: no element pills')
+local general
+for _,row in ipairs(page.rows) do if row.subsectionHeading and row.subsectionHeading:GetText()=='General' then general=row end end
+assert(general and general:IsShown() and general.offset==0,'General is the first group heading at the top of the page')
+assert(page.campfireControls.enabled==nil and page.campfireControls.showInCombat.frame:IsShown(),'no inner Enable switch')
+assert(not C:SetOption('enabled',true) and not C.active,'the module switch is the only switch')
+addon:SetModuleEnabled('campfireMonitor',true)
 assert(C.active and C.snapshot.known and not C.snapshot.nearby and not C.frame:IsShown())
 assert(C.events.events.UNIT_AURA and C.events.unitEvents.UNIT_AURA[1]=='player')
 local read=auraReads;FireEvent('UNIT_AURA','target');assert(auraReads==read)
@@ -67,12 +69,11 @@ assert(C.frame:GetWidth()==400 and C.frame:GetAlpha()==0.5)
 assert(C:SetOption('textColor',{0.2,0.7,1}))
 assert(not C:SetOption('textColor',{1,{secret=true},0}))
 assert(not C:SetOption('width',-1) and not C:SetOption('fontSize',0/0))
-assert(not C:SetOption('enabled',1) and not C:SetOption('unknown',true))
-assert(M:SetOption('sparklesEnabled',false) and C.active,'independent tab switch')
-assert(not M.running)
-assert(C:SetOption('enabled',false) and not C.frame:IsShown() and not next(C.events.events))
-assert(M:SetOption('sparklesEnabled',true) and M.active)
-assert(C:SetOption('enabled',true))
+assert(not C:SetOption('enabled',false) and not C:SetOption('unknown',true))
+addon:SetModuleEnabled('lootSparkles',true);assert(M.active and C.active,'independent modules')
+addon:SetModuleEnabled('lootSparkles',false);assert(C.active and not M.running,'Loot Sparkles off leaves Campfire on')
+addon:SetModuleEnabled('campfireMonitor',false);assert(not C.frame:IsShown() and not next(C.events.events))
+addon:SetModuleEnabled('campfireMonitor',true);assert(C.active and not M.active)
 auras={{spellId=C.BENEFITS,auraInstanceID=102}}
 FireEvent('UNIT_AURA','player')
 assert(not C.snapshot.nearby and C.frame:IsShown(),'joined earned buffs remain visible without claiming nearby fire')
@@ -105,13 +106,13 @@ C.frame.centerX=540;C.frame.centerY=420
 C.frame.scripts.OnDragStart();assert(C.frame.moving)
 C.frame.scripts.OnDragStop();assert(not C.frame.moving and C.db.x==40 and C.db.y==20)
 assert(addon.PositionManager:ResetPosition('campfireMonitor') and C.db.x==0 and C.db.y==-240)
-addon:SetEditMode(false);assert(addon.configWindow:IsShown());addon:SelectConfigPage('lootSparkles')
+addon:SetEditMode(false);assert(addon.configWindow:IsShown());addon:SelectConfigPage('campfireMonitor')
 assert(C:TogglePreview() and C.previewing and ShownText(C.frame):find('Preview:',1,true))
 page.campfireRefresh.scripts.OnClick();assert(not C.previewing,'Refresh Status returns to native data')
 C:TogglePreview()
-page:ShowSection(1);assert(C.previewing,'scrolling the page keeps the preview')
-page:Hide();assert(not C.previewing,'closing page ends preview')
-addon:SetModuleEnabled('lootSparkles',false)
+addon:SelectConfigPage('lootSparkles');assert(not C.previewing,'leaving the page ends preview')
+addon:SelectConfigPage('campfireMonitor');C:TogglePreview();page:Hide();assert(not C.previewing,'closing page ends preview')
+addon:SetModuleEnabled('campfireMonitor',false)
 assert(not C.active and not C.frame:IsShown() and not next(C.events.events))
 assert(C:TogglePreview() and not C.active and C.frame:IsShown(),'explicit preview works with master off')
 testCombat=true;testLockdown=true;FireEvent('PLAYER_REGEN_DISABLED')
@@ -123,10 +124,10 @@ assert(not C.events.scripts.OnUpdate,'no campfire polling')
 state=lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored,_=load(state,before=FIXTURE)
 restored.execute('''
-assert(C.db.enabled and C.db.width==400 and C.db.fontSize==18 and C.db.opacity==50)
-assert(C.db.textColor[2]==0.7 and not C.active)
-assert(M.db.sparklesEnabled and not M.enabled)
-addon:SetModuleEnabled('lootSparkles',true);assert(C.active)
+assert(C.db.width==400 and C.db.fontSize==18 and C.db.opacity==50)
+assert(C.db.textColor[2]==0.7 and not C.active and not C.module.enabled)
+assert(not M.enabled and addon.db.modules.campfireMonitor.adoptedSplit,'adopted once, never again')
+addon:SetModuleEnabled('campfireMonitor',true);assert(C.active)
 local candidate=addon.ProfileCodec.Copy(addon.db);candidate.modules.lootSparkles.campfire.width=2
 assert(not addon.ProfileValidation:Validate(candidate))
 C_UnitAuras=nil;C:Refresh();assert(not C.snapshot.known)
@@ -135,7 +136,7 @@ C_UnitAuras=nil;C:Refresh();assert(not C.snapshot.known)
 # Index fallback, missing details and complete scan/truncation boundaries.
 fallback,_=load(before=FIXTURE)
 fallback.execute('''
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:SetModuleEnabled('campfireMonitor',true)
 C_TooltipInfo={GetUnitAura=function(unit,index,filter)
  assert(unit=='player' and filter=='HELPFUL');return tips[102]
 end}
@@ -145,4 +146,4 @@ C_TooltipInfo=nil;C:Refresh();assert(ShownText(C.frame):find('Native benefit det
 C_UnitAuras.GetAuraDataByIndex=function() return {spellId=7} end
 C:Refresh();assert(not C.snapshot.known,'bounded scan cannot prove absence without terminator')
 ''')
-print('PASS Campfire Monitor one-scroll sections, independent switches, native proximity/earned details, unknown and secret data, combat, preview, position, persistence and profile validation (mock only)')
+print('PASS Campfire Monitor own page and switch, native proximity/earned details, unknown and secret data, combat, preview, position, persistence and profile validation (mock only)')

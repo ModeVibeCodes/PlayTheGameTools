@@ -6,8 +6,8 @@ from smoke import load
 lua, _ = load(before=FIXTURE)
 lua.execute(r'''
 local PM=addon.PositionManager
-for _,id in ipairs({'combatTimer','threatMeter','lootSparkles'}) do addon:SetModuleEnabled(id,true) end
-C:SetOption('enabled',true);C:SetOption('alwaysShow',true)
+for _,id in ipairs({'combatTimer','threatMeter','campfireMonitor'}) do addon:SetModuleEnabled(id,true) end
+C:SetOption('alwaysShow',true)
 for _,id in ipairs({'combatTimer','threatMeter','campfireMonitor'}) do assert(PM.elements[id],'managed display '..id) end
 -- No settings page offers placement: it lives only in Edit Mode.
 addon:ToggleConfig()

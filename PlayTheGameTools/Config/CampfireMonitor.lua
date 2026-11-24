@@ -1,9 +1,17 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
 local C,W,T=addon.CampfireMonitor,addon.ConfigWidgets,addon.InterfaceTheme
+-- Its own page since the v2 split; it was the second tab of Gameplay
+-- Enhancements. Leaving the page ends any preview.
+function C.module:CreateConfigPage(parent)
+    local page=W.Page(parent,480);self.page=page
+    C:AddConfig(page)
+    page:SetScript("OnHide",function() C:StopPreview() end)
+    page:Finish();return page
+end
 -- Presentation routes only: every control keeps its original getter/setter.
 local routes={
-    enabled={"general","options"},showInCombat={"general","options"},textColor={"general","text"},
+    showInCombat={"general","options"},textColor={"general","text"},
     headerGradient={"buffs","text"},headerColor={"buffs","text"},headerEndColor={"buffs","text"},
     showIcon={"monitor","options"},showText={"monitor","options"},showNearbyDetails={"monitor","options"},
     showProfessionGuide={"monitor","options"},alwaysShow={"monitor","options"},
@@ -107,10 +115,11 @@ function C:AddConfig(page)
         targets[id]={section=row.section,row=row}
     end
     page:Group("General")
-    Toggles({{"Enable Campfire Monitor","enabled"},{"Show In Combat","showInCombat"}})
+    -- No inner Enable switch: the module switch is the switch.
+    Toggles({{"Show In Combat","showInCombat"}})
     local status=Note("Campfire Status","",42);page.campfireStatus=status
     -- Live proximity only; hidden while it would just repeat a switch.
-    status:GetParent().row.visibleWhen=function() return self.previewing or (self.owner.active and self.db.enabled) end
+    status:GetParent().row.visibleWhen=function() return self.previewing or self.owner.active end
     local tools=page:Row("Tools",34)
     page.campfirePreview=Button(tools,"Preview",0,function() self:TogglePreview() end)
     page.campfireRefresh=Button(tools,"Refresh Status",190,function()
@@ -121,7 +130,7 @@ function C:AddConfig(page)
     page.refreshers[#page.refreshers+1]=function()
         local s=self.snapshot or {}
         status:SetText(self.previewing and "Preview only." or
-            ((not self.owner.active or not self.db.enabled) and "" or
+            (not self.owner.active and "" or
             (s.nearby and "Campfire Nearby" or (s.known and "No Nearby Campfire" or "Campfire status unavailable."))))
         page.campfirePreview.label:SetText(self.previewing and "Stop Preview" or "Preview")
     end

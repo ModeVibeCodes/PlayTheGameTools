@@ -33,15 +33,15 @@ tips[102]={lines={{leftText='Camp Benefits'},
  {leftText='Camp Chair: Critical strike chance increased by 2%.'},
  {leftText='Fish Bowl: All stats increased by 8%.'}}}
 auras={{spellId=C.BENEFITS,auraInstanceID=102}}
-addon:SetModuleEnabled('lootSparkles',true);C:SetOption('enabled',true)
+addon:SetModuleEnabled('campfireMonitor',true)
 assert(C.snapshot.nearby==false and C.frame:IsShown(),'joined earned buffs survive leaving camp')
 assert(Plain(C.frame.text:GetText()):find('2%% Crit\n8%% Stats'))
 assert(C:SetOption('separateBenefits',true))
 assert(not C.frame:IsShown() and C.benefitsFrame:IsShown())
 assert(Plain(C.benefitsFrame.text:GetText())=='2% Crit\n8% Stats')
 assert(not C.benefitsFrame.icon:IsShown(),'separate buff window stays simple')
-addon:ToggleConfig();addon:SelectConfigPage('lootSparkles');M.page:ShowSection(2)
-local page=M.page
+addon:ToggleConfig();addon:SelectConfigPage('campfireMonitor')
+local page=C.module.page
 local PM=addon.PositionManager
 local function Dragging(id) return PM.elements[id].dragging==true end
 assert(not page.campfireMove,'Edit Mode replaces the separate placement mode')
@@ -85,7 +85,7 @@ auras={};FireEvent('UNIT_AURA','player');assert(not C.benefitsFrame:IsShown(),'n
 rejectAura=true;FireEvent('UNIT_AURA','player');assert(not C.benefitsFrame:IsShown(),'unknown data is not stale success')
 rejectAura=nil
 auras={{spellId=C.BENEFITS,auraInstanceID=102}};FireEvent('UNIT_AURA','player')
-assert(addon:SetEditMode(true));addon:SetModuleEnabled('lootSparkles',false)
+assert(addon:SetEditMode(true));addon:SetModuleEnabled('campfireMonitor',false)
 assert(not C.editing and not C.benefitsFrame:IsShown(),'master disable ends editing and both displays')
 addon:SetEditMode(false)
 ''')

@@ -4,19 +4,15 @@ local M,W,T=addon.LootSparkles,addon.ConfigWidgets,addon.InterfaceTheme
 
 function M:CreateConfigPage(parent)
     local page=W.Page(parent,480); self.page=page
-    page:Section("Loot Sparkles",nil,false)
-    page:Group("Options")
+    -- Its own page since the v2 split. The module switch is the only enable.
     page.sparkleControls={}
-    local options,keys={},{}
-    for _,entry in ipairs({{"Enable Loot Sparkles","sparklesEnabled"},{"Quest Item Sparkles","questSparkles"},{"Ore Veins","ore"},
-        {"Herbs","herbs"},{"Quest Objects","questObjects"},{"Corpses With Loot","corpses"},
-        {"Show Object Names","showNames"}}) do
-        local key=entry[2]
-        keys[#keys+1]=key
-        options[#options+1]={label=entry[1],get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
-    end
-    local cells=page:ToggleGrid(options,{maxColumns=2,minimumCellWidth=210})
-    for i,key in ipairs(keys) do page.sparkleControls[key]=cells[i] end
+    local function Option(label,key) return {label=label,key=key,get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end} end
+    page:Group("Sparkle On")
+    local targets={Option("Quest Item Sparkles","questSparkles"),Option("Ore Veins","ore"),Option("Herbs","herbs"),
+        Option("Quest Objects","questObjects"),Option("Corpses With Loot","corpses")}
+    for i,chip in ipairs(W.Chips(page,targets)) do page.sparkleControls[targets[i].key]=chip end
+    page:Group("Options")
+    page.sparkleControls.showNames=page:ToggleGrid({Option("Show Object Names","showNames")},{maxColumns=2,minimumCellWidth=210})[1]
     page:Group("Appearance")
     for _,entry in ipairs({{"Sparkle Size","size"},{"Sparkle Opacity","opacity"},
         {"Name Font Size","fontSize"},{"Vertical Offset","offsetY"}}) do
@@ -32,8 +28,5 @@ function M:CreateConfigPage(parent)
     status:GetParent().row.visibleWhen=function() return self:StatusNotice()~=nil end
     availability.visibleWhen=status:GetParent().row.visibleWhen
     page.refreshers[#page.refreshers+1]=function() status:SetText(self:StatusNotice() or "");page:Layout() end
-    page:Section("Campfire Monitor",nil,false)
-    addon.CampfireMonitor:AddConfig(page)
-    page:SetScript("OnHide",function() addon.CampfireMonitor:StopPreview() end)
     page:Finish(); return page
 end

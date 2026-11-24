@@ -45,7 +45,8 @@ Class Training lists upcoming abilities under Upcoming Abilities and the rest
 under Available & Known; Level Up Window rows show while that window is on and
 Shortcut Icon & Menu while the module is on (the old tab gating). Guild Roster
 and Loot Sparkles drop their tab strips; Campfire preview now stops when the
-page hides, not on a section change. Kept: the Dungeon Loot browser's own pills
+page hides, not on a section change (since the split, when leaving the Campfire
+Monitor page). Kept: the Dungeon Loot browser's own pills
 and Options/Appearance/Data sub-tabs (`W.SetupModeBrowser`, `W.LayoutModePills`
 in Config/SectionTabs.lua). No TOC, SavedVariables or frame-name changes;
 `tests/mode_module_layouts.py` and `tests/campfire_mode_layout.py` guard it.
@@ -73,6 +74,52 @@ PLAYER_REGEN_ENABLED). Grid is session-only (`EditMode.grid`), off by default,
 snaps screen-centred drops to 32 units. No TOC or new files besides
 `tests/layout_style.py`; `tests/edit_mode.py` covers the mode. Native
 confirmation is pending; `/reload` OOC.
+v2 Gameplay Enhancements split (branch `t3/v2w2-split`, 2026-11-24, wave 2):
+the old `lootSparkles` module ("Gameplay Enhancements") is now two modules and
+two sidebar entries, each with its own switch. Decision, for compatibility:
+- **Loot Sparkles** keeps the ID `lootSparkles`, its saved table and its CVar
+  ownership record (`lootSparkleCVars`); turning it off still restores the
+  client settings it changed (unchanged `Configure`/`Restore` path).
+- **Campfire Monitor** is the new module `campfireMonitor`
+  (`Modules/CampfireMonitor.lua`, `addon.CampfireMonitor.module`). Its own saved
+  table holds only `enabled` and `adoptedSplit`. Every Campfire and Camp
+  Contributions setting is read in place from `modules.lootSparkles.campfire`;
+  nothing is moved or erased, and `LootSparkles.Initialize` still validates it.
+- First switch states: `LootSparkles.AdoptSplit` (run by profile validation, so
+  also on imports and inactive profiles) records the old master once as
+  `lootSparkles.splitMasterEnabled` and sets `lootSparkles.enabled` = old master
+  AND `sparklesEnabled`. `campfireMonitor:OnInitialize` sets its switch once to
+  `splitMasterEnabled` AND `campfire.enabled`, then marks `adoptedSplit`. Later
+  choices are never re-adopted. Missing old inner flags count as their old
+  defaults (sparkles on, campfire off).
+- The inner "Enable Loot Sparkles" (`sparklesEnabled`) and "Enable Campfire
+  Monitor" (`campfire.enabled`) switches are gone; both values stay saved, unread
+  and out of the defaults.
+- Display element IDs `campfireMonitor`, `campfireBuffs`, `campfireContributions`
+  are unchanged, so saved positions and Style card styles apply; they now name
+  `campfireMonitor` as their module. Their media scope stays `lootSparkles`.
+- Search aliases: both modules answer "gameplay enhancements"; Campfire Monitor
+  also "campfire", "camp contributions", "camp buffs".
+- Campfire Monitor's page is one scroll (merged with the one-scroll pages
+  branch in `t3/v2-wave2`): no pills or panel tabs, and no section either; its
+  General / Campfire Icon / Camp Buffs / Camp Contributions groups are the
+  headings, routed by its own `C:ApplyModeConfigLayout`. Loot Sparkles is one
+  scroll of Sparkle On / Options / Appearance / Availability groups.
+  `Config/ModePlans.lua` routes Loot Sparkles as one feature (`sparkles`) and
+  points the Campfire `EditAppearance` entries at page `campfireMonitor`.
+Chips (`Config/Chips.lua`, new TOC entry after `Config/Widgets.lua`, 124 Lua
+chunks): `W.Chips(page, items)` is one wrapping row of toggle chips, one per
+saved boolean key, each its own search entry. Used for Loot Sparkles "Sparkle
+On" (questSparkles, ore, herbs, questObjects, corpses) and Map Labels
+"Services" (the ten service keys plus otherFaction); Map Labels' Show Names
+moved to its Appearance group. The Map Labels page shows one source line
+(`CityLabels.SOURCE_LINE`) and **Full notice in About**, which opens Settings
+and flashes the About "Data sources" row (`CityLabels:ShowDataSources`). The
+full notice stays word for word in Settings → About and in the notice files.
+`tests/gameplay_split.py` covers adoption; the campfire, Map Labels and
+Settings suites cover the pages. Native confirmation pending; new TOC file:
+restart the client once.
+
 v2 module cuts (branch `t3/v2-module-cuts`, 2026-11-23): part of the approved
 v2 settings redesign. Display titles only: Map Labels (`cityLabels`), Experience
 Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and
@@ -97,7 +144,7 @@ Echoes: `LootSparkles:StatusNotice()` drops the two on/off status strings; the
 Rogue, Campfire and Food Bar status rows hide while they would only restate a
 switch. Food Bar: `F:IsOn()` = `enabled and shown`, `F:SetShown(v)` sets both, and
 `SyncEnabled` follows `IsOn()`. Enable Loot Sparkles and Enable Campfire Monitor
-stay: both are independent features under the one Gameplay Enhancements switch.
+stayed here; the v2 split above removed them.
 Refresh buttons: Spellbook Refresh, Update Learned List and Refresh Bags are gone.
 Their modules already re-read on SPELLS_CHANGED / LEARNED_SPELL_IN_SKILL_LINE
 (SpellBookDocumentation), SKILL_LINES_CHANGED (SkillInfoDocumentation) and

@@ -33,7 +33,10 @@ assert(Inventory()==expectedInventory,'all original module setting rows retained
 for _,id in ipairs(addon.moduleOrder) do
  addon:SelectConfigPage(id)
  local p=addon:EnsureConfigPage(id)
- if id~='dungeonLoot' then assert(p.modeLayout,'Mode rollout missing '..id) else assert(p.modeBrowser) end
+ -- Campfire Monitor routes its own rows on its own page (CampfireMonitor.lua).
+ if id=='dungeonLoot' then assert(p.modeBrowser)
+ elseif id=='campfireMonitor' then assert(not p.campfirePilot and not p.modeLayout and p.modeFooterLayout)
+ else assert(p.modeLayout,'Mode rollout missing '..id) end
  assert(not p.sectionTabs and not p.SelectSectionTab and not p.SelectModePanel,'no tab navigation '..id)
  if p.modeLayout then assert(not p.modeLayout.bar and not p.modeLayout.buttons and not p.modeLayout.panels,'no pills or panel tabs '..id) end
  for _,color in ipairs(p.settingsColors or {}) do
@@ -113,13 +116,14 @@ assert(sparkRow:IsShown() and spark.sparkleStatus:GetText():find('rejected',1,tr
 LS.status=nil;spark:Refresh();assert(not sparkRow:IsShown())
 local found=false
 for _,cells in ipairs(spark.toggleGrids) do for _,cell in ipairs(cells) do found=found or cell.label:GetText()=='Enable Loot Sparkles' end end
-assert(found,'Loot Sparkles keeps its own switch: the page switch also covers Campfire Monitor')
+for _,chip in pairs(spark.sparkleControls) do found=found or chip.label:GetText()=='Enable Loot Sparkles' end
+assert(not found and #spark.chipRows==1,'own module since the split: the module switch is the only switch')
 local Ro=addon.ForeverRogue;local rogue=addon:EnsureConfigPage('foreverRogue');local was=Ro.active
 Ro.active=false;rogue:Refresh();assert(not rogue.poisonStatus:GetParent().row:IsShown(),'no disabled echo')
 Ro.active=was;rogue:Refresh()
-local CM=addon.CampfireMonitor;local campOn=CM.db.enabled
-CM.db.enabled=false;spark:Refresh();spark:Layout();assert(not spark.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
-CM.db.enabled=campOn;spark:Refresh()
+local CM=addon.CampfireMonitor;local camp=addon:EnsureConfigPage('campfireMonitor');local campOn=CM.module.active
+CM.module.active=false;camp:Refresh();camp:Layout();assert(not camp.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
+CM.module.active=campOn;camp:Refresh()
 -- Food Bar: one switch for the two saved flags.
 local F=addon.ForeverFoodBar;local qa=addon:EnsureConfigPage('foreverQuickAccess');local labels={}
 for _,cells in ipairs(qa.toggleGrids) do for _,cell in ipairs(cells) do labels[cell.label:GetText()]=cell end end
@@ -215,10 +219,10 @@ end
 D:Navigate(nil);assert(not d.modeBrowser.viewport:IsShown(),'General panels hide in the catalog')
 D:Navigate(nil,'general');d:SelectModeBrowserPanel('appearance')
 d.iconSize.slider:SetValue(44);assert(D.db.shortcutSize==44,'browser slider keeps native setter')
--- Campfire Monitor joins the same scroll, below Loot Sparkles, with no pills.
-addon:SelectConfigPage('lootSparkles');local c=addon:EnsureConfigPage('lootSparkles')
-assert(not c.campfirePilot and not c.SelectCampfirePanel,'no Campfire element pills or panel tabs')
-assert(c.sections[2].header:IsShown() and c.sections[2].header.offset>c.sections[1].header.offset)
+-- Campfire Monitor has its own one-scroll page since the split, with no pills.
+addon:SelectConfigPage('campfireMonitor');local c=addon:EnsureConfigPage('campfireMonitor')
+assert(not c.campfirePilot and not c.SelectCampfirePanel and not c.sectionTabs,'no Campfire element pills or panel tabs')
+assert(not addon:EnsureConfigPage('lootSparkles').campfireControls,'Loot Sparkles no longer hosts Campfire rows')
 testCombat=true;testLockdown=true
 p:Layout();d:SelectModeBrowserPanel('options')
 testCombat=false;testLockdown=false
@@ -228,7 +232,7 @@ blizzard,_=load(lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)'),before=SETUP)
 blizzard.execute(inventory+'''
 addon:ToggleConfig();Inventory()
 for _,id in ipairs(addon.moduleOrder) do
- local p=addon:EnsureConfigPage(id);assert(p.modeLayout or p.modeBrowser,'Blizzard uses the same layout '..id)
+ local p=addon:EnsureConfigPage(id);assert(p.modeLayout or p.modeBrowser or (id=='campfireMonitor' and p.campfireControls and not p.campfirePilot),'Blizzard uses the same layout '..id)
  for _,color in ipairs(p.settingsColors or {}) do assert(not color.hex:IsShown() and color.pick:GetWidth()==80,'same picker-only color rows') end
 end
 ''')

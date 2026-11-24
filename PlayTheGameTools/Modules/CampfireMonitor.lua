@@ -1,10 +1,19 @@
 local _,addon=...
 if not addon.Edition or addon.Edition.name~="Forever" then return end
--- An independent subfeature under the Gameplay Enhancements master, like the
--- Food Bar under Quick Access. Do not treat earned buffs as proximity evidence.
+-- Campfire Monitor, its own module since the v2 split of Gameplay
+-- Enhancements. Do not treat earned buffs as proximity evidence.
 local C={NEARBY=1283391,BENEFITS=1229741,WELCOMING=1229739,CRAFTING=1289723}
 addon.CampfireMonitor=C
 local P=addon.LootSparkles
+-- The module's own saved table holds only its switch. Every Campfire and Camp
+-- Contributions setting stays where Gameplay Enhancements saved it,
+-- modules.lootSparkles.campfire, so nothing is moved; Loot Sparkles validates
+-- that table (LootSparkles.Initialize) and this module reads it in place.
+local CM={title="Campfire Monitor",category="questingLeveling",defaultEnabled=false,
+    searchAliases={"gameplay enhancements","campfire","camp contributions","camp buffs"},
+    configDescription="Shows whether a campfire is nearby, the buffs your camp gives and the contribution popup."}
+C.module=CM
+addon:RegisterModule("campfireMonitor",CM)
 local function Public(v) return not (issecretvalue and issecretvalue(v)) end
 local function Number(v,lo,hi) return Public(v) and type(v)=="number" and v==v and v>=lo and v<=hi end
 local function Call(fn,...)
@@ -22,7 +31,7 @@ C.ranges={contributionX={-10000,10000,1},contributionY={-10000,10000,1},contribu
     opacity={20,100,5},backgroundOpacity={0,100,5},benefitsX={-10000,10000,1},benefitsY={-10000,10000,1},
     benefitsWidth={100,600,10},benefitsFontSize={10,24,1},benefitsScale={50,150,5},
     benefitsOpacity={20,100,5},benefitsBackgroundOpacity={0,100,5},x={-10000,10000,1},y={-10000,10000,1}}
-C.defaults={headerGradient=false,contributionScale=100,contributionOpacity=100,contributionBackgroundOpacity=95,colorStats=true,showContributionPopup=true,contributionX=0,contributionY=120,enabled=false,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
+C.defaults={headerGradient=false,contributionScale=100,contributionOpacity=100,contributionBackgroundOpacity=95,colorStats=true,showContributionPopup=true,contributionX=0,contributionY=120,showIcon=true,showText=true,showBenefits=true,showNearbyDetails=false,
     showProfessionGuide=false,alwaysShow=false,showInCombat=false,locked=true,fontSize=14,
     iconSize=32,width=320,scale=100,opacity=100,backgroundOpacity=65,x=0,y=-240,compactBenefits=true,separateBenefits=false,
     benefitsLocked=true,benefitsX=260,benefitsY=-240,benefitsWidth=220,benefitsFontSize=14,
@@ -313,7 +322,7 @@ end
 function C:SetOption(key,value)
     if not P:OutsideCombat() or (self.defaults[key]==nil and self.colorDefaults[key]==nil) then return false end
     if not Public(value) then return false end
-    local candidate=addon.ProfileCodec.Copy(self.owner.db);candidate.campfire[key]=value
+    local candidate=addon.ProfileCodec.Copy(self.store);candidate.campfire[key]=value
     if not pcall(self.Initialize,candidate) then return false end
     self.db[key]=type(value)=="table" and {unpack(value)} or value
     if key=="contributionFont" then self.db.contributionFontMedia="" end
@@ -347,7 +356,7 @@ function C:Refresh()
     if self.owner.page then self.owner.page:Refresh() end
 end
 function C:SyncEnabled()
-    self.active=self.owner.active==true and self.db.enabled
+    self.active=self.owner.active==true
     self.editing=self.active and addon.editMode and P:OutsideCombat() or false
     if not self.events then self.events=CreateFrame("Frame") end
     self.events:UnregisterAllEvents()
@@ -377,7 +386,26 @@ function C:StopPreview()
     if addon.CampContributions then addon.CampContributions:StopPreview() end
     if self.previewing then self.previewing=false;self:SyncEnabled() end
 end
-function C:Attach(owner)
-    self.owner=owner;self.db=owner.db.campfire;self.snapshot={known=false}
+-- store is the lootSparkles saved table that holds .campfire.
+function C:Attach(owner,store)
+    self.owner=owner;self.store=store;self.db=store.campfire;self.snapshot={known=false}
     self:SyncEnabled()
 end
+
+-- The old inner "Enable Campfire Monitor" (campfire.enabled) is no longer
+-- read: the module switch is the switch. Its first value, once per profile,
+-- is the old Gameplay Enhancements master AND that inner flag. The master is
+-- recorded by LootSparkles.AdoptSplit before modules initialize; Loot
+-- Sparkles is registered first, so its table is ready here.
+function CM:OnInitialize()
+    local store=addon.LootSparkles.db
+    assert(type(store)=="table" and type(store.campfire)=="table","Play The Game Tools: Campfire Monitor settings unavailable.")
+    if self.db.adoptedSplit==nil then
+        self.db.enabled=store.splitMasterEnabled==true and store.campfire.enabled==true
+        self.db.adoptedSplit=true
+    end
+    C:Attach(self,store)
+end
+function CM:OnEnable() self.active=true;C:SyncEnabled() end
+function CM:OnDisable() self.active=false;C:StopPreview();C:SyncEnabled() end
+function CM:SetEditMode(enabled) C:SetEditMode(enabled) end
