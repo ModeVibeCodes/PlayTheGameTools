@@ -1,9 +1,11 @@
 local _, addon = ...
 local M, W, T = addon.DungeonLoot, addon.ConfigWidgets, addon.InterfaceTheme
 
-function M:CreateConfigPage(parent)
+-- The dungeon index, boss loot and quest lists: the body of the Dungeon Loot
+-- window (Config/BrowserWindow.lua). self.page names this browser.
+function M:CreateBrowser(parent)
     local page = CreateFrame("Frame", nil, parent)
-    page.searchEntries = {}
+    page:SetAllPoints()
     self.page = page
     local nav = CreateFrame("Frame", nil, page)
     nav:SetPoint("TOPLEFT");nav:SetPoint("TOPRIGHT");nav:SetHeight(36)
@@ -17,7 +19,6 @@ function M:CreateConfigPage(parent)
     page.home=Tab("Dungeons",function() self:Navigate(nil) end)
     page.loot=Tab("Boss Loot",function() self:Navigate(self.view.dungeon,"loot") end)
     page.quests=Tab("Quests",function() self:Navigate(self.view.dungeon,"quests") end)
-    page.general=Tab("General",function() self:Navigate(nil,"general") end)
     local jump=CreateFrame("Frame",nil,page)
     page.jumpBar=jump;page.jumpButtons={};page.bracketRows={}
     for _,range in ipairs({"10–19","20–29","30–39","40–49","50–60","Unknown"}) do
@@ -55,7 +56,6 @@ function M:CreateConfigPage(parent)
     end
     local root,rootRows=Pane(280)
     page.rootPane=root
-    W.SetupModeBrowser(page,root)
     local left,leftRows=Pane(140)
     local right,rightRows=Pane(180)
     page.listPane,page.detailPane=left,right
@@ -174,7 +174,7 @@ function M:CreateConfigPage(parent)
         self.search:ClearAllPoints();self.search:SetPoint("TOPLEFT",toolbar,"TOPLEFT",0,0)
         if questTab then self.search:SetPoint("TOPRIGHT",self.faction,"TOPLEFT",-10,0)
         else self.search:SetPoint("TOPRIGHT",toolbar,"TOPRIGHT",0,0) end
-        local home=M.active and M.view.dungeon==nil and M.view.tab~="general"
+        local home=M.active and M.view.dungeon==nil
         jump:SetShown(home)
         jump:ClearAllPoints();jump:SetPoint("TOPLEFT",0,-78);jump:SetPoint("TOPRIGHT",0,-78);jump:SetHeight(26)
         local x=0
@@ -183,8 +183,7 @@ function M:CreateConfigPage(parent)
             if b:IsShown() then b:ClearAllPoints();b:SetPoint("TOPLEFT",x,0);x=x+math.min(64,(width-20)/6)+4;b:SetWidth(math.min(64,(width-20)/6)) end
         end
         root:SetPoint("TOPLEFT",0,home and -110 or -84);root:SetPoint("BOTTOMRIGHT")
-        if self.LayoutModeBrowser and self:LayoutModeBrowser() then root:SetPoint("TOPLEFT",0,-132) end
-        local top=(M.active and M.view.dungeon and M.view.tab~="general") and -112 or -84
+        local top=(M.active and M.view.dungeon) and -112 or -84
         local leftWidth=math.max(160,math.min(300,width*0.37))
         left:SetPoint("TOPLEFT",0,top);left:SetPoint("BOTTOMLEFT");left:SetWidth(leftWidth)
         right:SetPoint("TOPLEFT",left,"TOPRIGHT",12,0);right:SetPoint("BOTTOMRIGHT")
@@ -196,42 +195,19 @@ function M:CreateConfigPage(parent)
         M:HideTooltip();M.tooltipInstances={};rootRows:Reset();leftRows:Reset();rightRows:Reset()
         local v=M.view
         local data=M.active and (M.data or M:ReadData()) or nil
-        local browser=M.active and data.available and v.dungeon~=nil and v.tab~="general"
+        local browser=M.active and data.available and v.dungeon~=nil
         root:SetShown(not browser);left:SetShown(browser);right:SetShown(browser)
-        toolbar:SetShown(M.active and v.tab~="general")
+        toolbar:SetShown(M.active)
         self.context:SetShown(browser)
         if browser then self.context:SetText(data.name.."  ·  "..data.card.suggestedLevel) end
-        self.home:SetSelected(v.dungeon==nil and v.tab~="general")
+        self.home:SetSelected(v.dungeon==nil)
         self.loot:SetSelected(v.dungeon~=nil and v.tab=="loot");self.quests:SetSelected(v.dungeon~=nil and v.tab=="quests")
-        self.general:SetSelected(v.tab=="general")
         self.loot:SetEnabled(M.active and v.dungeon~=nil and data.available);self.quests:SetEnabled(M.active and v.dungeon~=nil and data.available)
         for _,button in ipairs(buttons) do button.underline:SetShown(button.selected==true) end
         self.faction:EnableMouse(false)
         self.faction.label:SetText(data and data.player and data.player.faction or "Faction unknown")
         if not M.active then
-            rootRows:Add("Enable Dungeon Loot with the switch above to browse loot and quests.")
-        elseif v.tab=="general" then
-            -- While the module is on, its shortcut is in the Quick Actions ring.
-            rootRows.modePanel="appearance"
-            rootRows:Add("Quick Icon",nil,nil,T.secondary,nil,{heading=true})
-            page.iconSize=rootRows:SettingSlider("Icon Size",24,72,2,function() return M.db.shortcutSize end,function(value) M:SetShortcutOption("shortcutSize",value) end," px")
-            page.iconOpacity=rootRows:SettingSlider("Icon Opacity",25,100,5,function() return M.db.shortcutOpacity end,function(value) M:SetShortcutOption("shortcutOpacity",value) end,"%")
-            if addon.QuickActions.launcherFailure then rootRows:Add("Quick Actions button unavailable: "..addon.QuickActions.launcherFailure,nil,nil,T.primary) end
-            rootRows.modePanel="options"
-            rootRows:Add("Keybinding",nil,nil,T.secondary,nil,{heading=true})
-            page.bindingControl=rootRows:BindingControl(M:ShortcutBindingLabel(),function() M:CaptureShortcutBinding() end)
-            rootRows:Add("Clear Keybinding",function()
-                local _,message=M:SaveShortcutBinding(nil);M.bindingStatus=message;page:Refresh()
-            end)
-            if M.bindingStatus then rootRows:Add(M.bindingStatus,nil,nil,T.secondary) end
-            rootRows.modePanel="data"
-            rootRows:Add("Dungeon Data",nil,nil,T.secondary,nil,{heading=true})
-            rootRows:Add(data.providerSource or data.source,nil,nil,T.muted)
-            rootRows:Add("Bundled data: Lootified by Alen / CMaNGOS. GPLv3; no warranty. See CATALOG_SOURCES.md and LICENSES/GPL-3.0.txt.",nil,nil,T.muted)
-            local refresh=rootRows:Add("Refresh",function() M.attempted={};M:ReadData();page:Refresh() end)
-            self.reload=refresh.button;self.reload:SetWidth(86)
-            -- Keep the refresh target compact rather than filling the settings page.
-            refresh.button:ClearAllPoints();refresh.button:SetPoint("TOPLEFT");refresh.button:SetSize(86,28)
+            rootRows:Add("Enable Dungeon Loot in Settings to browse loot and quests.")
         elseif not v.dungeon then
             self.bracketRows={}
             local shown,group=0,nil
@@ -305,8 +281,85 @@ function M:CreateConfigPage(parent)
         self:Layout();self.refreshing=nil
     end
     page:SetScript("OnSizeChanged",function() page:Layout() end)
-    page:SetScript("OnShow",function() if self.active then self:ReadData() end;self:SyncEvents();page:Refresh() end)
-    page:SetScript("OnHide",function() self:CancelShortcutBinding();self:SyncEvents();self:HideTooltip();if self.coordinateFrame then self.coordinateFrame:Hide() end end)
+    -- The window's show and hide drive the browser (CreateBrowserWindow).
+    function page:Opened() if M.active then M:ReadData() end;M:SyncEvents();self:Refresh() end
+    function page:Closed() M:SyncEvents();M:HideTooltip();if M.coordinateFrame then M.coordinateFrame:Hide() end end
     page:Refresh()
+    return page
+end
+
+-- The standalone Dungeon Loot window. Created on first open; it keeps its
+-- place for the session and closes with Escape.
+function M:CreateBrowserWindow()
+    if self.window then return self.window end
+    local window=W.BrowserWindow({name="PlayTheGameToolsDungeonLootWindow",title="Dungeon Loot",width=760,height=600,module=self,
+        onShow=function() if self.page then self.page:Opened() end end,
+        onHide=function() if self.page then self.page:Closed() end end})
+    self.window=window
+    self:CreateBrowser(window.body)
+    return window
+end
+
+-- Settings only: the Quick Icon, its keybinding and the dungeon data notes.
+-- The index and loot lists open in their own window (Open Dungeon Loot).
+function M:CreateConfigPage(parent)
+    local page=W.Page(parent,320)
+    self.settingsPage=page
+    local function Slider(label,minimum,maximum,step,key,suffix)
+        local row=page:Row(label,48)
+        local refresh=W.Slider(row,minimum,maximum,step,function() return M.db[key] end,function(value) M:SetShortcutOption(key,value) end,suffix)
+        page.refreshers[#page.refreshers+1]=refresh
+        return {slider=row.slider,refresh=refresh}
+    end
+    page:Section("Quick Icon")
+    page.iconSize=Slider("Icon Size",24,72,2,"shortcutSize"," px")
+    page.iconOpacity=Slider("Icon Opacity",25,100,5,"shortcutOpacity","%")
+    page.launcherStatus=W.Label(page:Row("Quick Actions",42),"",nil,0,-8,320,T.secondary)
+    page.launcherStatus:SetWordWrap(true)
+    page:Section("Keybinding")
+    local binding=page:Row("Keybinding",44)
+    local host={set=W.Button(binding,"Set Keybinding",128,28)}
+    host.set:SetPoint("LEFT")
+    host.field=CreateFrame("EditBox",nil,binding)
+    host.field:SetPoint("LEFT",host.set,"RIGHT",10,0);host.field:SetPoint("RIGHT");host.field:SetHeight(28)
+    host.field:SetAutoFocus(false);host.field:EnableMouse(false);host.field:EnableKeyboard(false)
+    host.field:SetFontObject(GameFontHighlight);host.field:SetTextInsets(8,8,0,0)
+    addon.Media:BindInterfaceFont(host.field,GameFontHighlight)
+    W.Texture(host.field,"InputField")
+    host.set:SetScript("OnClick",function() if M.active then M:CaptureShortcutBinding() end end)
+    page.bindingControl=host
+    page.clearBinding=W.Button(page:Row("Clear Keybinding",42),"Clear Keybinding",128,26,"secondary")
+    page.clearBinding:SetPoint("LEFT")
+    page.clearBinding:SetScript("OnClick",function()
+        if not M.active then return end
+        local _,message=M:SaveShortcutBinding(nil);M.bindingStatus=message;page:Refresh()
+    end)
+    page.bindingStatus=W.Label(page:Row("Keybinding Status",42),"",nil,0,-8,320,T.secondary)
+    page.bindingStatus:SetWordWrap(true)
+    page:Section("Dungeon Data")
+    page.dataSource=W.Label(page:Row("Source",58),"",nil,0,-4,320,T.muted)
+    page.dataSource:SetWordWrap(true)
+    local license=W.Label(page:Row("License",58),"Bundled data: Lootified by Alen / CMaNGOS. GPLv3; no warranty. See CATALOG_SOURCES.md and LICENSES/GPL-3.0.txt.",nil,0,-4,320,T.muted)
+    license:SetWordWrap(true)
+    page.reload=W.Button(page:Row("Dungeon Data Refresh",42),"Refresh",86,28,"secondary")
+    page.reload:SetPoint("LEFT")
+    page.reload:SetScript("OnClick",function()
+        if not M.active then return end
+        M.attempted={};M:ReadData();page:Refresh()
+        if M:BrowserShown() then M.page:Refresh() end
+    end)
+    page.refreshers[#page.refreshers+1]=function()
+        local on=M.active==true
+        host.field:SetText(M:ShortcutBindingLabel())
+        host.set:SetEnabled(on);page.clearBinding:SetEnabled(on);page.reload:SetEnabled(on)
+        local failure=addon.QuickActions.launcherFailure
+        page.launcherStatus:SetText(failure and ("Quick Actions button unavailable: "..failure) or "While Dungeon Loot is on, its icon is in the Quick Actions ring.")
+        page.bindingStatus:SetText(M.bindingStatus or "")
+        local data=on and (M.data or M:ReadData()) or nil
+        page.dataSource:SetText(data and (data.providerSource or data.source) or "Turn Dungeon Loot on to read its dungeon data.")
+    end
+    page:SetScript("OnShow",function() page:Refresh() end)
+    page:SetScript("OnHide",function() M:CancelShortcutBinding() end)
+    page:Finish()
     return page
 end

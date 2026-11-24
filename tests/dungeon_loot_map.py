@@ -81,7 +81,7 @@ lua.execute('''
     function ShowUIPanel(map) opens=opens+1;map:Show() end
     WorldMapFrame:SetScript('OnHide',function() if Map.provider then Map.provider:OnHide() end end)
     addon:SetModuleEnabled('dungeonLoot',true)
-    addon:ToggleConfig();addon:SelectConfigPage('dungeonLoot')
+    assert(M:OpenDungeonLoot() and M.window:IsShown())
     assert(Map:Open(target,'pickup'))
     assert(opens==1 and WorldMapFrame.mapID==1421 and #Map.lines==2 and Map.markers[1]:IsShown())
     local acquired=acquisitions
@@ -95,8 +95,8 @@ lua.execute('''
     WorldMapFrame.canvasScale=1;Map.provider:OnCanvasScaleChanged()
     assert(Map.lines[1].start[3]==100 and Map.lines[1].start[4]==-120)
     assert(Map.lines[1].finish[3]==200 and Map.lines[1].finish[4]==-180)
-    assert(not addon.configWindow:IsShown(),'map is not hidden behind addon dialog')
-    WorldMapFrame:Hide();assert(Map.target==nil and not Map.lines[1]:IsShown() and addon.configWindow:IsShown())
+    assert(not M.window:IsShown(),'map is not hidden behind the Dungeon Loot window')
+    WorldMapFrame:Hide();assert(Map.target==nil and not Map.lines[1]:IsShown() and M.window:IsShown(),'closing the map returns to the window')
     testCombat=true
     local ok,reason=Map:Open(target,'pickup');assert(not ok and reason:find('combat') and opens==1)
     testCombat=false
@@ -110,7 +110,7 @@ lua.execute('''
         classOnly='MAGE',faction='Both',pickup='Fixture Patrol',turnin='Fixture Finisher',note='Important acquisition note',
         objective='Find fixture',requires=10,rewardItems={}}}}},QUEST_PREREQ_CHAINS={[100002]={{id=100003,name='Prerequisite'}}}}
     addon.DungeonLootCatalog.Read=function() return ForeverDungeonJournal_NS end
-    M:ReadData();addon.configWindow:Show();M:Navigate('Shadowfang Keep','quests')
+    M:ReadData();M.window:Show();M:Navigate('Shadowfang Keep','quests')
     local page=M.page
     assert(page.faction:GetWidth()==128 and page.faction:GetHeight()==28)
     assert(#page.faction.points==1 and page.faction.points[1][1]=='TOPRIGHT','no inherited left anchor')
@@ -190,7 +190,7 @@ lua.execute('''
     pin:GetScript('OnMouseUp')(pin,'LeftButton',true);assert(Map.target)
     pin:GetScript('OnMouseUp')(pin,'RightButton',true)
     assert(not pin:IsShown() and Map.target==nil and WorldMapFrame:IsShown(),'right click removes only our overlay, not the map')
-    WorldMapFrame:Hide();assert(addon.configWindow:IsShown(),'dismiss keeps return-to-settings behavior')
+    WorldMapFrame:Hide();assert(M.window:IsShown(),'dismiss keeps return-to-window behavior')
     -- Deferred canvas layout and native entry point, independent of quest ownership.
     local pending={}
     local timer=C_Timer.After

@@ -8,46 +8,6 @@ local function Measure(label)
     return math.max(1,math.ceil(width))
 end
 
--- Dungeon Loot keeps its pooled, navigable catalog. Only its General settings
--- get compact panels; recycled rows carry the panel of their current content.
-function W.SetupModeBrowser(page,root)
-    local state={panel="options",buttons={}};page.modeBrowser=state
-    local strip=CreateFrame("ScrollFrame",nil,page);strip:SetHeight(34)
-    strip:SetPoint("TOPLEFT",0,-44);strip:SetPoint("TOPRIGHT",0,-44)
-    local content=CreateFrame("Frame",nil,strip);content:SetSize(600,42);strip:SetScrollChild(content)
-    state.viewport,state.content=strip,content
-    local rule=W.Fill(page,T.line,"BACKGROUND");rule:ClearAllPoints();rule:SetPoint("TOPLEFT",0,-78);rule:SetPoint("TOPRIGHT",0,-78);rule:SetHeight(1)
-    local header=CreateFrame("Frame",nil,page);header:SetPoint("TOPLEFT",12,-88);header:SetPoint("TOPRIGHT",-12,-88);header:SetHeight(38)
-    local heading=W.Heading(header,"Options",20,0,0,100,T.text)
-    local separator=W.Label(header,"·",nil,0,0,8,T.muted);addon.Media:BindInterfaceFont(separator,GameFontHighlight,14)
-    separator:ClearAllPoints();separator:SetPoint("LEFT",heading,"RIGHT",8,0)
-    local description=W.Label(header,"",nil,0,0,300,T.muted);description:ClearAllPoints();description:SetPoint("LEFT",separator,"RIGHT",8,0)
-    local _,align=W.ModeHeadingRule(header,heading)
-    local choices={{"options","Options"},{"appearance","Appearance"},{"data","Data"}}
-    separator:Hide()
-    function page:SelectModeBrowserPanel(panel) state.panel=panel;root.scrollbar:SetValue(0);self:Layout() end
-    for _,entry in ipairs(choices) do
-        local panel=entry[1];local button=W.Button(content,entry[2],112,30,"subTab");state.buttons[#state.buttons+1]=button
-        button:SetScript("OnClick",function() page:SelectModeBrowserPanel(panel) end)
-    end
-    function root:ModeRowVisible(row,original)
-        return original and (addon.DungeonLoot.view.tab~="general" or not row.settingsBrowserPanel or row.settingsBrowserPanel==state.panel)
-    end
-    function page:LayoutModeBrowser()
-        local active=addon.DungeonLoot.active and addon.DungeonLoot.view.tab=="general"
-        strip:SetShown(active);rule:SetShown(active);header:SetShown(active)
-        local width=math.max(1,self:GetWidth());content:SetWidth(width)
-        local cell=math.min(112,math.max(1,(width-6*(#choices-1))/#choices))
-        for i,entry in ipairs(choices) do
-            local button=state.buttons[i];local selected=state.panel==entry[1]
-            button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*(cell+6),selected and -4 or -12);button:SetSize(cell,30);button:SetSelected(selected)
-            button.label:ClearAllPoints();button.label:SetPoint("CENTER",0,selected and 0 or 4);button.label:SetWidth(math.max(1,cell-16));button.label:SetWordWrap(false)
-            if selected then heading:SetText(entry[2]);description:SetText("") end
-        end
-        heading:SetWidth(Measure(heading));align();description:SetWidth(math.max(1,width-heading:GetWidth()-56))
-        return active
-    end
-end
 function W.ModeHeadingRule(parent,heading)
     local line=parent:CreateTexture(nil,"ARTWORK");line.modeAsset="ModeHeaderLine";W.Paint(line,T.line,0.7)
     line:SetHeight(1)

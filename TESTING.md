@@ -28,6 +28,72 @@ banner above the page. Display styling (fonts, sizes, colors) is edited in
 **Layout**, not on module pages. Run `python tests/mode_module_layouts.py` for the
 one-scroll pages (mock only).
 
+Browser windows (v2 wave 2): Dungeon Loot's dungeon index, Boss Loot and Quests,
+and Class Training's Upcoming Abilities and Available & Known, now open in their
+own movable windows. Run `tests/browser_windows.py` with the full suite. New TOC
+file `Config/BrowserWindow.lua`: restart the client once, then `/reload` OOC.
+Mock tests only; native confirmation pending.
+
+1. **Navigation:** `/ptg` → **Class Training** row in the sidebar.
+   **Action:** Read the page header, then click **Open Class Training**.
+   **Required state:** OOC, Class Training on.
+   **Confirmation:** The page shows General, Level Up Window and Shortcut Icon &
+   Menu only, no ability lists. The button opens a **Class Training** window with
+   **Upcoming Abilities** and **Available & Known** tabs, the training total at
+   the top and level headings; the settings window closes.
+2. **Navigation:** **Class Training** window.
+   **Action:** Switch between **Upcoming Abilities** and **Available & Known**;
+   learn a rank at a trainer with the window open.
+   **Required state:** OOC, at a class trainer.
+   **Confirmation:** Each tab shows its list; the learned rank moves to Known
+   without a reload or a Refresh button.
+3. **Navigation:** `/ptg` → **Dungeon Loot** row.
+   **Action:** Read the page, then click **Open Dungeon Loot**.
+   **Required state:** OOC, Dungeon Loot on.
+   **Confirmation:** The page shows Quick Icon (Icon Size, Icon Opacity),
+   Keybinding (**Set Keybinding**, **Clear Keybinding**) and Dungeon Data
+   (source, license, **Refresh**). The button opens a **Dungeon Loot** window with
+   **Dungeons**, **Boss Loot** and **Quests** tabs and no General tab.
+4. **Navigation:** Quick Actions ring → Dungeon Loot icon; then your Dungeon Loot
+   keybinding.
+   **Action:** Click the icon; close the window; press the key.
+   **Required state:** Dungeon Loot on, a key bound with **Set Keybinding**.
+   **Confirmation:** Both open the Dungeon Loot window on the dungeon index.
+5. **Navigation:** Either window.
+   **Action:** Drag it by its body to a new place, close it with **Close**, reopen
+   it; then press Escape.
+   **Required state:** OOC, same session.
+   **Confirmation:** It reopens where you left it (after a `/reload` it starts
+   centered again); Escape closes it before the game menu would open.
+6. **Navigation:** Dungeon Loot window → a dungeon → **Quests** → a quest →
+   **View on Map**.
+   **Action:** Close the world map.
+   **Required state:** OOC.
+   **Confirmation:** The window hides while the map is open and returns when the
+   map closes.
+7. **Navigation:** Your Dungeon Loot keybinding (set with **Set Keybinding**).
+   **Action:** Enter combat with a training dummy, press the Dungeon Loot key,
+   browse, then press Escape.
+   **Required state:** In combat, Dungeon Loot on.
+   **Confirmation:** The window opens, scrolls and closes with no Lua error or
+   blocked-action message.
+8. **Navigation:** Either window → **Settings** button.
+   **Action:** Click it.
+   **Required state:** OOC.
+   **Confirmation:** The settings window opens on that module's page and the tool
+   window closes.
+9. **Navigation:** `/ptg` → **Settings** row → Interface Theme.
+   **Action:** Switch between mode, Modern and Blizzard (reload when asked) and
+   open both windows each time.
+   **Required state:** OOC.
+   **Confirmation:** Each window takes the theme's window surface, like the
+   Recruiter: Blizzard draws the stock dialog border with content clear of it.
+10. **Navigation:** `/ptg` → **Dungeon Loot** row.
+    **Action:** Turn the module off with the header switch.
+    **Required state:** OOC, Dungeon Loot window open beforehand.
+    **Confirmation:** **Open Dungeon Loot** greys out and the window closes; your
+    keybinding then opens the settings page instead and does not turn it on.
+
 Record PASS / FAIL / NOT TESTED for each item, with version, client build, class
 and level. These instructions do not claim native acceptance. Do one chunk at a
 time; start with A. Stop and report startup/errors/settings loss before continuing.
@@ -69,15 +135,15 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** `/ptg` → sidebar **Class Training** → **Upcoming Abilities** and
-   **Available & Known** sections (scroll down past **Shortcut Icon & Menu**).
-   **Action:** Learn a rank at a trainer (or level up), return to the page without
+1. **Navigation:** `/ptg` → sidebar **Class Training** → **Open Class Training** (page header) →
+   **Upcoming Abilities** / **Available & Known** tabs of the Class Training window.
+   **Action:** Learn a rank at a trainer (or level up), return to the window without
    reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.
-   **Confirmation:** Only your class appears; abilities above your level list under
-   **Upcoming Abilities** and the rest under **Available & Known**, each under its
-   **Level N** heading; learned/superseded ranks are handled
+   **Confirmation:** Only your class appears; abilities above your level list on
+   the **Upcoming Abilities** tab and the rest on **Available & Known**, each under
+   its **Level N** heading; learned/superseded ranks are handled
    sensibly, estimates remain estimates, uncertain entries are not guaranteed offers.
 2. **Navigation:** Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
    **Action:** With Class Training on (its icon is always in the ring then), click the book, scroll, minimize, reopen,
@@ -243,7 +309,7 @@ Stock artwork, fonts, text fit and contrast require these in-game checks.
 | T5 Fresh-launch labels | Quit WoW fully, relaunch | Type `/ptg` as soon as you are in the world | Out of combat | Sidebar labels and the window title are visible, at worst after about a second |
 | T6 Threat Meter | `/ptg` → sidebar **Threat Meter** (enabled); in a group with a tank, or with your pet tanking | Attack the tank's target and keep adding threat until your row shows 90% or more without taking aggro; then stop and let it fall back | In combat | Header strip and class-coloured bars; your row has an accent stripe in its own gap left of the bar, not on the bar; at 90% or more that stripe turns red and a thin red frame surrounds your bar; below 90%, or once you hold aggro, both return to the plain accent stripe. Repeat once with the **Blizzard** theme: the red is clearly different from the gold stripe |
 | T7 Modern edges and hover | Modern active; `/ptg` | Look at **Layout**, **X**, the **Search** box and Settings → Appearance → Interface Theme without hovering, then hover each | Out of combat | Every control shows a visible outline at rest; hovering lifts its fill; **Modern** has a solid mint outline and **Blizzard** a grey one |
-| T8 Modern navigation and sections | Modern active; click a sidebar entry, then **Class Training** | Compare the selected sidebar entry with the others; scroll the page top to bottom | Out of combat | Selected entry has a mint bar on its left edge; the page is one scroll with no pills or tabs: **General**, **Level Up Window**, **Shortcut Icon & Menu**, **Upcoming Abilities** and **Available & Known** follow one another as plain headings with no Collapse button, separated by clearly more space than rows; dividers are visible but quiet |
+| T8 Modern navigation and sections | Modern active; click a sidebar entry, then **Class Training** | Compare the selected sidebar entry with the others; scroll the page top to bottom | Out of combat | Selected entry has a mint bar on its left edge; the page is one scroll with no pills or tabs: **General**, **Level Up Window** and **Shortcut Icon & Menu** follow one another as plain headings (the ability lists are in the window that **Open Class Training** opens) with no Collapse button, separated by clearly more space than rows; dividers are visible but quiet |
 | T9 Modern checkboxes and sliders | Modern active; sidebar **Automation**, then sidebar **Map Labels** → **Appearance** group | On Automation tick and untick any box; on Map Labels drag the **Icon Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
 | T10 Solid Dungeon Loot text | `/ptg` → sidebar **Dungeon Loot** (enabled) | On **Dungeons** read the card titles and Suggested Starting Levels headings; open a dungeon and view **Boss Loot** and **Quests** | Out of combat | Every heading, card title, list entry and NPC name is one solid colour; the selected tab underline is one solid accent; bracket headings sit over a plain hairline |
 | T11 Guild page | `/ptg` → sidebar **Guild** | Read the page, then click **Open Guild** | Guild on, out of combat | Superseded by section E, checks G3 and G4: the page holds only a note; Level range, Levels per search, Classes, the whisper box and the **History** menu are on the Guild window's **Recruit** tab with saved values as before |
@@ -281,6 +347,7 @@ python tests/dungeon_loot_player.py
 python tests/dungeon_loot_completion.py
 python tests/dungeon_loot_shortcut.py
 python tests/dungeon_loot_quick_icon.py
+python tests/browser_windows.py
 ```
 
 The catalog suite traverses all bundled browsable dungeons, every boss/source and
@@ -353,7 +420,7 @@ Use the exact revised checklist in docs/DUNGEON_LOOT.md; `/reload` applies these
 Lua-only edits once the initial PR's files are loaded. Native review pending.
 
 Binding-field refinement: verify an already-bound key can replace its previous
-action using General -> Keybinding -> Set Keybinding; the adjacent field shows
+action using the Dungeon Loot page -> Keybinding -> Set Keybinding (General before v2 wave 2); the adjacent field shows
 its key or Not bound after Clear Keybinding. Automated coverage includes occupied
 key capture, failed-save restoration of the overwritten action and previous
 Dungeon Loot keys, and live field updates. The Quick Icon revision has positive

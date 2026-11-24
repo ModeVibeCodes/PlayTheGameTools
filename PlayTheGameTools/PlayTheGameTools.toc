@@ -117,6 +117,7 @@ Config\GlobalSettings.lua
 Config\Reload.lua
 Config\Window.lua
 Config\EditMode.lua
+Config\BrowserWindow.lua
 Config\CombatTimer.lua
 Config\ForeverAutomation.lua
 Config\ForeverClassTraining.lua

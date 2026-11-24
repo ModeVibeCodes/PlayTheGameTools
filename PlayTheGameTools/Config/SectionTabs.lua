@@ -2,8 +2,8 @@ local _, addon = ...
 local W = addon.ConfigWidgets
 
 -- Module pages have no section tabs: each is one scroll (Config/Pages.lua).
--- What remains is the capsule pill layout of the Dungeon Loot browser's own
--- navigation (Config/DungeonLoot.lua).
+-- What remains is the capsule pill layout of the browser windows' own
+-- navigation (Config/DungeonLoot.lua, Config/ForeverClassTraining.lua).
 
 function W.FitModeTab(button,width)
     local available=math.max(1,width-16)

@@ -1,22 +1,10 @@
 local _, addon = ...
 local M, P, W, T = addon.ForeverClassTraining, addon.ForeverTrainingData, addon.ConfigWidgets, addon.Theme
 
+-- Settings only. Upcoming Abilities and Available & Known are browsing, so
+-- they open in the Class Training window (Open Class Training, below).
 function M:CreateConfigPage(parent)
     local page = W.Page(parent, 480)
-    local summary = page:Row("", 42)
-    summary.rowLabel:Hide();summary:ClearAllPoints();summary:SetPoint("TOPLEFT",10,-10);summary:SetPoint("BOTTOMRIGHT",-10,10)
-    page.statusLabel = W.Label(summary, "", nil, 0, 0, 200, T.muted)
-    page.totalLabel = W.Label(summary, "", nil, 0, 0, 270, T.text)
-    page.totalLabel:ClearAllPoints(); page.totalLabel:SetPoint("TOPRIGHT"); page.totalLabel:SetJustifyH("RIGHT")
-    summary.row:EnableMouse(true)
-    summary.row:SetScript("OnEnter", function(owner)
-        if GameTooltip then
-            GameTooltip:SetOwner(owner, "ANCHOR_RIGHT"); GameTooltip:SetText("Estimated training cost")
-            GameTooltip:AddLine("Catalog prices before trainer discounts. Includes unlearned abilities at your level with confirmed prerequisites. Uncertain entries are excluded.", 0.8, 0.8, 0.8, true)
-            GameTooltip:Show()
-        end
-    end)
-    summary.row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     -- No Refresh button: SPELLS_CHANGED, LEARNED_SPELL_IN_SKILL_LINE, trainer and
     -- level events (and opening this page) re-read the spellbook outside combat.
     local general=page:Section("General")
@@ -83,10 +71,63 @@ function M:CreateConfigPage(parent)
                 if self.trainingFlyout and self.trainingFlyout:IsShown() and self:OutsideCombat() then self:RenderTrainingFlyout() end
             end,key=="flyoutOpacity" and "%" or "")
     end
-    page:Section("Upcoming Abilities")
-    page:Section("Available & Known")
+    -- One scroll: Level Up Window shows while its window is on, and Shortcut
+    -- Icon & Menu follows the module switch alone (the old tab gating).
+    for _,row in ipairs(page.rows) do
+        local index
+        for i,section in ipairs(page.sections) do if row.section==section then index=i end end
+        local visible=row.visibleWhen
+        if index==2 then row.visibleWhen=function() return M.active and M.db.levelAlerts~=false and (not visible or visible()) end
+        elseif index==3 then row.visibleWhen=function() return M.active and (not visible or visible()) end end
+    end
+    function page:RenderSettings()
+        self.popupPreviewButton:SetEnabled(M.active and M.db.levelAlerts~=false and M:OutsideCombat())
+        self.guildMessageStatus:SetText(M.guildDingStatus or "Manual guild draft after next level-up.")
+        M:UpdateDingActions()
+        self:Layout()
+    end
+    page.refreshers[#page.refreshers+1] = function() page:RenderSettings() end
+    page:SetScript("OnShow", function() if self.active then self:RefreshTraining() end end)
+    self.trainingPage = page
+    page:Finish()
+    return page
+end
+
+-- The Class Training window's lists: the same pooled rows the settings page
+-- used to hold, under two tabs. Rendering reads the module's last spellbook
+-- result only, so it is safe in combat; the spellbook itself is re-read
+-- outside combat.
+local TABS={"Upcoming Abilities","Available & Known"}
+function M:CreateTrainingBrowser(parent)
+    local host=CreateFrame("Frame",nil,parent);host:SetAllPoints()
+    local nav=CreateFrame("Frame",nil,host)
+    nav:SetPoint("TOPLEFT");nav:SetPoint("TOPRIGHT");nav:SetHeight(36)
+    local page = W.Page(host, 420)
+    page:ClearAllPoints();page:SetPoint("TOPLEFT",0,-42);page:SetPoint("BOTTOMRIGHT")
+    page.host,page.selectedTab,page.tabButtons=host,TABS[1],{}
+    for _,title in ipairs(TABS) do
+        local tab=title
+        local b=W.Button(nav,title,150,32,"roundedTab")
+        b.underline=b.selectionEdge;if b.underline then b.underline:Hide() end
+        b:SetScript("OnClick",function() page:SelectTab(tab) end)
+        page.tabButtons[#page.tabButtons+1]=b;b.tab=title
+    end
+    host:SetScript("OnSizeChanged",function() W.LayoutModePills(page.tabButtons,host:GetWidth()) end)
+    local summary = page:Row("", 42)
+    summary.rowLabel:Hide();summary:ClearAllPoints();summary:SetPoint("TOPLEFT",10,-10);summary:SetPoint("BOTTOMRIGHT",-10,10)
+    page.statusLabel = W.Label(summary, "", nil, 0, 0, 200, T.muted)
+    page.totalLabel = W.Label(summary, "", nil, 0, 0, 270, T.text)
+    page.totalLabel:ClearAllPoints(); page.totalLabel:SetPoint("TOPRIGHT"); page.totalLabel:SetJustifyH("RIGHT")
+    summary.row:EnableMouse(true)
+    summary.row:SetScript("OnEnter", function(owner)
+        if GameTooltip then
+            GameTooltip:SetOwner(owner, "ANCHOR_RIGHT"); GameTooltip:SetText("Estimated training cost")
+            GameTooltip:AddLine("Catalog prices before trainer discounts. Includes unlearned abilities at your level with confirmed prerequisites. Uncertain entries are excluded.", 0.8, 0.8, 0.8, true)
+            GameTooltip:Show()
+        end
+    end)
+    summary.row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     page.trainingRows,page.levelHeaders={},{}
-    page.activeSection=nil
     page.baseRows={}
     for _,row in ipairs(page.rows) do page.baseRows[#page.baseRows+1]=row end
     function page:EnsureCatalogRows()
@@ -139,61 +180,28 @@ function M:CreateConfigPage(parent)
     page.emptyControl = page:Row("", 48); page.emptyControl.rowLabel:Hide()
     page.emptyLabel = W.Label(page.emptyControl.row, "", nil, 10, -12, 440, T.muted)
     page.emptyControl.row.visibleWhen = function() return page.visibleCount==0 end
-    -- One scroll: Level Up Window shows while its window is on, and Shortcut
-    -- Icon & Menu follows the module switch alone.
-    local upcomingSection, knownSection = page.sections[4], page.sections[5]
-    for _,row in ipairs(page.baseRows) do
-        local index
-        for i,section in ipairs(page.sections) do if row.section==section then index=i end end
-        local visible=row.visibleWhen
-        if index==2 then row.visibleWhen=function() return M.active and M.db.levelAlerts~=false and (not visible or visible()) end
-        elseif index==3 then row.visibleWhen=function() return M.active and (not visible or visible()) end end
-    end
-    -- Upcoming abilities list under their heading and the rest under
-    -- Available & Known; each level heading goes with its first ability.
-    local function PlaceCatalog(self)
-        local lists, levelSection, headed = {[upcomingSection]={}, [knownSection]={}}, {}, {}
-        for i, record in ipairs(P.records) do
-            local item = self.trainingRows[i]
-            if item and item.visible and not levelSection[record.level] then
-                levelSection[record.level] = item.upcoming and upcomingSection or knownSection
-            end
-        end
-        for i, record in ipairs(P.records) do
-            local item = self.trainingRows[i]
-            local heading = self.levelHeaders[record.level]
-            local section = item and item.upcoming and upcomingSection or knownSection
-            if heading and not headed[record.level] then
-                headed[record.level] = true
-                local target = levelSection[record.level] or knownSection
-                heading.row.section = target; table.insert(lists[target], heading.row)
-            end
-            if item then item.control.row.section = section; table.insert(lists[section], item.control.row) end
-        end
-        self.emptyControl.row.section = knownSection
-        table.insert(lists[knownSection], self.emptyControl.row)
-        self.rows = {}
-        for _, row in ipairs(self.baseRows) do
-            self.rows[#self.rows+1] = row
-            for _, listed in ipairs(row.sectionHeader and lists[row.section] or {}) do self.rows[#self.rows+1] = listed end
-        end
+    function page:SelectTab(title)
+        if self.selectedTab~=title then self.selectedTab=title;self.scrollbar:SetValue(0) end
+        self:RenderTraining()
     end
     function page:RenderTraining()
         if self.buildingRows then return end
         self:EnsureCatalogRows()
         local lookup = {}
         for _, result in ipairs(M.rows or {}) do lookup[result.record.id] = result end
+        local title = self.selectedTab
+        for _,b in ipairs(self.tabButtons) do
+            local selected=b.tab==title
+            b:SetSelected(selected);if b.underline then b.underline:SetShown(selected) end
+        end
         self.visibleCount, self.levelVisible = 0, {}
         local stale = M.dirty or not M:OutsideCombat()
         self.statusLabel:SetText(not M.active and "" or ((M.message or "No spellbook data") .. (stale and " · Pending" or "")))
         self.totalLabel:SetText("Training total  " .. (M.rows and M:MoneyText(P.TrainingTotal(M.rows)) or "—"))
-        self.popupPreviewButton:SetEnabled(M.active and M.db.levelAlerts~=false and M:OutsideCombat())
-        self.guildMessageStatus:SetText(M.guildDingStatus or "Manual guild draft after next level-up.")
-        M:UpdateDingActions()
         for _, item in ipairs(self.trainingRows) do
             local result = item.record and lookup[item.record.id]
             local upcoming=result and result.tab~="Learned" and M.snapshot and M.snapshot.level and result.record.level>M.snapshot.level
-            item.result,item.visible,item.upcoming=result,result~=nil,upcoming and true or false
+            item.result,item.visible=result,result~=nil and ((title=="Upcoming Abilities" and upcoming) or (title=="Available & Known" and not upcoming))
             if item.visible then
                 self.visibleCount = self.visibleCount + 1; self.levelVisible[item.record.level] = true
                 local name, icon = M:SpellPresentation(item.record)
@@ -203,17 +211,45 @@ function M:CreateConfigPage(parent)
             end
         end
         self.emptyLabel:SetText(not M.active and "Enable Class Training to view your abilities." or
-            (M.rows and "No abilities to show." or (M.message or "No spellbook data.")))
-        PlaceCatalog(self)
+            (M.rows and "No abilities in this tab." or (M.message or "No spellbook data.")))
         self:Layout()
     end
     page.refreshers[#page.refreshers+1] = function() page:RenderTraining() end
-    page:SetScript("OnShow", function() if self.active then self:RefreshTraining() end end)
-    self.trainingPage = page
+    self.trainingBrowser = page
     page:Finish()
+    W.LayoutModePills(page.tabButtons,host:GetWidth())
     return page
 end
 
+-- The standalone Class Training window. Created on first open; it keeps its
+-- place for the session and closes with Escape.
+function M:CreateTrainingWindow()
+    if self.trainingWindow then return self.trainingWindow end
+    local window=W.BrowserWindow({name="PlayTheGameToolsClassTrainingWindow",title="Class Training",width=560,height=600,module=self,
+        onShow=function()
+            -- Re-reads the spellbook outside combat; in combat it marks the
+            -- list pending and shows the last result.
+            if self.active then self:RefreshTraining() end
+            if self.trainingBrowser then self.trainingBrowser:RenderTraining() end
+        end})
+    self.trainingWindow=window
+    self:CreateTrainingBrowser(window.body)
+    return window
+end
+
+-- tab: "Upcoming Abilities" or "Available & Known"; nil keeps the last one.
+function M:OpenTrainingWindow(tab)
+    local window=self:CreateTrainingWindow()
+    if tab then self.trainingBrowser.selectedTab=tab end
+    if window:IsShown() then self.trainingBrowser:SelectTab(self.trainingBrowser.selectedTab)
+    else window:Show() end
+    return true
+end
+
+-- The page header's Open Class Training button.
+function M:OpenWindow() return self:OpenTrainingWindow() end
+
 function M:UpdateTrainingPage()
     if self.trainingPage and self.trainingPage:IsShown() and self:OutsideCombat() then self.trainingPage:Refresh() end
+    if self.trainingWindow and self.trainingWindow:IsShown() then self.trainingBrowser:RenderTraining() end
 end

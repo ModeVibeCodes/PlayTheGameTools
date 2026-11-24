@@ -33,8 +33,9 @@ assert(Inventory()==expectedInventory,'all original module setting rows retained
 for _,id in ipairs(addon.moduleOrder) do
  addon:SelectConfigPage(id)
  local p=addon:EnsureConfigPage(id)
- -- Campfire Monitor routes its own rows on its own page (CampfireMonitor.lua).
- if id=='dungeonLoot' then assert(p.modeBrowser)
+ -- Campfire Monitor routes its own rows on its own page (CampfireMonitor.lua);
+ -- Dungeon Loot's page holds settings only, its browser is a window.
+ if id=='dungeonLoot' then assert(not p.modeBrowser and not p.rootPane and p==addon.DungeonLoot.settingsPage,'Dungeon Loot settings only; its browser is a window')
  elseif id=='campfireMonitor' then assert(not p.campfirePilot and not p.modeLayout and p.modeFooterLayout)
  else assert(p.modeLayout,'Mode rollout missing '..id) end
  assert(not p.sectionTabs and not p.SelectSectionTab and not p.SelectModePanel,'no tab navigation '..id)
@@ -162,31 +163,27 @@ timer.scroll.ClearAllPoints=clear
 -- upcoming abilities and the rest under their own headings.
 local CT=addon.ForeverClassTraining;addon:SetModuleEnabled('foreverClassTraining',true)
 local training=addon:EnsureConfigPage('foreverClassTraining')
-training:RenderTraining()
-assert(training.sections[1].header:IsShown() and training.sections[2].header:IsShown() and training.sections[3].header:IsShown())
-CT.db.levelAlerts=false;training:RenderTraining()
+training:RenderSettings()
+assert(#training.sections==3 and training.sections[1].header:IsShown() and training.sections[2].header:IsShown() and training.sections[3].header:IsShown())
+CT.db.levelAlerts=false;training:RenderSettings()
 assert(not training.sections[2].header:IsShown() and not training.popupPreviewButton:GetParent().row:IsShown(),'Level Up Window hides with its switch')
-CT.db.levelAlerts=true;training.catalogVersion=nil;training:RenderTraining();training:Layout()
+CT.db.levelAlerts=true;training:RenderSettings()
 assert(training.sections[2].header:IsShown())
-local upcomingHeader,knownHeader=training.sections[4].header,training.sections[5].header
-local seen=0
-for _,item in ipairs(training.trainingRows) do
- local row=item.control.row
- if item.visible then
-  seen=seen+1
-  assert(row:IsShown() and row.section==(item.upcoming and training.sections[4] or training.sections[5]))
-  if item.upcoming then assert(row.offset>upcomingHeader.offset and row.offset<knownHeader.offset,'upcoming under its heading')
-  else assert(row.offset>knownHeader.offset,'known under Available & Known') end
- end
-end
-assert(training.emptyControl.row:IsShown()==(seen==0))
-training:ShowSection(5);assert(training.selectedSection.title=='Available & Known')
+-- The ability lists are not settings: no section on the page, and the catalog
+-- rebuilds in the Class Training window, apart from the settings page.
+for _,section in ipairs(training.sections) do assert(section.title~='Upcoming Abilities' and section.title~='Available & Known','lists left the settings page') end
+assert(CT:OpenTrainingWindow('Upcoming Abilities') and CT.trainingWindow:IsShown())
+local browser=CT.trainingBrowser
+browser.catalogVersion=nil;browser:RenderTraining();browser:Layout()
+assert(browser.selectedTab=='Upcoming Abilities' and #browser.trainingRows>0,'catalog rebuild in the window')
+CT.trainingWindow:Hide()
 -- No Quick Actions switch: shortcut settings follow the module switch alone,
 -- whatever an old saved showShortcut says.
 for _,cells in ipairs(training.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.label:GetText()~='Shortcut Icon & Menu','no ring switch') end end
-CT.db.showShortcut=false;training:RenderTraining()
+CT.db.showShortcut=false;training:RenderSettings()
 assert(training.sections[3].header:IsShown(),'shortcut settings stay reachable while the module is on')
-addon:SetModuleEnabled('foreverClassTraining',false);training:RenderTraining()
+training:ShowSection(3);assert(training.selectedSection.title=='Shortcut Icon & Menu')
+addon:SetModuleEnabled('foreverClassTraining',false);training:RenderSettings()
 assert(not training.sections[3].header:IsShown(),'shortcut settings hide with the module')
 addon:SetModuleEnabled('foreverClassTraining',true);CT.db.showShortcut=nil;training:ShowSection(1)
 -- Rogue: styling rows stay in Layout but keep their callbacks; toggles stay
@@ -203,28 +200,23 @@ for _,width in ipairs({1000,560}) do
  for _,cells in ipairs(p.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.frame:GetParent().row,'toggle stays in its row') end end
 end
 assert(p.sections[1].header:IsShown() and p.sections[2].header:IsShown() and p.sections[2].header.offset>p.sections[1].header.offset)
--- Source data-browser navigation and row recycling keep independent visibility.
+-- Dungeon Loot: the settings page holds the former General content; the
+-- index and lists are the window's, which has no General tab.
 local D=addon.DungeonLoot;addon:SetModuleEnabled('dungeonLoot',true)
-addon:SelectConfigPage('dungeonLoot');D:Navigate(nil,'general')
-local d=D.page
-for _,panel in ipairs({'options','appearance','data'}) do
- d:SelectModeBrowserPanel(panel);d:Refresh()
- local visible=0
- for _,slot in ipairs(d.rootPane.slots) do
-  if slot.visible and slot.row.settingsBrowserPanel==panel then assert(slot.row:IsShown());visible=visible+1
-  elseif slot.visible and slot.row.settingsBrowserPanel then assert(not slot.row:IsShown()) end
- end
- assert(visible>0,'browser General panel has all its original content')
-end
-D:Navigate(nil);assert(not d.modeBrowser.viewport:IsShown(),'General panels hide in the catalog')
-D:Navigate(nil,'general');d:SelectModeBrowserPanel('appearance')
-d.iconSize.slider:SetValue(44);assert(D.db.shortcutSize==44,'browser slider keeps native setter')
+addon:SelectConfigPage('dungeonLoot')
+local d=D.settingsPage
+assert(d:IsShown() and d.bindingControl and d.reload and d.dataSource:GetText()~='','settings page has its original General content')
+assert(not d.sectionTabs and #d.sections==3 and d.sections[3].header:IsShown(),'one scroll: Quick Icon, Keybinding, Dungeon Data')
+d.iconSize.slider:SetValue(44);assert(D.db.shortcutSize==44,'settings slider keeps native setter')
+assert(D:OpenDungeonLoot() and D.window:IsShown() and D.page:IsShown() and D.page:GetParent()==D.window.body)
+assert(D.page.general==nil and D.page.modeBrowser==nil,'no General tab in the window')
+D.window:Hide()
 -- Campfire Monitor has its own one-scroll page since the split, with no pills.
 addon:SelectConfigPage('campfireMonitor');local c=addon:EnsureConfigPage('campfireMonitor')
 assert(not c.campfirePilot and not c.SelectCampfirePanel and not c.sectionTabs,'no Campfire element pills or panel tabs')
 assert(not addon:EnsureConfigPage('lootSparkles').campfireControls,'Loot Sparkles no longer hosts Campfire rows')
 testCombat=true;testLockdown=true
-p:Layout();d:SelectModeBrowserPanel('options')
+p:Layout()
 testCombat=false;testLockdown=false
 addon.db.window.theme='blizzard'
 ''')
@@ -232,7 +224,7 @@ blizzard,_=load(lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)'),before=SETUP)
 blizzard.execute(inventory+'''
 addon:ToggleConfig();Inventory()
 for _,id in ipairs(addon.moduleOrder) do
- local p=addon:EnsureConfigPage(id);assert(p.modeLayout or p.modeBrowser or (id=='campfireMonitor' and p.campfireControls and not p.campfirePilot),'Blizzard uses the same layout '..id)
+ local p=addon:EnsureConfigPage(id);assert(p.modeLayout or (id=='dungeonLoot' and p==addon.DungeonLoot.settingsPage) or (id=='campfireMonitor' and p.campfireControls and not p.campfirePilot),'Blizzard uses the same layout '..id)
  for _,color in ipairs(p.settingsColors or {}) do assert(not color.hex:IsShown() and color.pick:GetWidth()==80,'same picker-only color rows') end
 end
 ''')

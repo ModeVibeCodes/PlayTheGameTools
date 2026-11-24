@@ -41,14 +41,15 @@ calls `ShowSection(1)` on open. `page:Reveal(entry)` (search) scrolls to the row
 and flashes it; search skips a section hit whose rows are all Layout styling.
 `W.ApplyModeModuleLayout` keeps only the routes that tag `row.editAppearance`
 (still hidden; headings are never tagged), compact rows and color pairing.
-Class Training lists upcoming abilities under Upcoming Abilities and the rest
-under Available & Known; Level Up Window rows show while that window is on and
+Class Training listed upcoming abilities under Upcoming Abilities and the rest
+under Available & Known (since the browsers merge those lists are in the Class
+Training window); Level Up Window rows show while that window is on and
 Shortcut Icon & Menu while the module is on (the old tab gating). Guild Roster
 and Loot Sparkles drop their tab strips; Campfire preview now stops when the
 page hides, not on a section change (since the split, when leaving the Campfire
-Monitor page). Kept: the Dungeon Loot browser's own pills
-and Options/Appearance/Data sub-tabs (`W.SetupModeBrowser`, `W.LayoutModePills`
-in Config/SectionTabs.lua). No TOC, SavedVariables or frame-name changes;
+Monitor page). Kept: the Dungeon Loot browser's own pills (`W.LayoutModePills`
+in Config/SectionTabs.lua); since the browsers merge its Options/Appearance/Data
+sub-tabs and `W.SetupModeBrowser` are gone (General became its settings page). No TOC, SavedVariables or frame-name changes;
 `tests/mode_module_layouts.py` and `tests/campfire_mode_layout.py` guard it.
 Native confirmation is pending; `/reload` OOC.
 
@@ -73,9 +74,11 @@ Window: `Config/ForeverGuild.lua` (one new TOC entry, 124 Lua chunks) builds
 the Guild window (old frame name `PlayTheGameToolsRecruitmentFrame`, Dialogs
 group `recruiter`, 536×712) with the module switch, **Roster**/**Recruit** tabs
 (`M:SelectTab`, session-only `M.tab`, default Roster; `/ptgr` opens Recruit) and
-the settings page: a note plus **Open Guild**, a page-owned button anchored left
-of `configWindow.moduleHeader.toggle` (no Window.lua change), disabled while
-off. The page carries an "Open Guild" search entry whose keywords are the old
+the settings page: a note; **Open Guild** is the shared page-header button
+(`openLabel="Open Guild"` on the module, `header.openButton` in
+`Config/Window.lua`, the same path as Open Dungeon Loot and Open Class
+Training): left of the switch, disabled (dimmed) while off, calling
+`M:OpenWindow()`. The page carries an "Open Guild" search entry whose keywords are the old
 names so they rank Guild first. `Config/ForeverRecruitment.lua` builds the
 Recruit tab (`M:BuildRecruitTab`) with one **History** menu (`W.Popup`) for
 `M.HISTORY_ACTIONS`; `Config/ForeverGuildRoster.lua` builds the Roster tab
@@ -158,6 +161,33 @@ full notice stays word for word in Settings → About and in the notice files.
 Settings suites cover the pages. Native confirmation pending; new TOC file:
 restart the client once.
 
+Browser windows (branch `t3/v2w2-browsers`, v2 wave 2): `Config/BrowserWindow.lua`
+(new TOC entry after `Config\EditMode.lua`, 124 Lua chunks) provides
+`W.BrowserWindow(spec)`: an unprotected, movable, clamped DIALOG frame drawn
+with `W.Texture(f,"Window")` (theme surface, as the Recruiter), Close and
+Settings buttons, a `body`, session-only centre positions
+(`addon.BrowserWindowPositions`, never saved) and its own Dialogs group (the
+module id), so Escape closes it and opening it closes Settings. The page header
+(`Config/Window.lua` `PageHeader`) shows `module.openLabel` as a button that
+calls `module:OpenWindow()` while the module is on (`header.openButton`).
+Dungeon Loot: `M:CreateBrowser(parent)` is the old in-page browser minus its
+General tab, parented to `PlayTheGameToolsDungeonLootWindow`; `M.page` still
+names it and `M:BrowserShown()` gates item/quest events. `M:CreateConfigPage`
+is now a plain `W.Page` (Quick Icon, Keybinding, Dungeon Data; `M.settingsPage`)
+and owns binding capture. `OpenDungeonLoot` (ring, binding, header) opens the
+window, in combat too; with the module off it still opens the settings page OOC.
+The map hand-off hides/restores the window. `W.SetupModeBrowser` was removed from
+`Config/ModeLayout.lua` (its only caller is gone). Class Training:
+`M:CreateTrainingBrowser` holds the moved row pool and summary under two local
+tabs in `PlayTheGameToolsClassTrainingWindow`; `M:OpenTrainingWindow(tab)`;
+the settings page refresher is `page:RenderSettings()`. Merged into
+`t3/v2-wave2` with the one-scroll pages: the Class Training settings page has
+no tab strip; Level Up Window rows show while that window is on and Shortcut
+Icon & Menu rows while the module is on, and `OpenTraining(section)` scrolls to
+sections 1–3 with `page:ShowSection`. The browser window keeps its own two
+pills, as the Dungeon Loot window keeps its own. Guild's Open Guild uses the
+same `openLabel` hook. `tests/browser_windows.py` guards it. Native
+confirmation is pending; restart the client once for the new TOC file.
 v2 module cuts (branch `t3/v2-module-cuts`, 2026-11-23): part of the approved
 v2 settings redesign. Display titles only: Map Labels (`cityLabels`), Experience
 Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and

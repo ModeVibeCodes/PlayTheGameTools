@@ -2,7 +2,9 @@ local _, addon = ...
 local P = addon.ForeverTrainingData
 addon:RegisterCategory("questingLeveling",{title="Questing & Leveling"})
 local M = {title="Class Training", category="questingLeveling", defaultEnabled=true,
-    configDescription="Browse your class training, upcoming levels and known ranks."}
+    configDescription="Browse your class training, upcoming levels and known ranks.",
+    -- The page header button; the ability lists live in their own window.
+    openLabel="Open Class Training"}
 addon.ForeverClassTraining = M
 addon:RegisterModule("foreverClassTraining", M)
 
@@ -136,6 +138,7 @@ function M:OnDisable()
     self:ResetLevelTime()
     self:SetShortcutAvailable(false)
     if self.dingWindow then self.dingWindow:Hide() end
+    if self.trainingWindow then self.trainingWindow:Hide() end
     if self.eventFrame then self.eventFrame:UnregisterAllEvents(); self.eventFrame:SetScript("OnEvent", nil) end
     if self.UpdateTrainingPage then self:UpdateTrainingPage() end
 end

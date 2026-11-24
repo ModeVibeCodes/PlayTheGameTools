@@ -46,7 +46,6 @@ function UI.New(page, module)
     page.slots = {}
     function pool:Reset()
         self.used = 0
-        self.modePanel=nil
         for _, slot in ipairs(page.slots) do slot.visible = false; slot.item = nil; slot.callback = nil; slot.mapKind=nil end
     end
     function pool:Row()
@@ -74,10 +73,7 @@ function UI.New(page, module)
             button:HookScript("OnLeave", function(owner) if module.tooltipOwner == owner then module:HideTooltip() end end)
         end
         slot.visible = true
-        slot.row.settingsBrowserPanel=self.modePanel
         if slot.copyButton then slot.copyButton:Hide() end
-        if slot.bindingControl then slot.bindingControl:Hide() end
-        for _,host in pairs(slot.settingSliders or {}) do host:Hide() end
         slot.button:ClearAllPoints();slot.button:SetAllPoints(slot.control)
         slot.button:Show(); slot.icon:Hide(); slot.subtitle:Hide(); UI.Factions(slot.button)
         for _,glow in ipairs(slot.headerGlow or {}) do glow:Hide() end
@@ -145,40 +141,6 @@ function UI.New(page, module)
             elseif slot.modeHeadingRule then slot.modeHeadingRule:Hide() end
         end
         return slot
-    end
-    function pool:BindingControl(value,callback)
-        local slot=self:Add("");slot.button:Hide()
-        local host=slot.bindingControl
-        if not host then
-            host=CreateFrame("Frame",nil,slot.control);host:SetAllPoints()
-            host.set=W.Button(host,"Set Keybinding",128,28);host.set:SetPoint("LEFT",12,0)
-            host.field=CreateFrame("EditBox",nil,host)
-            host.field:SetPoint("LEFT",host.set,"RIGHT",10,0);host.field:SetPoint("RIGHT",-12,0);host.field:SetHeight(28)
-            host.field:SetAutoFocus(false);host.field:EnableMouse(false);host.field:EnableKeyboard(false)
-            host.field:SetFontObject(GameFontHighlight);host.field:SetTextInsets(8,8,0,0)
-            addon.Media:BindInterfaceFont(host.field,GameFontHighlight)
-            W.Texture(host.field,"InputField");slot.bindingControl=host
-        end
-        host.field:SetText(value);host.set:SetScript("OnClick",function() if module.active then callback() end end)
-        host:Show()
-        function slot.row:layoutChildren() self:SetHeight(44) end
-        return host
-    end
-    function pool:SettingSlider(label,minimum,maximum,step,getter,setter,suffix)
-        local slot=self:Add("");slot.button:Hide()
-        slot.settingSliders=slot.settingSliders or {}
-        local host=slot.settingSliders[label]
-        if not host then
-            host=CreateFrame("Frame",nil,slot.control);host:SetAllPoints();host.getter,host.setter=getter,setter
-            host.title=W.Label(host,label,nil,12,-4,240,T.secondary)
-            local track=CreateFrame("Frame",nil,host)
-            track:SetPoint("TOPLEFT",12,-30);track:SetPoint("TOPRIGHT",-12,-30);track:SetHeight(26)
-            host.refresh=W.Slider(track,minimum,maximum,step,function() return host.getter() end,function(value) host.setter(value) end,suffix)
-            host.slider=track.slider;slot.settingSliders[label]=host
-        end
-        host.getter,host.setter=getter,setter;host:Show();host.refresh()
-        function slot.row:layoutChildren() self:SetHeight(66) end
-        return host
     end
     function pool:MapAction(target,kind,callback)
         local slot=self:Add("View on Map",callback)
@@ -322,7 +284,7 @@ function addon.DungeonLoot:ShowCoordinates(target)
         local close=W.Button(frame,"Close",58,22);close:SetPoint("BOTTOMRIGHT",-10,8)
         close:SetScript("OnClick",function() frame:Hide() end)
         frame.edit=edit;self.coordinateFrame=frame
-        addon.Dialogs:Register(frame,{group="settings"})
+        addon.Dialogs:Register(frame,{group="dungeonLoot"})
     end
     local name="Map "..target.mapID
     if C_Map and type(C_Map.GetMapInfo)=="function" then

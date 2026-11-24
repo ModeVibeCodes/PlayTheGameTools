@@ -55,15 +55,15 @@ separate result from the existing-settings upgrade check above.
 
 ## B. Training and positioning
 
-1. **Navigation:** `/ptg` → sidebar **Class Training** → **Upcoming Abilities** and
-   **Available & Known** sections (scroll down past **Shortcut Icon & Menu**).
-   **Action:** Learn a rank at a trainer (or level up), return to the page without
+1. **Navigation:** `/ptg` → sidebar **Class Training** → **Open Class Training** (page header) →
+   Upcoming Abilities / Available & Known tabs (their own window since v2).
+   **Action:** Learn a rank at a trainer (or level up), return to the window without
    reloading, and inspect known/unknown ranks against your spellbook and
    an ordinary class trainer. Record mismatched ability/rank/level/cost examples.
    **Required state:** OOC, enabled module, supported current class.
-   **Confirmation:** Only your class appears; abilities above your level list under
-   **Upcoming Abilities** and the rest under **Available & Known**, each under its
-   **Level N** heading; learned/superseded ranks are handled
+   **Confirmation:** Only your class appears; abilities above your level list on
+   the **Upcoming Abilities** tab and the rest on **Available & Known**, each under
+   its **Level N** heading; learned/superseded ranks are handled
    sensibly, estimates remain estimates, uncertain entries are not guaranteed offers.
 2. **Navigation:** Quick Actions button → green Class Training icon → Minimize / Jump to Settings.
    **Action:** With Class Training on (its icon is always in the ring then), click the book, scroll, minimize, reopen,
