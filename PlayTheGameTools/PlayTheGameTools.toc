@@ -98,6 +98,7 @@ Modules\ForeverRogueData.lua
 Modules\ForeverRogue.lua
 Modules\ForeverRogueInventory.lua
 Modules\ForeverRogueDisplay.lua
+Core\StyleReset.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
 Config\Widgets.lua
@@ -108,7 +109,6 @@ Config\ModePlans.lua
 Config\ModeLayout.lua
 Config\Previews.lua
 Config\Search.lua
-Config\FontDropdown.lua
 Config\Select.lua
 Config\GlowControls.lua
 Config\Developer.lua

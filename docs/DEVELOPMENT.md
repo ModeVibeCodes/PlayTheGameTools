@@ -1,5 +1,43 @@
 # Standalone Forever development
 
+v2 styling reset (branch `t3/v2-styling-clear`, 2026-11-24): the user approved
+one exception to "never reset SavedVariables": each display's old per-display
+styling is reset once per profile, with a one-time notice. `Core/StyleReset.lua`
+(new TOC entry before `Core\ProfileValidation.lua`) holds one explicit list
+per display (`R.lists`): fonts, sizes, colors, textures, borders, backgrounds,
+icon sizes and outline for Combat Timer (`appearance`), the Profession Bar and
+Food Bar (`foreverQuickAccess`, `.food`), the Experience Bar, the three Rogue
+Tools style tables, and Campfire/Camp Buffs/Camp Contributions
+(`lootSparkles.campfire`). Keys that also change behaviour, visibility,
+content or placement are kept and named in comments beside each list.
+`ProfileValidation:Normalize` runs it like `AdoptSplit`/`AdoptRoster`, so stored,
+selected, imported and exported profiles behave alike: a profile without the
+`v2StyleReset` marker gets `{cleared=false}` before the template is built, then
+`R.Clear(profile,template)` copies the template default into each listed key
+whose saved value differs (numbers within 1e-6) and records `cleared`. The
+marker is never exported, so an import re-runs the (idempotent) clear: an old
+export string is reset, a v2 one is not. The notice state is account-wide in
+`PTGToolsDB.styleResetNotice` (`announced`, `dismissed`), outside every
+profile: one chat line at login (`R:Announce` from `Core/Init.lua`) and a
+banner under the reload banner (`window.styleNotice`, **Dismiss** =
+`R:Dismiss()`) while the active profile's marker says `cleared` and nothing was
+dismissed. A new or never-customised profile shows neither. Dead code removed
+with it: every hidden `editAppearance` row on those pages, `W.EditAppearance`,
+`W.EditAppearancePanels`, `W.EditOwnedFeatures`, `PairColors`, the Rogue
+Customize panels (`poisonStyles`, `iconGroups`, `launcherLabelInput`), the
+Campfire routes/pairing (`campfireSliders`, `campfireColors`), the XP bar's
+`GetTextureChoices` (its "Use Global Setting" label went with it),
+`Config/FontDropdown.lua` (`addon:CloseFontDropdown` now lives in
+`Config/Widgets.lua`), `W.ModuleHeader`, `W.StateColor`, `page.ModeRowVisible`
+and the search exclusions. Plans in `Config/ModePlans.lua` now route a
+feature only (`row.modeRoute={feature=...}`). Search skips entries without a
+label (the "Rogue Tools > Display >" empty results came from unlabelled Rogue
+rows). Rogue's **Customize Reminder** / **Customize Quick Access** call
+`addon:EditElementAppearance` directly. Module APIs (`SetAppearance`,
+`SetStyle`, `SetOption`, `MinimalReminder`) and all validators stay: displays
+read these values. Still 126 Lua chunks. `tests/style_reset.py` covers it.
+Native confirmation is pending; new TOC file: restart the client once.
+
 v2 window shell (branch `t3/v2-window-shell`): `Config/Window.lua` is now
 960×640 (was 1120×760) with the same fit-to-screen scaling and off-screen
 recovery; the sidebar is 212 wide and the header 48 tall. The header holds the
@@ -38,9 +76,9 @@ shows, so a section holding only Layout styling (Combat Timer's Display) has no
 heading. `page:ShowSection(section|index|title)` replaces `SelectSectionTab`: it
 scrolls to the heading (section 1 = top) and sets `selectedSection`; the window
 calls `ShowSection(1)` on open. `page:Reveal(entry)` (search) scrolls to the row
-and flashes it; search skips a section hit whose rows are all Layout styling.
-`W.ApplyModeModuleLayout` keeps only the routes that tag `row.editAppearance`
-(still hidden; headings are never tagged), compact rows and color pairing.
+and flashes it. `W.ApplyModeModuleLayout` kept the routes that tagged
+`row.editAppearance`, compact rows and color pairing (since the v2 styling
+reset, above, the tagged rows, the tagging and the pairing are gone).
 Class Training listed upcoming abilities under Upcoming Abilities and the rest
 under Available & Known (since the browsers merge those lists are in the Class
 Training window); Level Up Window rows show while that window is on and
@@ -255,7 +293,7 @@ column borrows those same row frames while the element is selected
 change, exit or combat, so controls, callbacks and saved keys are unchanged.
 Non-display styling (Loot Sparkles, Class Training, Dungeon Loot) stays put. No
 new files in the TOC; no SavedVariables changes. `tests/edit_mode_appearance.py`
-guarded the contract. Superseded by Layout (below): the column and that test are gone. Native confirmation is pending; `/reload` OOC.
+guarded the contract. Superseded by Layout (below): the column and that test are gone; the v2 styling reset removed the tagged rows. Native confirmation is pending; `/reload` OOC.
 
 Declutter / unified Edit Mode (branch `t3/declutter-ui-unify-edit-mode`):
 placement lives only in Edit Mode (`Config/EditMode.lua`), and every display

@@ -22,6 +22,12 @@ function W.Popup(button,width,height)
     addon.Dialogs:Register(menu,{kind="layer"})
     return menu
 end
+-- Dropdown menus (W.Select, Profiles' Manage) register here, so opening one,
+-- scrolling or changing page closes the others. The name predates v2.
+addon.fontDropdownMenus=addon.fontDropdownMenus or {}
+function addon:CloseFontDropdown()
+    for dropdown in pairs(self.fontDropdownMenus) do dropdown:Hide() end
+end
 function W.GlowDropdown(parent,getter,setter,allowed)
     return W.Select(parent,260,function()
         local result={}
@@ -41,10 +47,6 @@ local function InterfaceColor(color)
         if color == original then return T[key] or color end
     end
     return color
-end
-
-function W.StateColor(enabled)
-    return enabled and T.enabled or T.off
 end
 
 function W.CrispText(region)
@@ -779,57 +781,6 @@ end
 -- Title, up to two lines of description and the divider below them.
 W.PAGE_HEADER_HEIGHT = 76
 W.PAGE_DESCRIPTION_HEIGHT = 28
-
--- Page header: title and one-line description on the left, the module's
--- enable switch on the right, closed by a hairline.
-function W.ModuleHeader(parent)
-    local header = CreateFrame("Frame", nil, parent)
-    header:SetPoint("TOPLEFT")
-    header:SetPoint("TOPRIGHT")
-    header:SetHeight(W.PAGE_HEADER_HEIGHT)
-    header:EnableMouse(false)
-    local title = W.Heading(header, "", T.fontSize.page, 0, -2, 520, T.text)
-    title:SetWordWrap(false)
-    local description = W.Label(header, "", nil, 0, -30, 520, T.muted)
-    description:SetWordWrap(false)
-    local toggle = W.Button(header, "", 44, 24, "toggle")
-    toggle:SetPoint("TOPRIGHT", 0, -2)
-    local state = W.Label(header, "", nil, 0, 0, 80, T.muted)
-    state:ClearAllPoints(); state:SetPoint("RIGHT", toggle, "LEFT", -6, 0); state:SetJustifyH("RIGHT")
-    title:SetPoint("TOPRIGHT", -140, -2)
-    description:SetPoint("TOPRIGHT", -140, -30)
-    local divider = W.Fill(header, T.line, "BORDER")
-    divider:ClearAllPoints(); divider:SetPoint("BOTTOMLEFT", 0, 12); divider:SetPoint("BOTTOMRIGHT", 0, 12)
-    divider:SetHeight(1)
-    toggle:SetScript("OnClick", function()
-        if header.module then addon:SetModuleEnabled(header.module.id, not header.module.enabled) end
-    end)
-    function header:Refresh()
-        local gameplay = self.module ~= nil and not self.module.developer
-        toggle:SetShown(gameplay)
-        state:SetShown(gameplay)
-        if self.module then
-            toggle:SetSelected(self.module.enabled)
-            state:SetText(self.module.enabled and "Enabled" or "Disabled")
-            state:SetTextColor(unpack(W.StateColor(self.module.enabled)))
-        end
-    end
-    function header:SetModule(module)
-        self.module = module
-        title:SetText(module and module.title or "Dashboard")
-        local icon=module and module.classIcon
-        -- Class identity already appears in the sidebar and category tab.
-        title:SetShown(icon==nil)
-        description:ClearAllPoints();description:SetPoint("TOPLEFT",0,icon and -2 or -30)
-        description:SetPoint("TOPRIGHT",-140,icon and -2 or -30)
-        description:SetWordWrap(icon~=nil)
-        description:SetText(module and (module.configDescription or module.description or "")
-            or "Turn modules on or off, or open one to change its settings.")
-        self:Refresh()
-    end
-    header.title, header.description, header.toggle, header.state, header.divider = title, description, toggle, state, divider
-    return header
-end
 
 -- Integer by default; optional decimal precision for presentation parameters.
 function W.NumericInput(parent, getter, setter, minimum, maximum, width, decimals)

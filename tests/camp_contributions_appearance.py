@@ -16,9 +16,10 @@ for _,id in ipairs({'monitor','buffs','contributions'}) do
 end
 page.contributionPreview.scripts.OnClick()
 local f=A.window;local sample=f.sample
-local input=page.campfireSliders.contributionWidth.numericInput
-input:SetText('607');input.scripts.OnEnterPressed(input)
-assert(input:GetText()=='610' and f:GetWidth()==610,'actual width numeric control snaps and applies')
+-- v2: contribution styling is not on the page (Layout styles the window);
+-- the saved values still drive the window.
+assert(not page.campfireSliders and not page.campfireColors and not page.contributionFont,'no styling rows on the page')
+assert(C:SetOption('contributionWidth',610) and f:GetWidth()==610,'saved width applies')
 local function Set(key,value) assert(C:SetOption('contribution'..key,value),key) end
 Set('Width',600);Set('Padding',16);Set('RowHeight',70);Set('RowGap',8);Set('VisibleRows',1)
 Set('IconSize',48);Set('IconOpacity',65);Set('TitleSize',22);Set('NameSize',20)
@@ -33,10 +34,8 @@ assert(f.viewport:GetWidth()==568 and sample.icon:GetWidth()==48 and sample.icon
 assert(sample.name.font[2]==20 and sample.info.font[2]==16 and sample.action.font[2]==18)
 assert(sample.name.font[3]=='OUTLINE' and sample.name.justifyH=='CENTER' and f.title.justifyH=='RIGHT')
 assert(sample.name.color[1]==0.3 and sample.info.color[3]==0.6)
-local pick=page.campfireColors.contributionNameColor.pick
-pick.scripts.OnClick();ColorPickerFrame.r=0.45;ColorPickerFrame.g=0.5;ColorPickerFrame.b=0.55
-ColorPickerFrame.info.swatchFunc();assert(sample.name.color[1]==0.45)
-ColorPickerFrame.info.cancelFunc();assert(sample.name.color[1]==0.3)
+Set('NameColor',{0.45,0.5,0.55});assert(sample.name.color[1]==0.45)
+Set('NameColor',{0.3,0.4,0.5});assert(sample.name.color[1]==0.3)
 Set('DismissSize',19);Set('DismissColor',{0.4,0.6,0.8})
 f.close.scripts.OnEnter(f.close)
 assert(f.close.label.font[2]==19 and f.close.label.color[3]==0.8,'dismiss styling survives hover')
@@ -50,9 +49,8 @@ assert(not sample.info:IsShown() and not sample.action:IsShown())
 Set('ShowIcons',true);Set('ShowNames',true);Set('ShowProfession',true);Set('ShowCount',true);Set('ShowAction',true)
 Set('ShowTitle',true);Set('HeaderGradient',true)
 assert(f.title:GetText():find('|r|cff',1,true),'optional independent contribution gradient')
--- Actual existing font dropdown switches off interface-font inheritance.
-page.contributionFont.scripts.OnClick()
-for _,row in ipairs(page.contributionFont.rows) do if row.choice.key=='chat' then row.scripts.OnClick();break end end
+-- A saved contribution font applies once interface-font inheritance is off.
+Set('UseInterfaceFont',false);Set('Font','chat')
 assert(not C.db.contributionUseInterfaceFont and C.db.contributionFont=='chat')
 assert(sample.name.font[1]==addon.Media.chatFont)
 addon.Media:RefreshFonts();assert(sample.name.font[1]==addon.Media.chatFont)

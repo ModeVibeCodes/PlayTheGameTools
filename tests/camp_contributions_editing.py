@@ -15,16 +15,15 @@ local getCenter=A.window.GetCenter
 A.window.GetCenter=function(f) if not f:IsShown() then return nil,nil end;return getCenter(f) end
 page.contributionPreview.scripts.OnClick();assert(not A.window:IsShown())
 page.contributionPreview.scripts.OnClick();assert(A.window:IsShown() and not A.positionFailure)
-local function Numeric(key,text)
- local input=page.campfireSliders[key].numericInput
- input:SetText(text);input.scripts.OnEnterPressed(input)
- return input:GetText()
-end
-local scale=page.campfireSliders.contributionScale.slider
-scale:SetValue(75);assert(C.db.contributionScale==75 and A.window:GetScale()==0.75)
-assert(Numeric('contributionScale','83')=='85' and A.window:GetScale()==0.85,'numeric edits snap to supported step')
-assert(Numeric('contributionOpacity','63')=='65' and A.window:GetAlpha()==0.65)
-assert(Numeric('contributionBackgroundOpacity','52')=='50' and A.window.backdropColor[4]==0.5)
+-- v2: the page has no contribution styling rows; saved values still apply
+-- and off-step values are still refused by validation.
+assert(not page.campfireSliders,'contribution styling is styled in Layout, not on the page')
+local function Numeric(key,value) assert(C:SetOption(key,value),key);return C.db[key] end
+assert(Numeric('contributionScale',75)==75 and A.window:GetScale()==0.75)
+assert(not C:SetOption('contributionScale',83) and C.db.contributionScale==75,'off-step value refused')
+assert(Numeric('contributionScale',85)==85 and A.window:GetScale()==0.85)
+assert(Numeric('contributionOpacity',65)==65 and A.window:GetAlpha()==0.65)
+assert(Numeric('contributionBackgroundOpacity',50)==50 and A.window.backdropColor[4]==0.5)
 assert(addon:SetEditMode(true) and addon.PositionManager:SelectElement('campfireContributions'))
 assert(addon.editMode and A.window.strata=='MEDIUM' and addon.editWindow.strata=='DIALOG','workspace is above the editable panel')
 local pm=addon.PositionManager;local e=pm.elements.campfireContributions
@@ -40,8 +39,8 @@ e.decoration.handle.scripts.OnDragStop();assert(not e.dragging and C.db.contribu
 assert(e.position.x==53 and e.position.y==-43,'round the managed position, not a callback copy')
 FireEvent('UNIT_AURA','player')
 assert(C.db.contributionX%1==0 and C.db.contributionY%1==0)
-assert(Numeric('contributionOpacity','70')=='70' and A.window:GetAlpha()==0.7,'settings still work after fractional drag')
-Numeric('contributionOpacity','65')
+assert(Numeric('contributionOpacity',70)==70 and A.window:GetAlpha()==0.7,'settings still work after fractional drag')
+Numeric('contributionOpacity',65)
 -- Repair the specific legacy fractional setting without replacing the position.
 local legacy=addon.ProfileCodec.Copy(M.db);legacy.campfire.contributionX=52.5;legacy.campfire.contributionY=-43.2
 C.Initialize(legacy);assert(legacy.campfire.contributionX==53 and legacy.campfire.contributionY==-43)
@@ -68,4 +67,4 @@ assert(C.db.contributionScale==85 and C.db.contributionOpacity==65 and C.db.cont
 A:TogglePreview();assert(A.window:GetScale()==0.85 and A.window:GetAlpha()==0.65)
 assert(C.db.contributionX==0 and C.db.contributionY==120)
 ''')
-print('PASS real sliders/numeric inputs, step normalization, edit layers/coordinates/handle drag/Exit, hidden reopen/reset, fixed Crit/Int and persistence (mock only)')
+print('PASS saved contribution style values, step validation, edit layers/coordinates/handle drag/Exit, hidden reopen/reset, fixed Crit/Int and persistence (mock only)')

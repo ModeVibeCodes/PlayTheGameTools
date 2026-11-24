@@ -191,6 +191,28 @@ local function ReloadBanner(parent)
     return banner
 end
 
+-- The one-time v2 styling notice (Core/StyleReset.lua), below any reload banner.
+local function StyleNoticeBanner(parent)
+    local banner = CreateFrame("Frame", nil, parent)
+    banner:Hide()
+    banner:SetHeight(BANNER_HEIGHT)
+    banner.fill = W.Fill(banner, T.surface, "BACKGROUND")
+    banner.outline = W.Outline(banner, T.primary, "BORDER", 0, 0.6)
+    banner.accent = W.Fill(banner, T.primary, "ARTWORK")
+    banner.accent:ClearAllPoints(); banner.accent:SetPoint("TOPLEFT"); banner.accent:SetPoint("BOTTOMLEFT")
+    banner.accent:SetWidth(2)
+    local dismiss = W.Button(banner, "Dismiss", 104, 28)
+    dismiss:SetPoint("RIGHT", -8, 0)
+    banner.message = W.Label(banner, addon.StyleReset.MESSAGE, nil, 14, -6, 400, T.text)
+    banner.message:SetPoint("TOPRIGHT", -124, -6)
+    banner.message:SetWordWrap(false)
+    banner.hint = W.Label(banner, addon.StyleReset.HINT, nil, 14, -23, 400, T.muted)
+    banner.hint:SetPoint("TOPRIGHT", -124, -23)
+    banner.hint:SetWordWrap(false)
+    banner.dismissButton = dismiss
+    return banner
+end
+
 function addon:CreateConfig()
     -- Every theme shares this layout and behavior; a theme only changes the
     -- palette, borders and textures ("art") drawn on it.
@@ -359,11 +381,16 @@ function addon:CreateConfig()
     banner:SetPoint("TOPLEFT", 0, -W.PAGE_HEADER_HEIGHT)
     banner:SetPoint("TOPRIGHT", 0, -W.PAGE_HEADER_HEIGHT)
     window.reloadBanner = banner
+    local notice = StyleNoticeBanner(body)
+    window.styleNotice = notice
     local pageHost = CreateFrame("Frame", nil, body)
     local pages, navigationButtons = {}, {}
     local selected
     local function AnchorPageHost()
         local top = W.PAGE_HEADER_HEIGHT + (banner:IsShown() and BANNER_HEIGHT + BANNER_GAP or 0)
+        notice:ClearAllPoints()
+        notice:SetPoint("TOPLEFT", 0, -top); notice:SetPoint("TOPRIGHT", 0, -top)
+        top = top + (notice:IsShown() and BANNER_HEIGHT + BANNER_GAP or 0)
         pageHost:ClearAllPoints()
         pageHost:SetPoint("TOPLEFT", 0, -top)
         pageHost:SetPoint("BOTTOMRIGHT", 0, 0)
@@ -385,8 +412,19 @@ function addon:CreateConfig()
         if current and current:IsShown() then current:Layout() end
     end
 
+    notice.dismissButton:SetScript("OnClick", function() self.StyleReset:Dismiss() end)
+    function self:RefreshStyleNotice()
+        local pending = self.StyleReset:Pending()
+        if pending == notice:IsShown() then return end
+        notice:SetShown(pending)
+        AnchorPageHost()
+        local current = selected and pages[selected]
+        if current and current:IsShown() then current:Layout() end
+    end
+
     function self:RefreshConfig()
         moduleHeader:Refresh()
+        self:RefreshStyleNotice()
         layout:SetSelected(self.editMode)
         self.ReloadManager:Refresh()
         for id, button in pairs(navigationButtons) do

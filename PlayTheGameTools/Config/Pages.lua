@@ -67,7 +67,6 @@ function W.Page(parent, minimumWidth)
                 if row.divider then row.divider:Hide() end
             end
             local show = row.sectionHeader or not row.section or row.section.expanded
-            if self.ModeRowVisible then show=self:ModeRowVisible(row,show) end
             if row.visibleWhen then show=show and row.visibleWhen() end
             row:SetShown(show)
             return show
@@ -250,7 +249,6 @@ function W.Page(parent, minimumWidth)
         self.searchEntries[#self.searchEntries + 1] = { label = title, keywords = keywords, section = self.activeSection, row = row, kind = "setting" }
         controls.row, controls.rowLabel = row, label
         row.settingsHost,row.settingsLabel,row.settingsTitle,row.settingsGroup=controls,label,title,self.activeGroup
-        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.cursor = self.cursor + height + 4
         return controls
     end
@@ -261,7 +259,6 @@ function W.Page(parent, minimumWidth)
         local heading=title:gsub("(%a)([%w]*)",function(first,rest) return first:upper()..rest end)
         row.subsectionHeading=W.Heading(row, heading, T.fontSize.group, 0, -10, 360, T.secondary)
         row.settingsGroupTitle=title;self.activeGroup=title
-        row.modeFeature,row.modePanel=self.activeModeFeature,self.activeModePanel
         self.rows[#self.rows + 1] = row
         self.cursor = self.cursor + 42
     end

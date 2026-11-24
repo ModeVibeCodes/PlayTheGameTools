@@ -85,6 +85,11 @@ function V:Normalize(source)
     end
     for key,value in pairs(profile.developer) do assert(type(value)=="boolean","Invalid diagnostic preference: "..tostring(key)) end
     Colors(profile.modules)
+    -- v2 styling reset, once per profile (Core/StyleReset.lua). The marker is
+    -- set before the template is built, so a new profile is already marked.
+    local R=addon.StyleReset
+    local resetPending=R and profile[R.MARKER]==nil
+    if resetPending then profile[R.MARKER]={cleared=false} end
     if not self.template then
         -- Use the same defaults and pure setting initializers as runtime modules.
         -- Sentinel prevents recursion; the detached baseline creates no frames.
@@ -92,6 +97,7 @@ function V:Normalize(source)
         if next(source)==nil then self.template=C.Copy(profile)
         else self.template=self:Normalize({}) end
     end
+    if resetPending and self.template then profile[R.MARKER].cleared=R.Clear(profile,self.template) end
     Check(profile,self.template or profile,"profile")
     for _,id in ipairs({"combatTimer","battleRez","InterruptTracker"}) do
         if addon.modules[id] then

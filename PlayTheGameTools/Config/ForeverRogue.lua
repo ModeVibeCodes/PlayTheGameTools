@@ -3,9 +3,12 @@ if not addon.ForeverRogue then return end
 local M,D,W=addon.ForeverRogue,addon.ForeverRogueData,addon.ConfigWidgets
 function M:CreateConfigPage(parent)
     local page=W.Page(parent,400);self.page=page
-    page.poisonControls={};page.poisonStyles={};page.poisonSliders={};page.poisonGrid={};page.positionControls={};page.iconGroups={}
+    page.poisonControls={};page.poisonSliders={};page.poisonGrid={}
     local function FullRow(label,height)
-        local c=page:Row(label,height);c.rowLabel:Hide();c:ClearAllPoints();c:SetAllPoints(c.row);return c,c.row
+        local c=page:Row(label,height);c.rowLabel:Hide();c:ClearAllPoints();c:SetAllPoints(c.row)
+        -- An unlabelled full-width row is not a search result: its controls add their own entries.
+        if label=="" then table.remove(page.searchEntries) end
+        return c,c.row
     end
     local function Note(text,height)
         local c,row=FullRow("",height or 44);local t=W.Label(c,text,nil,0,-8,380,addon.Theme.muted);t:SetWordWrap(true)
@@ -13,29 +16,24 @@ function M:CreateConfigPage(parent)
         if text and text~="" then page:FooterNote(t) end
         return t
     end
-    local function Toggles(entries,group)
+    local function Toggles(entries)
         local items={}
         for _,e in ipairs(entries) do local key=e[2]
-            items[#items+1]={label=e[1],get=function() return (group and self.db[group] or self.db)[key] end,
-                set=function(v) if group then self:SetStyle(group,key,v) else self:SetOption(key,v) end end}
+            items[#items+1]={label=e[1],get=function() return self.db[key] end,set=function(v) self:SetOption(key,v) end}
         end
         local cells=page:ToggleGrid(items,{maxColumns=2,minimumCellWidth=190})
-        if group then cells[1].frame:GetParent().row.modeFeature=group;cells[1].frame:GetParent().row.modePanel="text" end
-        if group then page.poisonStyles[group]=page.poisonStyles[group] or {} end
-        for i,e in ipairs(entries) do (group and page.poisonStyles[group] or page.poisonControls)[e[2]]=cells[i] end
+        for i,e in ipairs(entries) do page.poisonControls[e[2]]=cells[i] end
     end
-    local function Sliders(entries,group)
+    local function Sliders(entries)
         for first=1,#entries,2 do
             local c,row=FullRow("",66);local cells={}
-            if group then row.modeFeature=group;row.modePanel="appearance" end
             for i=first,math.min(first+1,#entries) do
-                local e=entries[i];local label,key,suffix=e[1],e[2],e[3];local r=group and D.styleRanges[key] or D.ranges[key]
-                if group and (key=="fontSize" or key=="labelGap" or key=="timerSize") then row.modePanel="text" end
+                local e=entries[i];local label,key,suffix=e[1],e[2],e[3];local r=D.ranges[key]
                 local f=CreateFrame("Frame",nil,c);local text=W.Label(f,label,nil,0,-4,220,addon.Theme.secondary)
                 local control=CreateFrame("Frame",nil,f);control:SetPoint("TOPLEFT",0,-23);control:SetPoint("BOTTOMRIGHT",0,4)
-                page.refreshers[#page.refreshers+1]=W.Slider(control,r[1],r[2],r[3],function() return (group and self.db[group] or self.db)[key] end,
-                    function(v) if group then self:SetStyle(group,key,v) else self:SetOption(key,v) end end,suffix,true)
-                cells[#cells+1]={frame=f,label=text};page.poisonSliders[(group or "root")..":"..key]=control
+                page.refreshers[#page.refreshers+1]=W.Slider(control,r[1],r[2],r[3],function() return self.db[key] end,
+                    function(v) self:SetOption(key,v) end,suffix,true)
+                cells[#cells+1]={frame=f,label=text};page.poisonSliders["root:"..key]=control
                 page.searchEntries[#page.searchEntries+1]={label=label,section=page.activeSection,row=row,kind="setting"}
             end
             row.layoutChildren=function(_,width)
@@ -52,80 +50,13 @@ function M:CreateConfigPage(parent)
         local c,row=FullRow("",38);local buttons={}
         for _,e in ipairs(entries) do local fn=e[2];local b=W.Button(c,e[1],130,28);buttons[#buttons+1]=b
             b:SetScript("OnClick",function() if self:CanConfigure() then fn();page:Refresh() end end)
+            page.searchEntries[#page.searchEntries+1]={label=e[1],section=page.activeSection,row=row,kind="setting"}
         end
         row.layoutChildren=function(_,width)
             local w=math.min(160,(width-(#buttons-1)*8)/#buttons)
             for i,b in ipairs(buttons) do b:ClearAllPoints();b:SetPoint("TOPLEFT",(i-1)*(w+8),-4);b:SetWidth(w) end
         end
         return buttons
-    end
-    local function Visible(predicate,build)
-        local start=#page.rows;build();for i=start+1,#page.rows do page.rows[i].visibleWhen=predicate end
-    end
-    local function AppearanceOwner(group)
-        local owner={db={appearance=self.db[group]}}
-        function owner:CanConfigure() return M:CanConfigure() end
-        function owner:SetAppearance(key,value) return M:SetStyle(group,key,value) end
-        function owner:GetFonts() return addon.Media:GetFonts() end
-        return owner
-    end
-    local function IconControls(group,reminder)
-        local first=#page.rows+1
-        page:Group(reminder and "Poison Reminder Icons" or "Quick Access Poisons Icon")
-        page.iconGroups[group]=page.rows[#page.rows]
-        Sliders({{"Icon Size","iconSize"},
-            {reminder and "Icon Gap" or "Icon Opacity",reminder and "iconGap" or "iconOpacity",not reminder and "%" or nil},
-            {"Icon Border Size","iconBorderSize"},{"Icon Border Opacity","iconBorderOpacity","%"}},group)
-        W.ColorRow(page,AppearanceOwner(group),"Icon Border Color","iconBorderColor")
-        for i=first,#page.rows do page.rows[i].modeFeature=group;page.rows[i].modePanel="appearance" end
-    end
-    local function Style(group,launcher,reminder)
-        local first=#page.rows+1
-        local owner=AppearanceOwner(group)
-        if not launcher and not reminder then
-            Sliders({{"Icon Size","iconSize"},{"Icon Border Size","iconBorderSize"}},group)
-        end
-        Sliders({{"Scale","scale","%"},{"Window Opacity","opacity","%"},{"Window Padding","padding"},
-            {"Icon Background Opacity","iconBackgroundOpacity","%"}},group)
-        if not launcher and not reminder then Sliders({{"Icon Border Opacity","iconBorderOpacity","%"}},group) end
-        if not launcher then Sliders({{"Icon Opacity","iconOpacity","%"}},group) end
-        W.ColorRow(page,owner,"Icon Background Color","iconBackgroundColor")
-        if not launcher and not reminder then W.ColorRow(page,owner,"Icon Border Color","iconBorderColor") end
-        if launcher then
-            Toggles({{"Show Label","showNames"},{"Show Inventory Count","showCounts"},{"Crop Icon","cropIcons"},{"Show Tooltip","tooltips"}},group)
-            Sliders({{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
-            local c=page:Row("Label Text",42);local input=CreateFrame("EditBox",nil,c);input:SetSize(150,26);input:SetPoint("LEFT");input:SetAutoFocus(false);input:SetMaxLetters(40);input:SetFontObject(GameFontHighlight);addon.Media:BindInterfaceFont(input,GameFontHighlight)
-            W.Texture(input,"InputField");input:SetTextInsets(6,6,0,0)
-            local apply=W.Button(c,"Apply",64,26);apply:SetPoint("LEFT",input,"RIGHT",8,0)
-            local function Apply() self:SetStyle(group,"labelText",input:GetText());input:ClearFocus();input:SetText(self.db[group].labelText) end
-            apply:SetScript("OnClick",Apply);input:SetScript("OnEnterPressed",Apply)
-            input:SetScript("OnEscapePressed",function() input:ClearFocus();input:SetText(self.db[group].labelText) end)
-            page.refreshers[#page.refreshers+1]=function() if not input:HasFocus() then input:SetText(self.db[group].labelText) end end;page.launcherLabelInput=input
-            Select("Label Position",{{id="TOP",label="Above Icon"},{id="CENTER",label="On Icon"},{id="BOTTOM",label="Below Icon"}},function()
-                local v=self.db[group].labelPosition;return v,v=="TOP" and "Above Icon" or v=="CENTER" and "On Icon" or "Below Icon"
-            end,function(v) self:SetStyle(group,"labelPosition",v) end)
-        else
-            Toggles({{"Show Icons","showIcons"},{"Show Hand Labels","showHands"},{"Show Poison Names","showNames"},{"Show Inventory Counts","showCounts"}},group)
-            Sliders({{"Text Size","fontSize"},{"Label Gap","labelGap"}},group)
-            if not reminder then Sliders({{"Cell Width","cellWidth"},{"Icon Spacing","spacing"}},group) end
-            if reminder then
-                Toggles({{"Show Remaining Time","showTimers"},{"Vertical Layout","vertical"}},group);Sliders({{"Timer Text Size","timerSize"}},group)
-                Select("Timer Position",{{id="CENTER",label="On Icon"},{id="TOP",label="Above Icon"},{id="BOTTOM",label="Below Labels"}},function()
-                    local v=self.db[group].timerPosition;return v,v=="TOP" and "Above Icon" or v=="BOTTOM" and "Below Labels" or "On Icon"
-                end,function(v) self:SetStyle(group,"timerPosition",v) end)
-                W.ColorRow(page,owner,"Timer Color","timerColor")
-            else Sliders({{"Poison Columns","columns"}},group) end
-        end
-        Toggles({{"Text Outline","outline"}},group)
-        local _,fontRefresh=W.FontDropdown(page:Row("Text Font",42),owner);page.refreshers[#page.refreshers+1]=fontRefresh
-        W.ColorRow(page,owner,"Text Color","textColor");W.ColorRow(page,owner,"Icon Tint","iconColor")
-        Sliders({{"Window Background Opacity","backgroundOpacity","%"},{"Window Border Opacity","borderOpacity","%"},{"Window Border Size","borderSize"}},group)
-        W.ColorRow(page,owner,"Window Background Color","backgroundColor");W.ColorRow(page,owner,"Window Border Color","borderColor")
-        local text={ ["Text Font"]=true,["Text Color"]=true,["Timer Color"]=true,["Label Text"]=true,["Label Position"]=true,["Timer Position"]=true }
-        for i=first,#page.rows do
-            local row=page.rows[i];row.modeFeature=group
-            row.modePanel=text[row.settingsTitle] and "text" or row.modePanel or "appearance"
-        end
     end
     page:Section("Display",nil,false)
     Toggles({{"Poison Reminder","watcher"},{"Quick Access Poisons","flyout"}})
@@ -137,26 +68,9 @@ function M:CreateConfigPage(parent)
     Toggles({{"Use Time Threshold","timeReminder"},{"Use Charge Threshold","chargeReminder"}})
     Sliders({{"Reminder Threshold (min)","threshold"," min"},{"Charge Threshold","chargeThreshold"," charges"}})
     Toggles({{"Right-click to Dismiss Reminders","dismissOnRightClick"},{"Show Poison Charges","showPoisonCharges"}})
-    Visible(function() return self.db.watcher end,function() IconControls("watchStyle",true) end)
-    Visible(function() return self.db.flyout end,function() IconControls("launcherStyle",false) end)
-    page.displayButtons=Buttons({{"Customize Reminder",function() page.customize=page.customize=="reminder" and nil or "reminder" end},{"Customize Quick Access",function() page.customize=page.customize=="quick" and nil or "quick" end}})
-    Visible(function() return page.customize=="reminder" and self.db.watcher end,function()
-        page:Group("Poison Reminder Appearance");Style("watchStyle",false,true);Buttons({{"Minimal",function() self:MinimalReminder() end}})
-        page.rows[#page.rows].modeFeature="watchStyle";page.rows[#page.rows].modePanel="appearance"
-    end)
-    Visible(function() return page.customize=="quick" and self.db.flyout end,function()
-        page:Group("Quick Access Appearance")
-        Select("Customize",{{id="icon",label="Icon and Label"},{id="menu",label="Expanded Menu"}},function() return page.quickCustomize or "icon",page.quickCustomize=="menu" and "Expanded Menu" or "Icon and Label" end,function(v) page.quickCustomize=v;page:Refresh() end)
-        page.rows[#page.rows].modeReplacedNavigation=true
-    end)
-    Visible(function() return page.customize=="quick" and self.db.flyout and page.quickCustomize~="menu" end,function() Style("launcherStyle",true,false) end)
-    Visible(function() return page.customize=="quick" and self.db.flyout and page.quickCustomize=="menu" end,function()
-        Style("flyoutStyle",false,false)
-        Select("Menu Direction",{{id="UP",label="Up"},{id="DOWN",label="Down"},{id="LEFT",label="Left"},{id="RIGHT",label="Right"}},function() return self.db.direction end,function(v) self:SetOption("direction",v) end)
-        page.rows[#page.rows].modeFeature="flyoutStyle";page.rows[#page.rows].modePanel="appearance"
-        Sliders({{"Visible Menu Rows","visibleRows"}})
-        page.rows[#page.rows].modeFeature="flyoutStyle";page.rows[#page.rows].modePanel="appearance"
-    end)
+    -- Customize opens the display itself in Layout, where its styling lives.
+    page.displayButtons=Buttons({{"Customize Reminder",function() addon:EditElementAppearance("roguePoisonReminder") end},
+        {"Customize Quick Access",function() addon:EditElementAppearance("rogueQuickPoisons") end}})
     page:Section("Settings",nil,false)
     local c,gridRow=FullRow("Poison Refresh Quick Apply",92)
     for i=1,6 do

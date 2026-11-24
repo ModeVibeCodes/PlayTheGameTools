@@ -22,21 +22,24 @@ local F=addon.ForeverFoodBar;F:SetOption('enabled',true);F:SetOption('shown',tru
 addon:ToggleConfig()
 local T,TM,X,Q=addon.modules.combatTimer,addon.ThreatMeter,addon.EnhancedExperienceBar,addon.ForeverQuickAccess
 
--- The old per-display styling rows stay off settings pages and out of search
--- (a later pass removes them); Layout no longer borrows them either.
-for _,id in ipairs({'combatTimer','enhancedExperienceBar','foreverQuickAccess','campfireMonitor'}) do
+-- v2 removed the old per-display styling rows from settings pages and search;
+-- Layout's Style card is the only styling surface.
+local removed={['Font']=true,['Font Size']=true,['Text outline']=true,['Text Color']=true,['Background Color']=true,
+ ['Background opacity']=true,['Frame scale']=true,['Bar Texture']=true,['Bar Width']=true,['Bar Font']=true,
+ ['Name Font']=true,['Icon Size']=true,['Food Font']=true,['Status Text Size']=true,['Contribution Font']=true,
+ ['Title Color']=true,['Normal XP Fill Color']=true,['Session Font']=true,['Food Icon Size']=true}
+for _,id in ipairs({'combatTimer','enhancedExperienceBar','foreverQuickAccess','campfireMonitor','foreverRogue'}) do
  local page=addon:EnsureConfigPage(id)
  for _,row in ipairs(page.rows) do
-  if row.editAppearance then assert(not row:IsShown() and not row.editBorrowed,'styling row shown on '..id) end
+  assert(row.editAppearance==nil and not removed[row.settingsTitle or ''],'styling row left on '..id..': '..tostring(row.settingsTitle))
  end
+ for _,entry in ipairs(page.searchEntries) do assert(not removed[entry.label or ''],'styling search entry left on '..id..': '..tostring(entry.label)) end
+ assert(not page.settingsColors or #page.settingsColors==0,'no color rows on '..id)
 end
+assert(addon.ConfigWidgets.EditAppearancePanels==nil and addon.ConfigWidgets.ModuleHeader==nil and addon.ConfigWidgets.FontDropdown==nil,'styling routes and widgets removed')
 for _,query in ipairs({'Font Size','Background opacity','Frame scale','Bar Texture'}) do
  for _,result in ipairs(addon:SearchSettings(query)) do
-  local entry=result.entry
-  if entry then
-   local row=entry.row
-   assert(not row.editAppearance,'search offers a removed styling row: '..result.label)
-  end
+  assert(not result.entry or result.entry.label~='','no empty search results: '..result.label)
  end
 end
 

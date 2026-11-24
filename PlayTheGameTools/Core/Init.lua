@@ -39,6 +39,8 @@ events:SetScript("OnEvent", function(self, _, loadedName)
     end
     addon.ReloadManager:Start()
     addon:PrintAction(addon:BuildIdentification(), "welcome")
+    -- One chat line if v2 just reset this profile's old display styling.
+    addon.StyleReset:Announce()
 
     SLASH_PLAYTHEGAMETOOLS1 = "/ptg"
     SlashCmdList.PLAYTHEGAMETOOLS = function(text)

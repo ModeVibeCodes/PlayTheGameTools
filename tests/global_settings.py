@@ -74,13 +74,9 @@ assert(timer.text.font[1]==M.gameFont and timer.globalBorder.borderKind~='shared
 assert(timer.background.texture==M.defaultStatusBar,'saved Global Texture not applied to displays')
 assert(addon.db.globalMedia.font=='media:PTG JetBrains Mono' and addon.db.globalMedia.texture=='media:PTG Satin' and addon.db.globalMedia.border=='media:PTG Clean','saved values untouched')
 addon:SelectConfigPage('combatTimer')
-local font=w.pages.combatTimer.fontDropdown
-font.scripts.OnClick()
-for _,row in ipairs(font.rows) do if row.choice.key=='media:PTG JetBrains Mono' then row.scripts.OnClick();break end end
-assert(timer.text.font[1]==M:GetFont('PTG JetBrains Mono'),'per-display font choice still applies')
-font.scripts.OnClick()
-for _,row in ipairs(font.rows) do if row.choice.key=='global' then row.scripts.OnClick();break end end
-assert(timer.text.font[1]==M.gameFont)
+assert(not w.pages.combatTimer.fontDropdown,'no per-display font picker on the page (v2: Layout styles displays)')
+assert(timer:SetAppearance('fontMedia','PTG JetBrains Mono') and timer.text.font[1]==M:GetFont('PTG JetBrains Mono'),'a saved per-display font still renders')
+assert(timer:SetAppearance('font','game') and timer.db.appearance.fontMedia=='' and timer.text.font[1]==M.gameFont,'the built-in default font')
 -- Class colors: nine swatches, the existing picker, one Reset.
 addon:SelectConfigPage('globalSettings')
 assert(#G.classes==9 and page.classColorButtons.DRUID and not page.classColorButtons.DRUID.reset)
