@@ -274,8 +274,8 @@ function addon:CreateGlobalSettingsPage(parent)
 
     page:Section("About",nil,false)
     page.aboutVersion=Fact(page,"Version",self.buildVersion or "unknown",{"version","about"})
-    Fact(page,"Created by","Mode and Prox",{"credits","author","about"})
-    Fact(page,"Bug reports","Discord NoJumperMike",{"bugs","discord","support","about"})
+    page.aboutCredits=Fact(page,"Created by","Mode and Prox",{"credits","author","about"})
+    page.aboutBugs=Fact(page,"Bug reports","Discord NoJumperMike",{"bugs","discord","support","about"})
     local sources=page:Row("Data sources",96,{"license","licence","attribution","efficient games","cmangos","points of interest","city labels"})
     local source=addon.CityLabelsData and addon.CityLabelsData.source
     local poi=W.Label(sources,"Points of Interest Labels",nil,0,-7,420,T.secondary)

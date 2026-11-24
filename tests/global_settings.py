@@ -109,6 +109,9 @@ G.lootBlocked=true;page:Refresh();assert(page.fastLootNotice:GetParent().row:IsS
 assert(AutoLootWrites()==0,'no Auto Loot writes from the page')
 -- About.
 assert(page.aboutVersion:GetText()==addon.buildVersion and addon.buildVersion~='')
+local function Reads(value) return value:GetParent().rowLabel:GetText()..' '..value:GetText() end
+assert(Reads(page.aboutCredits)=='Created by Mode and Prox','credits')
+assert(Reads(page.aboutBugs)=='Bug reports Discord NoJumperMike','bug reports go to Discord NoJumperMike')
 addon:SelectConfigPage('cityLabels')
 local notice=w.pages.cityLabels.cityLabelSource:GetText()
 addon:SelectConfigPage('globalSettings')
