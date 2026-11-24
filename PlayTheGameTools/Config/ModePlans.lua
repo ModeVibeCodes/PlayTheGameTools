@@ -35,7 +35,7 @@ W.ModeLayoutPlans={
         return feature,"options"
     end},
     threatMeter={features={{"meter","Threat Meter"}},route=function() return "meter","options" end},
-    cityLabels={features={{"labels","Points of Interest Labels"}},route=function(row)
+    cityLabels={features={{"labels","Map Labels"}},route=function(row)
         return "labels",(row.settingsGroupTitle or row.settingsGroup)=="Appearance" and "appearance" or "options"
     end},
     enhancedExperienceBar={features={{"bar","XP Bar"},{"session","Session Text"}},route=function(row)

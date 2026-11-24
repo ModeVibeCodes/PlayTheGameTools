@@ -32,17 +32,17 @@ function D.Initialize(db,styleOnly)
         end
         if D.ranges[key] then
             local r=D.ranges[key]
-            assert(D.Number(db[key],r[1],r[2]),"Invalid Quick Access Bars setting: "..key)
-            if r[3]==1 then assert(db[key]%1==0,"Invalid Quick Access Bars integer: "..key) end
+            assert(D.Number(db[key],r[1],r[2]),"Invalid Profession & Food Bars setting: "..key)
+            if r[3]==1 then assert(db[key]%1==0,"Invalid Profession & Food Bars integer: "..key) end
         elseif type(value)=="table" then
-            assert(type(db[key])=="table","Invalid Quick Access Bars color: "..key)
-            for i=1,3 do assert(D.Number(db[key][i],0,1),"Invalid Quick Access Bars color: "..key) end
-        else assert(type(db[key])==type(value),"Invalid Quick Access Bars setting: "..key) end
+            assert(type(db[key])=="table","Invalid Profession & Food Bars color: "..key)
+            for i=1,3 do assert(D.Number(db[key][i],0,1),"Invalid Profession & Food Bars color: "..key) end
+        else assert(type(db[key])==type(value),"Invalid Profession & Food Bars setting: "..key) end
     end
-    assert(db.font=="game" or db.font=="chat","Invalid Quick Access Bars font")
-    assert(#db.fontMedia<=128,"Invalid Quick Access Bars media font")
+    assert(db.font=="game" or db.font=="chat","Invalid Profession & Food Bars font")
+    assert(#db.fontMedia<=128,"Invalid Profession & Food Bars media font")
     if db.hidden==nil then db.hidden={} end
-    assert(type(db.hidden)=="table","Invalid Quick Access Bars profession preferences")
+    assert(type(db.hidden)=="table","Invalid Profession & Food Bars profession preferences")
     for id,hidden in pairs(db.hidden) do
         assert(D.Number(id,1,2147483647) and id%1==0 and type(hidden)=="boolean","Invalid profession preference")
     end

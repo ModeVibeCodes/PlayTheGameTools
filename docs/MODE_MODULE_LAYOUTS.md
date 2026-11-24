@@ -38,15 +38,15 @@ long explanatory blocks move to the bottom; minor text keeps its location.
 | --- | --- | --- |
 | Timers → Combat Timer | One display; existing preview controls stay above settings | Options, Text, Appearance, Position |
 | Quality of Life → Automation | Quests, Merchant, Dialogue | Each is one compact Options page |
-| Quality of Life → Quick Access Bars | Professions, Food Bar | Options, Text, Appearance, Position |
+| Quality of Life → Profession & Food Bars | Professions, Food Bar | Options, Text, Appearance, Position |
 | Quality of Life → Threat Meter | One display | Options, Position; no invented text/appearance settings |
 | Questing & Leveling → Class Training | General, Level Up Window, Shortcut Icon & Menu, Upcoming Abilities, Available & Known | Options, Text, Appearance where available; the last two views remain live catalogs |
 | Questing & Leveling → Dungeon Loot | Dungeons, Boss Loot, Quests, General | General: Options, Appearance, Position, Data; browser/search/quest/map/binding behavior retained |
 | Questing & Leveling → Gameplay Enhancements | Loot Sparkles, Campfire Monitor | Loot Sparkles: Options, Text, Appearance; approved Campfire layout unchanged |
-| Questing & Leveling → Enhanced Experience Bar | XP Bar, Session Text | XP Bar: Options, Text, Appearance, Position; Session Text: Options, Text |
+| Questing & Leveling → Experience Bar | XP Bar, Session Text | XP Bar: Options, Text, Appearance, Position; Session Text: Options, Text |
 | Guild Tools → Recruitment | Recruiter, History | Original actions in compact Options pages; Recruiter gameplay window unchanged |
 | Guild Tools → Roster | Class Summary, Members by Class | Existing class/member data layouts under the new pills and heading |
-| Class Tools → Rogue | General, Poison Reminder, Quick Icon, Expanded Menu, Quick Apply | Options, Text, Appearance, Position where available; feature enablement remains in General |
+| Class Tools → Rogue Tools | General, Poison Reminder, Quick Icon, Expanded Menu, Quick Apply | Options, Text, Appearance, Position where available; feature enablement remains in General |
 | Developer Mode | Existing diagnostic groups and expansion gates | Heading styling only; no diagnostic controls moved |
 
 Mode color rows show **Pick**, with their original wheel, live swatch and cancel
@@ -107,12 +107,12 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
    checkbox column at wide sizes and back into the form at narrower sizes.
 4. **Navigation:** PTG Tools → header **Search settings...**. **Action:** search
    **Food Font Size**, then **Popout Text Size**, then **Icon Border Color** and
-   open the relevant result. **Required state:** OOC; Quick Access Bars/Class
+   open the relevant result. **Required state:** OOC; Profession & Food Bars/Class
    Training/Rogue features enabled as needed. **Confirmation:** each result
    opens its correct Text or Appearance panel and highlights the visible
    control. Disabled Class Training windows keep their original tab gating and
    do not raise a Lua error.
-5. **Navigation:** PTG Tools → Quality of Life → Quick Access Bars → **Food Bar**
+5. **Navigation:** PTG Tools → Quality of Life → Profession & Food Bars → **Food Bar**
    → **Options** → **Carried Items** row → **Refresh Bags**. **Action:** refresh
    carried items; visit Text, Appearance and Position, then return to Options.
    **Required state:** OOC; Food Bar enabled for a populated list.
@@ -133,7 +133,7 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
    keybinding, position and data actions; catalog search, details and maps still
    work and General tabs stay hidden in the browser. No keybinding changes are
    necessary for this layout check.
-8. **Navigation:** PTG Tools → Class Tools → Rogue → **General**, then **Poison
+8. **Navigation:** PTG Tools → Class Tools → Rogue Tools → **General**, then **Poison
    Reminder / Quick Icon / Expanded Menu** → **Text / Appearance / Position**
    where shown. **Action:** review each feature, temporarily adjust Text Size
    and restore it; return to **Quick Apply**. **Required state:** OOC, Rogue

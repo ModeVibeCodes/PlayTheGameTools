@@ -1,7 +1,7 @@
-# Enhanced Experience Bar
+# Experience Bar
 
 Forever only; opt-in tenth module. Open `/ptg`, expand **Questing & Leveling**,
-then select **Enhanced Experience Bar**. Uses the addon's shared **Edit Mode**
+then select **Experience Bar**. Uses the addon's shared **Edit Mode**
 workspace for its owned frame. Existing modules, settings and stock XP UI stay intact.
 
 ## Owner acceptance and merge closeout — 2026-11-07
@@ -136,13 +136,13 @@ and the deterministic release build (99 Lua / 174 packaged files). These are
 Lua 5.1 mock/static results; no in-game acceptance is claimed.
 
 1. **Navigation:** Chat input → `/reload`, then `/ptg` → Play The Game Tools →
-   Questing & Leveling → Enhanced Experience Bar → General →
-   Enable Enhanced Experience Bar; **Action:** reload and enable on a leveling
+   Questing & Leveling → Experience Bar → General →
+   Enable Experience Bar; **Action:** reload and enable on a leveling
    character; **Required state:** OOC with feature branch installed;
    **Confirmation:** bar shows current XP %, rested % and total quest log XP without
    errors. This revision uses existing runtime files; `/reload` loads it.
 2. **Navigation:** Native Quest Log → zone headers, then Play The Game Tools →
-   Questing & Leveling → Enhanced Experience Bar → Bar Appearance → Forecasts;
+   Questing & Leveling → Experience Bar → Bar Appearance → Forecasts;
    **Action:** accept an unfinished quest, collapse headers, complete it, then
    turn it in; **Required state:** OOC, below max level; **Confirmation:** total
    includes its reward before completion, does not double-count completion,
@@ -174,7 +174,7 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
    **Confirmation:** session clock/XP/hr update with no rollover spike. `/reload`
    resets counters while retaining appearance/position.
 7. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
-   Bar → General → Enable Enhanced Experience Bar; **Action:** disable/re-enable
+   Bar → General → Enable Experience Bar; **Action:** disable/re-enable
    after a combat/XP gain check; **Required state:** settings OOC;
    **Confirmation:** combat XP updates without blocked-action errors, disable
    hides the bar, re-enable starts a fresh session and other features still work.
@@ -197,7 +197,7 @@ Lua 5.1 mock/static results; no in-game acceptance is claimed.
     **Action:** toggle each separately, then choose Choose Your XP Bar → Use
     Existing Bar; **Required state:** OOC; **Confirmation:** individual hides are
     independent, Existing hides PTG and the owners decide their normal visibility.
-    Toggle General → Enable Enhanced Experience Bar off to verify restoration
+    Toggle General → Enable Experience Bar off to verify restoration
     on disable. No external addon settings are reset.
 11. **Navigation:** Play The Game Tools → Questing & Leveling → Enhanced Experience
     Bar → XP Bar Choice → Detected XP Bars; **Action:** `/reload`, enter/leave

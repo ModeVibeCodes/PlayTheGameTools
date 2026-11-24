@@ -1,6 +1,7 @@
 local _, addon = ...
 if not addon.Edition or addon.Edition.name ~= "Forever" then return end
-local M = { title = "Enhanced Experience Bar", category = "questingLeveling", defaultEnabled = false,
+local M = { title = "Experience Bar", category = "questingLeveling", defaultEnabled = false,
+    searchAliases = {"enhanced experience bar", "xp bar"},
     description = "Experience, rested pool, total quest log rewards and session progress.", supportsAnchoring = true }
 addon.EnhancedExperienceBar = M
 addon:RegisterModule("enhancedExperienceBar", M)

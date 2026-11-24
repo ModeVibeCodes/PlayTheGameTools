@@ -33,7 +33,7 @@ function M:CreateConfigPage(parent)
         cell.searchEntry=page.searchEntries[#page.searchEntries]
     end
     page.refreshers[#page.refreshers+1]=function()
-        status:SetText(self.message or "Enable Quick Access Bars to discover learned professions.")
+        status:SetText(self.message or "Turn on Profession & Food Bars to discover learned professions.")
         for i,cell in ipairs(page.professionCells) do
             local p=self.professions[i]
             cell.label:SetText(p and p.name or "No profession")

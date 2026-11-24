@@ -1,5 +1,12 @@
 # Standalone Forever development
 
+v2 module cuts (branch `t3/v2-module-cuts`, 2026-11-23): part of the approved
+v2 settings redesign. Display titles only: Map Labels (`cityLabels`), Experience
+Bar (`enhancedExperienceBar`), Profession & Food Bars (`foreverQuickAccess`) and
+Rogue Tools (`foreverRogue`). Module IDs, SavedVariables keys, frame names and
+doc file names are unchanged; old names stay as `searchAliases`. Dated notes
+below keep the names that were current when they were written.
+
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,
 {kind, group, close})`. A `window` closes open windows/notices of other groups

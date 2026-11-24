@@ -112,6 +112,13 @@ mode.execute(r'''
     assert(w.collapsedCategories[cid],'unrelated navigation and reopen retain disclosure')
     local results=addon:SearchSettings('Combat Timer')
     assert(#results>0)
+    -- Renamed modules keep their old names as search aliases.
+    for query,id in pairs({['points of interest']='cityLabels',['enhanced experience']='enhancedExperienceBar',['quick access bars']='foreverQuickAccess'}) do
+        local found=addon:SearchSettings(query)
+        assert(found[1] and found[1].module.id==id,'old module name still finds '..id)
+    end
+    assert(addon.modules.cityLabels.title=='Map Labels' and addon.modules.enhancedExperienceBar.title=='Experience Bar')
+    assert(addon.modules.foreverQuickAccess.title=='Profession & Food Bars' and addon.modules.foreverRogue.title=='Rogue Tools')
     addon:SelectConfigPage(results[1].module.id)
     assert(not w.collapsedCategories[cid] and w.sidebarModuleButtons.combatTimer:IsShown(),'direct/search routing reveals child')
     local b=w.sidebarModuleButtons.combatTimer
@@ -125,7 +132,7 @@ mode.execute(r'''
     local oldWidth=b:GetWidth();b:SetWidth(100);b.scripts.OnSizeChanged(b)
     assert(b.selectionEdge:GetWidth()<=80,'line follows resized text area')
     b:SetWidth(oldWidth);b.scripts.OnSizeChanged(b)
-    local oldText=b.label:GetText();b.label:SetText('· Enhanced Experience Bar')
+    local oldText=b.label:GetText();b.label:SetText('· Profession & Food Bars')
     b:SetWidth(164);b:FitNavigationText()
     assert(not b.label.wordWrap and b.label:GetStringWidth()<=138,'long subcategory fits one line at constrained width')
     b.label:SetText(oldText);b:SetWidth(oldWidth);b:FitNavigationText()

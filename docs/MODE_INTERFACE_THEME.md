@@ -224,7 +224,7 @@ No release publication or automatic theme activation is included.
     **Required state:** OOC after `/reload` with this revision;
     **Confirmation:** rounded corners rather than the reported solid square,
     with the same saved checked/unchecked state.
-11. **Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements / · Enhanced Experience Bar;
+11. **Navigation:** PTG Tools → Questing & Leveling → · Gameplay Enhancements / · Experience Bar;
     **Action:** inspect both sidebar entries, then click each;
     **Required state:** OOC; **Confirmation:** each name stays on one line and
     opens the same page. Long names may use a slightly smaller selected font.

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Renamed four modules to the names people use: Points of Interest Labels is
+  now Map Labels, Enhanced Experience Bar is now Experience Bar, Quick Access
+  Bars is now Profession & Food Bars (so it isn't confused with the Quick
+  Actions ring) and Rogue is now Rogue Tools. Only the names changed: your
+  saved settings, keybindings and positions carry over. Searching settings for
+  an old name still finds the module.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.
