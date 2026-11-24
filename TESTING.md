@@ -142,10 +142,11 @@ game state. Leave a feature off if you are not ready to exercise it.
    funds; inspect options before opening merchant. No developer item injector exists.
    **Confirmation:** Eligible junk only sells; gray equipment remains; repair uses
    personal funds once within threshold; disabled features leave actions manual.
-4. **Navigation:** Play The Game Tools → Quality of Life → Automation → Dialogue → Auto Gossip.
-   **Action:** Inspect the disabled control and Auto Gossip Availability note.
+4. **Navigation:** Play The Game Tools → Quality of Life → Automation.
+   **Action:** Scroll the whole page.
    **Required state:** OOC.
-   **Confirmation:** Explicitly unavailable/deferred; dialogue stays manual.
+   **Confirmation:** Only Quests and Merchant groups appear; there is no Dialogue
+   group, Auto Gossip switch or Auto Gossip Availability note. Dialogue stays manual.
 
 ## E. Guild Recruitment
 

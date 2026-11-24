@@ -82,7 +82,7 @@ the option does not restore the previous client setting.
 Training costs are catalog estimates before discounts, not guaranteed trainer
 offers. Eligibility can be uncertain; pet training, tomes, quest acquisition and
 all special training cases are not comprehensively covered. No cross-class browser
-is provided. Auto Gossip is unavailable and remains manual. Development prototypes
+is provided. Gossip dialogue is never automated. Development prototypes
 and Retail-only features are excluded.
 
 This is a beta candidate. Static checks do not establish in-game behavior; the

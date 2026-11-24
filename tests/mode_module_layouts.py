@@ -123,6 +123,12 @@ assert(questRow and not questRow:IsShown(),'no quest status text while nothing i
 A.questBlocked=true;automation:Refresh()
 assert(questRow:IsShown() and automation.questStatusLabel:GetText():find('Unavailable this session',1,true),'rejection warning appears')
 A.questBlocked=nil;automation:Refresh();assert(not questRow:IsShown())
+-- Auto Gossip could never be turned on, so it and its explanation are gone.
+for _,row in ipairs(automation.rows) do
+ assert(row.settingsTitle~='Auto Gossip Availability' and row.settingsGroupTitle~='Dialogue','no Dialogue placeholder')
+ for _,cell in ipairs(row.settingsToggles or {}) do assert(cell.label:GetText()~='Auto Gossip','no Auto Gossip switch') end
+end
+assert(not A:SetOption('autoGossip',true) and A.GossipCapability==nil)
 local timer=addon:EnsureConfigPage('combatTimer')
 timer.scroll:SetWidth(1000);timer:SelectModePanel('timer','appearance')
 assert(timer.modeLayout.panel=='options','timer styling is edited in Edit Mode')

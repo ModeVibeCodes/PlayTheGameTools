@@ -18,6 +18,9 @@
 - Experience Bar: the bar always hides at maximum level, so the Hide at
   Maximum Level switch is gone. Hide Ellesmere XP Bar appears only while
   EllesmereUIActionBars is loaded, and the Detected XP Bars status row is gone.
+- Automation: the Dialogue group is gone. Its Auto Gossip switch could never be
+  turned on, and its explanation is removed with it. Gossip dialogue stays
+  manual, as before.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

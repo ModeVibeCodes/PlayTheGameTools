@@ -37,7 +37,7 @@ long explanatory blocks move to the bottom; minor text keeps its location.
 | Sidebar category → page | Main pills / retained views | Common settings panels |
 | --- | --- | --- |
 | Timers → Combat Timer | One display; existing preview controls stay above settings | Options, Text, Appearance, Position |
-| Quality of Life → Automation | Quests, Merchant, Dialogue | Each is one compact Options page |
+| Quality of Life → Automation | Quests, Merchant | Each is one compact Options page |
 | Quality of Life → Profession & Food Bars | Professions, Food Bar | Options, Text, Appearance, Position |
 | Quality of Life → Threat Meter | One display | Options, Position; no invented text/appearance settings |
 | Questing & Leveling → Class Training | General, Level Up Window, Shortcut Icon & Menu, Upcoming Abilities, Available & Known | Options, Text, Appearance where available; the last two views remain live catalogs |

@@ -20,7 +20,7 @@ W.ModeLayoutPlans={
         if section=="Display" then return "timer","appearance" end
         return "timer","options"
     end},
-    foreverAutomation={features={{"Quests","Quests"},{"Merchant","Merchant"},{"Dialogue","Dialogue"}},route=function(row)
+    foreverAutomation={features={{"Quests","Quests"},{"Merchant","Merchant"}},route=function(row)
         return row.settingsGroupTitle or row.settingsGroup or "Quests","options"
     end},
     foreverQuickAccess={features={{"professions","Professions"},{"food","Food Bar"}},route=function(row)

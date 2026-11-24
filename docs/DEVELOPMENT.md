@@ -17,6 +17,9 @@ display hides whenever the player is capped outside Preview/Edit Mode. The
 Ellesmere row and its search entry use `M:EllesmereLoaded()`
 (`C_AddOns.IsAddOnLoaded("EllesmereUIActionBars")`); `OtherBarsStatus` and the
 Detected XP Bars row are gone. Search skips entries whose `available()` is false.
+Automation: the Dialogue group, `GossipCapability` and the `autoGossip` option and
+default are removed; an old saved `autoGossip` stays, unread. The Quest/Merchant
+Automation rows stay: they appear only while the client rejected an action.
 
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,

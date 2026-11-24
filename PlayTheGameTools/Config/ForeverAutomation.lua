@@ -47,20 +47,6 @@ function M:CreateConfigPage(parent)
         local blocked = self.merchantBlocked or {}
         merchantStatus:SetText("Unavailable this session: " .. (blocked.sellJunk and "Auto Sell Junk " or "") .. (blocked.repair and "Auto Repair" or "") .. " was rejected by the client.")
     end
-    page:Group("Dialogue")
-    local gossip = page:ToggleGrid({{
-        label = "Auto Gossip", get = function() return self.db.autoGossip == true end,
-        set = function(value) self:SetOption("autoGossip", value) end,
-    }})
-    page.automationControls.autoGossip = gossip[1]
-    local gossipStatus = W.Label(page:Row("Auto Gossip Availability", 48), "", nil, 0, -4, 440, T.muted)
-    gossipStatus:SetWordWrap(true); page.gossipStatusLabel = gossipStatus
-    gossipStatus:GetParent().row.visibleWhen = function() return not self:GossipCapability() end
-    page.refreshers[#page.refreshers + 1] = function()
-        local available, reason = self:GossipCapability()
-        gossip[1].frame:SetEnabled(available); gossip[1].button:SetEnabled(available)
-        gossipStatus:SetText(reason or "")
-    end
     -- Blocked-state rows can appear after a session rejection.
     page.refreshers[#page.refreshers + 1] = function() page:Layout() end
     page:Finish()
