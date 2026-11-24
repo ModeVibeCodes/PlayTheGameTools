@@ -58,8 +58,26 @@ addon:SetModuleEnabled(M.id,true)
 local old=EllesmereEAB_XPBar;EllesmereEAB_XPBar=CreateFrame('Frame');EllesmereEAB_XPBar.protected=true
 EllesmereEAB_XPBar:Show();FireEvent('ADDON_LOADED','EllesmereUIActionBars')
 assert(EllesmereEAB_XPBar:IsShown(),'protected foreign frame skipped')
-assert(M:OtherBarsStatus():find('unsupported'))
+assert(M.OtherBarsStatus==nil,'no Detected XP Bars status')
 EllesmereEAB_XPBar=old
+-- Hide Ellesmere XP Bar is offered only while EllesmereUIActionBars is loaded.
+SlashCmdList.PLAYTHEGAMETOOLS();addon:SelectConfigPage(M.id)
+local page=addon.configWindow.pages[M.id]
+local function Labels()
+    local seen={}
+    for _,cells in ipairs(page.toggleGrids) do for _,cell in ipairs(cells) do
+        if cell.frame:GetParent().row:IsShown() then seen[cell.label:GetText()]=true end
+    end end
+    for _,entry in ipairs(page.searchEntries) do assert(entry.label~='Detected XP Bars' and entry.label~='Hide at Maximum Level') end
+    return seen
+end
+page:Refresh()
+assert(Labels()['Hide Blizzard XP Bar'] and not Labels()['Hide Ellesmere XP Bar'],'no Ellesmere switch without the addon')
+local found=addon:SearchSettings('Hide Ellesmere');assert(#found==0,'hidden switch is not offered by search')
+C_AddOns.IsAddOnLoaded=function(name) return name=='EllesmereUIActionBars' end
+page:Refresh();assert(Labels()['Hide Ellesmere XP Bar'],'switch appears once the addon is loaded')
+assert(addon:SearchSettings('Hide Ellesmere')[1],'and search finds it')
+C_AddOns.IsAddOnLoaded=nil;page:Refresh()
 local state=addon.ProfileCodec.Copy(addon.db);state.modules[M.id].barChoice='unknown'
 assert(not addon.ProfileValidation:Validate(state),'provider setting validated')
 ''')

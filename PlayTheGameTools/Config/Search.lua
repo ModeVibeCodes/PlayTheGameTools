@@ -33,7 +33,8 @@ function addon:SearchSettings(query)
         for _, entry in ipairs(page and page.searchEntries or {}) do
             -- Display styling is edited in Edit Mode, not on this page.
             local base = entry.modeBaseRow or entry.campfireBaseRow or entry.row
-            if not (base and base.editAppearance) then
+            -- An entry may name a condition under which its control exists at all.
+            if not (base and base.editAppearance) and (not entry.available or entry.available()) then
                 local rank = Match(entry.label, query)
                 for _, alias in ipairs(entry.keywords or {}) do
                     local aliasRank = Match(alias, query)

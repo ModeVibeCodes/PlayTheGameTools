@@ -12,6 +12,11 @@ their ring icon whenever the module is on (Recruitment already did). Their old
 Combat Timer: `CombatTimerDisplay.Format(seconds)` is always MM:SS; the Timer
 format row and `SetAppearance("format")` are gone. `appearance.format` stays in
 SavedVariables and profile validation, unread by the display.
+Experience Bar: `hideAtMax` left the defaults (old values stay, unread); the
+display hides whenever the player is capped outside Preview/Edit Mode. The
+Ellesmere row and its search entry use `M:EllesmereLoaded()`
+(`C_AddOns.IsAddOnLoaded("EllesmereUIActionBars")`); `OtherBarsStatus` and the
+Detected XP Bars row are gone. Search skips entries whose `available()` is false.
 
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,

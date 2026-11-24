@@ -57,7 +57,10 @@ for _,feature in ipairs({'bar','session'}) do
 end
 AssertSettingsClean('enhancedExperienceBar')
 local hide
-for _,row in ipairs(xp.rows) do for _,cell in ipairs(row.settingsToggles or {}) do if cell.label:GetText()=='Hide at Maximum Level' then hide=row end end end
+for _,row in ipairs(xp.rows) do for _,cell in ipairs(row.settingsToggles or {}) do
+ assert(cell.label:GetText()~='Hide at Maximum Level','the bar always hides at maximum level')
+ if cell.label:GetText()=='Hide Blizzard XP Bar' then hide=row end
+end end
 assert(hide and not hide.editAppearance and hide.modeRoute.panel=='options','behavior toggles stay in settings')
 local camp=addon:EnsureConfigPage('lootSparkles');camp:SelectSectionTab(2)
 for _,element in ipairs({'general','monitor','buffs','contributions'}) do

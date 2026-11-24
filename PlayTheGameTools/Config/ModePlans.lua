@@ -45,8 +45,6 @@ W.ModeLayoutPlans={
             return "session",(label=="Session Scope" or label=="Session Tracking") and "options" or "text"
         end
         if section=="Bar Text" then return "bar","text" end
-        -- Hiding the bar at maximum level is behavior, not styling.
-        if Label(row)=="Hide at Maximum Level" then return "bar","options" end
         if section=="Layout" or section=="Bar Appearance" or section=="Colors" then return "bar","appearance" end
         return "bar","options"
     end},
