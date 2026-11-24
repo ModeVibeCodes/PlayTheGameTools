@@ -27,6 +27,7 @@ function F:RegisterPosition()
     local ok,element=addon.PositionManager:RegisterModuleDisplay(ELEMENT,self.bar,self.owner,{
         db=self.db,label="Food Bar",defaultX=0,defaultY=-260,
         canDrag=function() return self.active==true end,
+        onStyleChanged=function() self:Render() end,
         onRegistered=function() self:Render();addon.PositionManager:RefreshSelection() end})
     if ok then element.editMode=self.active and self.db.enabled and self.db.shown and self.bar:IsShown() or false end
 end
@@ -77,7 +78,8 @@ function F:Render()
         self.message="Native macro action dispatcher unavailable.";if self.bar then self.bar:Hide() end;return
     end
     self:CreateBar();if self.blocked or not self.bar then return end
-    local items=self:VisibleItems();local bar,db=self.bar,self.db
+    -- Layout's Style card: Text size scales names and counts, Background hides the fill and border.
+    local items=self:VisibleItems();local bar,db=self.bar,addon.PositionManager:StyleView(ELEMENT,self.db,{text={"fontSize"},background={"backgroundOpacity","borderOpacity"}})
     local w,h,columns,cellHeight=D.Geometry(#items,db)
     bar:SetSize(w,h);bar:SetScale(db.scale/100)
     if not addon.PositionManager.elements[ELEMENT] then

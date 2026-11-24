@@ -62,10 +62,10 @@ function PM:RegisterElement(id, frame, options)
     if options.owner == nil and (not Plain(options.moduleId) or type(options.moduleId) ~= "string") then return false, "unknown-module" end
     local module = options.owner or addon.modules[options.moduleId]
     if not module or not module.db or not addon.db then return false, "unknown-module" end
-    for _, key in ipairs({ "draggable", "editMode", "anchoring", "legacyPosition" }) do
+    for _, key in ipairs({ "draggable", "editMode", "anchoring", "legacyPosition", "styleText" }) do
         if options[key] ~= nil and type(options[key]) ~= "boolean" then return false, "invalid-options" end
     end
-    for _, key in ipairs({ "canDrag", "onPositionChanged", "onHighlight" }) do
+    for _, key in ipairs({ "canDrag", "onPositionChanged", "onHighlight", "onStyleChanged" }) do
         if options[key] ~= nil and type(options[key]) ~= "function" then return false, "invalid-options" end
     end
     local defaults = options.defaultPosition or { target = "screen", placement = "center", x = 0, y = 0 }
@@ -97,6 +97,7 @@ function PM:RegisterElement(id, frame, options)
         allowedTargets = allowed, draggable = draggable, editMode = options.editMode ~= false,
         supportsAnchoring = options.anchoring ~= false, legacy = options.legacy,
         canDrag = options.canDrag, onPositionChanged = options.onPositionChanged, onHighlight = options.onHighlight,
+        onStyleChanged = options.onStyleChanged, styleText = options.styleText ~= false,
         scripts = {}, handlers = {} }
     element.subject = { frame = frame, db = { position = position } }
     element.subject.originPoint=options.originPoint
@@ -121,7 +122,10 @@ function PM:RegisterElement(id, frame, options)
         Bind("OnHide", function() self:StopDragging(id) end)
         element.dragUpdate = function() self:NotifyPosition(id, false) end
     end
-    if not element.legacy then self:ApplyPosition(id) end
+    if not element.legacy then
+        self:InstallStyle(element)
+        self:ApplyPosition(id)
+    end
     return true, element
 end
 -- Shared registration for module displays that saved screen offsets in their
@@ -149,6 +153,7 @@ function PM:RegisterModuleDisplay(id, frame, module, options)
     local ok, value = self:RegisterElement(id, frame, { moduleId = module.id,
         defaultPosition = { target = "screen", placement = "center", x = options.defaultX or 0, y = options.defaultY or 0 },
         canDrag = options.canDrag, onHighlight = options.onHighlight,
+        onStyleChanged = options.onStyleChanged, styleText = options.styleText,
         onPositionChanged = function(changed, position)
             if position.target == "screen" and position.placement == "center" and not position.point then
                 db[xKey], db[yKey] = math.floor(position.x + 0.5), math.floor(position.y + 0.5)
@@ -202,6 +207,7 @@ function PM:UnregisterElement(id)
         if element.frame:GetScript(name) == handler then element.frame:SetScript(name, element.scripts[name]) end
     end
     if element.onHighlight then element.onHighlight(element, false, false) end
+    self:RemoveStyle(element)
     self.frames[element.frame], self.elements[id] = nil, nil
     for index, key in ipairs(self.order) do if key == id then table.remove(self.order, index); break end end
     if self.selected == id then self.selected = nil end
@@ -483,7 +489,7 @@ function PM:StopDragging(id)
     element.dragging, element.module.dragging = false, false
     local changed
     if not Combat() then
-        local x, y = P:ReadFrame(element.subject)
+        local x, y = self:SnapToGrid(element, P:ReadFrame(element.subject))
         changed = x ~= element.position.x or y ~= element.position.y
         element.position.x, element.position.y = x, y
         self:ApplyPosition(id, true)
@@ -510,14 +516,16 @@ function PM:SelectElement(id)
     return true
 end
 
+-- Layout starts with nothing selected: a selection is the open Style card.
+function PM:ClearSelection()
+    if self.selected == nil then return true end
+    self.selected = nil
+    self:RefreshSelection()
+    return true
+end
+
 function PM:RefreshSelection()
-    if addon.editMode and not self:GetSelectedElement() then
-        self.selected = nil
-        for _, id in ipairs(self.order) do
-            local element = self.elements[id]
-            if element.editMode and element.module.enabled then self.selected = id; break end
-        end
-    elseif not addon.editMode then self.selected = nil end
+    if not addon.editMode or not self:GetSelectedElement() then self.selected = nil end
     addon.EditMode.selected = self.selected -- compatibility view, not another selector
     for id, element in pairs(self.elements) do
         if not addon.editMode or not element.module.enabled then self:StopDragging(id) end
@@ -576,6 +584,7 @@ end
 function PM:Refresh(discover)
     if Combat() then self.pending = true; P.pending = true; return end
     self.pending, P.pending = false, false
+    self:FlushStyles()
     local changed = not discover
     for _, element in pairs(self.elements) do
         if not element.legacy and not element.dragging then
@@ -585,4 +594,223 @@ function PM:Refresh(discover)
         end
     end
     if changed then self:NotifyPosition() end
+end
+
+-- Layout Style card: Scale, Opacity, Text size and Background for every display.
+-- Saved in the display's own position record as `style`, so it follows the
+-- position through profiles, exports and imports. Values are whole percents;
+-- a record without `style` (every display until it is styled) uses defaults.
+PM.STYLE = {
+    scale = { minimum = 50, maximum = 200, default = 100 },
+    opacity = { minimum = 10, maximum = 100, default = 100 },
+    text = { minimum = 50, maximum = 200, default = 100 },
+}
+local STYLE_KEYS = { "scale", "opacity", "text" }
+
+local function StyleNumber(key, value)
+    local range = PM.STYLE[key]
+    return Number(value) and value == math.floor(value) and value >= range.minimum and value <= range.maximum
+end
+
+-- Strict check for a saved or imported `style` record.
+function PM:ValidateStyle(style)
+    if not Plain(style) or type(style) ~= "table" then return false, "invalid-style" end
+    for _, key in ipairs(STYLE_KEYS) do
+        if style[key] ~= nil and not StyleNumber(key, style[key]) then return false, "invalid-" .. key end
+    end
+    if not Plain(style.background) or (style.background ~= nil and type(style.background) ~= "boolean") then
+        return false, "invalid-background"
+    end
+    return true
+end
+
+local function SavedRecord(self, id)
+    local element = Lookup(self, id)
+    if element then return element.position end
+    if not Plain(id) or type(id) ~= "string" then return nil end
+    local positions = addon.db and addon.db.positions
+    return Plain(positions) and type(positions) == "table" and positions[id] or nil
+end
+
+-- Always a complete, valid copy. A malformed saved field reads as its default
+-- and stays in place, untouched, until the card writes a valid value.
+function PM:GetStyle(id)
+    local record = SavedRecord(self, id)
+    local saved = Plain(record) and type(record) == "table" and Plain(record.style) and type(record.style) == "table" and record.style or {}
+    local style = {}
+    for _, key in ipairs(STYLE_KEYS) do
+        style[key] = StyleNumber(key, saved[key]) and saved[key] or self.STYLE[key].default
+    end
+    style.background = not (Plain(saved.background) and saved.background == false)
+    return style
+end
+
+function PM:IsDefaultStyle(style)
+    for _, key in ipairs(STYLE_KEYS) do if style[key] ~= self.STYLE[key].default then return false end end
+    return style.background ~= false
+end
+
+-- Scale and Opacity apply to the display frame itself. A display that sets its
+-- own scale or alpha keeps doing so: its value is multiplied by the style here,
+-- and GetScale/GetAlpha keep returning the display's own value.
+function PM:InstallStyle(element)
+    if element.styleInstalled then return end
+    local frame = element.frame
+    local setScale, setAlpha, getScale, getAlpha = frame.SetScale, frame.SetAlpha, frame.GetScale, frame.GetAlpha
+    if type(setScale) ~= "function" or type(setAlpha) ~= "function" or type(getScale) ~= "function" or type(getAlpha) ~= "function" then return end
+    element.styleMethods = { SetScale = setScale, SetAlpha = setAlpha, GetScale = getScale, GetAlpha = getAlpha }
+    element.baseScale, element.baseAlpha = getScale(frame), getAlpha(frame)
+    element.styleScale, element.styleAlpha = 1, 1
+    frame.SetScale = function(owner, value)
+        element.baseScale = value
+        return setScale(owner, value * element.styleScale)
+    end
+    frame.SetAlpha = function(owner, value)
+        element.baseAlpha = value
+        return setAlpha(owner, value * element.styleAlpha)
+    end
+    frame.GetScale = function() return element.baseScale end
+    frame.GetAlpha = function() return element.baseAlpha end
+    element.styleInstalled = true
+    self:ApplyStyle(element.id)
+end
+
+-- Unregistering returns the frame to its own methods, scale and alpha.
+function PM:RemoveStyle(element)
+    if not element.styleInstalled then return end
+    local frame, methods = element.frame, element.styleMethods
+    for name in pairs(methods) do frame[name] = nil end
+    for name, method in pairs(methods) do
+        if frame[name] ~= method then frame[name] = method end
+    end
+    methods.SetScale(frame, element.baseScale); methods.SetAlpha(frame, element.baseAlpha)
+    element.styleInstalled, element.styleMethods = nil, nil
+    if self.stylePending then self.stylePending[element.id] = nil end
+end
+
+-- Never rescales or moves a display in combat; the change waits for combat to end.
+function PM:ApplyStyle(id, notify)
+    local element = Lookup(self, id)
+    if not element then return false, "unknown-element" end
+    if not element.styleInstalled then return false, "unstyled" end
+    if Combat() then
+        self.stylePending = self.stylePending or {}
+        self.stylePending[id] = self.stylePending[id] or notify or false
+        self.pending, P.pending = true, true
+        return false, "combat"
+    end
+    local style = self:GetStyle(id)
+    local scale, alpha = style.scale / 100, style.opacity / 100
+    if scale ~= element.styleScale or alpha ~= element.styleAlpha then
+        element.styleScale, element.styleAlpha = scale, alpha
+        element.styleMethods.SetScale(element.frame, element.baseScale * scale)
+        element.styleMethods.SetAlpha(element.frame, element.baseAlpha * alpha)
+        if not element.dragging then self:ApplyPosition(id, true) end
+    end
+    if notify and element.onStyleChanged then
+        local ok, message = pcall(element.onStyleChanged, element, style)
+        if not ok then print("Play The Game Tools: display style callback failed: " .. tostring(message)) end
+    end
+    return true
+end
+
+function PM:FlushStyles()
+    local pending = self.stylePending
+    if not pending or Combat() then return end
+    self.stylePending = nil
+    for id, notify in pairs(pending) do self:ApplyStyle(id, notify) end
+end
+
+-- One Style card value. Layout only, outside combat; values are validated.
+function PM:SetStyle(id, key, value)
+    local element = Lookup(self, id)
+    if not element or not element.styleInstalled then return false, "unknown-element" end
+    if Combat() then return false, "combat" end
+    if not addon.editMode then return false, "layout-only" end
+    if not Plain(key) or (key ~= "background" and not self.STYLE[key]) then return false, "invalid-key" end
+    if key == "background" then
+        if not Plain(value) or type(value) ~= "boolean" then return false, "invalid-background" end
+    else
+        if not Number(value) then return false, "invalid-" .. key end
+        local range = self.STYLE[key]
+        value = math.max(range.minimum, math.min(range.maximum, math.floor(value + 0.5)))
+    end
+    if key == "text" and not element.styleText then return false, "no-text" end
+    local current = self:GetStyle(id)
+    if current[key] == value then return true, "unchanged" end
+    current[key] = value
+    -- A default style leaves the saved record exactly as it was before styling.
+    if self:IsDefaultStyle(current) then element.position.style = nil
+    else element.position.style = current end
+    self:ApplyStyle(id, true)
+    self:NotifyPosition()
+    return true
+end
+
+-- Reset on the Style card: this display's style and its default position.
+function PM:ResetLayout(id)
+    local element = Lookup(self, id)
+    if not element then return false, "unknown-element" end
+    if Combat() then return false, "combat" end
+    if element.position.style ~= nil then
+        element.position.style = nil
+        self:ApplyStyle(id, true)
+    end
+    local ok, reason = self:ResetPosition(id)
+    self:NotifyPosition()
+    return ok, reason
+end
+
+-- Text size and Background, read through a display's own settings table:
+--   keys.text        font sizes, scaled by Text size;
+--   keys.background  background/border opacities, read as 0 while Background is off;
+--   keys.scale / keys.opacity  percent settings of a window that belongs to the
+--                    display but is not its registered frame (a flyout menu),
+--                    multiplied by Scale / Opacity.
+-- While Background is off the view also reads layoutBackground = false, for
+-- display code that draws a border without an opacity setting.
+-- Writes through the view still reach the settings table.
+function PM:StyleView(id, settings, keys)
+    local style = self:GetStyle(id)
+    if self:IsDefaultStyle(style) then return settings end
+    local view = {}
+    for _, key in ipairs(keys.text or {}) do
+        local size = settings[key]
+        if Number(size) then view[key] = self:StyleFontSize(id, size, style) end
+    end
+    if not style.background then
+        view.layoutBackground = false
+        for _, key in ipairs(keys.background or {}) do
+            if Number(settings[key]) then view[key] = 0 end
+        end
+    end
+    for _, pair in ipairs({ { keys.scale, style.scale }, { keys.opacity, style.opacity } }) do
+        for _, key in ipairs(pair[1] or {}) do
+            if Number(settings[key]) then view[key] = settings[key] * pair[2] / 100 end
+        end
+    end
+    return setmetatable(view, { __index = settings, __newindex = settings })
+end
+
+function PM:StyleFontSize(id, size, style)
+    if not Number(size) then return size end
+    style = style or self:GetStyle(id)
+    if style.text == 100 then return size end
+    return math.max(1, math.floor(size * style.text / 100 + 0.5))
+end
+
+function PM:StyleBackground(id)
+    return self:GetStyle(id).background
+end
+
+-- Grid: session-only and off by default. While it is on, a display dropped on
+-- the screen snaps its centre to the nearest grid line. Displays anchored to
+-- another frame, or placed by an edge, keep the exact spot they were dropped on.
+PM.GRID = 32
+function PM:SnapToGrid(element, x, y)
+    if not addon.EditMode.grid or not Number(x) or not Number(y) then return x, y end
+    local position = element.position
+    if position.target ~= "screen" or position.placement ~= "center" or position.point or element.subject.originPoint then return x, y end
+    local size = self.GRID
+    return math.floor(x / size + 0.5) * size, math.floor(y / size + 0.5) * size
 end

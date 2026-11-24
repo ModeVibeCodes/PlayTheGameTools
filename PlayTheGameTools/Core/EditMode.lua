@@ -1,5 +1,7 @@
 local _, addon = ...
-local E = { highlights = true }
+-- Layout mode's session state. Display names and outlines (highlights) always
+-- show in Layout; grid is the Layout bar's Grid switch, off until turned on.
+local E = { highlights = true, grid = false }
 addon.EditMode = E
 
 function E:RegisterElement(module, frame)
@@ -28,6 +30,20 @@ end
 function E:SetHighlights(show)
     self.highlights = show
     self:RefreshElements()
+end
+
+-- Grid shows guide lines in Layout and snaps dropped screen displays to them.
+function E:SetGrid(show)
+    if type(show) ~= "boolean" then return false end
+    self.grid = show
+    if addon.RefreshLayoutGrid then addon:RefreshLayoutGrid() end
+    if addon.RefreshEditWindow then addon:RefreshEditWindow() end
+    return true
+end
+
+-- The display whose Style card is open, or nil.
+function E:Deselect()
+    return addon.PositionManager:ClearSelection()
 end
 
 function E:Bounds(element)
@@ -86,5 +102,6 @@ function E:ViewportChanged()
     self:FinishDrags()
     addon.Positioning:Refresh()
     if addon.UpdateEditWindowBounds then addon:UpdateEditWindowBounds() end
+    if addon.RefreshLayoutGrid then addon:RefreshLayoutGrid() end
     self:NotifyPosition()
 end

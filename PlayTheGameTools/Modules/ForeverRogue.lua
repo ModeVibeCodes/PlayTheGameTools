@@ -159,7 +159,8 @@ function M:RegisterPositions()
                 end,
                 onHighlight=function()
                     if not addon.editMode then f:EnableMouse(false) end
-                end})
+                end,
+                onStyleChanged=function() self:Layout() end})
             assert(ok,"Play The Game Tools: Rogue position registration failed: "..tostring(registered))
             e=registered;e.label=f.enableKey=="watcher" and "Rogue: Poison Reminder" or "Rogue: Quick Access Poisons"
             e.defaults={target="screen",placement="center",x=f.enableKey=="watcher" and 0 or 200,y=-140}

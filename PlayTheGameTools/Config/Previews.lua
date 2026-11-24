@@ -171,7 +171,7 @@ function W.Preview(page, module, options)
         local safe=not (InCombatLockdown() or UnitAffectingCombat("player"))
         static:SetEnabled(safe);animated:SetEnabled(safe);pop:SetEnabled(safe)
         test:SetSelected(module.testing==true)
-        local permitted=module.SetTestDisplay and module.active and not (InCombatLockdown() or UnitAffectingCombat("player") or addon.editMode or addon.previewMode)
+        local permitted=module.SetTestDisplay and module.active and not (InCombatLockdown() or UnitAffectingCombat("player") or addon.editMode)
         if module.CanTestDisplay then permitted=module:CanTestDisplay() end
         test:SetEnabled(module.testing==true or permitted==true)
         local top=h+12

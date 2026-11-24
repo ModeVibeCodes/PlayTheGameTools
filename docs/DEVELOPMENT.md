@@ -1,5 +1,28 @@
 # Standalone Forever development
 
+Layout (branch `t3/v2-layout-mode`, v2 redesign): one on-screen mode replaces
+Preview and Edit Mode. `addon:SetEditMode(true/false)` is still the way in and
+out and `addon.editMode` its only flag; `addon:SetPreviewMode`/`previewMode` are
+gone (modules' own `SetPreviewMode(bool)` is now driven by Layout, so displays
+show sample data). `Config/EditMode.lua` builds the bar
+(`PlayTheGameToolsEditWindow`: Layout, cue, Drag to move, Grid, Done) and the
+Style card; nothing is selected on entry, and a selection is the open card.
+`addon:EditElementAppearance(id)` opens Layout with one card open. Styles live
+in each display's position record as `style = {scale, opacity, text,
+background}` (whole percents 50-200 / 10-100 / 50-200, boolean); defaults leave
+no record, so profiles, export and import carry styles with positions.
+Display API (Core/PositionManager.lua): Scale/Opacity are generic (the manager
+multiplies the frame's own SetScale/SetAlpha; GetScale/GetAlpha return the
+display's own value; restored on unregister). Displays implement Text size and
+Background with `onStyleChanged(element, style)` (re-render) and read values via
+`PM:StyleView(id, settings, {text=, background=, scale=, opacity=})`,
+`PM:StyleFontSize(id, size)` or `PM:StyleBackground(id)`; `styleText=false`
+marks a display without text. Styles never apply in combat (deferred to
+PLAYER_REGEN_ENABLED). Grid is session-only (`EditMode.grid`), off by default,
+snaps screen-centred drops to 32 units. No TOC or new files besides
+`tests/layout_style.py`; `tests/edit_mode.py` covers the mode. Native
+confirmation is pending; `/reload` OOC.
+
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,
 {kind, group, close})`. A `window` closes open windows/notices of other groups
@@ -33,7 +56,7 @@ column borrows those same row frames while the element is selected
 change, exit or combat, so controls, callbacks and saved keys are unchanged.
 Non-display styling (Loot Sparkles, Class Training, Dungeon Loot) stays put. No
 new files in the TOC; no SavedVariables changes. `tests/edit_mode_appearance.py`
-guards the contract. Native confirmation is pending; `/reload` OOC.
+guarded the contract. Superseded by Layout (below): the column and that test are gone. Native confirmation is pending; `/reload` OOC.
 
 Declutter / unified Edit Mode (branch `t3/declutter-ui-unify-edit-mode`):
 placement lives only in Edit Mode (`Config/EditMode.lua`), and every display

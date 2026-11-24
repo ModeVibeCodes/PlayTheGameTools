@@ -117,9 +117,10 @@ assert(M:SetOption('questFormat','percent'))
 assert(not M:SetOption('barTexture','arbitrary/path') and not M:SetOption('sessionFont','invalid'))
 locked=true;FireEvent('PLAYER_XP_UPDATE','player');assert(not M.questFill:IsShown() and M.text:GetText():find('XP locked'))
 locked=false;capped=true;FireEvent('PLAYER_LEVEL_UP',60);assert(not M.frame:IsShown())
-addon:SetPreviewMode(true);assert(M.frame:IsShown() and M.text:GetText():find('PREVIEW'))
+-- Layout shows the bar with its sample data even at the level cap.
+assert(addon:SetEditMode(true) and M.frame:IsShown() and M.text:GetText():find('PREVIEW'))
 assert(M.sessionXP==610,'sample never counts XP')
-addon:SetPreviewMode(false);assert(not M.frame:IsShown())
+addon:SetEditMode(false);assert(not M.frame:IsShown())
 assert(addon:SetEditMode(true) and M.frame:IsShown())
 local PM=addon.PositionManager
 assert(PM:SelectElement(M.id));assert(PM:StartDragging(M.id));PM:StopDragging(M.id)

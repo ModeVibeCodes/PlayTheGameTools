@@ -402,8 +402,19 @@ reloaded.execute('''
     UnitDetailedThreatSituation=nil
     addon:SetModuleEnabled('threatMeter',true)
     assert(not M.frame:IsShown(),'hidden out of combat')
-    assert(addon:SetEditMode(true) and M.frame:IsShown(),'Edit Mode reveals the meter for placement')
+    assert(addon:SetEditMode(true) and M.frame:IsShown(),'Layout reveals the meter for placement')
     assert(M.frame.empty:GetText()==M.MESSAGES.unavailable)
+    -- Layout replaced Preview and Edit Mode: one flag, one bar, one Style card.
+    assert(addon.SetPreviewMode==nil and addon.previewMode==nil,'no separate Preview state')
+    assert(M.previewing and M.editing,'Layout shows sample data and is editable')
+    local bar,pm=addon.editWindow,addon.PositionManager
+    assert(bar.title:GetText()=='Layout' and bar.cue:GetText()=='Click a display to style it' and bar.doneButton.label:GetText()=='Done')
+    assert(pm.selected==nil and not bar.styleCard:IsShown(),'no card until a display is clicked')
+    assert(pm:SelectElement('threatMeter') and bar.styleCard:IsShown())
+    assert(pm:SetStyle('threatMeter','scale',125) and addon.db.positions.threatMeter.style.scale==125)
+    bar.doneButton.scripts.OnClick(bar.doneButton)
+    assert(not addon.editMode and not M.previewing and not bar:IsShown())
+    assert(not pm:SetStyle('threatMeter','scale',150),'styling is Layout-only')
 ''')
 wrong, _ = load(project=1)
 wrong.execute('assert(not addon.initialized and PTGToolsDB==nil)')

@@ -16,18 +16,22 @@ function M:CreateDisplay()
     f:Show()
     local ok, reason = addon.PositionManager:RegisterElement(self.id, f, {moduleId = self.id,
         defaultPosition = {target = "screen", placement = "center", x = 0, y = -300},
-        canDrag = function() return self.active == true end})
+        canDrag = function() return self.active == true end,
+        onStyleChanged = function() self:ApplyAppearance() end})
     assert(ok, "Play The Game Tools: experience position registration failed: " .. tostring(reason))
     self:ApplyAppearance(); f:Hide()
 end
 function M:ApplyAppearance()
     if not self.frame or not self:CanConfigure() then return end
     addon.PositionManager:StopDragging(self.id)
-    local db, f = self.db, self.frame
+    -- Layout's Style card: Text size scales both texts; Background hides the fill behind the bar and its border.
+    local db, f = addon.PositionManager:StyleView(self.id, self.db, {text = {"fontSize", "sessionFontSize"}}), self.frame
+    local background = db.layoutBackground ~= false
     f:SetSize(db.width, db.height); f:SetScale(db.scale / 100); f:SetAlpha(1)
     addon.Media:ApplyBackdrop(f,{edgeFile = FLAT, edgeSize = 1},"enhancedExperienceBar")
-    f:SetBackdropBorderColor(db.borderColor[1], db.borderColor[2], db.borderColor[3], db.opacity / 100)
+    f:SetBackdropBorderColor(db.borderColor[1], db.borderColor[2], db.borderColor[3], background and db.opacity / 100 or 0)
     addon.Media:PaintSurface(self.background,db.backgroundColor,db.opacity/100,self.id)
+    self.background:SetShown(background)
     for _, spec in ipairs({{self.text, db.fontSize, db.font, db.fontMedia, db.outline, db.textColor, db.align, db.width, db.textOpacity},
         {self.sessionText, db.sessionFontSize, db.sessionFont, db.sessionFontMedia, db.sessionOutline,
             db.sessionTextColor, db.sessionAlign, db.sessionWidth, db.sessionOpacity}}) do
