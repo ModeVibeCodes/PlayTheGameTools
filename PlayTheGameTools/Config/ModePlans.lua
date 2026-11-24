@@ -63,8 +63,10 @@ W.ModeLayoutPlans={
         if Label(row)=="Name Font Size" then return "Loot Sparkles","text" end
         return "Loot Sparkles",(row.settingsGroupTitle or row.settingsGroup)=="Appearance" and "appearance" or "options"
     end},
-    foreverRecruitment={preserveSections=true,route=function(row) if row.section then return row.section.title,"options" end end},
-    foreverGuildRoster={preserveSections=true},
+    -- Guild has no settings sections: its page is a note and the header's
+    -- Open Guild button, so Mode only decorates it. Guild Roster's plan left
+    -- with its page.
+    foreverRecruitment={decorateOnly=true},
     foundation={decorateOnly=true},
     foreverRogue={features={{"general","General"},{"watchStyle","Poison Reminder"},{"launcherStyle","Quick Icon"},{"flyoutStyle","Expanded Menu"},{"apply","Quick Apply"}},
         route=function(row)

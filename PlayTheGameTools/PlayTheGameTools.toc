@@ -124,6 +124,7 @@ Config\ForeverQuickAccess.lua
 Config\ForeverFoodBar.lua
 Config\ForeverRecruitment.lua
 Config\ForeverGuildRoster.lua
+Config\ForeverGuild.lua
 Config\ThreatMeter.lua
 Config\CityLabels.lua
 Config\DungeonLootWidgets.lua

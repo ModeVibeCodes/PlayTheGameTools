@@ -30,7 +30,7 @@ addon:ToggleConfig()
 assert(Inventory()==expectedInventory,'all original module setting rows retained')
 -- Native anchored viewports resolve after their strip. The mock normally gives
 -- unsized frames 1024 units, which previously hid this startup ordering bug.
-for _,id in ipairs({'foreverGuildRoster','lootSparkles','foreverClassTraining'}) do
+for _,id in ipairs({'lootSparkles','foreverClassTraining'}) do -- Guild Roster's pills left with its page (Guild window)
  local p=addon:EnsureConfigPage(id);local strip=p.sectionTabs;local viewport=strip.viewport
  local widths={};for i,button in ipairs(strip.buttons) do widths[i]=button:GetWidth() end
  viewport:SetWidth(0);strip:Layout()
