@@ -1,13 +1,11 @@
 # Settings page
 
-Forever only. `/ptg` → **Global Settings** is one short scrolling page with no
-section tabs: **Appearance**, **Game**, **Profile** and **About**, in that order.
-This is the approved v2 layout (design mockup "PTG Tools v2 design"). Renaming
-the sidebar entry to **Settings**, pinning it at the bottom of the sidebar and
-replacing the header **Reload** button with a reload banner belong to the
-separate settings-window change; until that lands, the entry is still labelled
-**Global Settings** and **Reload** is still in the header. Mocks do not establish
-rendering, security or gameplay acceptance; native confirmation is pending.
+Forever only. `/ptg` → **Settings** (pinned at the bottom of the sidebar; the
+page title also reads Settings) is one short scrolling page with no section
+tabs: **Appearance**, **Game**, **Profile** and **About**, in that order. This is
+the approved v2 layout (design mockup "PTG Tools v2 design"). Mocks do not
+establish rendering, security or gameplay acceptance; native confirmation is
+pending.
 
 ## Appearance
 
@@ -218,57 +216,57 @@ Static/mock checks: `tests/global_settings.py`, `tests/shared_media.py`,
 `tests/` suite and `tools/build_release.py`. No new files: 123 Lua chunks. None of
 this is native confirmation.
 
-1. **Navigation:** `/ptg` → Global Settings → Appearance → Theme. **Action:**
+1. **Navigation:** `/ptg` → Settings → Appearance → Theme. **Action:**
    click the **mode** card, then the **Modern** card, then **mode** again and use
    the header **Reload** (or the reload banner once the window change lands).
    **Required state:** out of combat. **Confirmation:** each card draws its own
    colors and edges, the clicked card is outlined, **Current** stays on the theme
    on screen until the reload, and after it the mode theme is applied and marked
    Current.
-2. **Navigation:** `/ptg` → Global Settings → Appearance. **Action:** look for
+2. **Navigation:** `/ptg` → Settings → Appearance. **Action:** look for
    Global Font, Global Texture and Global Border, then look at module displays.
    **Required state:** a profile saved with a custom Global Font/Texture/Border
    before this change, after one reload. **Confirmation:** no such pickers exist;
    settings text uses the theme font; displays use the game font, flat surface and
    thin edge; a module's own font choice still applies.
-3. **Navigation:** `/ptg` → Global Settings → Appearance → Class colors.
+3. **Navigation:** `/ptg` → Settings → Appearance → Class colors.
    **Action:** click the Mage swatch and pick a color; click it again and cancel;
    reload and look at a class-colored roster or recruiter name; then click
    **Reset** and reload. **Required state:** out of combat (in combat the swatch
    does nothing). **Confirmation:** the swatch shows the color, cancel keeps it,
    the color appears after reload, and Reset returns all nine to native colors.
-4. **Navigation:** `/ptg` → Global Settings → Game → Fast loot. **Action:** turn it
+4. **Navigation:** `/ptg` → Settings → Game → Fast loot. **Action:** turn it
    on, loot a corpse with auto loot, repeat with the auto-loot modifier, turn it
    off. **Required state:** out of combat, no other fast-loot addon.
    **Confirmation:** normal auto loot is faster; modifier sessions stay manual;
    the game's own Auto Loot option is never changed by the addon.
-5. **Navigation:** Escape → Options, the game's own Auto Loot checkbox (find it with the Options search if needed), then `/ptg` → Global
+5. **Navigation:** Escape → Options, the game's own Auto Loot checkbox (find it with the Options search if needed), then `/ptg` →
    Settings → Game. **Action:** set the game's Auto Loot either way, reload,
    switch profiles and reload again. **Required state:** out of combat.
    **Confirmation:** the game's Auto Loot stays as you set it; there is no Auto
    loot control on the page.
-6. **Navigation:** `/ptg` → Global Settings → Game → Camera distance / Hide red
+6. **Navigation:** `/ptg` → Settings → Game → Camera distance / Hide red
    error text. **Action:** move the slider; turn Hide red error text on, trigger a
    red error, turn it off and repeat. **Required state:** out of combat.
    **Confirmation:** the camera value matches what the game accepted; red text is
    hidden then shown again; yellow messages and sounds are unchanged.
-7. **Navigation:** `/ptg` → Global Settings → Profile → Manage → New profile….
+7. **Navigation:** `/ptg` → Settings → Profile → Manage → New profile….
    **Action:** enter a name and click **Create**; choose it in the **Active
    profile** dropdown; reload; log into another character. **Required state:** out
    of combat. **Confirmation:** the status line says the switch waits for a
    reload; after it the new profile, settings and positions are active on both
    characters.
-8. **Navigation:** `/ptg` → Global Settings → Profile → Manage → Export…, then
+8. **Navigation:** `/ptg` → Settings → Profile → Manage → Export…, then
    Manage → Import…. **Action:** copy the string with Ctrl+A, Ctrl+C, click
    **Close**, open Import…, paste, enter a name and click **Import**. **Required
    state:** out of combat. **Confirmation:** the imported profile appears in the
    dropdown; an existing name or an invalid string is refused without overwriting.
-9. **Navigation:** `/ptg` → Global Settings → Profile → Manage → Duplicate… /
+9. **Navigation:** `/ptg` → Settings → Profile → Manage → Duplicate… /
    Rename… / Delete profile…. **Action:** duplicate a profile, rename the copy,
    then delete it; also try deleting the profile in use. **Required state:** out
    of combat. **Confirmation:** each dialog acts on the profile chosen in it; the
    profile in use (or one waiting for a reload) is refused with a message.
-10. **Navigation:** `/ptg` → Global Settings → About. **Action:** read the rows.
+10. **Navigation:** `/ptg` → Settings → About. **Action:** read the rows.
     **Required state:** none. **Confirmation:** Version matches the installed
     version; Created by Mode and Prox; Bug reports Discord NoJumperMike; Data
     sources matches the Points of Interest Labels page notice word for word.
