@@ -49,11 +49,16 @@ lua.execute('''
     assert(SLASH_PLAYTHEGAMETOOLS1=='/ptg' and SLASH_PLAYTHEGAMETOOLS2==nil)
     SlashCmdList.PLAYTHEGAMETOOLS()
     assert(addon.configWindow.title:GetText()=='Play The Game Tools')
-    assert(addon.configWindow.moduleHeader.title:GetText()=='Dashboard')
+    -- v2 shell: no Dashboard; the first open lands on the first module A to Z.
+    local first=addon:ListedConfigPages()[1]
+    assert(first=='foreverAutomation' and addon.configWindow.selectedPage==first,'opens on the first module')
+    assert(addon.configWindow.moduleHeader.title:GetText()=='Automation')
+    assert(addon.configWindow:GetWidth()==960 and addon.configWindow:GetHeight()==640 and addon.configWindow.sidebarWidth==212,'960x640 window')
+    assert(addon.configWindow.pages.dashboard==nil and addon.configWindow.navigationButtons.dashboard==nil,'no Dashboard page')
     -- Opening redraws text set while a shared font may still be loading
     -- (mock timers fire immediately: two passes, each clearing and re-setting).
-    local nav=addon.configWindow.navigationButtons.dashboard.label
-    assert(nav:GetText()=='Dashboard' and nav.textWrites>=5,'sidebar text redrawn')
+    local nav=addon.configWindow.navigationButtons[first].label
+    assert(nav:GetText()=='Automation' and nav.textWrites>=5,'sidebar text redrawn')
     assert(addon.configWindow.title:GetText()=='Play The Game Tools' and addon.configWindow.title.textWrites>=5,'title redrawn')
     local field=CreateFrame('EditBox',nil,UIParent);field:SetText('typed')
     local changes=0;field:SetScript('OnTextChanged',function() changes=changes+1 end)
@@ -62,7 +67,6 @@ lua.execute('''
     local writes=nav.textWrites;testCombat=true
     assert(addon.Media:RedrawInterfaceText()==false and nav.textWrites==writes,'no redraw in combat')
     testCombat=false;addon.Media:UnbindInterfaceFont(field)
-    assert(addon.configWindow.pages.dashboard.welcomeTexts[1]=='Welcome to Play The Game Tools!')
     for _,id in ipairs(addon.moduleOrder) do
         addon:SelectConfigPage(id)
         assert(addon.configWindow.pages[id],id)
@@ -83,7 +87,6 @@ restored.execute('''
     local T=addon.InterfaceTheme
     assert(addon.db.window.theme=='modern' and T.id=='modern' and not T.blizzardArt)
     SlashCmdList.PLAYTHEGAMETOOLS()
-    assert(not addon.configWindow.pages.dashboard.themeButtons,'theme moved out of Dashboard')
     addon:SelectConfigPage('globalSettings')
     local themes=addon.configWindow.pages.globalSettings.themeButtons
     assert(#themes==3 and themes[1].selected and not themes[2].selected and themes[3].label:GetText()=='mode','theme choice')
@@ -100,7 +103,7 @@ restored.execute('''
     local resting,chosen=themes[2].outline.edges[1].color,themes[1].outline.edges[1].color
     assert(resting[1]==T.lineStrong[1] and resting[4]==1,'unselected choice keeps a visible edge')
     assert(chosen[2]==T.primary[2] and chosen[4]==1,'selected choice has a full accent edge')
-    assert(addon.configWindow.navigationButtons.dashboard.selectionEdge.height==2,'selected navigation marker: one underline style in every theme')
+    assert(addon.configWindow.navigationButtons.globalSettings.selectionEdge.height==2,'selected navigation marker: one underline style in every theme')
     themes[2].scripts.OnClick()
     assert(addon.db.window.theme=='blizzard' and addon.ReloadManager.requests.interfaceTheme,'theme reload request')
     assert(themes[2].selected and T.id=='modern','theme applies only after reload')
@@ -120,7 +123,7 @@ themed.execute('''
     assert(window.backdrop.edgeSize==32 and window.backdrop.insets.top==12,'stock dialog edge is not replaced by Global Border')
     assert(window.canvas.shown~=false and window.canvas.color[4]==1,'opaque canvas under the dialog border')
     for _,id in ipairs(addon.moduleOrder) do addon:SelectConfigPage(id); assert(window.pages[id],id) end
-    addon:SelectConfigPage('dashboard')
+    addon:SelectConfigPage('combatTimer')
     assert(window.closeButton.blizzardArt.middle.texture==ART.buttonUp)
     window.closeButton:SetSelected(true)
     assert(window.closeButton.blizzardArt.middle.texture==ART.buttonDown)
@@ -129,7 +132,7 @@ themed.execute('''
     window.closeButton:SetEnabled(true);window.closeButton:SetSelected(false)
     local toggle=window.moduleHeader.toggle
     assert(toggle.fill.texture==ART.checkbox and toggle.knob.texture==ART.check)
-    assert(window.navigationButtons.dashboard.blizzardHighlight.shown)
+    assert(window.navigationButtons.combatTimer.blizzardHighlight.shown and window.navigationButtons.combatTimer.selected)
     -- Stock game font, drop shadows, and segmented choices without push-button art.
     assert(window.title.font[1]==GameFontHighlight:GetFont() and window.title.shadowOffset[1]==1,'global font with theme shadow')
     addon:SelectConfigPage('globalSettings')

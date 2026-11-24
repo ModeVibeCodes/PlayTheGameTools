@@ -35,7 +35,7 @@ assert(M.library:HashTable('border')['PTG Clean'] and M.library:HashTable('backg
 assert(cvars.cameraDistanceMaxZoomFactor=='4' and cvars.uiScale=='1' and cvars.useUiScale=='0','startup leaves UI scale alone')
 addon:ToggleConfig();addon:SelectConfigPage('globalSettings')
 local w=addon.configWindow;local page=w.pages.globalSettings
-assert(w.moduleHeader.title:GetText()=='Global Settings' and not w.moduleHeader.toggle:IsShown())
+assert(w.moduleHeader.title:GetText()=='Settings' and not w.moduleHeader.toggle:IsShown())
 assert(#page.sections==4 and page.sections[1].title=='Appearance' and page.sections[2].title=='Profiles')
 assert(page.sectionTabs:GetNumPoints()==2 and page.scroll.points[1][5]==-40,'tabs are anchored above scrolling controls')
 for key in pairs(page.mediaControls) do assert(key:sub(1,7)=='global:','no per-module overrides on page') end

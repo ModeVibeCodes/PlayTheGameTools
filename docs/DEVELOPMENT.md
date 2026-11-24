@@ -1,5 +1,30 @@
 # Standalone Forever development
 
+v2 window shell (branch `t3/v2-window-shell`): `Config/Window.lua` is now
+960×640 (was 1120×760) with the same fit-to-screen scaling and off-screen
+recovery; the sidebar is 212 wide and the header 48 tall. The header holds the
+brand and only **Layout** (calls `addon:SetEditMode`, starting on the current
+module's first display, exactly as the old Edit Mode button did) and **X**;
+`window.editButton` names the same control. The Preview, Reload, Edit Mode and
+Profile header buttons are gone; profiles stay on the Settings page. A pending
+`ReloadManager` request shows as a banner above the page (`window.reloadBanner`,
+**Reload now** = `ReloadManager:Reload()`); `ReloadManager:Refresh` drives it.
+The sidebar is the search box, one flat A–Z list of module pages
+(`addon:ListedConfigPages()`, each row with an on/off dot) and **Settings**
+pinned at the bottom (the `globalSettings` page, titled "Settings"). No
+Dashboard, no category headings: categories stay registered as module data
+(`Core/Categories.lua`) but nothing shows them. A module with a stock
+`classIcon` (`ClassIcon_<Class>`) is listed and searchable only for that class
+(`addon:IsConfigPageListed`). Developer Mode is not listed; `/ptg dev` opens it
+(`addon:OpenDeveloperPage`). The window opens on the last page used this
+session (not saved), or the first module. The page header is the title,
+description and the one switch, with no Enabled/Disabled text. Search
+(`Config/Search.lua`) sits at the top of the sidebar; its results replace the
+list while it holds text and include the Settings page; choosing one opens the
+page and flashes the row. No new TOC files, SavedVariables or frame names.
+`tests/window_shell.py` guards the shell. Native confirmation is pending;
+`/reload` OOC.
+
 Dialogs (`Core/Dialogs.lua`, one new TOC entry, 122 Lua chunks): every addon
 window, dialog and dropdown registers with `addon.Dialogs:Register(frame,
 {kind, group, close})`. A `window` closes open windows/notices of other groups

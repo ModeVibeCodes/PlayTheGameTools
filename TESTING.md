@@ -19,6 +19,11 @@ Enhanced Experience Bar: follow [the focused checklist](docs/ENHANCED_EXPERIENCE
 on its local feature branch. Enable under Questing & Leveling; native acceptance
 is pending.
 
+Sidebar paths: since the v2 window the sidebar has no category headings. A path
+such as "Timers → Combat Timer" means the **Combat Timer** row in the A–Z list;
+"Global Settings" means the **Settings** row pinned at the bottom. Header
+**Reload** is now the **Reload now** button in the banner above the page.
+
 Record PASS / FAIL / NOT TESTED for each item, with version, client build, class
 and level. These instructions do not claim native acceptance. Do one chunk at a
 time; start with A. Stop and report startup/errors/settings loss before continuing.
@@ -105,8 +110,8 @@ special prerequisites require specific evidence; report uncertainty honestly.
 
 ## C. Combat Timer
 
-1. **Navigation:** Play The Game Tools → Timers → Combat Timer → module header switch
-   (unlabeled, beside Enabled/Disabled).
+1. **Navigation:** Play The Game Tools → sidebar **Combat Timer** → page header switch
+   (unlabeled, top right of the page).
    **Action:** Enable, close configuration, enter and leave ordinary combat.
    **Required state:** OOC to configure; ordinary combat to observe.
    **Confirmation:** Elapsed time advances during combat and follows the configured
@@ -239,17 +244,37 @@ Stock artwork, fonts, text fit and contrast require these in-game checks.
 
 | Check | Navigation | Action | Required state | Confirmation |
 | --- | --- | --- | --- | --- |
-| T1 Choose Blizzard | `/ptg` → Global Settings → Appearance → Interface Theme | Click **Blizzard**, then **Reload** in the window header | Out of combat | Header **Reload** shows pending before the click; after reload `/ptg` shows the gold dialog border, opaque dark stone, red header buttons, stock checkboxes and gold headings |
-| T2 Text fit | Blizzard active; open each sidebar entry | Read sidebar items, Dashboard module rows, dropdowns and search results | Out of combat | No clipped or overlapping labels in the game font |
+| T1 Choose Blizzard | `/ptg` → sidebar **Settings** → Appearance → Interface Theme | Click **Blizzard**, then **Reload now** in the banner above the page | Out of combat | The banner appears with the theme change before the click; after reload `/ptg` shows the gold dialog border, opaque dark stone, red header buttons, stock checkboxes and gold headings |
+| T2 Text fit | Blizzard active; open each sidebar entry | Read sidebar rows, page headers, dropdowns and search results | Out of combat | No clipped or overlapping labels in the game font |
 | T3 Selectors and inputs | Blizzard active; Global Settings → Appearance, a module's Positioning section, the search box | Click options; type in the search box | Out of combat | Selected option has a gold outline; input borders show no square corners |
-| T4 Return to Modern | `/ptg` → Global Settings → Appearance → Interface Theme | Click **Modern**, then **Reload** | Out of combat | Window shows the Modern graphite look: dark sidebar column, slightly lighter canvas, outlined header buttons |
+| T4 Return to Modern | `/ptg` → sidebar **Settings** → Appearance → Interface Theme | Click **Modern**, then **Reload now** in the banner | Out of combat | Window shows the Modern graphite look: dark sidebar column, slightly lighter canvas, outlined header buttons |
 | T5 Fresh-launch labels | Quit WoW fully, relaunch | Type `/ptg` as soon as you are in the world | Out of combat | Sidebar labels and the window title are visible, at worst after about a second |
 | T6 Threat Meter | `/ptg` → Quality of Life → Threat Meter (enabled); in a group with a tank, or with your pet tanking | Attack the tank's target and keep adding threat until your row shows 90% or more without taking aggro; then stop and let it fall back | In combat | Header strip and class-coloured bars; your row has an accent stripe in its own gap left of the bar, not on the bar; at 90% or more that stripe turns red and a thin red frame surrounds your bar; below 90%, or once you hold aggro, both return to the plain accent stripe. Repeat once with the **Blizzard** theme: the red is clearly different from the gold stripe |
-| T7 Modern edges and hover | Modern active; `/ptg` → Dashboard | Look at **Reload**, **Preview**, **Edit Mode**, **X**, the **Search settings...** box and Global Settings → Appearance → Interface Theme without hovering, then hover each | Out of combat | Every control shows a visible outline at rest; hovering lifts its fill; **Modern** has a solid mint outline and **Blizzard** a grey one |
+| T7 Modern edges and hover | Modern active; `/ptg` | Look at **Layout**, **X**, the **Search** box and Settings → Appearance → Interface Theme without hovering, then hover each | Out of combat | Every control shows a visible outline at rest; hovering lifts its fill; **Modern** has a solid mint outline and **Blizzard** a grey one |
 | T8 Modern navigation and sections | Modern active; click a sidebar entry, then a module with several sections | Compare the selected sidebar entry with the others; scroll the page | Out of combat | Selected entry has a mint bar on its left edge; sections are separated by clearly more space than rows; dividers are visible but quiet |
-| T9 Modern checkboxes and sliders | Modern active; sidebar **Quality of Life** → **Automation**, then **Timers** → **Combat Timer** → **Display** | On Automation tick and untick any box; on Combat Timer drag the **Font Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
+| T9 Modern checkboxes and sliders | Modern active; sidebar **Automation**, then **Combat Timer** → **Display** | On Automation tick and untick any box; on Combat Timer drag the **Font Size** slider | Out of combat | Ticked box shows a mint square on a faint mint wash with a mint edge; slider track is a thick grey bar filled mint up to the thumb |
 | T10 Solid Dungeon Loot text | `/ptg` → Questing & Leveling → Dungeon Loot (enabled) | On **Dungeons** read the card titles and Suggested Starting Levels headings; open a dungeon and view **Boss Loot** and **Quests** | Out of combat | Every heading, card title, list entry and NPC name is one solid colour; the selected tab underline is one solid accent; bracket headings sit over a plain hairline |
 | T11 Recruitment page | `/ptg` → Guild Tools → Recruitment | Scroll the page, then click **Open Recruiter** | Out of combat | Page shows only Recruiter (**Open Recruiter**) and History (**Clear Invite History**, **Clear Never-Invite List**, **Reset Statistics**); the Recruiter window still has Level range, Levels per search, Classes and the whisper box, and saved values are as before |
+
+## v2 settings window
+
+Run `python tests/window_shell.py`, `python tests/smoke.py` and
+`python tests/mode_theme.py`. These are mock checks; the window's real fit,
+fonts and behavior need these in-game checks. Use `/reload` OOC first.
+
+| Check | Navigation | Action | Required state | Confirmation |
+| --- | --- | --- | --- | --- |
+| V1 Size and fit | Type `/ptg` | Look at the whole window; drag it by the header strip left of **Layout**, then type `/ptg resetwindow` | Out of combat | The window is smaller than before (960×640 at full scale) and fully on screen; it moves while dragged and returns to the centre after `/ptg resetwindow` |
+| V2 Header | `/ptg` | Read the header | Out of combat | Logo and "Play The Game Tools" on the left; only **Layout** and **X** on the right. No Preview, Reload, Edit Mode or Profile button |
+| V3 Layout | `/ptg` → sidebar **Combat Timer** (switch on) | Click **Layout**, then **Exit** in the Layout window | Out of combat | Settings steps aside and Edit Mode opens with the Combat Timer display selected; **Exit** brings settings back on Combat Timer |
+| V4 Sidebar | `/ptg` | Read the sidebar top to bottom; click two rows; turn one module's page switch off and on | Out of combat | **Search** box first, then one A–Z list of module names with a small dot each (filled accent = on, dim = off), no category headings, no Dashboard, no Developer Mode; **Settings** sits at the bottom below a line; clicking a row opens its page; the dot follows the switch |
+| V5 Class-only row | Log in on a Rogue, then on any other class; `/ptg` each time | Read the sidebar | Out of combat | **Rogue** (with its class icon) is listed on the Rogue only |
+| V6 Page header | `/ptg` → any module row, then **Settings** | Read the page header | Out of combat | Title, one-line description and one switch at the right; no "Enabled"/"Disabled" text. **Settings** reads "Settings" / "Look, game options and profiles for the whole addon." with no switch |
+| V7 Reload banner | `/ptg` → **Settings** → Appearance → Interface Theme | Click a theme other than the current one; open another page; click the current theme again; pick the other theme and click **Reload now** | Out of combat | A banner "Applies after a reload" with the theme reason and **Reload now** shows above every page while the change is pending, disappears when you pick the current theme back, and **Reload now** reloads the UI |
+| V8 Reload in combat | Banner showing (V7 before reloading) | Enter combat, click **Reload now** | In combat | No reload; the banner says reload is unavailable during combat (also printed in chat) |
+| V9 Search | `/ptg` → **Search** box | Type `font`; click a setting result; then type `threat` and press Enter; then type `zzzz` and press Escape | Out of combat | While typing, results (name and page beneath) replace the list; a click opens that page and briefly highlights the setting; Enter opens the first result; `zzzz` says "Nothing matches"; Escape clears it and the list returns |
+| V10 Last page | `/ptg` → **Threat Meter** | Close with **X**, type `/ptg` | Out of combat | Reopens on Threat Meter. After `/reload`, the first `/ptg` opens on **Automation** (first A–Z) |
+| V11 Developer Mode | Type `/ptg dev` | Read the page | Out of combat | Settings opens on Developer Mode (no switch in its page header); it is not in the sidebar |
 
 ## Dungeon Loot
 

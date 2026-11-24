@@ -40,8 +40,8 @@ testCombat=false;testLockdown=false;FireEvent('PLAYER_REGEN_ENABLED');M:SetOptio
 addon:ToggleConfig();addon:SelectConfigPage('foreverRogue');local p=M.page
 assert(#p.sections==2 and p.sections[1].title=='Display' and p.sections[2].title=='Settings','placement lives in Edit Mode')
 local h=addon.configWindow.moduleHeader
-assert(h.classIcon==nil and not h.title:IsShown(),'No duplicate class icon below the tab')
-assert(addon.configWindow.sidebarModuleButtons.foreverRogue.classIcon.texture==M.classIcon,'Class icon appears in the left subcategory')
+assert(h.classIcon==nil and h.title:IsShown() and h.title:GetText()=='Rogue','page header names the page; no duplicate class icon')
+assert(addon.configWindow.sidebarModuleButtons.foreverRogue.classIcon.texture==M.classIcon,'Class icon appears in the sidebar row')
 assert(p.poisonGrid[1].label:GetText()=='Recent' and p.poisonGrid[4].label:GetText()=='Crippling')
 assert(p.poisonGrid[2].available and p.poisonGrid[4].icon.desaturated and not p.poisonGrid[4]:IsEnabled())
 assert(not p.customize)

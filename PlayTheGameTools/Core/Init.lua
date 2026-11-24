@@ -42,9 +42,10 @@ events:SetScript("OnEvent", function(self, _, loadedName)
 
     SLASH_PLAYTHEGAMETOOLS1 = "/ptg"
     SlashCmdList.PLAYTHEGAMETOOLS = function(text)
-        if type(text)=="string" and text:lower():match("^%s*resetwindow%s*$") then
-            addon:ResetConfigWindowPosition();return
-        end
+        local command=type(text)=="string" and text:lower():match("^%s*(%S*)%s*$") or ""
+        if command=="resetwindow" then addon:ResetConfigWindowPosition();return end
+        -- Developer Mode is reached only here, not from the sidebar.
+        if command=="dev" then addon:OpenDeveloperPage();return end
         addon:ToggleConfig()
     end
 end)

@@ -1,5 +1,13 @@
 # mode interface theme
 
+> **v2 window shell:** the header now holds only the brand, **Layout** and
+> **X**; search heads the sidebar; the sidebar is one A–Z module list with
+> **Settings** pinned at the bottom; a pending reload shows as a banner with
+> **Reload now** above the page. Notes below about header Reload/Profile/search,
+> category headings, nested rows and the 240-unit sidebar describe the earlier
+> shell. See [DEVELOPMENT.md](DEVELOPMENT.md) and the
+> [v2 window checks](../TESTING.md#v2-settings-window).
+
 ## Module layout rollout — November 10
 
 Campfire Monitor's design is owner-accepted. PR #26 now applies its layout pattern
