@@ -31,18 +31,14 @@ local M=addon.Media
 assert(M.sharedMediaStatus=='Ready' and #enables==2 and #loads==2 and saves==2)
 assert(M:GetFont('Adventure') and M:GetStatusBar('media:Aluminium') and M:GetBorder('media:RothSquare'))
 assert(M:GetFont('My Custom Font (Personal)'))
-for _,getter in ipairs({'GetFonts','GetTextures','GetBorders','GetStatusBars'}) do
+for _,getter in ipairs({'GetFonts','GetBorders','GetStatusBars'}) do
  for _,choice in ipairs(M[getter](M)) do assert(not choice.label:find('[()]'),'media choices contain names only') end
 end
-addon:ToggleConfig();addon:SelectConfigPage('globalSettings')
-local page=addon.configWindow.pages.globalSettings
-local button=page.mediaControls['global:texture'];button.scripts.OnClick()
 local found=false
-for _,row in ipairs(button.rows) do
- assert(not row.label:GetText():find('[()]'))
- if row.choice.id=='media:Aluminium' then row.scripts.OnClick();found=true;break end
-end
-assert(found and button.label:GetText()=='Aluminium')
+for _,choice in ipairs(M:GetStatusBars()) do if choice.key=='media:Aluminium' and choice.label=='Aluminium' then found=true end end
+assert(found and M.library:HashTable('background').Bricks,'provider bars and backgrounds join the media lists')
+addon:ToggleConfig();addon:SelectConfigPage('globalSettings')
+assert(not addon.configWindow.pages.globalSettings.mediaControls,'Settings has no Global Texture picker')
 local profile=addon.ProfileCodec.Decode(assert(addon.ProfileManager:Export(addon.ProfileManager.activeName))).profile
 assert(not profile.sharedMediaActivation,'service setup is machine/account state, not a profile option')
 testCombat=true;M:EnsureSharedMedia();assert(M.sharedMediaPending and #enables==2)
@@ -60,4 +56,4 @@ failed.execute(r'''
 assert(addon.Media.sharedMediaStatus=='Reload or check AddOns')
 local calls=#loads;addon.Media:EnsureSharedMedia();assert(#loads==calls,'no retry loop on native rejection')
 ''')
-print('PASS explicit SharedMedia/MyMedia activation, asset registrations, plain dropdown names, account state isolation, combat deferral, manual disables and load failure')
+print('PASS explicit SharedMedia/MyMedia activation, asset registrations, plain media names, no Settings media pickers, account state isolation, combat deferral, manual disables and load failure')

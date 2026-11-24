@@ -41,9 +41,7 @@ local M=addon.Media
 assert(M:GetFont('Remembered font')==[[Interface\AddOns\DisabledProvider\media\font.ttf]])
 assert(M:GetStatusBar('media:Remembered statusbar'))
 assert(M:GetBorder('media:Remembered border').kind=='shared')
-local found=false
-for _,choice in ipairs(M:GetTextures()) do if choice.key=='background:Remembered background' then found=true end end
-assert(found,'cached backgrounds join texture choices without provider execution')
+assert(M.library:HashTable('background')['Remembered background'],'cached backgrounds return without provider execution')
 ''')
 missing,_=load(state,before=SETUP+"\ninstalledProviders.DisabledProvider=false\n")
 missing.execute(r'''

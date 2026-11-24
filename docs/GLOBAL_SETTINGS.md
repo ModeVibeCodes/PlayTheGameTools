@@ -1,29 +1,56 @@
-# Global Settings
+# Settings page
 
-Forever only. `/ptg` → **Global Settings** has four tabs: **Appearance**,
-**Profiles**, **Optimizations**, and **Class Colors**. The owner confirmed the
-previous page mostly worked. The expansion described here still needs native
-confirmation; mocks do not establish rendering, security or gameplay acceptance.
+Forever only. `/ptg` → **Global Settings** is one short scrolling page with no
+section tabs: **Appearance**, **Game**, **Profile** and **About**, in that order.
+This is the approved v2 layout (design mockup "PTG Tools v2 design"). Renaming
+the sidebar entry to **Settings**, pinning it at the bottom of the sidebar and
+replacing the header **Reload** button with a reload banner belong to the
+separate settings-window change; until that lands, the entry is still labelled
+**Global Settings** and **Reload** is still in the header. Mocks do not establish
+rendering, security or gameplay acceptance; native confirmation is pending.
 
-## Appearance and shared media
+## Appearance
 
-**Interface Theme** offers **Modern**, **Blizzard**, and experimental **mode**.
-Modern remains the default. Select a theme and use header **Reload** OOC.
-[mode's design and exact test packet](MODE_INTERFACE_THEME.md) cover its neutral
-graphite/cyan Figma materials, Lato typography, header search/profile shortcut and
-expanded, collapsible text navigation; existing themes remain intact.
+**Theme** shows three preview cards side by side, **Modern**, **Blizzard** and
+**mode**, built from `addon.InterfaceThemes`. Each card draws a tiny settings
+window in that theme's own palette, edges and font: a header strip, a sidebar
+strip with a selected row, and two rows with an on switch in the theme accent.
+Modern has a square one-unit edge, Blizzard a three-line metal frame, and mode
+its rounded Figma material. Below the drawing are the name and a one-line
+caption. The theme on screen is marked **Current**; the chosen one is outlined.
+Picking a card uses the existing `SetInterfaceTheme` save and reload request, so
+a theme still applies after a reload, and picking the current theme again
+withdraws the request. Narrow pages stack the cards.
 
-**Global Font**, **Global Texture**, and **Global Border** list every available
-LibSharedMedia font, status-bar/background texture and border. LibSharedMedia,
-LibStub and CallbackHandler are now bundled, so another addon is not required.
-Bundled examples include **PTG JetBrains Mono**, **PTG Satin**, **PTG Matte**,
-and **PTG Clean**, alongside LSM's native choices and PTG panel textures.
-Installed media packs extend the same lists. Missing selections remain stored
-with safe fallbacks. Use header **Reload** after appearance changes.
-**Global Texture** applies only to module/feature displays. Configuration windows,
-pages, fields and popups keep their interface theme's original materials. A saved
-custom texture no longer replaces mode's graphite/sheen or Modern's flat surfaces;
-Blizzard popups retain native backgrounds. The selection remains saved for displays.
+**Global Font, Global Texture and Global Border were removed.** Themes are
+predefined only: the theme decides the font, surfaces and edges of the addon's
+own windows and displays. Modern and Blizzard use the stock game font and mode
+uses the bundled Lato. Module displays without a font choice of their own use the
+game font, the flat built-in surface and the thin built-in edge, which were the
+defaults. `Media:GlobalStyle` now returns those built-ins for every caller, so no
+code reads a saved global choice any more. Saved `globalMedia` values (including
+the inert `overrides` table) stay in SavedVariables and profile strings untouched;
+nothing was reset. PR #40 had already limited Global Font to the addon's own
+frames; this change removes the remaining paths that applied a saved font,
+texture or border to settings text, Edit Mode or module displays.
+
+Per-display choices on module pages (a display's own font, the XP bar texture,
+icon borders) still list every LibSharedMedia entry and still apply. Their
+**Use Global Setting** choice now means the built-in default above; renaming that
+label belongs to the module pages.
+
+**Class colors** is one row of nine class swatches. Clicking a swatch opens the
+native color picker (blocked in combat); cancelling restores the previous color.
+One **Reset** button returns all nine to native colors and is available only
+while a custom color exists. Recruitment, Guild Roster, Threat Meter and
+class-colored Dungeon Loot labels use the shared accessor after a reload. Native
+class-color tables and other addons' settings are not rewritten.
+
+## Shared media registry
+
+LibSharedMedia, LibStub and CallbackHandler remain bundled for the per-display
+media lists, so another addon is not required. Bundled examples include **PTG
+JetBrains Mono**, **PTG Satin**, **PTG Matte** and **PTG Clean**.
 
 **SharedMedia asset-pack integration:** SharedMedia is the additional-media addon;
 LibSharedMedia is the registry it uses. On first adoption, PTG enables/saves and
@@ -42,14 +69,8 @@ The [official pack description](https://www.wowace.com/projects/sharedmedia)
 confirms that its assets are registered into LibSharedMedia. SharedMedia remains
 an installed external addon, distinct from PTG's bundled registry library.
 
-Media dropdown labels now contain names only. Texture-kind, override and fallback
-parenthetical annotations are removed from lists/selected labels; stored media
-keys and fallback behavior are unchanged.
-
-The Shared Media, Loot and Errors, and Camera Distance description rows were
-removed at the owner's request. The class grid now has body insets and vertical
-padding, so its controls clear the separator. Native alignment confirmation is
-pending after `/reload`.
+Media dropdown labels contain names only; stored media keys and fallback
+behavior are unchanged.
 
 **Expressway** is also offered when an installed EllesmereUI or AyijeUI font asset
 is verified by the client, or any media pack already registers that LSM name.
@@ -105,65 +126,50 @@ can verify installation without checking/enabling/loading the provider. Actual
 font and texture rendering still requires native validation. This is not universal
 runtime discovery of every file in every disabled addon.
 
-There are no module override sections on this page. Earlier experimental
-`globalMedia.overrides` data is retained but inert. Existing module custom fonts
-and XP texture settings remain more specific; their **Use Global Setting**
-choice resumes inheritance. Choosing Game/Chat locally pins the original native
-font path.
-
-**Global Font applies to Play The Game Tools' own interface only**: settings
-windows, Edit Mode and module displays. At the owner's request it no longer
-rewrites Blizzard's standard FontObjects, so unit frames, chat, tooltips, quest
-text and the rest of the game UI keep their stock fonts, as do other addons.
-There are no global SetFont hooks or LSM:SetGlobal overrides. Font objects
-reset on reload, so earlier game-wide changes disappear after one `/reload`.
-
-Owned module panel/icon borders resolve the global setting while retaining
-color/opacity/thickness and existing hidden or zero-size choices. Textures cover
-owned module surfaces and bar fills, excluding configuration surfaces. Item/spell art, map symbols and functional
-highlights retain their meaning. The Blizzard configuration theme retains its
-button/check art and its stock dialog/tooltip window and popup edges; Global
-Border, like Global Texture, applies to module displays only.
-
 Original procedural media is generated by `tools/build_global_media.py`.
 The PTG Clean atlas follows the eight cells and cropped UVs in the pinned
 [native backdrop renderer](https://github.com/Gethe/wow-ui-source/blob/9dc84f0d3bbae1768ac3405b3716000bd93eda06/Interface/AddOns/Blizzard_SharedXML/Backdrop.lua).
 Library/font licenses and provenance are in THIRD_PARTY_NOTICES.md and LICENSES.
 
-## Account-wide profiles
+## Profile
 
-The existing ModeTools-derived profile codec, validation, reload manager and
-profile hub were already present in Forever. Their controls are now exposed in
-**Profiles**. The TOC's `PTGToolsDB` is account SavedVariables. Both the profile
-library and selected/pending profile are shared across characters, through a
-new `accountSelection` record. Initial adoption retains the current character's
-previous assignment when available; historical character assignments remain
-stored for recovery. No SavedVariables files are edited externally or reset.
+The **Active profile** row has one dropdown plus a **Manage** button. Choosing a
+profile in the dropdown uses the existing `ProfileManager:Select`: the switch
+waits for a reload and the status line says so; choosing the profile in use again
+withdraws it. **Manage** (blocked in combat) opens a menu with **New profile…**,
+**Duplicate…**, **Rename…**, **Import…**, **Export…** and **Delete profile…**.
+Each opens one small dialog over the page that calls the existing
+`Create`/`Duplicate`/`Rename`/`PrepareImport`/`Import`/`Export` functions.
+Duplicate, Rename, Export and Delete choose their profile inside the dialog.
+New starts as a copy of the profile in use, as Create New Profile did.
 
-Create copies the active setup. Profiles automatically retain module enable
-states, module settings, shared Edit Mode anchors/positions, global appearance,
-class colors and optimizations. Selection applies all modules together after
-Reload. Duplicate, rename, cancel selection, import and export reuse the existing
-hub. Forever specialization controls remain hidden. Import creates a new named
-profile without overwriting an existing name, and validates a detached candidate.
-The compatible version-1 envelope now permits globalMedia/globalOptions; older
-exports still import. Account assignments, identity, runtime history and backups
-remain excluded. Edit Mode's temporary active/dragging state is not serialized.
+**Delete** is new: `ProfileManager:Delete` removes one stored profile. It never
+removes the profile in use or one waiting to apply after a reload, and refuses a
+profile still assigned elsewhere where specialization profiles exist. Deleting the
+fallback profile moves the fallback to the profile in use. Nothing else changes.
 
-## Optimizations and API boundaries
+The profile library and selected/pending profile are shared across characters
+through `accountSelection`. Profiles retain module enable states, module settings,
+Edit Mode positions, saved media keys, class colors and game options. Import
+creates a new named profile without overwriting an existing name, and validates a
+detached candidate. Account assignments, identity, runtime history and backups
+remain excluded from exports. Forever specialization controls are not shown.
 
-- **Auto Loot** moved out of Quality of Life → Automation and operates without
-  that module's enable switch. An active old opt-in is adopted when introducing
-  global options. Otherwise first adoption captures the existing native setting.
-  Once adopted, each profile restores its explicit on/off state; toggle-off sets
-  the CVar to zero. The legacy field remains dormant for recovery.
-- **Fast Loot** uses native `LOOT_READY(autoloot)` and schedules bounded 50ms
+## Game
+
+- **Auto loot was removed.** The addon no longer writes the game's
+  `autoLootDefault` CVar at startup, on profile switches or anywhere else, and
+  leaves whatever the player set in the game's own options alone. Saved
+  `autoLoot`/`adoptAutoLoot` keys stay in profiles, unread.
+- **Fast loot** uses native `LOOT_READY(autoloot)` and schedules bounded 50ms
   slot requests for an actual auto-loot session outside combat. Generation tokens
   invalidate requests on closure, a replacement session or disable. Manual/modifier
   sessions are untouched. Native confirmations and the loot window remain; no
   confirmation acceptance, window hiding or combat-action fallback is added.
-  Native API rejection stops this helper for the session.
-- **Camera Max Zoom** always applies the selected `cameraDistanceMaxZoomFactor`
+  Native API rejection stops this helper for the session, and the page then
+  shows the **Fast loot** notice "Stopped after the client rejected it; loot
+  manually."
+- **Camera distance** always applies the selected `cameraDistanceMaxZoomFactor`
   at initialization/world entry and when changed. The slider offers 1–4 in 0.1
   steps. The pinned native Forever options expose only 1–2; Lua's CVar metadata
   does not declare engine bounds. The wider range is a candidate, not proof of a
@@ -176,16 +182,10 @@ remain excluded. Edit Mode's temporary active/dragging state is not serialized.
   but inert.
 - CVar writes verify public writable/nonsecure metadata and read back the
   accepted value; a refusal is shown instead of claiming success.
-- **Hide Error Text** unregisters only UIErrorsFrame's red-error event. It restores
+- **Hide red error text** unregisters only UIErrorsFrame's red-error event. It restores
   that event only if this helper originally found it registered. Yellow/system
   messages and error sounds retain their normal behavior. No event payload,
   resource value or secret combat value is inspected.
-
-The **Class Colors** tab displays all nine Forever classes in a responsive grid.
-Click the class name for the native color picker; **Reset** restores native color.
-Picker cancel restores the previous override. Class-colored Dungeon Loot labels,
-Recruitment, Guild Roster and Threat Meter use the shared accessor after Reload.
-Native class-color tables and other addons' saved settings are not rewritten.
 
 Research: pinned Forever [CVar declarations](https://github.com/Gethe/wow-ui-source/blob/9dc84f0d3bbae1768ac3405b3716000bd93eda06/Interface/AddOns/Blizzard_APIDocumentationGenerated/CVarDocumentation.lua),
 [screen declarations](https://github.com/Gethe/wow-ui-source/blob/9dc84f0d3bbae1768ac3405b3716000bd93eda06/Interface/AddOns/Blizzard_APIDocumentationGenerated/ScreenDocumentation.lua),
@@ -205,80 +205,74 @@ The current native loot UI also calls LootSlot, while its
 [loot declarations](https://github.com/Gethe/wow-ui-source/blob/9dc84f0d3bbae1768ac3405b3716000bd93eda06/Interface/AddOns/Blizzard_APIDocumentationGenerated/LootDocumentation.lua)
 define LOOT_READY's boolean. This does not establish native action acceptance.
 
-Interface Theme now appears below Global Border in Global Settings → Appearance,
-with the existing Modern/Blizzard choices and header Reload behavior. Dashboard
-no longer exposes its former Appearance section.
+## About
+
+**Version** (from the TOC), **Created by** Mode and Prox, **Bug reports**
+Discord NoJumperMike, and **Data sources**: the full Points of Interest Labels
+license notice, copied exactly from that module's page (which is unchanged).
 
 ## Validation and native checklist
 
-Owner accepted the completed Global Settings page and authorized PR #23 to merge
-into public main on 2026-11-09. This closes the requested appearance, SharedMedia,
-profiles and optimization development pass. The checklist below remains the
-boundary for broader provider/client/combat coverage; acceptance does not imply
-every listed scenario was separately confirmed. No release publication is included.
+Static/mock checks: `tests/global_settings.py`, `tests/shared_media.py`,
+`tests/media_discovery.py`, `tests/mode_theme.py`, `tests/smoke.py`, the full
+`tests/` suite and `tools/build_release.py`. No new files: 123 Lua chunks. None of
+this is native confirmation.
 
-All 31 standalone scripts pass, including the expanded global/discovery/SharedMedia suites. Focused
-rechecks cover the final media, scaling and layout changes. Smoke compiles/loads
-116 Lua chunks. Deterministic packaging has 199 files, including upstream licenses
-and runtime media. No new native acceptance or release is claimed.
+1. **Navigation:** `/ptg` → Global Settings → Appearance → Theme. **Action:**
+   click the **mode** card, then the **Modern** card, then **mode** again and use
+   the header **Reload** (or the reload banner once the window change lands).
+   **Required state:** out of combat. **Confirmation:** each card draws its own
+   colors and edges, the clicked card is outlined, **Current** stays on the theme
+   on screen until the reload, and after it the mode theme is applied and marked
+   Current.
+2. **Navigation:** `/ptg` → Global Settings → Appearance. **Action:** look for
+   Global Font, Global Texture and Global Border, then look at module displays.
+   **Required state:** a profile saved with a custom Global Font/Texture/Border
+   before this change, after one reload. **Confirmation:** no such pickers exist;
+   settings text uses the theme font; displays use the game font, flat surface and
+   thin edge; a module's own font choice still applies.
+3. **Navigation:** `/ptg` → Global Settings → Appearance → Class colors.
+   **Action:** click the Mage swatch and pick a color; click it again and cancel;
+   reload and look at a class-colored roster or recruiter name; then click
+   **Reset** and reload. **Required state:** out of combat (in combat the swatch
+   does nothing). **Confirmation:** the swatch shows the color, cancel keeps it,
+   the color appears after reload, and Reset returns all nine to native colors.
+4. **Navigation:** `/ptg` → Global Settings → Game → Fast loot. **Action:** turn it
+   on, loot a corpse with auto loot, repeat with the auto-loot modifier, turn it
+   off. **Required state:** out of combat, no other fast-loot addon.
+   **Confirmation:** normal auto loot is faster; modifier sessions stay manual;
+   the game's own Auto Loot option is never changed by the addon.
+5. **Navigation:** Escape → Options, the game's own Auto Loot checkbox (find it with the Options search if needed), then `/ptg` → Global
+   Settings → Game. **Action:** set the game's Auto Loot either way, reload,
+   switch profiles and reload again. **Required state:** out of combat.
+   **Confirmation:** the game's Auto Loot stays as you set it; there is no Auto
+   loot control on the page.
+6. **Navigation:** `/ptg` → Global Settings → Game → Camera distance / Hide red
+   error text. **Action:** move the slider; turn Hide red error text on, trigger a
+   red error, turn it off and repeat. **Required state:** out of combat.
+   **Confirmation:** the camera value matches what the game accepted; red text is
+   hidden then shown again; yellow messages and sounds are unchanged.
+7. **Navigation:** `/ptg` → Global Settings → Profile → Manage → New profile….
+   **Action:** enter a name and click **Create**; choose it in the **Active
+   profile** dropdown; reload; log into another character. **Required state:** out
+   of combat. **Confirmation:** the status line says the switch waits for a
+   reload; after it the new profile, settings and positions are active on both
+   characters.
+8. **Navigation:** `/ptg` → Global Settings → Profile → Manage → Export…, then
+   Manage → Import…. **Action:** copy the string with Ctrl+A, Ctrl+C, click
+   **Close**, open Import…, paste, enter a name and click **Import**. **Required
+   state:** out of combat. **Confirmation:** the imported profile appears in the
+   dropdown; an existing name or an invalid string is refused without overwriting.
+9. **Navigation:** `/ptg` → Global Settings → Profile → Manage → Duplicate… /
+   Rename… / Delete profile…. **Action:** duplicate a profile, rename the copy,
+   then delete it; also try deleting the profile in use. **Required state:** out
+   of combat. **Confirmation:** each dialog acts on the profile chosen in it; the
+   profile in use (or one waiting for a reload) is refused with a message.
+10. **Navigation:** `/ptg` → Global Settings → About. **Action:** read the rows.
+    **Required state:** none. **Confirmation:** Version matches the installed
+    version; Created by Mode and Prox; Bug reports Discord NoJumperMike; Data
+    sources matches the Points of Interest Labels page notice word for word.
 
-1. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global
-   Font / Global Texture / Global Border. **Action:** choose PTG JetBrains Mono,
-   PTG Satin and PTG Clean, then use header Reload. **Required state:** OOC;
-   restart once if the running client has not discovered the new files/font.
-   **Confirmation:** choices persist; addon and standard game UI fonts change,
-   eligible module surfaces/edges inherit, configuration backgrounds keep their
-   theme material, and custom module font choices remain pinned.
-2. **Navigation:** Play The Game Tools → Global Settings → Profiles → Create New
-   Profile → Create. **Action:** save a named setup after changing module enable
-   states and Edit Mode positions; select that name in the profile dropdown
-   (initially Default), Reload, and log into another character. **Required state:**
-   OOC for selection/reload, same account/client. **Confirmation:** same selected
-   profile, settings and positions; earlier profiles remain available.
-3. **Navigation:** Play The Game Tools → Global Settings → Profiles → Import /
-   Export → Export / Import. **Action:** copy the selected profile string, import
-   with a new Profile Name, and select/reload it. **Required state:** OOC.
-   **Confirmation:** modules, positions, media/colors/options round-trip; duplicate
-   names and invalid strings do not overwrite existing profiles.
-4. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Auto
-   Loot / Fast Loot. **Action:** enable both, loot a corpse, repeat with the native
-   auto-loot modifier, and disable Fast Loot. **Required state:** OOC, no other fast
-   loot helper enabled. **Confirmation:** normal auto-loot accelerates; modifier
-   sessions stay manual; confirmations/full bags retain native handling, and
-   disabling restores stock timing without delayed requests on a later corpse.
-5. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Camera
-   Max Zoom. **Action:** adjust the slider, then change Blizzard's own UI Scale
-   option and reload. **Required state:** OOC. **Confirmation:** accepted camera
-   value/status matches the game; Blizzard's UI Scale choice is kept after reload
-   and is not overridden; no combat writes/errors.
-6. **Navigation:** Play The Game Tools → Global Settings → Optimizations → Hide
-   Error Text. **Action:** enable, trigger an insufficient-resource error, disable
-   and repeat. **Required state:** configure OOC. **Confirmation:** red text is
-   suppressed/restored; information messages and error sounds retain behavior.
-7. **Navigation:** Play The Game Tools → Global Settings → Class Colors → Mage /
-   Reset. **Action:** pick a color, separately cancel a second edit, Reload and
-   inspect class-colored module text; then Reset and Reload. **Required state:**
-   OOC, applicable module enabled. **Confirmation:** selected color propagates,
-   cancel preserves it, and Reset restores native color.
-
-The existing desktop Forever junction remains unchanged. The requested local
-checkout update reads the feature branch on reload; new TOC/library/font discovery
-can require one full client restart. No Retail sync, release or merge is implied.
-
-8. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global
-   Font / Global Texture / Global Border. **Action:** with AyijeUI already installed
-   and disabled, choose AyijeUI: Expressway, AyijeUI: focus, and
-   AyijeUI: Ayije_Thin; Reload. **Required state:** OOC; restart once for new catalog
-   files if necessary. **Confirmation:** the provider stays disabled, the choices
-   render and persist, and no provider functionality starts. For uncataloged media,
-   first let its provider register normally, then disable it and reload separately;
-   the remembered choices should remain available while its files remain installed.
-
-9. **Navigation:** Play The Game Tools → Global Settings → Appearance → Global Font / Global Texture / Global Border. **Action:** Reload with the
-   SharedMedia pack installed and choose Adventure / Aluminium /
-   RothSquare; inspect custom MyMedia entries if installed. **Required state:**
-   OOC; restart once if SharedMedia was installed while the client was running.
-   **Confirmation:** the actual pack is enabled/loaded, its registered choices
-   render, menu labels have no parenthetical annotations, and unrelated addon
-   enabled states are unchanged. A later deliberate SharedMedia disable must
-   remain respected on the next reload.
+Media-pack checks still apply to per-display font, texture and border choices on
+module pages: with SharedMedia or a cataloged disabled provider installed, those
+lists show the pack's entries without enabling unrelated addons.
