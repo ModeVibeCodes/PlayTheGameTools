@@ -219,8 +219,8 @@ Labels adds new TOC files: restart the client once. Data, coverage and limits:
 | L3 Undercity gaps | World map on Undercity (Horde, or **Other Faction** ticked) | Set **Profession Trainers** to **All**, then find **Alchemy**; set **Class Trainers** to **All**, then find **Warlock Trainer** | Out of combat | **Alchemy** labels near 47, 75 and 51, 75; **Warlock Trainer** near 87, 16 in the Rogues' Quarter, whose tooltip reads **Classic position: may differ where Forever moved an NPC.** and **Location: CMaNGOS classic-db (GPL-3.0)** |
 | L4 Tooltip | World map on your capital | Hover the **Bank** icon | L1 done | Tooltip lists the bankers and **Guild Vault**, then **Approximate: where players stood to use it.** and **Locations: Efficient Games (CC BY 4.0)** |
 | L5 Clicks pass through | World map zoomed into your capital | Left-click an icon, then right-click it | L1 done | The map zooms in and out as if the icon were not there |
-| L6 Trainer modes and filters | `/ptg` → Quality of Life → Map Labels | Set **Class Trainers** and **Profession Trainers** to **All**, then **Off**, then back to **Mine**; under **Labels** tick **Mailboxes**; under **Filters** tick **Other Faction**; reopen the map each time | Out of combat | **All** adds every class's and profession's trainers, **Off** removes them, **Mine** restores yours; mailbox icons without names and the other faction's labels appear while ticked |
-| L7 Appearance | `/ptg` → Quality of Life → Map Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Icon Size** to 24 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Filters** | Out of combat | Icons and names are larger; with **Show Names** off only icons remain |
+| L6 Trainer modes and filters | `/ptg` → Quality of Life → Map Labels | Set **Class Trainers** and **Profession Trainers** to **All**, then **Off**, then back to **Mine**; under **Services** click the **Mailboxes** and **Other Faction** chips; reopen the map each time | Out of combat | **All** adds every class's and profession's trainers, **Off** removes them, **Mine** restores yours; mailbox icons without names and the other faction's labels appear while ticked |
+| L7 Appearance | `/ptg` → Quality of Life → Map Labels → **Appearance** (in the mode theme, the **Appearance** tab) | Drag **Icon Size** to 24 and **Name Size** to 14, reopen the map; then untick **Show Names** under **Appearance** | Out of combat | Icons and names are larger; with **Show Names** off only icons remain |
 | L8 Turn off and combat start | `/ptg` → Quality of Life → Map Labels; later a fresh login | Click the switch at the top right of the page and open the map; switch it back on, log in again, enter combat before first opening the map, and open it after combat | Combat, then out of combat | Switch reads **Disabled** and no Map Labels icons show; after re-enabling, labels appear once combat has ended; no Lua error |
 
 ## F. Reporting and release gate
@@ -316,12 +316,32 @@ exact regression paths remain in docs/DUNGEON_LOOT.md. This does not establish
 every catalog fact or server availability.
 Screenshots: pending.
 
-## Gameplay Enhancements / Campfire Monitor
+## Campfire Monitor and Loot Sparkles (v2 split)
 
-Use the exact Navigation/Action/Required state/Confirmation checklist in
-[Campfire Monitor](docs/CAMPFIRE_MONITOR.md#static-validation-and-native-checklist).
-Loot Sparkles has scoped positive owner feedback; the new two-tab layout and
-campfire monitor require native review. Campfire benefits are earned player buffs,
+Run `python tests/gameplay_split.py`, `python tests/campfire_monitor.py`,
+`python tests/loot_sparkles.py`, `python tests/city_labels.py` and
+`python tests/global_settings.py`. These are mock checks. A new TOC file
+(`Config/Chips.lua`) was added: restart the client once, then use `/reload` OOC.
+Do S1 first on your existing settings, before changing any switch.
+
+| Check | Navigation | Action | Required state | Confirmation |
+| --- | --- | --- | --- | --- |
+| S1 Switches carried over | `/ptg` → sidebar **Campfire Monitor**, then **Loot Sparkles** | Read each page header switch and sidebar dot | First login after updating; note beforehand whether Gameplay Enhancements, Enable Loot Sparkles and Enable Campfire Monitor were on | Two separate rows, no **Gameplay Enhancements** row. Loot Sparkles is on only if Gameplay Enhancements and Enable Loot Sparkles both were; Campfire Monitor is on only if Gameplay Enhancements and Enable Campfire Monitor both were. Campfire sizes, colors and contribution settings are as before |
+| S2 No inner switches | `/ptg` → **Campfire Monitor** (pill **General**); `/ptg` → **Loot Sparkles** | Read the options | Out of combat | Campfire General shows **Show In Combat**, **Preview** and **Refresh Status** but no **Enable Campfire Monitor**; Loot Sparkles has no **Enable Loot Sparkles** |
+| S3 Independent switches | `/ptg` → **Campfire Monitor**, then **Loot Sparkles** | Turn Campfire Monitor on and Loot Sparkles off with each page header switch; stand near a campfire | Out of combat, near a campfire | The Campfire display shows; no sparkles appear over ore, herbs or corpses |
+| S4 Loot Sparkles restores game settings | `/ptg` → **Loot Sparkles** | Turn the page header switch on, then off; type `/console SoftTargetInteract` before and after | Out of combat | While on, sparkles mark nearby targets; after off, the value is what it was before you turned Loot Sparkles on |
+| S5 Sparkle On chips | `/ptg` → **Loot Sparkles** → **Sparkle On** | Click **Ore Veins** off, look at an ore vein, click it on again | Loot Sparkles on, out of combat, near ore | The chips wrap on one or more lines; **Ore Veins** shows unselected and no sparkle appears on ore; selected again, the sparkle returns |
+| S6 Positions and styles kept | **Layout** button in the window header | Look at **Campfire Monitor**, **Camp Buffs** (if separate) and **Camp Contributions**; click one and read its Style card | Campfire Monitor on, out of combat | Each display sits where it was before the update with the same Scale, Opacity, Text size and Background; **Settings** on the card opens the Campfire Monitor page |
+| S7 Old search terms | `/ptg` → **Search** | Type `gameplay enhancements`, then `campfire`, then `camp contributions` | Out of combat | The first lists both Campfire Monitor and Loot Sparkles; the other two open Campfire Monitor first |
+| S8 Map Labels chips | `/ptg` → **Map Labels** → **Services** | Click **Mailboxes** and **Other Faction**, open the world map; click them again | Map Labels on, out of combat | Both chips show selected; mailbox icons and the other faction's labels appear, then disappear when unselected |
+| S9 Map Labels source line | `/ptg` → **Map Labels** (Options panel) | Read the source line; click **Full notice in About** | Out of combat | One line reads "Locations: Efficient Games (CC BY 4.0), with CMaNGOS classic-db (GPL-3.0) where none is recorded yet."; the button opens **Settings**, scrolls to About and briefly highlights **Data sources**, which shows the full notice |
+
+For the detailed Campfire checklist see
+[Campfire Monitor](docs/CAMPFIRE_MONITOR.md#static-validation-and-native-checklist);
+since the v2 split its page is sidebar **Campfire Monitor**, not a second tab of
+Gameplay Enhancements, and its switch is the page header switch.
+Loot Sparkles has scoped positive owner feedback; Campfire Monitor requires
+native review. Campfire benefits are earned player buffs,
 not a detected inventory of objects at a nearby camp. Screenshots: pending.
 
 Dungeon Loot shortcut revision: run dungeon_loot_shortcut.py for binding payload

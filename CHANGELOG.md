@@ -4,6 +4,16 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
 
 ## Unreleased
 
+- Gameplay Enhancements is now two modules with their own switches: Campfire
+  Monitor and Loot Sparkles. Each starts on only if Gameplay Enhancements and
+  its own Enable switch were both on. The Enable Loot Sparkles and Enable
+  Campfire Monitor switches are gone; the page switch is the switch. Campfire
+  settings, positions and styles carry over, and searching "gameplay
+  enhancements", "campfire" or "camp contributions" finds the right page.
+- Map Labels' services and Loot Sparkles' "Sparkle On" targets are now a row of
+  chips you click on and off. The Map Labels page shows one source line with a
+  **Full notice in About** button; the full notice is unchanged in Settings →
+  About.
 - Threat Meter: your row's marker now sits in its own gap left of your bar, so
   it no longer blends into your class color. When you are close to pulling
   aggro the marker turns red (it was amber, which matched the Blizzard theme's

@@ -4,6 +4,14 @@ Record PASS / FAIL / NOT TESTED for each item, with version, client build, class
 and level. These instructions do not claim native acceptance. Do one chunk at a
 time; start with A. Stop and report startup/errors/settings loss before continuing.
 
+## v2: Campfire Monitor and Loot Sparkles
+
+Gameplay Enhancements is now two sidebar entries, **Campfire Monitor** and
+**Loot Sparkles**, each with its own page header switch; Map Labels' services
+and Loot Sparkles' targets are chips. Use checks S1–S9 in the repository's
+TESTING.md ("Campfire Monitor and Loot Sparkles (v2 split)"). Do S1 first on
+your existing settings. A new file was added: restart the client once.
+
 ## A. Package and first startup
 
 Use the attached `PlayTheGameTools-0.2.0-beta.1-forever.zip`, not GitHub's source archive.

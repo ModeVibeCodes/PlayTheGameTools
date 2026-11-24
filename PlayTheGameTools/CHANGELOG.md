@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Gameplay Enhancements is now two modules with their own switches: Campfire
+  Monitor and Loot Sparkles. Each starts on only if Gameplay Enhancements and
+  its own Enable switch were both on. The Enable Loot Sparkles and Enable
+  Campfire Monitor switches are gone; the page switch is the switch. Campfire
+  settings, positions and styles carry over, and searching "gameplay
+  enhancements", "campfire" or "camp contributions" finds the right page.
+- Map Labels' services and Loot Sparkles' "Sparkle On" targets are now a row of
+  chips you click on and off. The Map Labels page shows one source line with a
+  **Full notice in About** button; the full notice is unchanged in Settings →
+  About.
 - Layout replaces Preview and Edit Mode. Every enabled display shows its sample
   data with its name, and can be dragged. The bar along the top reads Layout,
   "Click a display to style it", Drag to move, a Grid switch and Done. Grid
