@@ -13,6 +13,8 @@
   row). While a module is on, its icon is in the ring; turning the module off
   takes it out. Icon size, opacity and the popout options stay. Old saved
   switch values are left in your profile but no longer read.
+- Combat Timer: the Timer format choice is gone. The timer always reads plain
+  MM:SS (for example 00:42); a saved [MM:SS] or (MM:SS) choice is ignored.
 - Removed Global UI Scale from Global Settings → Optimizations. The addon no
   longer changes or resets the game's UI scale; Blizzard's own UI Scale option
   in the game's Graphics settings is in charge again.

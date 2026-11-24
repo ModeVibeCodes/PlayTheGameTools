@@ -31,9 +31,7 @@ end
 function timer:SetAppearance(key, value)
     local layout = key == "font" or key == "fontMedia" or key == "fontSize" or key == "outline" or key == "scale"
     if layout and not self:CanConfigure() then return false end
-    if key == "format" then
-        if value ~= "plain" and value ~= "square" and value ~= "round" then return false end
-    elseif key == "font" then
+    if key == "font" then
         if value ~= "game" and value ~= "chat" then return false end
         self.db.appearance.fontMedia = ""
     elseif key == "fontMedia" then
@@ -154,7 +152,7 @@ function timer:UpdateText()
     local seconds = self.running and math.floor(math.max(0, GetTime() - self.startedAt)) or ((self.preview or self.editing) and 83 or 0)
     if (self.preview or self.editing or self.testing) and not self.running then seconds=addon.PreviewStates:Sample(self.id) or seconds end
     if seconds ~= self.lastSecond then
-        self.text:SetText(addon.CombatTimerDisplay.Format(seconds, self.db.appearance.format))
+        self.text:SetText(addon.CombatTimerDisplay.Format(seconds))
         self.lastSecond = seconds
     end
 end

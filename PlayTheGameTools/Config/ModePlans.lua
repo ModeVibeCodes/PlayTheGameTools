@@ -17,7 +17,7 @@ W.ModeLayoutPlans={
         local section=row.section and row.section.title
         local label=Label(row)
         if textLabels[label] then return "timer","text" end
-        if section=="Display" and label~="Timer format" then return "timer","appearance" end
+        if section=="Display" then return "timer","appearance" end
         return "timer","options"
     end},
     foreverAutomation={features={{"Quests","Quests"},{"Merchant","Merchant"},{"Dialogue","Dialogue"}},route=function(row)

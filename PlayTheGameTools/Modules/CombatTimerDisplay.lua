@@ -3,11 +3,10 @@ local D = {}
 addon.CombatTimerDisplay = D
 
 -- Presentation only: no clock, events, enable state or position persistence.
-function D.Format(seconds, format)
-    local value = string.format("%02d:%02d", math.floor(seconds / 60), seconds % 60)
-    if format == "square" then return "[" .. value .. "]" end
-    if format == "round" then return "(" .. value .. ")" end
-    return value
+-- Always plain MM:SS. An older saved appearance.format (square/round brackets)
+-- may remain in profiles; it is no longer read.
+function D.Format(seconds)
+    return string.format("%02d:%02d", math.floor(seconds / 60), seconds % 60)
 end
 
 function D.Apply(view, appearance, layout)
