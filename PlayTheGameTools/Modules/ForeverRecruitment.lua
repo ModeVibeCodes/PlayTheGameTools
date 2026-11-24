@@ -97,18 +97,20 @@ end
 
 -- One-time, non-destructive adoption of the retired Roster module's switch:
 -- Guild is on if either old module was on. The old table is only read; the
--- marker lives in this table so turning Guild off later sticks.
-function M:AdoptRoster(modules)
-    if self.db.rosterAdopted then return end
-    local legacy=type(modules)=="table" and modules[addon.ForeverGuildRoster.LEGACY_ID]
-    if type(legacy)=="table" and legacy.enabled==true then self.db.enabled=true end
-    self.db.rosterAdopted=true
+-- marker lives in this table so turning Guild off later sticks. Pure: profile
+-- validation also runs it on detached copies, so a profile exported before it
+-- was ever loaded still carries the adopted switch.
+function M.AdoptRoster(db,modules)
+    if db.rosterAdopted then return end
+    local legacy=type(modules)=="table" and modules["foreverGuildRoster"]
+    if type(legacy)=="table" and legacy.enabled==true then db.enabled=true end
+    db.rosterAdopted=true
 end
 
 function M:OnInitialize()
     self.Initialize(self.db)
     -- Runs before the module's saved switch is applied, so an adopted "on" takes effect now.
-    self:AdoptRoster(addon.db and addon.db.modules)
+    self.AdoptRoster(self.db,addon.db and addon.db.modules)
     addon.ForeverGuildRoster:Initialize()
     -- Earlier "Mark Contacted" entries become invites made now, so they return
     -- after the re-invite window instead of staying hidden permanently.

@@ -82,7 +82,12 @@ lua.execute(r'''
     assert(ok,reason)
     local profile=P.root.profiles[name]
     assert(profile.modules.foreverGuildRoster.enabled==true and profile.modules.foreverRecruitment.minLevel==15,'both old tables kept')
-    assert(profile.modules.foreverRecruitment.rosterAdopted==nil,'adopted when that profile is next loaded')
+    assert(profile.modules.foreverRecruitment.rosterAdopted==true and profile.modules.foreverRecruitment.enabled==true,'adopted during import validation')
+    -- A stored profile never loaded since the update still exports Guild on.
+    P.root.profiles['Never Loaded']={schemaVersion=1,modules={foreverGuildRoster={enabled=true},foreverRecruitment={enabled=false}}}
+    local unloaded=C.Decode(P:Export('Never Loaded')).profile.modules
+    assert(unloaded.foreverRecruitment.enabled==true and unloaded.foreverRecruitment.rosterAdopted==true,'export adopts the old Roster switch')
+    assert(P.root.profiles['Never Loaded'].modules.foreverGuildRoster.enabled==true,'export leaves the stored profile alone')
     local bad=C.Encode({version=1,name='Bad',profile={schemaVersion=1,modules={noSuchModule={enabled=true}}}})
     assert(not P:Import(bad),'unknown module IDs are still refused')
     local text=P:Export(P.activeName)
