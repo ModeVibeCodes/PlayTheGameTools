@@ -17,10 +17,15 @@ moves, through the shared Edit Mode, where it is listed as **Quick Actions**.
   anchors to the main button and lights the main button while open. Guild
   opens or closes the Guild window (Roster and Recruit tabs), which keeps its own
   placement and lights the main button while open. Each learned profession
-  (Profession & Food Bars on) gets its own icon after those three; clicking it
-  opens that profession through the same path as the profession bar. A
-  profession turned off on the Profession & Food Bars page is left out of the
-  ring as well.
+  with a window to open (Profession & Food Bars on) gets its own icon after
+  those three. Opening a profession casts its spell, which the game protects,
+  so these icons (and the profession bar's) are Blizzard's unprotected
+  InsecureActionButtonTemplate armed outside combat with
+  `/stopmacro [combat]` + `/cast <spell>`. The spell is the first non-passive
+  spellbook entry in the profession's range (`GetProfessionInfo` offset), so
+  passive-only gathering skills get no icon. A profession turned off on the
+  Profession & Food Bars page is left out of the ring as well. `AddAction`
+  takes `secure=true` for such icons; the owner sets the attributes.
 - Icons are spaced evenly clockwise from the top. Larger icons or longer lists
   widen the ring, and the main button's screen clamp grows so no icon opens
   off-screen.

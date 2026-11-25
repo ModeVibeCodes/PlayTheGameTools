@@ -49,6 +49,25 @@ function D.Initialize(db,styleOnly)
     if not styleOnly and addon.ForeverFoodBar then addon.ForeverFoodBar.Initialize(db) end
 end
 
+-- The spell that opens a profession: the first castable (non-passive) spell in
+-- its spellbook range, the slot Blizzard's own profession book uses for its
+-- first button. Gathering skills with only passive spells return nil.
+function D.ProfessionSpell(offset,count)
+    if not D.Number(offset,0,4096) or offset%1~=0 or not D.Number(count,0,64) or count%1~=0 then return nil end
+    local book=C_SpellBook
+    local banks=type(Enum)=="table" and Enum.SpellBookSpellBank
+    local bank=type(banks)=="table" and banks.Player
+    if type(book)~="table" or type(book.GetSpellBookItemInfo)~="function" or bank==nil then return nil end
+    for slot=offset+1,offset+count do
+        local ok,info=pcall(book.GetSpellBookItemInfo,slot,bank)
+        if ok and type(info)=="table" and info.isPassive==false and D.Public(info.name) and type(info.name)=="string"
+            and info.name~="" and not info.name:find("[\r\n;]") and D.Number(info.spellID,1,2147483647) then
+            return info.name,info.spellID
+        end
+    end
+    return nil
+end
+
 -- Five explicit slots: a nil first profession must not truncate secondary skills.
 -- Native Camelot slots are primary1, primary2, First Aid, Fishing, Cooking.
 function D.ReadProfessions()
@@ -74,7 +93,8 @@ function D.ReadProfessions()
             end
             if not seen[id] then
                 seen[id]=true
-                result[#result+1]={id=id,name=name,icon=icon,
+                local spell,spellID=D.ProfessionSpell(offset,count)
+                result[#result+1]={id=id,name=name,icon=icon,spell=spell,spellID=spellID,
                     rank=D.Number(rank,0,10000) and rank or nil,maxRank=D.Number(maxRank,0,10000) and maxRank or nil}
             end
         end

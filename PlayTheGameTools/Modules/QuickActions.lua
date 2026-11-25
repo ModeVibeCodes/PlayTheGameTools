@@ -48,7 +48,9 @@ local function SetRingColor(b,color)
     for _,dot in ipairs(b.ring) do dot:SetColorTexture(color[1],color[2],color[3],1) end
 end
 local function CreateRoundButton(parent,spec)
-    local b=CreateFrame("Button",nil,parent)
+    -- spec.secure: Blizzard's unprotected action template, so a hardware click can
+    -- run the action its owner sets in attributes (a spell cast the game protects).
+    local b=CreateFrame("Button",nil,parent,spec.secure and "InsecureActionButtonTemplate" or nil)
     b:SetFrameStrata("MEDIUM");b:EnableMouse(true);b:RegisterForClicks("LeftButtonUp")
     -- The backing keeps the dial's ring from showing through transparent icon art.
     b.backing=CreateDisc(b,"BACKGROUND",0,.05,.06,.08,1)
@@ -156,7 +158,16 @@ function Q:AddAction(id,spec)
     if self.actions[id] then return self.actions[id].button end
     if not self:EnsureLauncher() then return nil end
     local b=CreateRoundButton(self.ring,spec)
-    b:SetScript("OnClick",function() self:CloseRing();spec.onClick() end)
+    if spec.secure then
+        -- The template's own OnClick runs the action; never replace it. The ring
+        -- closes after the click instead. Unusable templates are refused.
+        if b:IsProtected()~=false or type(b:GetScript("OnClick"))~="function" then b:Hide();return nil end
+        -- Act on the button's release, whatever the action-bar key-down setting.
+        b:SetAttribute("useOnKeyDown",false)
+        b:SetScript("PostClick",function() self:CloseRing() end)
+    else
+        b:SetScript("OnClick",function() self:CloseRing();spec.onClick() end)
+    end
     b:Hide()
     self.actions[id]={id=id,order=spec.order,button=b,available=false}
     self:Sync()
