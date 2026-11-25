@@ -41,6 +41,10 @@ function Pin:OnReleased()
 end
 function Pin:OnCanvasSizeChanged() self:ApplyCurrentPosition() end
 function Pin:ShouldMouseButtonBePassthrough() return false end
+-- Blizzard's AcquirePin calls this, and the base calls SetPassThroughButtons,
+-- which the game blocks in combat. This pin passes no button through (above),
+-- the state every frame of our own pool starts in, so skip the restricted call.
+function Pin:CheckMouseButtonPassthrough() end
 function Pin:OnMouseClickAction(button)
     if button=="RightButton" and self.owner then self.owner:Dismiss() end
 end

@@ -46,6 +46,8 @@ lua.execute('''
         SetPosition=function(self,x,y) self.normalizedX,self.normalizedY=x,y;self.owningMap:SetPinPosition(self,x,y) end,
         ApplyCurrentPosition=function(self) self.owningMap:SetPinPosition(self,self.normalizedX,self.normalizedY) end,
         ApplyCurrentScale=function(self) self:SetScale(1/(self.owningMap.canvasScale or 1));self:ApplyCurrentPosition() end,
+        -- Native base calls SetPassThroughButtons, which the game blocks in combat.
+        CheckMouseButtonPassthrough=function() assert(not testCombat,'blocked: SetPassThroughButtons in combat') end,
     }
     local freePins,activePins={},{}
     local acquisitions=0
@@ -64,6 +66,7 @@ lua.execute('''
         end
         assert(not activePins[pin]);activePins[pin]=true;acquisitions=acquisitions+1
         pin.owningMap=self;pin:Show();pin:OnAcquired(...)
+        pin:CheckMouseButtonPassthrough('RightButton')
         assert(not pin:ShouldMouseButtonBePassthrough('RightButton'))
         return pin
     end

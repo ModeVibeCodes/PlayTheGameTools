@@ -8,7 +8,7 @@ function M:Release()
     self.overlay:ClearAllPoints(); self.overlay:SetParent(UIParent)
     self.anchor=nil
 end
-function M:ShowTarget(plate,name,state)
+function M:ShowTarget(plate,name,state,blocked)
     if not self.overlay then
         local f=CreateFrame("Frame",nil,UIParent); self.overlay=f
         f:SetSize(1,1); f:EnableMouse(false)
@@ -30,7 +30,7 @@ function M:ShowTarget(plate,name,state)
     end
     self.state=state
     local r,g,b=1,0.82,0.3
-    if state=="Unavailable" then r,g,b=0.6,0.6,0.6 end
+    if blocked then r,g,b=0.6,0.6,0.6 end
     self.tint={r,g,b}
     f.label:SetFont(addon.Media:GetInterfaceFont(nil,"lootSparkles"),db.fontSize,"OUTLINE")
     f.label:SetTextColor(r,g,b)

@@ -12,6 +12,12 @@
 - Profession bar and ring icons now open professions through Blizzard's action
   button (a `/cast` of the profession's spell) instead of a direct call the
   game blocked with "Blocked by the game: UNKNOWN()".
+- Opening or changing the world map in combat no longer shows "Blocked by the
+  game: Frame:SetPassThroughButtons()". Map Labels and Dungeon Loot map pins
+  skip that combat-restricted call; they never pass clicks through anyway.
+- Loot Sparkles labels a node you can't gather yet (no profession or skill too
+  low) **Can't gather**, and a quest object you can't use yet **Can't use**,
+  instead of "Unavailable". Distance still reads In reach / Out of reach.
 - v2 styles displays only in **Layout**. Each display's old font, color and
   size settings (Combat Timer, Profession & Food Bars, Experience Bar, Rogue
   Tools reminder and Quick Access, Campfire icon, Camp Buffs and Camp

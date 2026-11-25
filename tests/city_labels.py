@@ -134,13 +134,16 @@ lua.execute('''
         SetScalingLimits=function(self,...) self.scalingLimits={...} end,
         UseFrameLevelType=function(self,v) self.frameLevelType=v end,
         SetPosition=function(self,x,y) self.normalizedX,self.normalizedY=x,y end,
-        ApplyCurrentScale=function(self) self.scaled=true end}
+        ApplyCurrentScale=function(self) self.scaled=true end,
+        -- Native base calls SetPassThroughButtons, which the game blocks in combat.
+        CheckMouseButtonPassthrough=function() assert(not testCombat,'blocked: SetPassThroughButtons in combat') end}
     local active,acquired={},0
     function map:AcquirePin(template,...)
         assert(template=='PlayTheGameToolsCityLabelsMapPinTemplate')
         local pin=CreateFrame('Frame',nil,canvas)
         for k,v in pairs(PlayTheGameToolsCityLabelsMapPinMixin) do pin[k]=v end
         pin.pinTemplate=template;pin:OnLoad();pin:Show();pin:OnAcquired(...)
+        pin:CheckMouseButtonPassthrough('RightButton')
         active[pin]=true;acquired=acquired+1
         return pin
     end
@@ -195,6 +198,9 @@ lua.execute('''
     M:SetOption('classTrainerMode','mine')
     map:SetMapID(424242);assert(Count()==0,'unlabeled map clears our pins')
     map:SetMapID(999999);assert(Count()==5)
+    -- Opening or changing the map in combat redraws without restricted calls.
+    testCombat=true;map:SetMapID(424242);map:SetMapID(999999)
+    assert(Count()==5 and Map.lastError==nil,'combat redraw: '..tostring(Map.lastError));testCombat=false
 
     -- Disabling clears pins and later refreshes draw nothing; re-enable redraws.
     Find('Bank'):OnMouseEnter();assert(GameTooltip.shown)
