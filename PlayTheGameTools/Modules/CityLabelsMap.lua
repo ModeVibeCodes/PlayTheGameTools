@@ -83,6 +83,11 @@ function Pin:OnReleased()
     MapCanvasPinMixin.OnReleased(self)
     self.entry=nil
 end
+-- Blizzard's AcquirePin calls this, and the base calls SetPassThroughButtons,
+-- which the game blocks in combat ("Blocked by the game" when the map
+-- refreshes mid-fight). These pins take no clicks at all (OnLoad), so there
+-- is nothing to pass through: never touch the restricted setting.
+function Pin:CheckMouseButtonPassthrough() end
 function Pin:OnMouseEnter()
     local entry=self.entry
     if not entry or not GameTooltip then return end
