@@ -578,6 +578,12 @@ python tests/edit_mode.py
 python tools/build_release.py
 ```
 
+`lupa` publishes wheels only for released Python versions it supports; on a newer
+interpreter without a wheel (Python 3.15 at the time of writing) the install
+tries to compile and fails. Install a supported Python alongside it and run the
+tests with that one, for example `py install 3.13`, `py -V:3.13 -m pip install lupa`,
+then `py -V:3.13 tests/smoke.py`.
+
 The standalone builder reads the actual TOC and runtime media, verifies Forever
 identity and dependency paths, excludes developer files/settings, and creates a
 deterministic installable ZIP and SHA-256 checksum under ignored `dist/`.
@@ -641,11 +647,11 @@ focused checks and native review steps. The owner accepted SFK and authorized
 all-dungeon expansion on 2026-11-07. The owner authorized merging PR #6 on 2026-11-07. Standalone native review
 and screenshots remain pending; this authorization does not publish a release.
 
-For this machine the owner verified an existing Forever AddOns junction to this
-checkout's PlayTheGameTools directory. Source edits and branch switches affect the next
-client load. Preserve that junction; do not apply the older copy-sync workflow.
-This owner-directed arrangement supersedes the general separate-install advice
-above for this machine only. Never change SavedVariables.
+On the owner's machine the Forever `AddOns/PlayTheGameTools` folder is a
+directory junction to a checkout's `PlayTheGameTools` directory, so source edits
+load on the next `/reload`; see "Local /reload testing" below. This
+owner-directed arrangement supersedes the general separate-install advice above
+for that machine only. Never change SavedVariables.
 
 ## Loot Sparkles feature branch
 
@@ -655,16 +661,32 @@ Run `python tests/loot_sparkles.py` alongside the smoke suite and builder.
 Native validation/screenshots are pending. No live branch switch, sync or release
 is part of creating this PR. Existing main-checkout junctions remain untouched.
 
-### Local reload workflow
+### Local /reload testing
 
-The desktop Forever AddOns/PlayTheGameTools junction loads the standalone
-checkout at A:/WoW-Development/PlayTheGameTools/PlayTheGameTools. A PR created
-in another worktree does not update that live source. For explicitly requested
-local testing, validate the feature, preserve dirty work, and switch the clean
-live-linked checkout to the feature branch. Keep the existing junction and
-SavedVariables intact. Subsequent runtime edits in that checkout are read on
-/reload; adding newly discovered files may require one full client restart if
-the running client does not discover the updated TOC/file inventory.
+Every change goes through a pull request, and a PR is merged to `main` only
+after the owner has tested it in the local client. To test a branch:
+
+1. In the checkout or worktree that holds the branch, run the checks
+   (`python tests/smoke.py`, the focused tests, `python tools/build_release.py`).
+2. Run `python tools/dev_link.py link` from that checkout. It points the Forever
+   `Interface/AddOns/PlayTheGameTools` junction at this checkout's
+   `PlayTheGameTools` folder and prints the previous target with an undo
+   command. `python tools/dev_link.py status` shows the current target, its
+   branch, commit and uncommitted paths. It finds `_forever_` under
+   `World of Warcraft` on each drive, or use `--addons` / `PTG_FOREVER_ADDONS`.
+3. In game, `/reload` out of combat. The tool says when the TOC differs from the
+   one the running client loaded: then exit the game fully and start it again,
+   because a `/reload` does not pick up new or reordered TOC files.
+4. Edits in that checkout now load on every `/reload`. After the PR merges,
+   update the main checkout (`git pull`) and run `python tools/dev_link.py link`
+   from it, so the game keeps loading a checkout that will not be deleted.
+
+The tool only replaces the link. It refuses to touch a real (copied) addon
+folder, never copies files and never touches WTF/SavedVariables, which stay
+the same whichever checkout is linked. If a linked worktree is removed, the
+addon disappears in game until you link another checkout. Earlier work in
+`A:/WoW-Development/PlayTheGameTools` (uncommitted, on a local branch) is kept
+as it was; link it again with `--source` to load it.
 
 Loot Sparkles local testing uses codex/forever-loot-sparkles, including the
 accepted main changes through b8a411b. Disable ForeverLootSparkles/Lueur in the

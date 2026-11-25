@@ -14,7 +14,8 @@ changes do not automatically synchronize with another repository or a live game.
    Run `python tests/smoke.py` and `python tools/build_release.py`.
 5. Test a separate Forever installation with WoW closed while copying the built
    ZIP. Preserve your own SavedVariables. Never install into Retail or link your
-   Git checkout into a live AddOns directory.
+   Git checkout into a live AddOns directory. (The owner's own test machine
+   links a checkout with `tools/dev_link.py`; see docs/DEVELOPMENT.md.)
 6. Open a pull request to `ModeVibeCodes/PlayTheGameTools:main`. Describe the
    problem, change, static results, actual native results and remaining unknowns.
    A maintainer reviews and merges it. Only the maintainer publishes releases,

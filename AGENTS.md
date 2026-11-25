@@ -13,6 +13,10 @@
   Do not claim native testing without the user's in-game confirmation.
 - Manual checks must state Navigation, Action, Required state and Confirmation,
   using actual implemented control labels. Do not invent UI paths.
+- Every change goes through a pull request. Do not merge to `main` until the
+  owner has tested the branch in the local client: link it with
+  `python tools/dev_link.py link` from its checkout, then `/reload` in game
+  (docs/DEVELOPMENT.md, "Local /reload testing").
 - Live sync, releases, pushes and collaborator invitations require user scope
   authorization. Source edits alone do not authorize deployment or publication.
 - Preserve licenses/notices and unknown user work. Never force-push or reset.
