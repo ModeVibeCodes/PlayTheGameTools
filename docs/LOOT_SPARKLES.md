@@ -124,8 +124,9 @@ other players' names and chat. No mock screenshot substitutes.
    toggle each independently. **Required state:** OOC, applicable categories on,
    native Interact Key/object icons on. **Confirmation:** only the current native
    interaction target gains animated glints and its name/range label. Near/far
-   states read In reach / Out of reach; when the game shows its "Unable" cursor the
-   label reads Can't gather (ore, herbs) or Can't use (quest objects) and the effect greys.
+   states read In reach / Out of reach. When the game shows its "Unable" cursor the
+   effect greys; out of range it still reads Out of reach, and only within reach
+   does it read Skill too low (ore, herbs) or Can't use (quest objects).
    Unknown range must say Range unknown. Unreadable objects may remain unmarked.
 3. **Navigation:** Play The Game Tools → Questing & Leveling → Gameplay
    Enhancements → Loot Sparkles → Corpses With Loot / Show Object Names;

@@ -1,9 +1,11 @@
 local _, addon = ...
 if not addon.Edition or addon.Edition.name ~= "Forever" then return end
 local M, SOFT = addon.LootSparkles, "softinteract"
--- The game shows its "Unable" cursor when you can't gather or use the target
--- yet (no profession or skill too low). Distance is the separate reach state.
-local BLOCKED = {ore="Can't gather", herbs="Can't gather", questObjects="Can't use"}
+-- The game shows its "Unable" cursor both when the target is too far away and
+-- when you can't gather or use it (no profession, skill too low). Distance is
+-- read separately, so a greyed target out of range says Out of reach; only one
+-- you stand next to and still can't use names the skill reason.
+local BLOCKED = {ore="Skill too low", herbs="Skill too low", questObjects="Can't use"}
 
 -- Cursor paths/atlases and numeric file IDs are all used by Forever builds.
 -- Do not inspect hidden tooltip data or guess quest status from object names.
@@ -76,7 +78,8 @@ function M:Evaluate()
         self:Release(); return
     end
     local range=self.Read(UnitIsInInteractRange,unit)
-    local state=blocked and (BLOCKED[category] or "Can't use") or (range==true and "In reach" or (range==false and "Out of reach" or "Range unknown"))
+    local state=range==false and "Out of reach" or (range~=true and "Range unknown") or
+        (blocked and (BLOCKED[category] or "Can't use") or "In reach")
     local name=self.Read(UnitName,unit)
     self:ShowTarget(plate,type(name)=="string" and name or "",state,blocked)
 end

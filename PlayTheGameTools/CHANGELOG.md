@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Loot Sparkles: a greyed node that is only too far away now reads **Out of
+  reach** instead of "Can't gather". A node you stand next to and still can't
+  gather reads **Skill too low**; quest objects still read **Can't use**.
 - **Blizzard** is now the default interface theme for new profiles. Profiles
   that already saved a theme keep it; pick one under Settings → Appearance →
   Theme.
