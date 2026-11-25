@@ -35,7 +35,7 @@ local defaults = {
             locked = true, showOutOfCombat = false,
         },
     },
-    window = { x = 0, y = 0, theme = "modern" },
+    window = { x = 0, y = 0, theme = "blizzard" },
 }
 if addon.Edition and addon.Edition.name == "Forever" then
     -- Only supported modules receive defaults; retain dormant Retail/unknown keys.
@@ -43,7 +43,7 @@ if addon.Edition and addon.Edition.name == "Forever" then
         modules = { combatTimer = defaults.modules.combatTimer,
             foreverAutomation = { enabled = false, autoLoot = false,
                 autoAccept = true, autoTurnIn = true, bypassModifier = "shift",
-                sellJunk = true, sellGrayEquipment = false, repair = true, maxRepairCostPercent = 35 } }, window = { x = 0, y = 0, theme = "modern" } }
+                sellJunk = true, sellGrayEquipment = false, repair = true, maxRepairCostPercent = 35 } }, window = { x = 0, y = 0, theme = "blizzard" } }
 end
 
 defaults.globalMedia = {font = "game", texture = "default", border = "thin", overrides = {}}

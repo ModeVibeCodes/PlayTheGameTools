@@ -95,7 +95,7 @@ local MODE = {
 -- and is never rewritten.
 addon.InterfaceThemes = {
     order = { "modern", "blizzard", "mode" },
-    default = "modern",
+    default = "blizzard",
     modern = { label = "Modern", palette = MODERN },
     blizzard = { label = "Blizzard", palette = BLIZZARD, blizzardArt = true },
     mode = { label = "mode", palette = MODE },

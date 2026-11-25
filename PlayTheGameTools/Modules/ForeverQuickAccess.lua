@@ -23,27 +23,24 @@ function M:SetOption(key,value)
 end
 function M:SetHidden(id,hidden)
     if not self:CanConfigure() or not D.Number(id,1,2147483647) or type(hidden)~="boolean" then return false end
-    self.db.hidden[id]=hidden;self:Render();return true
+    self.db.hidden[id]=hidden;self:Render();self:SyncQuickActions();return true
 end
-function M:OpenProfession(id)
-    if not self.active or not D.OutsideCombat() then return false end
-    -- Re-read on the hardware click; an unlearned/stale skill never opens another page.
-    local current=D.ReadProfessions()
-    if not current then return false end
-    for _,p in ipairs(current) do
-        if p.id==id and not self.db.hidden[id] then
-            if not C_TradeSkillUI or type(C_TradeSkillUI.OpenTradeSkill)~="function" then
-                print("Play The Game Tools: native profession page opening is unavailable.");return false
-            end
-            local ok,opened=pcall(C_TradeSkillUI.OpenTradeSkill,id)
-            if not ok or not D.Public(opened) or opened~=true then
-                print("Play The Game Tools: the client could not open "..p.name..". Use the native Professions book.")
-                return false
-            end
-            return true
-        end
+-- Opening a profession casts its spell, which the game protects: only a
+-- hardware click on Blizzard's unprotected action template may do it. Buttons
+-- get a /cast macro outside combat; /stopmacro keeps the click inert in combat.
+-- Attributes are written only outside combat.
+local MACRO_GUARD="/stopmacro [combat]"
+function M:ArmButton(button,profession)
+    if not button or not button.nativeReady or not D.OutsideCombat() then return end
+    button:SetAttribute("type1",nil);button:SetAttribute("macrotext1",nil)
+    if profession and profession.spell then
+        button:SetAttribute("macrotext1",MACRO_GUARD.."\n/cast "..profession.spell)
+        button:SetAttribute("type1","macro")
     end
-    return false
+end
+local function NativeReady(button)
+    local ok,protected=pcall(button.IsProtected,button)
+    return ok and D.Public(protected) and protected==false and type(button:GetScript("OnClick"))=="function"
 end
 
 function M:RefreshProfessions()
@@ -52,7 +49,7 @@ function M:RefreshProfessions()
     self.dirty=false
     local professions,message=D.ReadProfessions()
     self.professions=professions or {};self.message=message
-    self:Render()
+    self:Render();self:SyncQuickActions()
     if self.page then self.page:Refresh() end
 end
 -- Edit Mode owns placement: icons forward drags to the Position Manager.
@@ -87,7 +84,10 @@ function M:CreateBar()
     local function leave() self.hover=false;self:UpdateVisibility() end
     f:SetScript("OnEnter",enter);f:SetScript("OnLeave",leave)
     for i=1,5 do
-        local button=CreateFrame("Button",nil,f,"BackdropTemplate");f.buttons[i]=button
+        -- Blizzard's unprotected action template runs the /cast; its OnClick is never replaced.
+        local button=CreateFrame("Button",nil,f,"InsecureActionButtonTemplate");f.buttons[i]=button
+        button.nativeReady=NativeReady(button)
+        if button.nativeReady then button:SetAttribute("useOnKeyDown",false) end
         button:RegisterForClicks("LeftButtonUp");button:RegisterForDrag("LeftButton")
         button:SetScript("OnDragStart",start);button:SetScript("OnDragStop",stop)
         button.icon=button:CreateTexture(nil,"ARTWORK");button.icon:SetAllPoints()
@@ -95,10 +95,9 @@ function M:CreateBar()
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
         button.label=button:CreateFontString(nil,"OVERLAY","GameFontHighlight")
         button.label:SetPoint("TOP",button,"BOTTOM",0,-3)
-        button:SetScript("OnClick",function()
-            -- In Layout a click opens the bar's Style card instead.
-            if self.editing then addon.PositionManager:SelectElement(ELEMENT)
-            elseif button.profession then self:OpenProfession(button.profession.id) end
+        -- In Layout the buttons hold no action, and a click opens the bar's Style card.
+        button:SetScript("PostClick",function()
+            if self.editing then addon.PositionManager:SelectElement(ELEMENT) end
         end)
         button:SetScript("OnEnter",function()
             enter()
@@ -107,7 +106,7 @@ function M:CreateBar()
                 GameTooltip:SetOwner(button,"ANCHOR_TOP");GameTooltip:SetText(p.name)
                 if p.rank and p.maxRank then GameTooltip:AddLine(p.rank.." / "..p.maxRank,0.7,0.8,0.9) end
                 GameTooltip:AddLine(not D.OutsideCombat() and "Unavailable in combat" or
-                    (self.editing and "Drag to move" or "Click to open profession"),0.7,0.8,0.9)
+                    (self.editing and "Drag to move" or (p.spell and "Click to open profession" or "No profession window to open")),0.7,0.8,0.9)
                 GameTooltip:Show()
             end
         end)
@@ -131,6 +130,7 @@ function M:Render()
     f:SetBackdropBorderColor(db.borderColor[1],db.borderColor[2],db.borderColor[3],db.borderOpacity/100)
     for i,button in ipairs(f.buttons) do
         local p=visible[i];button.profession=p;button:SetShown(p~=nil)
+        self:ArmButton(button,not self.editing and not self.previewing and p or nil)
         if p then
             button:SetSize(db.iconSize,db.iconSize);button:ClearAllPoints()
             button:SetPoint("TOPLEFT",db.padding+((i-1)%columns)*(db.iconSize+db.spacing),-db.padding-math.floor((i-1)/columns)*(cellHeight+db.spacing))
@@ -201,4 +201,43 @@ function M:OnDisable()
     if addon.ForeverFoodBar then addon.ForeverFoodBar:SyncEnabled() end
     if self.events then self.events:UnregisterAllEvents();self.events:SetScript("OnEvent",nil) end
     if self.bar then self:StopDrag();self.bar:Hide() end
+    self:SyncQuickActions()
+end
+
+-- Quick Actions ring: one icon per shown profession that has a window to open,
+-- after Class Training, Dungeon Loot and Guild. Icons are action-template
+-- buttons armed like the bar's. Professions hidden on the page stay out of the
+-- ring too. Built and armed outside combat only; PLAYER_REGEN_ENABLED re-reads.
+local RING_SLOTS,RING_ORDER=5,40
+function M:SyncQuickActions()
+    local Q=addon.QuickActions
+    if not Q or not Q.OutsideCombat() then return end
+    self.ringSlots=self.ringSlots or {}
+    local shown={}
+    if self.active then
+        for _,p in ipairs(self.professions or {}) do
+            if not self.db.hidden[p.id] and p.spell then shown[#shown+1]=p end
+        end
+    end
+    for i=1,RING_SLOTS do
+        local id="profession"..i
+        local p,slot=shown[i],self.ringSlots[i]
+        if p and not slot and not self.ringRefused then
+            slot={spec={order=RING_ORDER+i,secure=true,texture=p.icon,color={.48,.82,.52},title=p.name}}
+            slot.spec.hint=function()
+                local current=slot.profession
+                local rank=current and current.rank and current.maxRank and (current.rank.." / "..current.maxRank.."\n") or ""
+                return rank.."Click to open profession."
+            end
+            slot.button=Q:AddAction(id,slot.spec)
+            -- A refused template never retries: one frame per attempt would pile up.
+            if slot.button then slot.button.nativeReady=true;self.ringSlots[i]=slot else slot=nil;self.ringRefused=true end
+        end
+        if slot then
+            slot.profession=p
+            if p then slot.spec.title=p.name;slot.button.icon:SetTexture(p.icon) end
+            self:ArmButton(slot.button,p)
+            Q:SetAvailable(id,p~=nil)
+        end
+    end
 end
