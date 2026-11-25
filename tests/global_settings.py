@@ -53,12 +53,13 @@ for _,card in ipairs(cards) do
  assert(card.mini.palette==addon.InterfaceThemes[card.themeID].palette,'each preview uses its own palette')
 end
 assert(cards[2].mini.rows[1].switch.color[1]==addon.InterfaceThemes.blizzard.palette.primary[1],'on switch drawn in the theme accent')
-assert(cards[1].selected and cards[1].current:IsShown() and not cards[2].current:IsShown())
-assert(cards[1].selectedOutline.edges[1]:IsShown() and not cards[2].selectedOutline.edges[1]:IsShown(),'chosen card outlined')
+-- Blizzard is the default theme.
+assert(cards[2].selected and cards[2].current:IsShown() and not cards[1].current:IsShown())
+assert(cards[2].selectedOutline.edges[1]:IsShown() and not cards[1].selectedOutline.edges[1]:IsShown(),'chosen card outlined')
 cards[3].scripts.OnClick()
-assert(addon.db.window.theme=='mode' and addon.ReloadManager.requests.interfaceTheme and cards[3].selected and not cards[1].selected)
-assert(cards[1].current:IsShown() and not cards[3].current:IsShown(),'Current stays on the theme on screen until reload')
-cards[1].scripts.OnClick();assert(addon.db.window.theme=='modern' and not addon.ReloadManager.requests.interfaceTheme)
+assert(addon.db.window.theme=='mode' and addon.ReloadManager.requests.interfaceTheme and cards[3].selected and not cards[2].selected)
+assert(cards[2].current:IsShown() and not cards[3].current:IsShown(),'Current stays on the theme on screen until reload')
+cards[2].scripts.OnClick();assert(addon.db.window.theme=='blizzard' and not addon.ReloadManager.requests.interfaceTheme)
 -- Saved global media is retained but never applied.
 addon.db.globalMedia.font='media:PTG JetBrains Mono';addon.db.globalMedia.texture='media:PTG Satin';addon.db.globalMedia.border='media:PTG Clean'
 M:RefreshFonts();M:RefreshBorders()

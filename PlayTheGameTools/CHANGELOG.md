@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Blizzard** is now the default interface theme for new profiles. Profiles
+  that already saved a theme keep it; pick one under Settings → Appearance →
+  Theme.
+- The **Quick Actions** ring shows one icon per learned profession while
+  Profession & Food Bars is on. Clicking an icon opens that profession, like
+  the profession bar does. Professions turned off on the Profession & Food Bars
+  page stay out of the ring too.
 - v2 styles displays only in **Layout**. Each display's old font, color and
   size settings (Combat Timer, Profession & Food Bars, Experience Bar, Rogue
   Tools reminder and Quick Access, Campfire icon, Camp Buffs and Camp

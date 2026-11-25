@@ -6,9 +6,9 @@ lua.execute('''
     addon:ToggleConfig();addon:SelectConfigPage('globalSettings')
     local buttons=addon.configWindow.pages.globalSettings.themeButtons
     buttons[3].scripts.OnClick()
-    assert(addon.db.window.theme=='mode' and addon.InterfaceTheme.id=='modern')
+    assert(addon.db.window.theme=='mode' and addon.InterfaceTheme.id=='blizzard')
     assert(addon.ReloadManager.requests.interfaceTheme and buttons[3].selected)
-    buttons[1].scripts.OnClick()
+    buttons[2].scripts.OnClick()
     assert(not addon.ReloadManager.requests.interfaceTheme)
     buttons[3].scripts.OnClick()
 ''')

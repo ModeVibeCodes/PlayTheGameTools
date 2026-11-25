@@ -23,7 +23,7 @@ function M:SetOption(key,value)
 end
 function M:SetHidden(id,hidden)
     if not self:CanConfigure() or not D.Number(id,1,2147483647) or type(hidden)~="boolean" then return false end
-    self.db.hidden[id]=hidden;self:Render();return true
+    self.db.hidden[id]=hidden;self:Render();self:SyncQuickActions();return true
 end
 function M:OpenProfession(id)
     if not self.active or not D.OutsideCombat() then return false end
@@ -52,7 +52,7 @@ function M:RefreshProfessions()
     self.dirty=false
     local professions,message=D.ReadProfessions()
     self.professions=professions or {};self.message=message
-    self:Render()
+    self:Render();self:SyncQuickActions()
     if self.page then self.page:Refresh() end
 end
 -- Edit Mode owns placement: icons forward drags to the Position Manager.
@@ -201,4 +201,40 @@ function M:OnDisable()
     if addon.ForeverFoodBar then addon.ForeverFoodBar:SyncEnabled() end
     if self.events then self.events:UnregisterAllEvents();self.events:SetScript("OnEvent",nil) end
     if self.bar then self:StopDrag();self.bar:Hide() end
+    self:SyncQuickActions()
+end
+
+-- Quick Actions ring: one icon per shown profession, after Class Training,
+-- Dungeon Loot and Guild. Clicking opens that profession like the bar does.
+-- Professions hidden on the page stay out of the ring too. Icons are built
+-- outside combat only; PLAYER_REGEN_ENABLED re-reads and retries.
+local RING_SLOTS,RING_ORDER=5,40
+function M:SyncQuickActions()
+    local Q=addon.QuickActions
+    if not Q then return end
+    self.ringSlots=self.ringSlots or {}
+    local shown={}
+    if self.active then
+        for _,p in ipairs(self.professions or {}) do if not self.db.hidden[p.id] then shown[#shown+1]=p end end
+    end
+    for i=1,RING_SLOTS do
+        local id="profession"..i
+        local p,slot=shown[i],self.ringSlots[i]
+        if p and not slot and Q.OutsideCombat() then
+            slot={spec={order=RING_ORDER+i,texture=p.icon,color={.48,.82,.52},title=p.name}}
+            slot.spec.hint=function()
+                local current=slot.profession
+                local rank=current and current.rank and current.maxRank and (current.rank.." / "..current.maxRank.."\n") or ""
+                return rank.."Click to open profession."
+            end
+            slot.spec.onClick=function() if slot.profession then self:OpenProfession(slot.profession.id) end end
+            slot.button=Q:AddAction(id,slot.spec)
+            if slot.button then self.ringSlots[i]=slot else slot=nil end
+        end
+        if slot then
+            slot.profession=p
+            if p then slot.spec.title=p.name;slot.button.icon:SetTexture(p.icon) end
+            Q:SetAvailable(id,p~=nil)
+        end
+    end
 end

@@ -82,6 +82,9 @@ lua.execute('''
     timer.db.appearance.format='square';timer.lastSecond=nil;timer:UpdateText()
     assert(timer.text:GetText()=='00:00' and addon.CombatTimerDisplay.Format(83)=='01:23')
     for _,entry in ipairs(addon.configWindow.pages.combatTimer.searchEntries) do assert(entry.label~='Timer format','no format row') end
+    -- A new profile starts on the Blizzard theme. The checks below pick Modern.
+    assert(addon.db.window.theme=='blizzard' and addon.InterfaceTheme.id=='blizzard' and addon.InterfaceTheme.blizzardArt,'Blizzard by default')
+    addon.db.window.theme='modern'
 ''')
 state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 restored, _ = load(state)
@@ -90,7 +93,7 @@ restored.execute('''
     assert(addon.modules.combatTimer.enabled)
     addon:SetModuleEnabled('combatTimer',false)
     assert(not addon.modules.combatTimer.enabled)
-    -- Interface theme: Modern by default; a choice is saved and needs a reload.
+    -- Interface theme: a saved Modern choice loads; a change needs a reload.
     local T=addon.InterfaceTheme
     assert(addon.db.window.theme=='modern' and T.id=='modern' and not T.blizzardArt)
     SlashCmdList.PLAYTHEGAMETOOLS()
@@ -158,9 +161,9 @@ missing.execute('''
     assert(window.closeButton.blizzardArt==nil and window.closeButton.outline.edges[1]:IsShown())
     assert(window.moduleHeader.toggle.switchOutline.edges and window.moduleHeader.toggle.knob.texture==nil)
     testMissingTextures=nil
-    -- An unknown saved id renders Modern and is never rewritten.
+    -- An unknown saved id renders the default (Blizzard) and is never rewritten.
     addon.db.window.theme='future'
-    assert(addon:ApplyInterfaceTheme(addon.db.window.theme)=='modern' and addon.db.window.theme=='future')
+    assert(addon:ApplyInterfaceTheme(addon.db.window.theme)=='blizzard' and addon.db.window.theme=='future')
 ''')
 adopted, _ = load(state, variable='ModeToolsDB')
 adopted.execute('''

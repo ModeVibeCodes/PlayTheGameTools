@@ -30,7 +30,7 @@ Broad native acceptance is pending before considering other themes.
 Forever only, experimental and opt-in. Open `/ptg` → **Settings** →
 **Appearance** → **Theme** → the **mode** card, then **Reload now** in the
 banner above the page, OOC.
-Modern remains the default. Modern and Blizzard retain their palettes and layouts.
+Blizzard is the default for new profiles; a saved choice is never changed. Modern and Blizzard retain their palettes and layouts.
 The selected theme uses the existing profile setting and reload flow; no settings
 are reset or migrated. Theme changes affect configuration surfaces only.
 
