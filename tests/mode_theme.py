@@ -42,7 +42,7 @@ mode.execute(r'''
     local moduleFrame=CreateFrame('Frame',nil,UIParent)
     addon.Media:ApplyBackdrop(moduleFrame,{bgFile='original'},'lootSparkles')
     assert(moduleFrame.backdrop.bgFile==display.texture,'module backdrops take the built-in surface')
-    assert(w.title:GetText()=='Play The Game Tools' and w.sidebarWidth==212,'one brand text in every theme')
+    assert(w.title:GetText()=='Play The Game Tools' and w.sidebarWidth==232,'one brand text in every theme')
     assert(w.title.color[1]==0 and w.title.color[2]==240/255 and w.title.color[3]==1,'cyan branding')
     assert(w.brandLogo and not w.headerArt:IsShown() and not w.columnEdge:IsShown())
     assert(w.brandLogo.points[1][5]==0,'logo centers inside the header without overlapping navigation')

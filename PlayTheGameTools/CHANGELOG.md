@@ -2,9 +2,6 @@
 
 ## Unreleased
 
-- Layout: dragging a Style card slider (Scale, Opacity, Text size, X/Y
-  Offset) no longer makes the card shake or slide away. The card stays put
-  while the slider is held and settles beside the display on release.
 - Loot Sparkles: a greyed node that is only too far away now reads **Out of
   reach** instead of "Can't gather". A node you stand next to and still can't
   gather reads **Skill too low**; quest objects still read **Can't use**.

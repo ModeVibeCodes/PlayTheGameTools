@@ -54,7 +54,7 @@ lua.execute('''
     local first=addon:ListedConfigPages()[1]
     assert(first=='foreverAutomation' and addon.configWindow.selectedPage==first,'opens on the first module')
     assert(addon.configWindow.moduleHeader.title:GetText()=='Automation')
-    assert(addon.configWindow:GetWidth()==960 and addon.configWindow:GetHeight()==640 and addon.configWindow.sidebarWidth==212,'960x640 window')
+    assert(addon.configWindow:GetWidth()==960 and addon.configWindow:GetHeight()==640 and addon.configWindow.sidebarWidth==232,'960x640 window')
     assert(addon.configWindow.pages.dashboard==nil and addon.configWindow.navigationButtons.dashboard==nil,'no Dashboard page')
     -- Opening redraws text set while a shared font may still be loading
     -- (mock timers fire immediately: two passes, each clearing and re-setting).

@@ -1,7 +1,7 @@
 local _, addon = ...
 local W, T = addon.ConfigWidgets, addon.InterfaceTheme
 local WINDOW_WIDTH, WINDOW_HEIGHT = 960, 640
-local SIDEBAR_WIDTH, HEADER_HEIGHT = 212, 48
+local SIDEBAR_WIDTH, HEADER_HEIGHT = 232, 48
 -- Reserve the header controls (Layout/Close) for safe dragging.
 local HEADER_RESERVED = 160
 local BANNER_HEIGHT, BANNER_GAP = 44, 12
