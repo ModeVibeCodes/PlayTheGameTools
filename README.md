@@ -1,6 +1,6 @@
 # Play The Game Tools
 
-**By Mode and Prox** · WoW Forever · Release 0.3.0
+**By Mode and Prox** · WoW Forever · Release 0.4.0
 
 Play The Game Tools brings useful everyday tools into one modular addon with a unified dark
 configuration interface. Enable the features you want, adjust their appearance,
