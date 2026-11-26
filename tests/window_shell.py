@@ -11,7 +11,7 @@ local w=addon.configWindow
 assert(w:IsShown())
 
 -- Window: 960x640, fitted to small screens, position recovery intact.
-assert(w:GetWidth()==960 and w:GetHeight()==640 and w.sidebarWidth==212)
+assert(w:GetWidth()==960 and w:GetHeight()==640 and w.sidebarWidth==232)
 assert(w.scale==1,'fits a 1280x800 screen unscaled')
 UIParent.width,UIParent.height=800,560
 addon:UpdateWindowBounds()

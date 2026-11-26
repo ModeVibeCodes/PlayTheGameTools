@@ -2,6 +2,14 @@
 
 Global Settings now groups Appearance, account-wide Profiles, Optimizations and Class Colors. Bundled LibSharedMedia plus licensed PTG media populate the dropdowns. Standard game UI fonts inherit; module overrides stay in their own controls. Added account-wide profile selection/import/export, Auto Loot/Fast Loot, camera zoom, detected UI scale and red-error suppression. Prior page-only native feedback is retained; these additions await in-game confirmation. See docs/GLOBAL_SETTINGS.md.
 
+## 0.4.1
+
+- Layout: dragging a Style card slider (Scale, Opacity, Text size, X/Y
+  Offset) no longer makes the card shake or slide away. The card stays put
+  while the slider is held and settles beside the display on release.
+- Settings: the sidebar is 20px wider, so the **Play The Game Tools** title
+  beside the logo no longer runs into its edge.
+
 ## 0.4.0
 
 - v2 styles displays only in **Layout**. Each display's old font, color and

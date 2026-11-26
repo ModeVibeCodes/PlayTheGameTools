@@ -80,7 +80,9 @@ local frame=pm.elements[id].frame
 frame:GetScript('OnMouseDown')(frame,'LeftButton')
 assert(pm.selected==id and card:IsShown() and card.title:GetText()=='Combat Timer')
 local point,relative=card:GetPoint(1)
-assert(relative==frame,'card sits beside the display')
+-- Placed beside the display, then pinned there on screen so resizing the
+-- display never moves the card's sliders.
+assert(card.pinned and relative==UIParent and card.attached==id,'card placed beside the display, pinned on screen')
 local handle=pm.elements[id].decoration.handle
 Click(card.closeButton)
 assert(pm.selected==nil and not card:IsShown())

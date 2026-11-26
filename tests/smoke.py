@@ -54,7 +54,7 @@ lua.execute('''
     local first=addon:ListedConfigPages()[1]
     assert(first=='foreverAutomation' and addon.configWindow.selectedPage==first,'opens on the first module')
     assert(addon.configWindow.moduleHeader.title:GetText()=='Automation')
-    assert(addon.configWindow:GetWidth()==960 and addon.configWindow:GetHeight()==640 and addon.configWindow.sidebarWidth==212,'960x640 window')
+    assert(addon.configWindow:GetWidth()==960 and addon.configWindow:GetHeight()==640 and addon.configWindow.sidebarWidth==232,'960x640 window')
     assert(addon.configWindow.pages.dashboard==nil and addon.configWindow.navigationButtons.dashboard==nil,'no Dashboard page')
     -- Opening redraws text set while a shared font may still be loading
     -- (mock timers fire immediately: two passes, each clearing and re-setting).
@@ -425,6 +425,16 @@ reloaded.execute('''
     assert(pm.selected==nil and not bar.styleCard:IsShown(),'no card until a display is clicked')
     assert(pm:SelectElement('threatMeter') and bar.styleCard:IsShown())
     assert(pm:SetStyle('threatMeter','scale',125) and addon.db.positions.threatMeter.style.scale==125)
+    -- The card is pinned on screen, not to the display, and holding its Scale
+    -- slider keeps it still while the display rescales under it.
+    local card=bar.styleCard
+    assert(card.pinned and card.anchor[2]==UIParent,'card pinned to the screen, not the display')
+    local scaleSlider=card.sliders.scale.slider
+    for _,hook in ipairs(scaleSlider.scriptHooks.OnMouseDown) do hook(scaleSlider,'LeftButton') end
+    local held=card.anchor
+    assert(card.holding and pm:SetStyle('threatMeter','scale',140) and card.anchor==held,'held slider never moves the card')
+    for _,hook in ipairs(scaleSlider.scriptHooks.OnMouseUp) do hook(scaleSlider,'LeftButton') end
+    assert(not card.holding and card.anchor~=held and card.pinned,'release places the card beside the display again')
     bar.doneButton.scripts.OnClick(bar.doneButton)
     assert(not addon.editMode and not M.previewing and not bar:IsShown())
     assert(not pm:SetStyle('threatMeter','scale',150),'styling is Layout-only')
