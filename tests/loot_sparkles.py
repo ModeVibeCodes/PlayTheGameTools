@@ -75,7 +75,11 @@ assert(cvars.SoftTargetNameplateInteract=='1' and M.overlay:IsShown())
 assert(M.overlay.label:GetText()=='Copper Vein\nOut of reach')
 assert(M.state=='Out of reach' and M.overlay.ignoreAlpha)
 target.cursor=101;M:Evaluate();assert(M.overlay:IsShown(),'numeric cursor file ID')
-target.cursor=102;M:Evaluate();assert(M.state=="Can't gather" and M.overlay.label:GetText()=="Copper Vein\nCan't gather")
+-- Greyed (Unable) cursor out of range: distance is the reason.
+target.cursor=102;M:Evaluate();assert(M.state=='Out of reach' and M.tint[1]==0.6 and M.overlay.label:GetText()=='Copper Vein\nOut of reach')
+-- Greyed cursor right next to it: the skill is the reason.
+target.range=true;M:Evaluate();assert(M.state=='Skill too low' and M.tint[1]==0.6 and M.overlay.label:GetText()=='Copper Vein\nSkill too low')
+target.range=false
 target.cursor=999;target.atlas='Cursor_GatherHerbs_64';M:Evaluate();assert(M.overlay:IsShown(),'atlas fallback')
 target.atlas=nil;target.cursor={secret=true};M:Evaluate();assert(not M.overlay:IsShown(),'secret cursor')
 target.cursor='Mine';M:Evaluate()
@@ -84,7 +88,8 @@ assert(M.overlay.glints[1].rotation~=nil)
 target.range=true;M:Evaluate();assert(M.state=='In reach')
 target.range={secret=true};M:Evaluate();assert(M.state=='Range unknown')
 target.cursor='Cursor_Crosshair_UnableMine_64';M:Evaluate()
-assert(M.state=="Can't gather" and M.tint[1]==0.6)
+assert(M.state=='Range unknown' and M.tint[1]==0.6,'unknown range never guesses a reason')
+target.range=true;M:Evaluate();assert(M.state=='Skill too low')
 target.cursor='Interface\\Cursor\\GatherHerbs';target.range=true;target.name='Peacebloom'
 M:Evaluate();assert(M.overlay.label:GetText()=='Peacebloom\nIn reach')
 assert(M:SetOption('herbs',false));assert(not M.overlay:IsShown())
