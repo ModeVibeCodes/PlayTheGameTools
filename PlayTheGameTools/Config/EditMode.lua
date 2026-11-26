@@ -262,8 +262,10 @@ local function CreateStyleCard(owner, window)
         self:SetHeight(y + FOOTER)
     end
 
-    -- Beside the display, on the side with more room.
-    function card:Attach(element)
+    -- Beside the display, on the side with more room. While the display is
+    -- dragged the card follows it; otherwise it is pinned to that spot on screen,
+    -- so rescaling or offsetting the display never moves the slider being used.
+    function card:Attach(element, follow)
         self:ClearAllPoints()
         local x = P:Geometry(element.frame)
         local cx = UIParent:GetCenter()
@@ -272,8 +274,31 @@ local function CreateStyleCard(owner, window)
         else
             self:SetPoint("LEFT", element.frame, "RIGHT", CARD_GAP, 0)
         end
-        self.attached = element.id
+        self.attached, self.pinned = element.id, false
+        if follow then return end
+        local left, top = self:GetLeft(), self:GetTop()
+        if issecretvalue and (issecretvalue(left) or issecretvalue(top)) then return end
+        if type(left) ~= "number" or type(top) ~= "number" then return end
+        self:ClearAllPoints()
+        self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+        self.pinned = true
     end
+
+    -- Holding a card slider keeps the card where it is until release.
+    local function Hold(slider)
+        slider:HookScript("OnMouseDown", function(_, button)
+            if button == "LeftButton" then card.holding = true end
+        end)
+        local function Release()
+            if not card.holding then return end
+            card.holding = false
+            if card:IsShown() then card:Refresh() end
+        end
+        slider:HookScript("OnMouseUp", Release)
+        slider:HookScript("OnHide", Release)
+    end
+    for _, spec in ipairs(SLIDERS) do Hold(card.sliders[spec.key].slider) end
+    Hold(xRow.slider); Hold(yRow.slider)
 
     function card:Refresh()
         local element = Selected()
@@ -302,8 +327,13 @@ local function CreateStyleCard(owner, window)
         targets:Refresh(); placements:Refresh()
         settings:SetEnabled(owner.modules[element.module.id] ~= nil)
         self:Layout()
-        -- A card follows its display while it is dragged; only re-pick a side when settled.
-        if self.attached ~= element.id or not element.dragging then self:Attach(element) end
+        -- A card follows its display while it is dragged; only re-pick a side when
+        -- settled, and never while one of its own sliders is held.
+        if element.dragging then
+            if self.attached ~= element.id or self.pinned then self:Attach(element, true) end
+        elseif self.attached ~= element.id or not self.holding then
+            self:Attach(element)
+        end
         self:Show()
         refreshing = false
     end

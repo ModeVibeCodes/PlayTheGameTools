@@ -96,6 +96,8 @@ function methods:SetHeight(h) self.height = h end
 function methods:GetWidth() return self.width or 1024 end
 function methods:GetLeft() local x = self:GetCenter(); return x - self:GetWidth() / 2 end
 function methods:GetBottom() local _, y = self:GetCenter(); return y - self:GetHeight() / 2 end
+function methods:GetTop() local _, y = self:GetCenter(); return y + self:GetHeight() / 2 end
+function methods:GetRight() local x = self:GetCenter(); return x + self:GetWidth() / 2 end
 function methods:SetResizable(value) self.resizable = value end
 function methods:SetResizeBounds(...) self.resizeBounds = {...} end
 function methods:StartSizing(point) self.sizingPoint = point; self.sizing = true end
