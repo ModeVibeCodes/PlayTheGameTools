@@ -64,6 +64,8 @@ function M:CreateDisplay()
     local f=CreateFrame("Frame","PlayTheGameToolsBuffRemindersFrame",UIParent)
     self.frame=f
     f:Hide();f:SetSize(200,48);f:SetFrameStrata("MEDIUM");f:SetClampedToScreen(true);f:EnableMouse(false)
+    -- A real rectangle before Layout registers it; Position Manager takes over from there.
+    f:SetPoint("CENTER",UIParent,"CENTER",self.db.x,self.db.y)
     f.background=f:CreateTexture(nil,"BACKGROUND");f.background:SetAllPoints()
     addon.Media:PaintSurface(f.background,T.panel,0.55,MAIN)
     f.icons={};f.rows={}
@@ -80,6 +82,7 @@ function M:CreateDisplay()
     local g=CreateFrame("Frame","PlayTheGameToolsBuffRemindersGroupFrame",UIParent)
     self.groupFrame=g
     g:Hide();g:SetSize(200,60);g:SetFrameStrata("MEDIUM");g:SetClampedToScreen(true);g:EnableMouse(false)
+    g:SetPoint("CENTER",UIParent,"CENTER",self.db.groupX,self.db.groupY)
     g.background=g:CreateTexture(nil,"BACKGROUND");g.background:SetAllPoints()
     addon.Media:PaintSurface(g.background,T.panel,0.6,GROUP)
     g.headers={};g.tiles={};g.rows={}
@@ -192,7 +195,13 @@ function M:GroupTotems(shown)
 end
 
 local function StyleSize(id,size) return addon.PositionManager:StyleFontSize(id,size) end
-local function SetFont(text,id,size,scope) addon.Media:BindInterfaceFont(text,GameFontHighlight,StyleSize(id,size),scope or id) end
+-- Fonts are bound once per size; the Media registry redraws them on global font changes.
+local function SetFont(text,id,size,scope)
+    local applied=StyleSize(id,size)
+    if text.appliedSize==applied then return end
+    text.appliedSize=applied
+    addon.Media:BindInterfaceFont(text,GameFontHighlight,applied,scope or id)
+end
 
 function M:ClassColor(class)
     local c=class and addon.GlobalSettings and addon.GlobalSettings:GetClassColor(class)
@@ -210,7 +219,8 @@ function M:Render(shown)
     -- In combat, reminders keep the places they had when combat began, so the
     -- click buttons laid over them (which can't move in combat) still match.
     local frozenView=false
-    if self:InCombat() and self.frozen and not placing then
+    if self.suppressed and not placing then list={} end
+    if self:InCombat() and self.frozen and not placing and not self.suppressed then
         frozenView=true
         local byKey,ordered,used={},{},{}
         for _,e in ipairs(list) do
@@ -237,9 +247,11 @@ function M:Render(shown)
     if #list==0 then
         f:Hide()
         self:SetPulse(false)
-        if self.LayoutSecure then self:LayoutSecure() end
         return
     end
+    -- Frame size is held in combat: the frame is centre-anchored, so resizing it
+    -- would slide every icon away from the click button laid over it.
+    local function Size(w,h) if not frozenView then f:SetSize(w,h) end end
     local size,gap=look.iconSize,look.spacing
     local timerBelow=look.timer=="below" and mode~="single"
     local anyGlow=false
@@ -273,13 +285,13 @@ function M:Render(shown)
                 r:ClearAllPoints();r:SetPoint("TOPLEFT",4,-4-(i-1)*lineHeight);r:SetSize(width,lineHeight);r:Show()
             end
         end
-        f:SetSize(width+8,#lines*lineHeight+8)
+        Size(width+8,#lines*lineHeight+8)
     elseif mode=="single" then
-        table.sort(list,function(a,b)
+        if not frozenView then table.sort(list,function(a,b)
             local ra,rb=a.status=="missing" and 0 or 1,b.status=="missing" and 0 or 1
             if ra~=rb then return ra<rb end
             return (a.left or 0)<(b.left or 0)
-        end)
+        end) end
         local e=list[1]
         local b=self:PaintIcon(1,e,size,false)
         b:ClearAllPoints();b:SetPoint("LEFT",6,0)
@@ -291,7 +303,7 @@ function M:Render(shown)
         f.label:ClearAllPoints();f.label:SetPoint("TOPLEFT",b,"TOPRIGHT",8,-2);f.label:Show()
         f.sub:ClearAllPoints();f.sub:SetPoint("BOTTOMLEFT",b,"BOTTOMRIGHT",8,2);f.sub:Show()
         local w=math.max(f.label:GetStringWidth() or 0,f.sub:GetStringWidth() or 0)
-        f:SetSize(size+20+(Number(w,0,4000) and w or 120),size+12)
+        Size(size+20+(Number(w,0,4000) and w or 120),size+12)
         self.slots[1]={region=b,entry=e,keys=e.slotKeys or e.dismissKeys or e.key,late=e.late}
     else
         local vertical=look.grow=="down" or look.grow=="up"
@@ -300,7 +312,7 @@ function M:Render(shown)
         local cellW,cellH=size+gap,size+below+(vertical and gap or 0)
         local width=vertical and size or count*size+(count-1)*gap
         local height=vertical and (count*(size+below)+(count-1)*gap) or size+below
-        f:SetSize(width+8,height+8)
+        Size(width+8,height+8)
         for i,e in ipairs(list) do
             local b=self:PaintIcon(i,e,size,timerBelow)
             anyGlow=anyGlow or b.glowing
@@ -318,7 +330,6 @@ function M:Render(shown)
     end
     f:Show()
     self:SetPulse(anyGlow and look.glow)
-    if self.LayoutSecure then self:LayoutSecure() end
 end
 
 -- The display keeps room for every reminder that can apply, so it grows from a fixed edge.
@@ -411,7 +422,21 @@ function M:RenderGroup()
     for _,t in ipairs(g.tiles) do t:Hide() end
     for _,h in ipairs(g.headers) do h:Hide() end
     for _,r in ipairs(g.rows) do r:Hide() end
-    if #rows==0 then g:Hide();if self.LayoutSecure then self:LayoutSecure() end;return end
+    if #rows==0 then g:Hide();return end
+    -- In combat every player keeps the tile place they had when it began (their
+    -- click button can't move); players who join mid-fight wait for combat to end.
+    local frozen=self.groupFrozen and self:InCombat() and not placing
+    local positions=frozen and (self.groupPositions or {}) or {}
+    if not frozen then self.groupPositions=positions end
+    local function Place(region,key,x,y)
+        region:ClearAllPoints()
+        if frozen then
+            local p=positions[key]
+            if not p then region:Hide();return false end
+            region:SetPoint("TOPLEFT",p[1],p[2])
+        else positions[key]={x,y};region:SetPoint("TOPLEFT",x,y) end
+        region:Show();return true
+    end
     g.background:SetShown(addon.PositionManager:StyleBackground(GROUP))
     local w=self.db.watchLook
     local raid=Public(IsInRaid) and D.Truthy(IsInRaid) and not placing
@@ -448,10 +473,11 @@ function M:RenderGroup()
                 r.label:SetText(m.name..(m.family and ("  ·  "..(D.ChoiceLabel("blessing",m.family) or "")) or ""));r.label:SetTextColor(c[1],c[2],c[3])
                 r.value:SetText(self:MemberText(m));local vc=self:MemberColor(m);r.value:SetTextColor(vc[1],vc[2],vc[3])
                 r.member,r.row=m,row
-                r:ClearAllPoints();r:SetPoint("TOPLEFT",6,y);r:SetSize(220,16);r:Show()
+                r:SetSize(220,16)
+                local placed=Place(r,row.buff.key..":"..m.name,6,y)
                 width=math.max(width,232)
                 y=y-18
-                self.groupSlots[#self.groupSlots+1]={region=r,member=m,buff=row.buff}
+                if placed then self.groupSlots[#self.groupSlots+1]={region=r,member=m,buff=row.buff} end
             end
         else
             -- Icons: grouped by class in raids, so a full raid stays one compact strip.
@@ -473,18 +499,17 @@ function M:RenderGroup()
                     local t=g.tiles[tileIndex]
                     if not t then t=Icon(self,g,GROUP);g.tiles[tileIndex]=t end
                     self:PaintTile(t,m,row,size,raid)
-                    t:ClearAllPoints();t:SetPoint("TOPLEFT",x,y);t:Show()
+                    local placed=Place(t,row.buff.key..":"..m.name,x,y)
                     x=x+size+gap;col=col+1
                     width=math.max(width,x+4)
-                    self.groupSlots[#self.groupSlots+1]={region=t,member=m,buff=row.buff}
+                    if placed then self.groupSlots[#self.groupSlots+1]={region=t,member=m,buff=row.buff} end
                 end
             end
             y=y-lineHeight-2
         end
     end
-    g:SetSize(math.max(width,120),-y+4)
+    if not frozen then g:SetSize(math.max(width,120),-y+4) end
     g:Show()
-    if self.LayoutSecure then self:LayoutSecure() end
 end
 
 function M:MemberText(m)
@@ -627,7 +652,6 @@ function M:SyncEditElements()
             if not e.editMode then PM:StopDragging(id) end
         end
     end
-    if not PM.elements[MAIN] and self.active and not self:InCombat() then self:RegisterPositions() end
 end
 
 function M:HideAll()

@@ -85,7 +85,12 @@ watcher icons cast on that player's unit. Right-click only dismisses (until the
 next loading screen). In combat nothing in this layer is shown, hidden, moved
 or rebound: icons keep their combat-start places (a buff reapplied mid-fight
 stays as a faded icon), and a reminder that first appears mid-fight is visual
-only until combat ends. Elixirs have no click.
+only until combat ends. Displays hold their size in combat, and "Most urgent only"
+does not re-sort, so icons stay under their buttons. With **When Needed (OOC)** or
+**Always Outside Combat** a secure state driver hides the whole click layer in
+combat. Watcher buttons target unit tokens (party1, raid5): if the roster is
+reordered mid-fight a button may point at a different player until combat
+ends. Elixirs have no click.
 
 ## Settings and Layout
 
@@ -129,6 +134,9 @@ Spell ranks come from the Forever trainer catalogs
 - Elixir and flask aura IDs are Classic values.
 - Poisons, Shaman imbues and Firestone/Spellstone are assumed to be the Imbue
   enchant type and oils/stones the Temporary type; Forever lets several stack.
+- Firestone/Spellstone: in Classic these are off-hand items, and a secure "item"
+  click would equip them instead of applying them. Forever reportedly made them
+  weapon imbues; the reminder is opt-in until this is confirmed.
 - Firestone/Spellstone duration; Water Shield (408510) availability; top ranks
   missing from the catalog (25289, 25290, 25291, 25359, 25361).
 - Whether `UNIT_SPELLCAST_SENT` gives your target's name in combat.

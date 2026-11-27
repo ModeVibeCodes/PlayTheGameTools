@@ -194,9 +194,11 @@ local B=addon.BuffReminders
 for _,id in ipairs({8512,10613,5675,8017,324}) do known[id]=true end
 enchants[0]={{hasEnchant=true,enchantType=3,timeLeft=3000*1000,enchantIconID=401,enchantID=900}}
 weaponIDs[17]=nil
-Aura('player',324,500,{applications=1})
+Aura('player',324,500,{applications=3})
 NoFood()
 addon:SetModuleEnabled('buffReminders',true)
+assert(not Keys(B.shown).shield,'three charges: fine')
+auras.player[1].applications=1;FireEvent('UNIT_AURA','player')
 local shown=Keys(B.shown)
 assert(shown['totem:air'] and shown['totem:air'].status=='missing','Windfury Totem reminds when not placed')
 assert(not shown.imbueMain and not shown.imbueOff,'imbue fine; no off-hand weapon, no off-hand reminder')
@@ -307,4 +309,86 @@ addon:ToggleConfig()
 local page=addon:EnsureConfigPage('foreverRogue');page:Refresh()
 assert(not page.handoverNote:GetParent().row.visibleWhen(),'no handover note once handed back')
 ''')
+# Review regressions: bounded Layout registration, held geometry in combat, charges only
+# for stacked auras, fixed warning fallback, mouse on unclickable reminders, sound not
+# replayed, OOC settings hide the click layer in combat, retry after restricted reads,
+# exact cast targets, frozen watcher places.
+lua, _ = load(before=SETUP + BR + "testClass='PRIEST'")
+lua.execute(r"""
+local B,PM=addon.BuffReminders,addon.PositionManager
+for _,id in ipairs({1243,588}) do known[id]=true end
+sounds=0;SOUNDKIT={RAID_WARNING=8959};function PlaySound() sounds=sounds+1 end
+drivers={};function RegisterStateDriver(frame,state,values) drivers[frame]=values end
+function UnregisterStateDriver(frame,state) drivers[frame]=nil end
+NoFood()
+-- A display that can't register yet (layout pending) never loops.
+local register=PM.RegisterModuleDisplay;local calls=0
+PM.RegisterModuleDisplay=function(...) calls=calls+1;return false,'layout-pending' end
+addon:SetModuleEnabled('buffReminders',true)
+B:SetOption('show',true);B:SetOption('mode','icons');B:Update();B:Update();B:Update()
+assert(calls<=8,'bounded registration attempts: '..calls)
+PM.RegisterModuleDisplay=register;B.registerTries=0;B:Update()
+assert(PM.elements.buffReminders,'registers once possible')
+-- Inner Fire without stacks: no charge badge, not expiring; Fortitude shows no 0 badge.
+Aura('player',588,580,{applications=0});Aura('player',1243,3000,{applications=0})
+FireEvent('UNIT_AURA','player')
+assert(not Keys(B.shown).innerFire and B.states.innerFire.charges==nil,'unstacked aura has no charges')
+B:SetOption('when','always')
+for _,icon in ipairs(B.frame.icons) do if icon:IsShown() then assert(icon.count:GetText()=='','no 0 badge') end end
+B:SetOption('when','needed')
+-- A fixed 15 min warning never makes a 10 min buff due from the start.
+assert(B:SetOption('warnMinutes',15))
+auras.player={};Aura('player',588,600,{duration=600});Aura('player',1243,600);FireEvent('UNIT_AURA','player')
+assert(not Keys(B.shown).innerFire,'short buff falls back to automatic timing')
+assert(Keys(B.shown).fortitude and Keys(B.shown).fortitude.status=='expiring','60 min buff warns at 15 min')
+assert(B:SetOption('warnMinutes',0))
+-- Sound: once for a new reminder, not again after a dismount.
+assert(B:SetGroupOption('look','sound',true))
+auras.player={};Aura('player',588,600);FireEvent('UNIT_AURA','player')
+assert(sounds==1,'one sound for the new Fortitude reminder: '..sounds)
+function IsMounted() return true end;B:Update()
+function IsMounted() return false end;B:Update()
+assert(sounds==1,'no replay after dismount')
+-- Unclickable reminder (nothing to apply with) keeps its mouse for tooltip and dismiss.
+B.db.buffs.food=true;B:Update(true)
+local foodSlot;for _,s in ipairs(B.slots) do if s.entry.key=='food' then foodSlot=s end end
+assert(foodSlot and not foodSlot.covered and foodSlot.region.mouse==true,'no button over food: icon takes the mouse')
+B.db.buffs.food=false;B:Update(true)
+-- Combat: frame size held while a late reminder appears in text mode.
+assert(B:SetOption('mode','text'))
+Combat(true)
+local w,h=B.frame.width,B.frame.height
+auras.player={};Advance(1);B:Update()
+assert(B.frame.width==w and B.frame.height==h,'frame size held in combat')
+Combat(false)
+-- Restricted reads after combat retry on the next tick.
+auras.player={};Aura('player',588,600);Aura('player',1243,3000)
+testCombat=true;testLockdown=true;FireEvent('PLAYER_REGEN_DISABLED')
+testCombat=false;testLockdown=false;testAurasSecret=true;FireEvent('PLAYER_REGEN_ENABLED')
+assert(B.retryRead,'still restricted: retry pending')
+testAurasSecret=false;Advance(1)
+assert(not B.retryRead and not Keys(B.shown).fortitude,'read once restrictions lift')
+-- When Needed (OOC): the click layer is hidden in combat by a secure state driver.
+assert(B:SetOption('mode','icons') and B:SetOption('when','neededOOC'))
+assert(drivers[B.secureLayer]=='[combat] hide; show','OOC setting registers the visibility driver')
+auras.player={};FireEvent('UNIT_AURA','player')
+Combat(true)
+assert(not B.frame:IsShown() and B.frozen==nil,'hidden in combat, no placeholders')
+Combat(false)
+assert(B:SetOption('when','needed') and drivers[B.secureLayer]==nil,'driver removed for In-combat settings')
+-- A cast's target only applies to that cast (castGUID).
+testGroup=true;members.party1={name='Mendra',class='MAGE'};B:RefreshRoster();B:Update(true)
+Combat(true)
+FireEvent('UNIT_SPELLCAST_SENT','player','Mendra','guid-1',1243)
+FireEvent('UNIT_SPELLCAST_SUCCEEDED','player','guid-2',1243)
+assert(B.states.fortitude.present and not B.members.Mendra.buffs.fortitude.present,'unmatched cast: yours, not for Mendra')
+FireEvent('UNIT_SPELLCAST_SENT','player','Mendra','guid-3',1243)
+FireEvent('UNIT_SPELLCAST_SUCCEEDED','player','guid-3',1243)
+assert(B.members.Mendra.buffs.fortitude.present and B.members.Mendra.buffs.fortitude.estimated,'matched cast restarts the timer for Mendra')
+local gw,gh=B.groupFrame.width,B.groupFrame.height
+dead.party1=true;Advance(1)
+assert(B.groupFrame.width==gw and B.groupFrame.height==gh,'watcher size held in combat')
+dead.party1=nil
+Combat(false)
+""")
 print('PASS Buff Reminders: classes, read-and-count timing, combat estimates/frozen slots, own casts, deaths, resources, dismissal, icons/text/single, totems and Totems Missing, imbues/charges, group watcher with names and clicks, Soulstone target-or-self, secure layer never touched in combat, Layout card groups and Reset, page, search, validation, Rogue adoption and handover')

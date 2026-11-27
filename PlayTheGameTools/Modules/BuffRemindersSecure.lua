@@ -24,7 +24,12 @@ function M:CreateSecure()
         return
     end
     self.secureAvailable=true
+    -- One container for every button. With a "When ... (OOC)" setting a secure
+    -- state driver hides it in combat, so no invisible button stays clickable.
+    self.secureLayer=CreateFrame("Frame",nil,UIParent)
+    self.secureLayer:SetAllPoints(UIParent)
     self.securePool={main={},group={}}
+    probe:SetParent(self.secureLayer)
     self:PrepareSecure(probe)
     self.securePool.main[1]=probe
 end
@@ -46,7 +51,7 @@ function M:SecureButton(pool,index)
     local list=self.securePool[pool]
     if list[index] then return list[index] end
     if self:InCombat() then return end
-    local ok,b=pcall(CreateFrame,"Button",nil,UIParent,"SecureActionButtonTemplate")
+    local ok,b=pcall(CreateFrame,"Button",nil,self.secureLayer or UIParent,"SecureActionButtonTemplate")
     if not ok or type(b)~="table" or type(b.SetAttribute)~="function" then return end
     self:PrepareSecure(b)
     list[index]=b
@@ -147,27 +152,43 @@ end
 
 -- Visual icons take the mouse (tooltip, right-click dismiss) only where no
 -- click button covers them, and never while placing in Layout.
-function M:SlotMouse(covered)
-    local free=not covered and not self.editing and not self.previewing
+function M:SlotMouse()
+    local placing=self.editing or self.previewing
     for _,list in ipairs({self.slots or {},self.groupSlots or {}}) do
         for _,slot in ipairs(list) do
-            if slot.region and slot.region.EnableMouse then slot.region:EnableMouse(free) end
+            if slot.region and slot.region.EnableMouse then slot.region:EnableMouse(not slot.covered and not placing) end
         end
+    end
+end
+
+-- Hidden in combat only when the display itself is (When Needed (OOC) / Always Outside Combat).
+function M:SecureVisibility()
+    local layer=self.secureLayer
+    if not layer then return end
+    local ooc=self.db.when=="neededOOC" or self.db.when=="alwaysOOC"
+    if self.secureDriver==ooc then return end
+    self.secureDriver=ooc
+    if ooc and type(RegisterStateDriver)=="function" then pcall(RegisterStateDriver,layer,"visibility","[combat] hide; show")
+    else
+        if type(UnregisterStateDriver)=="function" then pcall(UnregisterStateDriver,layer,"visibility") end
+        layer:Show()
     end
 end
 
 function M:LayoutSecure()
     if not self.secureAvailable then
-        if not self:InCombat() then self:SlotMouse(false) end
+        if not self:InCombat() then self:SlotMouse() end
         return
     end
     if self:InCombat() then self.securePending=true;return end
     self.securePending=false
+    self:SecureVisibility()
     local on=self:SecureActive()
     local function Place(pool,slots,actionOf)
         local used=0
         if on then
             for _,slot in ipairs(slots or {}) do
+                slot.covered=false
                 local action=not slot.late and actionOf(slot)
                 local region=slot.region
                 if action and region and region:IsShown() then
@@ -179,6 +200,7 @@ function M:LayoutSecure()
                         self:BindSecure(b,action)
                         b:ClearAllPoints();b:SetPoint("BOTTOMLEFT",UIParent,"BOTTOMLEFT",x,y);b:SetSize(w,h)
                         b.region,b.dismissKey=region,slot.keys
+                        slot.covered=true
                         b:Show()
                     end
                 end
@@ -191,17 +213,22 @@ function M:LayoutSecure()
     end
     Place("main",self.slots,function(slot) return self:ActionFor(slot.entry) end)
     Place("group",self.groupSlots,function(slot) return self:MemberAction(slot.member,slot.buff) end)
-    self:SlotMouse(on)
+    self:SlotMouse()
 end
 
 -- Combat start: remember where every clickable reminder sits, so the display
 -- keeps them there until combat ends.
 function M:FreezeSecure()
+    -- Only worth holding places when click buttons are actually laid over them.
+    -- (With an out-of-combat-only When setting the whole layer hides instead.)
+    local ooc=self.db.when=="neededOOC" or self.db.when=="alwaysOOC"
+    if not self:SecureActive() or ooc then self.frozen,self.groupFrozen=nil,nil;return end
     local keys={}
     for _,slot in ipairs(self.slots or {}) do keys[#keys+1]=slot.keys end
     self.frozen=keys
+    self.groupFrozen=true
 end
 function M:ThawSecure()
-    self.frozen=nil
+    self.frozen,self.groupFrozen=nil,nil
     if self.securePending then self:LayoutSecure() end
 end

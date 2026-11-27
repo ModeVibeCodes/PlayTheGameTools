@@ -47,6 +47,8 @@ function M:SetGroupOption(group,key,value)
     local valid={buffs=true,totems=true,choices=true,where=true,look=true,watchLook=true}
     if not self:CanConfigure() or not valid[group] or type(self.db[group])~="table" or self.db[group][key]==nil then return false end
     if not Valid(self,function(db) db[group][key]=value end) then return false end
+    -- Look changes come from Layout sliders: redraw only, no new read.
+    if group=="look" or group=="watchLook" then self:Update();if addon.RefreshConfig then addon:RefreshConfig() end;return true end
     self:Changed();return true
 end
 function M:SetBuff(key,value) return self:SetGroupOption("buffs",key,value) end
@@ -72,9 +74,16 @@ function M:Known(id)
     return Truthy(IsPlayerSpell,id) or Truthy(IsSpellKnown,id)
 end
 -- Highest known rank of a chain, or nil.
+-- Cached until spells change (SPELLS_CHANGED, settings), since it runs every tick.
 function M:Best(chain)
     if type(chain)~="table" then return end
-    for i=#chain,1,-1 do if self:Known(chain[i]) then return chain[i] end end
+    self.bestCache=self.bestCache or {}
+    local cached=self.bestCache[chain]
+    if cached~=nil then return cached or nil end
+    local best=false
+    for i=#chain,1,-1 do if self:Known(chain[i]) then best=chain[i];break end end
+    self.bestCache[chain]=best
+    return best or nil
 end
 function M:SpellName(id)
     local name=Call(C_Spell and C_Spell.GetSpellName,id)
@@ -184,10 +193,12 @@ function M:ReadAuras(unit)
         if not ok then return nil end
         if a==nil then break end
         if not Public(a) or type(a)~="table" then return nil end
-        local id=Field(a,"spellId")
+        -- Plain AuraData table (checked not secret above): read fields directly; each
+        -- value is still checked, since single fields can be secret.
+        local id=a.spellId
         if not Number(id,1,2147483647) then return nil end
-        local expires,duration,count=Field(a,"expirationTime"),Field(a,"duration"),Field(a,"applications")
-        local name,source=Field(a,"name"),Field(a,"sourceUnit")
+        local expires,duration,count=a.expirationTime,a.duration,a.applications
+        local name,source=a.name,a.sourceUnit
         list[#list+1]={id=id,expires=Number(expires,0.001) and expires or nil,duration=Number(duration,0.001) and duration or nil,
             count=Number(count,0,10000) and count or nil,name=Public(name) and type(name)=="string" and name or nil,
             source=Public(source) and type(source)=="string" and source or nil}
@@ -305,6 +316,7 @@ function M:ScanBags()
 end
 
 function M:RefreshKnowledge()
+    self.bestCache={}
     self.class=self:PlayerClass()
     local name=Call(UnitName,"player")
     if Public(name) and type(name)=="string" then self.playerName=name end
@@ -313,18 +325,24 @@ end
 -- The read-and-count engine ---------------------------------------------------
 
 -- states[key]={present=true|false|nil, expires=t|nil, charges, estimated, icon, who}
-function M:Scan()
+-- full: read every group member too; otherwise only members whose auras changed.
+function M:Scan(full)
     local now=self:Now()
     local states=self.states
     local list=self:ReadAuras("player")
     self.readable=list~=nil
+    -- Still restricted after combat (encounter, PvP): read again next tick.
+    if not list and not self:InCombat() then self.retryRead=true else self.retryRead=nil end
     for _,b in ipairs(D.buffs) do
         if b.class=="ALL" or b.class==self.class then
             local s=states[b.key] or {};states[b.key]=s
             if b.kind=="aura" or b.kind=="food" or b.kind=="active" then
                 if list then
                     local rec=self:MatchAura(b,list)
-                    s.present=rec~=nil;s.expires=rec and rec.expires or nil;s.charges=rec and rec.count or nil
+                    s.present=rec~=nil;s.expires=rec and rec.expires or nil
+                    -- Applications mean charges only once the aura has been seen stacked.
+                    if rec and rec.count and rec.count>1 then s.stacked=true elseif not rec then s.stacked=nil end
+                    s.charges=rec and s.stacked and rec.count or nil
                     s.estimated=false;s.readAt=now
                     if rec and rec.duration then s.duration=rec.duration end
                 end
@@ -351,7 +369,8 @@ function M:Scan()
             end
         end
     end
-    if self.ScanGroup then self:ScanGroup(now) end
+    if self.ScanGroup then self:ScanGroup(now,not full and (self.dirtyUnits or {}) or nil) end
+    self.dirtyUnits={}
     self.lastScan=now
 end
 
@@ -364,7 +383,9 @@ function M:WarnAt(b,s)
     if b.poison then return self.db.poisonWarn*60 end
     local duration=(s and s.duration) or b.duration
     local minutes=self.db.warnMinutes
-    if minutes>0 then return math.min(minutes*60,duration or minutes*60) end
+    -- A fixed time that would cover half the buff or more falls back to automatic,
+    -- so short buffs (Battle Shout, Inner Fire) never warn from the moment they're cast.
+    if minutes>0 and (not duration or minutes*60<duration*0.5) then return minutes*60 end
     if not duration then return 0 end
     return math.min(300,duration*0.25)
 end
@@ -435,10 +456,12 @@ end
 -- Entries the display shows now, in catalog order.
 function M:Visible(entries)
     local db=self.db
+    self.suppressed=true
     if not db.show then return {} end
     local combat=self:InCombat()
     if combat and (db.when=="neededOOC" or db.when=="alwaysOOC") then return {} end
     if not self:PlaceAllowed() then return {} end
+    self.suppressed=false
     local all=db.when=="always" or (db.when=="alwaysOOC" and not combat)
     local out={}
     for _,e in ipairs(entries) do
@@ -462,9 +485,14 @@ function M:RestoreDismissed() self.dismissed={};self:Update();if addon.RefreshCo
 
 function M:Update(rescan)
     if not self.active then return end
+    if not self:InCombat() and self.RegisterPositions and not addon.PositionManager.elements[self.MAIN_ID] and (self.registerTries or 0)<3 then
+        self.registerTries=(self.registerTries or 0)+1
+        self:RegisterPositions()
+    end
+    if self.retryRead and not self:InCombat() then self.dirty=true end
     if rescan or (self.dirty and not self:InCombat()) or not self.lastScan then
         self.dirty=false
-        self:Scan()
+        self:Scan(rescan or not self.lastScan)
     else
         -- Combat: weapons and totems are still read; auras keep their stored end times.
         for _,b in ipairs(D.buffs) do
@@ -491,28 +519,35 @@ function M:Update(rescan)
     for _,e in ipairs(entries) do if e.status=="ok" then self.dismissed[e.key]=nil end end
     self.entries=entries
     local shown=self:Visible(entries)
-    self:Announce(shown)
+    self:Announce(entries)
     self.shown=shown
     if self.Render then self:Render(shown) end
     if self.RenderGroup then self:RenderGroup() end
+    if self.LayoutSecure then self:LayoutSecure() end
 end
 
 -- One sound when a reminder first appears; never for the reminders already up at login.
-function M:Announce(shown)
+-- Tracks what is due whether or not it is on screen, so dismounting or leaving
+-- combat never replays the sound for reminders that were already up.
+function M:Announce(entries)
     local now={}
-    for _,e in ipairs(shown) do if e.status=="missing" or e.status=="expiring" then now[e.key]=true end end
+    for _,e in ipairs(entries) do if (e.status=="missing" or e.status=="expiring") and not self.dismissed[e.key] then now[e.key]=true end end
     local fresh=false
     if self.announced then for key in pairs(now) do if not self.announced[key] then fresh=true end end end
     self.announced=now
-    if fresh and self.db.look.sound and not self.previewing and not self.editing then
+    if fresh and not self.suppressed and self.db.look.sound and not self.previewing and not self.editing then
         local sound=SOUNDKIT and SOUNDKIT.RAID_WARNING
         if sound then pcall(PlaySound,sound,"Master") end
     end
 end
 
 -- Your own casts are visible in combat: a reapplied buff restarts its timer.
-function M:OnSpellCast(unit,spell)
-    if not Public(unit) or unit~="player" or not Number(spell,1,2147483647) then return end
+function M:OnSpellCast(unit,guid,spell)
+    if not Public(unit) or unit~="player" then return end
+    -- The target named by UNIT_SPELLCAST_SENT, only for this very cast.
+    local sent=self.lastSent;self.lastSent=nil
+    self.castTarget=sent and Public(guid) and sent.guid==guid and sent.target or nil
+    if not Number(spell,1,2147483647) then return end
     local now=self:Now()
     for _,b in ipairs(D.buffs) do
         if b.class==self.class or b.class=="ALL" then
@@ -527,7 +562,7 @@ function M:OnSpellCast(unit,spell)
                 if not hit and b.kind=="active" then hit=detectSets[b.key][spell]==true end
             end
             -- A group buff cast on someone else restarts their timer, not yours.
-            local target=self.lastCastTarget
+            local target=self.castTarget
             local onSelf=target==nil or target=="" or target==self.playerName
             if hit and (b.kind~="aura" or not b.party or onSelf) then
                 s=s or {};self.states[b.key]=s
@@ -538,7 +573,7 @@ function M:OnSpellCast(unit,spell)
         end
     end
     if self.OnGroupCast then self:OnGroupCast(spell,now) end
-    self.lastCastTarget=nil
+    self.castTarget=nil
     self.dirty=true
     self:Update()
 end
@@ -570,21 +605,22 @@ local function Watched(unit)
 end
 
 function M:OnEvent(event,a,b,c,d)
-    if event=="UNIT_SPELLCAST_SUCCEEDED" then self:OnSpellCast(a,c);return end
+    if event=="UNIT_SPELLCAST_SUCCEEDED" then self:OnSpellCast(a,b,c);return end
     if (event=="UNIT_INVENTORY_CHANGED" or event=="UNIT_PET") and not (Public(a) and a=="player") then return end
     if event=="UNIT_SPELLCAST_SENT" then
-        if Public(a) and a=="player" and Public(b) and type(b)=="string" then self.lastCastTarget=b;self.lastCastSpell=d end
+        if Public(a) and a=="player" and Public(b) and type(b)=="string" and Public(c) then self.lastSent={target=b,guid=c} end
         return
     end
     if event=="UNIT_AURA" then
         if self:InCombat() or not Watched(a) then return end
+        self.dirtyUnits=self.dirtyUnits or {};self.dirtyUnits[a]=true
         self.dirty=true;self:ScheduleUpdate();return
     end
-    if event=="PLAYER_ENTERING_WORLD" then self.dismissed={};self.announced=nil;self.foodNames=nil end
+    if event=="PLAYER_ENTERING_WORLD" then self.dismissed={};self.announced=nil;self.foodNames=nil;self.registerTries=0 end
     if event=="PLAYER_REGEN_ENABLED" then
         -- Anything a combat login or reload postponed: click buttons and Layout registration.
         if self.secureAvailable==nil and self.CreateSecure then self:CreateSecure() end
-        if self.RegisterPositions and not addon.PositionManager.elements[self.MAIN_ID] then self:RegisterPositions() end
+        self.registerTries=0
         if self.ThawSecure then self:ThawSecure() end
     end
     if event=="PLAYER_REGEN_DISABLED" then
@@ -594,15 +630,17 @@ function M:OnEvent(event,a,b,c,d)
     if event=="SPELLS_CHANGED" or event=="LEARNED_SPELL_IN_SKILL_LINE" then self:RefreshKnowledge() end
     if event=="BAG_UPDATE_DELAYED" or event=="PLAYER_ENTERING_WORLD" or event=="PLAYER_REGEN_ENABLED" then self:ScanBags() end
     if event=="GROUP_ROSTER_UPDATE" and self.RefreshRoster then self:RefreshRoster() end
+    -- Bags, gear, totems and pets only need your own state; these need everyone.
+    local full={PLAYER_ENTERING_WORLD=true,PLAYER_REGEN_ENABLED=true,GROUP_ROSTER_UPDATE=true,SPELLS_CHANGED=true,LEARNED_SPELL_IN_SKILL_LINE=true}
     self.dirty=true
-    self:Update(not self:InCombat())
+    self:Update(full[event]==true and not self:InCombat())
 end
 
 -- UNIT_AURA arrives in bursts; read once on the next tick.
 function M:ScheduleUpdate()
     if self.pendingUpdate then return end
     self.pendingUpdate=true
-    C_Timer.After(0.1,function() self.pendingUpdate=false;if self.active then self:Update() end end)
+    C_Timer.After(0.25,function() self.pendingUpdate=false;if self.active then self:Update() end end)
 end
 
 function M:OnInitialize()

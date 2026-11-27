@@ -75,11 +75,14 @@ end
 
 local function Mine(rec) return rec.source==nil or rec.source=="player" or rec.source=="pet" end
 
-function M:ScanGroup(now)
+-- only: unit set to read (auras changed); nil reads everyone.
+function M:ScanGroup(now,only)
     self.roster=self.roster or {}
     local watched=self:WatchedBuffs()
     local groupKinds={}
-    for _,b in ipairs(D.buffs) do if b.kind=="group" and b.class==self.class then groupKinds[#groupKinds+1]=b end end
+    for _,b in ipairs(D.buffs) do
+        if b.kind=="group" and b.class==self.class and self.db.buffs[b.key] and self:Applicable(b) then groupKinds[#groupKinds+1]=b end
+    end
     if #watched==0 and #groupKinds==0 then return end
     local found={}
     local function Check(unit,name,list)
@@ -91,13 +94,14 @@ function M:ScanGroup(now)
             end
         end
     end
-    local complete=true
+    local complete,scanned=only==nil,{player=true}
     local mine=self:ReadAuras("player")
-    if mine then Check("player","you",mine) else complete=false end
+    if mine then Check("player","you",mine) else complete=false;scanned.player=nil end
     for _,m in ipairs(self.roster) do
         local member=self.members[m.name] or {buffs={}};self.members[m.name]=member
         member.unit,member.class=m.unit,m.class
-        local list=self:ReadAuras(m.unit)
+        local list=(not only or only[m.unit]) and self:ReadAuras(m.unit) or nil
+        if list then scanned[m.unit]=true end
         if list then
             Check(m.unit,m.name,list)
             for _,b in ipairs(watched) do
@@ -109,14 +113,15 @@ function M:ScanGroup(now)
                 s.present=best~=nil;s.expires=best and best.expires or nil;s.estimated=false
                 if best and b.key=="blessing" then member.blessing=blessingFamily[best.id] or member.blessing end
             end
-        else complete=false end
+        elseif not only or only[m.unit] then complete=false end
     end
-    -- Only a complete read proves a one-target buff is gone.
+    -- Only a complete read proves a one-target buff is gone; a partial read
+    -- can only clear it from a player who was read.
     for _,b in ipairs(groupKinds) do
         local s=self.states[b.key] or {};self.states[b.key]=s
         local f=found[b.key]
         if f then s.present=true;s.expires=f.expires;s.who=f.who;s.whoUnit=f.unit;s.estimated=false;if f.duration then s.duration=f.duration end
-        elseif complete then s.present=false;s.expires=nil;s.who=nil;s.whoUnit=nil end
+        elseif complete or (s.whoUnit and scanned[s.whoUnit]) then s.present=false;s.expires=nil;s.who=nil;s.whoUnit=nil end
     end
 end
 
@@ -134,7 +139,7 @@ end
 
 -- Your cast on a group member (target from UNIT_SPELLCAST_SENT) restarts that member's timer.
 function M:OnGroupCast(spell,now)
-    local target=self.lastCastTarget
+    local target=self.castTarget
     for _,b in ipairs(D.buffs) do
         if b.class==self.class and b.kind=="group" and self.detectSets[b.key] then
             local chain=self:ChainFor(b)
@@ -144,7 +149,8 @@ function M:OnGroupCast(spell,now)
                 local s=self.states[b.key] or {};self.states[b.key]=s
                 local member=target and self.members and self.members[target]
                 s.present=true;s.expires=now+(s.duration or b.duration);s.estimated=true
-                s.who=member and target or "you";s.whoUnit=member and member.unit or "player"
+                local other=target and target~="" and target~=self.playerName
+                s.who=other and target or "you";s.whoUnit=member and member.unit or (not other and "player" or nil)
             end
         end
     end
