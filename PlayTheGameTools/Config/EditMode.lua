@@ -140,6 +140,54 @@ local function CreateStyleCard(owner, window)
     background.switch = switch
     card.backgroundRow = background
 
+    -- A display may add its own groups below the shared rows
+    -- (element.styleGroups: {{title=, rows={{kind=slider|select|toggle, label=, ...}}}}).
+    -- Each group folds like Position; values are saved by the display itself.
+    local Hold -- defined with the card's other slider handling below
+    card.extras, card.extraOpen = {}, {}
+    local function BuildExtras(element)
+        if card.extras[element.id] or type(element.styleGroups) ~= "table" then return card.extras[element.id] end
+        local built = {}
+        for _, spec in ipairs(element.styleGroups) do
+            local group = { title = spec.title, rows = {} }
+            group.toggle = W.Button(card, spec.title, CARD_WIDTH - PAD * 2, 28, "secondary")
+            group.toggle:SetScript("OnClick", function()
+                card.extraOpen[spec.title] = not (card.extraOpen[spec.title] ~= false)
+                owner:RefreshEditWindow()
+            end)
+            for _, rowSpec in ipairs(spec.rows or {}) do
+                local row = Row(rowSpec.label)
+                local function Set(value)
+                    if refreshing or InCombat() then return end
+                    rowSpec.set(value)
+                    if card:IsShown() then card:Refresh() end
+                end
+                if rowSpec.kind == "slider" then
+                    row.refresh = W.Slider(row.host, rowSpec.min, rowSpec.max, rowSpec.step or 1, rowSpec.get, Set, rowSpec.suffix or "")
+                    Hold(row.host.slider)
+                elseif rowSpec.kind == "select" then
+                    local select = W.Select(row.host, CONTROL, function() return rowSpec.choices end, function()
+                        local value = rowSpec.get()
+                        for _, choice in ipairs(rowSpec.choices) do if choice.id == value then return choice.id, choice.label end end
+                        return value, tostring(value)
+                    end, Set)
+                    select:ClearAllPoints(); select:SetPoint("TOPLEFT")
+                    row.dropdown, row.refresh = select, function() select:Refresh() end
+                else
+                    local toggle = W.Button(row.host, "", 34, 30, "toggle")
+                    toggle:SetPoint("LEFT")
+                    toggle:SetScript("OnClick", function() Set(not rowSpec.get()) end)
+                    row.switch, row.refresh = toggle, function() toggle:SetSelected(rowSpec.get() == true) end
+                end
+                group.rows[#group.rows + 1] = row
+            end
+            built[#built + 1] = group
+        end
+        card.extras[element.id] = built
+        return built
+    end
+    card.BuildExtras = BuildExtras
+
     -- Anchoring and exact offsets, folded away until asked for.
     local positionToggle = W.Button(card, "Position", CARD_WIDTH - PAD * 2, 28, "secondary")
     positionToggle:SetScript("OnClick", function()
@@ -251,6 +299,23 @@ local function CreateStyleCard(owner, window)
         local y = HEADER + 10
         for _, spec in ipairs(SLIDERS) do Place(self.sliders[spec.key], y); y = y + ROW end
         Place(background, y); y = y + ROW
+        local element = Selected()
+        for id, groups in pairs(card.extras) do
+            local current = element and element.id == id
+            for _, group in ipairs(groups) do
+                local open = card.extraOpen[group.title] ~= false
+                if current then
+                    group.toggle:ClearAllPoints(); group.toggle:SetPoint("TOPLEFT", PAD, -y - 2)
+                    group.toggle.label:SetText(group.title .. (open and "  -" or "  +"))
+                    group.toggle:Show()
+                    y = y + ROW
+                else group.toggle:Hide() end
+                for _, row in ipairs(group.rows) do
+                    if current and open then Place(row, y); y = y + ROW
+                    else Hide(row); if row.dropdown then row.dropdown.menu:Hide() end end
+                end
+            end
+        end
         positionToggle:ClearAllPoints(); positionToggle:SetPoint("TOPLEFT", PAD, -y - 2)
         positionToggle.label:SetText(self.positionOpen and "Position  -" or "Position  +")
         y = y + ROW
@@ -285,7 +350,7 @@ local function CreateStyleCard(owner, window)
     end
 
     -- Holding a card slider keeps the card where it is until release.
-    local function Hold(slider)
+    function Hold(slider)
         slider:HookScript("OnMouseDown", function(_, button)
             if button == "LeftButton" then card.holding = true end
         end)
@@ -316,6 +381,9 @@ local function CreateStyleCard(owner, window)
         text.slider:SetEnabled(element.styleText)
         text.label:SetTextColor(unpack(element.styleText and T.secondary or T.unavailable))
         switch:SetSelected(style.background)
+        for _, group in ipairs(BuildExtras(element) or {}) do
+            for _, row in ipairs(group.rows) do row.refresh() end
+        end
         local anchoring = element.supportsAnchoring == true
         local available = P:Resolve(element.position.target or "screen") ~= nil
         targets:SetEnabled(anchoring); placements:SetEnabled(anchoring and available)
@@ -339,6 +407,11 @@ local function CreateStyleCard(owner, window)
     end
     function card:CloseMenus()
         for _, row in ipairs(position) do if row.dropdown then row.dropdown.menu:Hide() end end
+        for _, groups in pairs(card.extras) do
+            for _, group in ipairs(groups) do
+                for _, row in ipairs(group.rows) do if row.dropdown then row.dropdown.menu:Hide() end end
+            end
+        end
     end
     return card
 end

@@ -52,7 +52,7 @@ function M:DragHandle(f,xKey,yKey,lock)
     f.elementId=xKey=="x" and "roguePoisonReminder" or "rogueQuickPoisons"
 end
 function M:StartElementDrag(f)
-    if not self.active or not self.db[f.enableKey] or not D.OutsideCombat() then return end
+    if not self.active or not self:PartOn(f.enableKey) or not D.OutsideCombat() then return end
     if addon.editMode then return addon.PositionManager:StartDragging(f.elementId) end
 end
 function M:StopElementDrag(f)
@@ -237,7 +237,8 @@ function M:Layout()
 end
 function M:Render()
     if not self.active or not self.isRogue or not self.watcher then return end
-    if not self.db.watcher and not self.db.flyout then self.watcher:Hide();self.launcher:Hide();self.menu:Hide();return end
+    local watcherOn=self:PartOn("watcher")
+    if not watcherOn and not self.db.flyout then self.watcher:Hide();self.launcher:Hide();self.menu:Hide();return end
     local db=self.db;local ooc=D.OutsideCombat();local states={self:ReadHand(1),self:ReadHand(2)}
     self.reminderStates=states
     self:Observe(states)
@@ -250,7 +251,7 @@ function M:Render()
         local visibility=db.reminderVisibility
         local combat=visibility=="needed" or visibility=="always"
         local always=visibility=="alwaysOOC" or visibility=="always"
-        local show=db.watcher and (ooc or combat) and ((not state.empty and (needs or always) and not dismissed) or placement)
+        local show=watcherOn and (ooc or combat) and ((not state.empty and (needs or always) and not dismissed) or placement)
         if show then
             any=true;b.icon:SetTexture(state.icon or (p and p.icon) or "Interface\\Icons\\Trade_BrewPoison")
             local text=state.empty and "No weapon" or state.unknown and "Unknown" or state.missing and "Missing" or string.format("%d:%02d",math.floor(state.seconds/60),math.floor(state.seconds%60))

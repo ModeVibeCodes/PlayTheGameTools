@@ -1,0 +1,207 @@
+local _,addon=...
+local M=addon.BuffReminders
+if not M then return end
+local D=addon.BuffRemindersData
+local Public,Number=D.Public,D.Number
+
+-- Click to reapply. Secure action buttons (SecureActionButtonTemplate) are a
+-- separate layer on UIParent, laid over the visual reminders out of combat.
+-- They are never parented or anchored to the displays, so the displays stay
+-- unprotected and movable. In combat nothing here is shown, hidden, moved or
+-- rebound: buttons placed before the fight keep working where they are, and
+-- reminders that first appear mid-fight are visual only until combat ends.
+-- Left-click casts; right-click only dismisses (PreClick, insecure display work).
+-- Buffs for another player use one macro rule: your friendly target, else you.
+local TARGET_OR_SELF="[@target,help,nodead][@player]"
+local ATTRIBUTES={"type1","spell1","unit1","item1","macrotext1","target-slot1"}
+
+function M:CreateSecure()
+    if self.secureAvailable~=nil or self:InCombat() then return end
+    local ok,probe=pcall(CreateFrame,"Button",nil,UIParent,"SecureActionButtonTemplate")
+    if not ok or type(probe)~="table" or type(probe.SetAttribute)~="function" then
+        self.secureAvailable=false
+        if ok and type(probe)=="table" and probe.Hide then probe:Hide() end
+        return
+    end
+    self.secureAvailable=true
+    self.securePool={main={},group={}}
+    self:PrepareSecure(probe)
+    self.securePool.main[1]=probe
+end
+
+function M:PrepareSecure(b)
+    b:Hide()
+    b:SetFrameStrata("MEDIUM")
+    if b.SetFrameLevel then b:SetFrameLevel(20) end
+    b:RegisterForClicks("LeftButtonUp","RightButtonUp")
+    b:SetAttribute("useOnKeyDown",false)
+    b:SetScript("PreClick",function(btn,button)
+        if button=="RightButton" and btn.dismissKey then self:Dismiss(btn.dismissKey) end
+    end)
+    b:SetScript("OnEnter",function(btn) if btn.region then self:ShowTooltip(btn.region) end end)
+    b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
+end
+
+function M:SecureButton(pool,index)
+    local list=self.securePool[pool]
+    if list[index] then return list[index] end
+    if self:InCombat() then return end
+    local ok,b=pcall(CreateFrame,"Button",nil,UIParent,"SecureActionButtonTemplate")
+    if not ok or type(b)~="table" or type(b.SetAttribute)~="function" then return end
+    self:PrepareSecure(b)
+    list[index]=b
+    return b
+end
+
+-- What a left-click does for a reminder; nil when it can't be applied by click.
+function M:ActionFor(e)
+    local b=e.buff
+    if not b or b.noClick or e.sample then return end
+    if e.totems then
+        local names={}
+        for _,t in ipairs(e.totems) do
+            local kind=D.TotemType(t.buff.element,self.db.totems[t.buff.element])
+            local spell=kind and self:Best(kind.spells)
+            local name=spell and self:SpellName(spell)
+            if name then names[#names+1]=name end
+        end
+        if #names==0 then return end
+        return {type="macro",text="/castsequence reset=15 "..table.concat(names,", ")}
+    end
+    if b.kind=="food" then return self.bestFood and {type="item",item="item:"..self.bestFood} or nil end
+    if b.kind=="weapon" then
+        if b.poison or b.key=="weaponStone" or b.key=="weaponOil" then
+            local list=b.key=="weaponOil" and D.items.weaponOil or D.items[self.db.choices[b.choice]]
+            local item=self:BestItem(list)
+            return item and {type="item",item="item:"..item,slot=b.hand==1 and 16 or 17} or nil
+        end
+        local spell=self:Best(self:ChainFor(b))
+        return spell and {type="spell",spell=spell} or nil
+    end
+    if b.kind=="totem" then
+        local kind=D.TotemType(b.element,self.db.totems[b.element])
+        local spell=kind and self:Best(kind.spells)
+        return spell and {type="spell",spell=spell} or nil
+    end
+    if b.key=="soulstone" then
+        local stone=self:BestItem(D.items.soulstone)
+        if stone then return {type="macro",text="/use "..TARGET_OR_SELF.." item:"..stone} end
+        local create=self:Best(D.chains.createSoulstone)
+        return create and {type="spell",spell=create,unit="player"} or nil
+    end
+    if b.kind=="group" then
+        local spell=self:Best(self:ChainFor(b))
+        local name=spell and self:SpellName(spell)
+        return name and {type="macro",text="/cast "..TARGET_OR_SELF.." "..name} or nil
+    end
+    local spell=self:Best(self:ChainFor(b))
+    return spell and {type="spell",spell=spell,unit=b.kind=="pet" and nil or "player"} or nil
+end
+
+-- A group watcher icon casts that player's buff on them.
+function M:MemberAction(member,buff)
+    if not member or member.status=="dead" or not member.unit or member.sample then return end
+    local chain=member.family and D.chains[member.family] or self:ChainFor(buff)
+    local spell=self:Best(chain)
+    return spell and {type="spell",spell=spell,unit=member.unit} or nil
+end
+
+local function Signature(action)
+    if not action then return "none" end
+    return table.concat({action.type or "",tostring(action.spell or ""),action.unit or "",action.item or "",action.text or "",tostring(action.slot or "")},"|")
+end
+
+function M:BindSecure(b,action)
+    local signature=Signature(action)
+    if b.signature==signature then return end
+    for _,name in ipairs(ATTRIBUTES) do b:SetAttribute(name,nil) end
+    if action then
+        if action.type=="spell" then
+            b:SetAttribute("spell1",action.spell)
+            if action.unit then b:SetAttribute("unit1",action.unit) end
+        elseif action.type=="item" then
+            b:SetAttribute("item1",action.item)
+            if action.slot then b:SetAttribute("target-slot1",action.slot) end
+        elseif action.type=="macro" then
+            b:SetAttribute("macrotext1",action.text)
+        end
+        b:SetAttribute("type1",action.type)
+    end
+    b.signature=signature
+end
+
+-- Screen rectangle of a region, in UIParent units.
+local function Rect(region)
+    local left,bottom,width,height=region:GetLeft(),region:GetBottom(),region:GetWidth(),region:GetHeight()
+    local scale=region:GetEffectiveScale()
+    local parent=UIParent:GetEffectiveScale()
+    for _,v in ipairs({left,bottom,width,height,scale,parent}) do if not Number(v,-100000,100000) then return end end
+    if parent<=0 then return end
+    local ratio=scale/parent
+    return left*ratio,bottom*ratio,width*ratio,height*ratio
+end
+
+function M:SecureActive()
+    return self.secureAvailable and self.active and self.db.click and not self.editing and not self.previewing
+end
+
+-- Visual icons take the mouse (tooltip, right-click dismiss) only where no
+-- click button covers them, and never while placing in Layout.
+function M:SlotMouse(covered)
+    local free=not covered and not self.editing and not self.previewing
+    for _,list in ipairs({self.slots or {},self.groupSlots or {}}) do
+        for _,slot in ipairs(list) do
+            if slot.region and slot.region.EnableMouse then slot.region:EnableMouse(free) end
+        end
+    end
+end
+
+function M:LayoutSecure()
+    if not self.secureAvailable then
+        if not self:InCombat() then self:SlotMouse(false) end
+        return
+    end
+    if self:InCombat() then self.securePending=true;return end
+    self.securePending=false
+    local on=self:SecureActive()
+    local function Place(pool,slots,actionOf)
+        local used=0
+        if on then
+            for _,slot in ipairs(slots or {}) do
+                local action=not slot.late and actionOf(slot)
+                local region=slot.region
+                if action and region and region:IsShown() then
+                    local x,y,w,h=Rect(region)
+                    if x then
+                        used=used+1
+                        local b=self:SecureButton(pool,used)
+                        if not b then used=used-1;break end
+                        self:BindSecure(b,action)
+                        b:ClearAllPoints();b:SetPoint("BOTTOMLEFT",UIParent,"BOTTOMLEFT",x,y);b:SetSize(w,h)
+                        b.region,b.dismissKey=region,slot.keys
+                        b:Show()
+                    end
+                end
+            end
+        end
+        for i=used+1,#self.securePool[pool] do
+            local b=self.securePool[pool][i]
+            b:Hide();b.region,b.dismissKey=nil,nil
+        end
+    end
+    Place("main",self.slots,function(slot) return self:ActionFor(slot.entry) end)
+    Place("group",self.groupSlots,function(slot) return self:MemberAction(slot.member,slot.buff) end)
+    self:SlotMouse(on)
+end
+
+-- Combat start: remember where every clickable reminder sits, so the display
+-- keeps them there until combat ends.
+function M:FreezeSecure()
+    local keys={}
+    for _,slot in ipairs(self.slots or {}) do keys[#keys+1]=slot.keys end
+    self.frozen=keys
+end
+function M:ThawSecure()
+    self.frozen=nil
+    if self.securePending then self:LayoutSecure() end
+end

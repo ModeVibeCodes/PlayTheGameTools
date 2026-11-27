@@ -15,6 +15,7 @@ W.ModeLayoutPlans={
         return section:sub(1,4)=="Food" and "food" or "professions"
     end},
     threatMeter={route=function() return "meter" end},
+    buffReminders={route=function(row) return row.section and row.section.title or "reminder" end},
     cityLabels={route=function() return "labels" end},
     enhancedExperienceBar={route=function(row)
         return row.section and row.section.title=="Session Text" and "session" or "bar"

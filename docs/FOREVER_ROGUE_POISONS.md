@@ -303,3 +303,11 @@ On 2026-11-10 the owner confirmed the independent Quick Access right-click
 dismissal works as expected and authorized merging PR #28 into main. This closes
 the focused dismissal correction; prior broader poison/combat coverage limits
 remain unchanged. No release publication or SavedVariables reset.
+
+## Buff Reminders handover
+
+While the Buff Reminders module is on and tracks a poison, the Poison Reminder
+steps aside at runtime and the Poison Reminder section shows a note; the saved
+**Show reminder** setting is unchanged and Quick Poisons keeps working. Buff
+Reminders adopts the time and charge thresholds once. See
+[Buff Reminders](BUFF_REMINDERS.md#rogue-tools).

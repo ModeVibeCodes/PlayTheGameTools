@@ -98,6 +98,11 @@ Modules\ForeverRogueData.lua
 Modules\ForeverRogue.lua
 Modules\ForeverRogueInventory.lua
 Modules\ForeverRogueDisplay.lua
+Modules\BuffRemindersData.lua
+Modules\BuffReminders.lua
+Modules\BuffRemindersGroup.lua
+Modules\BuffRemindersDisplay.lua
+Modules\BuffRemindersSecure.lua
 Core\StyleReset.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua
@@ -135,5 +140,6 @@ Config\CampfireMonitor.lua
 Config\LootSparkles.lua
 Config\EnhancedExperienceBar.lua
 Config\ForeverRogue.lua
+Config\BuffReminders.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua

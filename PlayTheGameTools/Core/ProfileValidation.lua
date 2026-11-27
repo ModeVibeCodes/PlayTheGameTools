@@ -54,6 +54,10 @@ function V:Normalize(source)
         addon.ForeverRecruitment.Initialize(profile.modules.foreverRecruitment)
     end
     if addon.ThreatMeter then addon.ThreatMeter.Initialize(profile.modules.threatMeter) end
+    if addon.BuffRemindersData and profile.modules.buffReminders then
+        addon.BuffRemindersData.AdoptRogue(profile.modules.buffReminders,profile.modules)
+        addon.BuffRemindersData.Initialize(profile.modules.buffReminders)
+    end
     if addon.CityLabels then addon.CityLabels.Initialize(profile.modules.cityLabels) end
     if addon.EnhancedExperienceBar then addon.EnhancedExperienceBar.Initialize(profile.modules.enhancedExperienceBar) end
     if addon.ForeverQuickAccessData then addon.ForeverQuickAccessData.Initialize(profile.modules.foreverQuickAccess) end

@@ -2,6 +2,22 @@
 
 Global Settings now groups Appearance, account-wide Profiles, Optimizations and Class Colors. Bundled LibSharedMedia plus licensed PTG media populate the dropdowns. Standard game UI fonts inherit; module overrides stay in their own controls. Added account-wide profile selection/import/export, Auto Loot/Fast Loot, camera zoom, detected UI scale and red-error suppression. Prior page-only native feedback is retained; these additions await in-game confirmation. See docs/GLOBAL_SETTINGS.md.
 
+## Unreleased
+
+- **Buff Reminders** (new, off by default): warns when your class buffs,
+  poisons, imbues, totems, group buffs or food are missing or about to run
+  out, for your class only. Timers are read out of combat and keep counting
+  through combat (shown with `~`). Reminders dim or hide when you can't apply
+  them, show as icons, text or the most urgent one, and reapply with a
+  left-click (buffs for others go on your friendly target, else you). The
+  group watcher shows your buff on every party or raid member with their name
+  in class colour. Shamans pick which totems to be reminded about. Styling
+  lives on two Layout Style cards with their own Display and Group watcher
+  groups. While it tracks poisons, Rogue Tools' Poison Reminder steps aside;
+  its time and charge settings are adopted once. See docs/BUFF_REMINDERS.md.
+- Layout's Style card can carry extra groups for a display; Reset restores
+  them too.
+
 ## 0.4.1
 
 - Layout: dragging a Style card slider (Scale, Opacity, Text size, X/Y

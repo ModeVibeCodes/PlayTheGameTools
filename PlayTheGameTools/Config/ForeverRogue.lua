@@ -66,8 +66,13 @@ function M:CreateConfigPage(parent)
     -- the display there. Layout-only keys (vertical, columns, label/timer
     -- positions, label text, visible menu rows) stay saved without a control.
     page:Section("Poison Reminder",nil,false)
-    local function Reminder() return self.db.watcher end
-    Toggles({{"Show reminder","watcher"}})
+    local function Reminder() return self.db.watcher and not self:HandedOver() end
+    local handC,handRow=FullRow("",52)
+    page.handoverNote=W.Label(handC,"Buff Reminders now shows your poison reminder, with the same time, charge and dismiss settings. Turn off its poison reminders to use this one again.",nil,0,-8,380,addon.Theme.muted)
+    page.handoverNote:SetWordWrap(true)
+    handRow.layoutChildren=function(_,width) page.handoverNote:SetWidth(width-12) end
+    handRow.visibleWhen=function() return self:HandedOver() end
+    Toggles({{"Show reminder","watcher"}});Visible(function() return not self:HandedOver() end)
     local choices={{id="needed",label="When Needed"},{id="neededOOC",label="When Needed (OOC)"},{id="alwaysOOC",label="Always Outside Combat"},{id="always",label="Always, Including Combat"}}
     page.reminderVisibility=Select("When",choices,function() for _,c in ipairs(choices) do if c.id==self.db.reminderVisibility then return c.id,c.label end end end,function(v) self:SetOption("reminderVisibility",v) end)
     Visible(Reminder)
@@ -131,7 +136,7 @@ function M:CreateConfigPage(parent)
         end
         page.settingsButtons[2]:SetEnabled(self.active and (next(self.dismissed)~=nil or self.quickDismissed==true))
         page.settingsButtons[3]:SetEnabled(self.active and self.db.flyout and not self.quickDismissed and not self.editing and not self.previewing)
-        page.displayButtons[1]:SetEnabled(self.db.watcher);page.displayButtons[2]:SetEnabled(self.db.flyout)
+        page.displayButtons[1]:SetEnabled(self:PartOn("watcher"));page.displayButtons[2]:SetEnabled(self.db.flyout)
         status:SetText(StatusText() or "")
         page:Layout()
     end

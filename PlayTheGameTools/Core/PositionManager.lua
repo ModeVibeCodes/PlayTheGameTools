@@ -756,6 +756,11 @@ function PM:ResetLayout(id)
         element.position.style = nil
         self:ApplyStyle(id, true)
     end
+    -- A display with its own Style card rows resets those too.
+    if element.onLayoutReset then
+        local done, message = pcall(element.onLayoutReset, element)
+        if not done then print("Play The Game Tools: display reset callback failed: " .. tostring(message)) end
+    end
     local ok, reason = self:ResetPosition(id)
     self:NotifyPosition()
     return ok, reason

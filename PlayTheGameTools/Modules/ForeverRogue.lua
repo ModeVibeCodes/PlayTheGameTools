@@ -10,6 +10,16 @@ function M:OnInitialize()
     local _,class=UnitClass("player");self.isRogue=D.Public(class) and class=="ROGUE"
 end
 function M:CanConfigure() return D.OutsideCombat() end
+-- While Buff Reminders tracks your poisons, its reminder replaces this one;
+-- the saved Show reminder setting is left as it is. Quick Poisons is unaffected.
+function M:HandedOver()
+    local B=addon.BuffReminders
+    return B~=nil and type(B.HandlesPoisons)=="function" and B:HandlesPoisons()==true
+end
+function M:PartOn(key)
+    if key=="watcher" and self:HandedOver() then return false end
+    return self.db[key]
+end
 function M:SetOption(key,value)
     if not self:CanConfigure() then return false end
     local copy=addon.ProfileCodec.Copy(self.db);copy[key]=value
@@ -151,7 +161,7 @@ function M:RegisterPositions()
             local shown=f:IsShown();f:Show()
             local ok,registered=PM:RegisterElement(f.elementId,f,{moduleId=self.id,anchoring=false,allowedTargets={"screen"},
                 defaultPosition={target="screen",placement="center",x=self.db[f.xKey],y=self.db[f.yKey]},
-                canDrag=function() return self.active and self.db[f.enableKey] end,
+                canDrag=function() return self.active and self:PartOn(f.enableKey) end,
                 onPositionChanged=function(element,position)
                     self.db[f.xKey],self.db[f.yKey]=math.floor(position.x+0.5),math.floor(position.y+0.5)
                     if self.page then self.page:Refresh() end
@@ -172,7 +182,7 @@ function M:RegisterPositions()
             f:HookScript("OnDragStop",function() self:StopDrag() end)
             f:HookScript("OnHide",function() self:StopDrag() end)
         end
-        e.editMode=self.active and self.db[f.enableKey] or false
+        e.editMode=self.active and self:PartOn(f.enableKey) or false
         self.db[f.xKey],self.db[f.yKey]=math.floor(e.position.x+0.5),math.floor(e.position.y+0.5)
         -- Layout() hand-anchors with only the module scale; force the manager to
         -- re-anchor with the full (module x Style card) scale.
@@ -183,7 +193,7 @@ function M:SyncEditElements()
     local PM=addon.PositionManager
     for _,f in ipairs({self.watcher,self.launcher}) do
         local e=PM.elements[f.elementId]
-        if e then e.editMode=self.active and self.db[f.enableKey] or false;if not e.editMode then PM:StopDragging(f.elementId) end end
+        if e then e.editMode=self.active and self:PartOn(f.enableKey) or false;if not e.editMode then PM:StopDragging(f.elementId) end end
     end
     PM:RefreshSelection()
 end
@@ -198,7 +208,7 @@ function M:SyncPosition(key)
     end
 end
 function M:EnterElementEdit(quick)
-    if not self.active or not D.OutsideCombat() or not self.db[quick and "flyout" or "watcher"] then return false end
+    if not self.active or not D.OutsideCombat() or not self:PartOn(quick and "flyout" or "watcher") then return false end
     self:Refresh();addon:SetEditMode(true)
     return addon.PositionManager:SelectElement(quick and "rogueQuickPoisons" or "roguePoisonReminder")
 end

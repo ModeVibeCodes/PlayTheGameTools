@@ -452,3 +452,11 @@ Dungeon Loot keys, and live field updates. The Quick Icon revision has positive
 owner confirmation; the owner also confirmed the final binding refinement
 working on 2026-11-07 and authorized merging PR #14. The checks above remain
 regression guidance; no release publication is authorized.
+
+## Buff Reminders
+
+Run `python tests/buff_reminders.py` with the full suite. New TOC files
+(`Modules/BuffReminders*.lua`, `Config/BuffReminders.lua`): restart the client
+once, then `/reload` OOC. The module is off by default; turn it on from sidebar
+**Buff Reminders**. Mock checks only; use the
+[in-game checklist](docs/BUFF_REMINDERS.md#in-game-checks) (B1–B15).

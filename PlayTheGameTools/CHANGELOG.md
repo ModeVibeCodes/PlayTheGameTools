@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- New **Buff Reminders** module (off by default): reminds you when your
+  class buffs, poisons, imbues, totems, group buffs or food are missing or
+  about to run out, and reapplies them with a left-click. Turn it on from
+  sidebar **Buff Reminders**; style it in **Layout**.
 - Loot Sparkles: a greyed node that is only too far away now reads **Out of
   reach** instead of "Can't gather". A node you stand next to and still can't
   gather reads **Skill too low**; quest objects still read **Can't use**.
