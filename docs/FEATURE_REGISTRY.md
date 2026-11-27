@@ -26,6 +26,8 @@ Settings (v2, formerly Global Settings): one scroll of Appearance (Theme, Class 
 | Dungeon Loot | Questing & Leveling → Dungeon Loot | All recorded Forever dungeon/wing cards, boss/quest details, customizable Quick Icon/shared Edit Mode/direct keybinding editor, automatic faction/class filtering and quest-log/completion card status, deduplicated chain tasks and bracket jumps, native map/copy controls; bundled GPLv3 catalog; no DungeonJournal dependency | SFK, PR #8 player-progress/completion/layout and PR #14 Quick Icon/keybinding revisions accepted in-game by owner; screenshots pending |
 | Map Labels | Quality of Life -> Map Labels | Opt-in world map icons/names: class and profession trainers each Mine (auto-detected class/professions)/All/Off, banks, auction houses, inns, flight masters, guild/transmog, optional stable masters, mailboxes and vendors; faction filter, sizes; Efficient Games data (CC BY 4.0) plus CMaNGOS classic-db positions (GPL-3.0) for gaps | Mock-tested; native confirmation pending; [details](CITY_LABELS.md) |
 
+Cooldown Profits: Sidebar Cooldown Profits → Open Cooldown Profits (module `cooldownProfits`). Opt-in ranking of transmutes, Mooncloth and the Salt Shaker by gold per day from Auctionator's API (optional), with learned plan, Worth learning, ready times and an optional ready chat line; per-character timers outside profiles. Mock-tested; native confirmation pending; [details](COOLDOWN_PROFITS.md).
+
 See [Dungeon Loot](DUNGEON_LOOT.md) for source provenance, dependencies, API
 assumptions, limitations and exact manual checks. Existing modules are documented
 in the README and their owning source/config files; this registry begins with the

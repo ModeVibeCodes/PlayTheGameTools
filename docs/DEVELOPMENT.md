@@ -1,5 +1,24 @@
 # Standalone Forever development
 
+Cooldown Profits (branch `t3/transmute-profit-artifact`, 2026-11-27): new
+opt-in module `cooldownProfits` (Quality of Life), designed in the PTG v2
+design artifact. Three new TOC entries: `Modules\CooldownProfitsData.lua`
+(bundled recipes, profit/plan/upgrade math, no game calls) and
+`Modules\CooldownProfits.lua` after `Modules\ThreatMeter.lua`;
+`Config\CooldownProfits.lua` after `Config\ThreatMeter.lua` (129 Lua
+chunks). `Auctionator` joins the TOC `OptionalDeps`. Profile settings
+(`cut`, `freeMaterials`, `view`, `sort`, `remind`, `remindBest`) are validated
+in `M.Initialize`, called from `ProfileValidation:Normalize`. Per-character
+timers and account-wide observed lengths/shared timers live outside profiles
+in `PTGToolsDB.cooldownProfits`; nothing existing is migrated or removed. The
+page holds the reminder switches and a note (`W.ModeLayoutPlans.cooldownProfits={}`);
+**Open Cooldown Profits** (`openLabel`) opens `PlayTheGameToolsCooldownProfitsWindow`
+(`W.BrowserWindow`, 900×660), also in the Quick Actions ring (`cooldownProfits`,
+order 40). Forever uses `C_TradeSkillUI` (Retail-style), not the Classic
+`GetTradeSkill*` globals. APIs, sources and manual checks:
+[Cooldown Profits](COOLDOWN_PROFITS.md). `tests/cooldown_profits.py` covers it.
+Native confirmation is pending; new TOC files: restart the client once.
+
 v2 styling reset (branch `t3/v2-styling-clear`, 2026-11-24): the user approved
 one exception to "never reset SavedVariables": each display's old per-display
 styling is reset once per profile, with a one-time notice. `Core/StyleReset.lua`
