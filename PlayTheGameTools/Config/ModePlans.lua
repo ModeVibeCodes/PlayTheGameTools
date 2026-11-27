@@ -33,6 +33,9 @@ W.ModeLayoutPlans={
     -- plan without a route only compacts the page. Guild Roster's plan left
     -- with its page (the retired foreverGuildRoster ID).
     foreverRecruitment={},
+    -- Cooldown Profits: the reminder switches and a note; the ranking is the
+    -- Cooldown Profits window. A plan without a route only compacts the page.
+    cooldownProfits={},
     foundation={},
     foreverRogue={route=function(row)
         return row.section and row.section.title=="Settings" and "apply" or "general"

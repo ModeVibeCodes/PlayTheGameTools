@@ -40,6 +40,12 @@ modules. The project display name is Play The Game Tools; the addon is named Pla
   and optional time-to-level, money and profession summaries.
 - **Quick Access and Food Bar:** configurable profession/utility access, food
   selection and optional bandages with existing native click/combat guards.
+- **Cooldown Profits:** opt-in; ranks transmutes, Mooncloth and the Salt
+  Shaker by the gold each earns a day at Auctionator's last scanned prices,
+  less the 5% auction house cut and materials. **Open Cooldown Profits**
+  shows your learned plan, what learning each recipe would add, ready times
+  and a hover breakdown; an optional chat line says when one is ready.
+  Auctionator is optional. See [Cooldown Profits](docs/COOLDOWN_PROFITS.md).
 - **Threat Meter:** opt-in threat list for your current target with class-colored
   bars and percentages; pets are optional and off by default.
 - **Map Labels:** opt-in under Quality of Life; icons and names on the world map

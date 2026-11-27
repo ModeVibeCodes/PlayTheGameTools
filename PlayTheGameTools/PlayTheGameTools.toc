@@ -4,7 +4,7 @@
 ## Author: Mode and Prox
 ## Version: 0.4.1
 ## SavedVariables: PTGToolsDB, ModeToolsDB
-## OptionalDeps: QuestieDB, Questie, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0
+## OptionalDeps: QuestieDB, Questie, LibSharedMedia-3.0, SharedMedia, SharedMedia_MyMedia, Kiratank_SharedMedia, atrocityMedia, NorthernSkyRaidTools, LibCustomGlow-1.0, Auctionator
 ## X-PlayTheGameTools-Edition: Forever
 ## X-License: GPL-3.0-only (bundled distribution; original MIT grants retained)
 ## X-Curse-Project-ID: 1790980
@@ -66,6 +66,8 @@ Modules\ForeverFoodBar.lua
 Modules\ForeverRecruitment.lua
 Modules\ForeverGuildRoster.lua
 Modules\ThreatMeter.lua
+Modules\CooldownProfitsData.lua
+Modules\CooldownProfits.lua
 Modules\CityLabelsData.lua
 Modules\CityLabelsClassicData.lua
 Modules\CityLabels.lua
@@ -128,6 +130,7 @@ Config\ForeverRecruitment.lua
 Config\ForeverGuildRoster.lua
 Config\ForeverGuild.lua
 Config\ThreatMeter.lua
+Config\CooldownProfits.lua
 Config\CityLabels.lua
 Config\DungeonLootWidgets.lua
 Config\DungeonLoot.lua
