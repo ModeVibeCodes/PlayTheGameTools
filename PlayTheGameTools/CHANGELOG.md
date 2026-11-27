@@ -6,6 +6,8 @@
   class buffs, poisons, imbues, totems, group buffs or food are missing or
   about to run out, and reapplies them with a left-click. Turn it on from
   sidebar **Buff Reminders**; style it in **Layout**.
+  Click an icon to apply what you used last, or use its corner tab to pick
+  another poison, food or spell; your picks are remembered per character.
 - Loot Sparkles: a greyed node that is only too far away now reads **Out of
   reach** instead of "Can't gather". A node you stand next to and still can't
   gather reads **Skill too low**; quest objects still read **Can't use**.

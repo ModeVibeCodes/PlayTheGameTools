@@ -201,16 +201,25 @@ D.RESTING={show=true,hide=true,only=true}
 D.WATCH_MODES={icons=true,list=true}
 D.TOTEM_MODES={each=true,one=true}
 D.GROW={right=true,left=true,center=true,down=true,up=true}
-D.TIMER={below=true,inside=true,hidden=true}
+D.TIMER={below=true,above=true,bottom=true,center=true,top=true,hidden=true}
+D.OUTLINES={none=true,outline=true,thick=true}
+D.TIMER_COLORS={state=true,white=true}
+D.LABEL_STYLES={short=true,long=true}
+D.LABEL_POSITIONS={above=true,top=true,under=true}
+D.DIRECTIONS={up=true,down=true,left=true,right=true}
 D.NAME_POSITIONS={bottom=true,top=true,below=true}
 D.NAME_COLORS={class=true,white=true}
 D.WARN_CHOICES={0,1,2,3,5,10,15}
 
-local LOOK={grow="right",iconSize=40,spacing=6,timer="below",glow=true,sound=false}
+-- Icons have no background and 1px borders by default.
+local LOOK={grow="right",iconWidth=40,iconHeight=40,spacing=6,borderSize=1,fineBorder=true,
+    colorMissing={0.87,0.23,0.2},colorExpiring={0.9,0.74,0.26},colorFine={0,0,0},menuDirection="up",
+    timer="below",timerFont="game",timerSize=12,timerOutline="outline",timerColor="state",
+    labels=true,labelStyle="short",labelSize=10,labelPosition="above",glow=true,sound=false}
 local WATCH_LOOK={iconSize=30,spacing=3,names=true,namePosition="bottom",nameColor="class",nameSize=9,nameLetters=5,timers=true}
 D.LOOK,D.WATCH_LOOK=LOOK,WATCH_LOOK
 D.ranges={warnMinutes={0,15},poisonWarn={5,20},poisonCharges={5,25},x={-10000,10000},y={-10000,10000},groupX={-10000,10000},groupY={-10000,10000}}
-D.lookRanges={iconSize={20,80},spacing={0,30}}
+D.lookRanges={iconWidth={16,96},iconHeight={16,96},spacing={0,30},borderSize={0,6},timerSize={8,24},labelSize={7,16}}
 D.watchRanges={iconSize={16,64},spacing={0,20},nameSize={6,18},nameLetters={2,12}}
 
 local function Defaults(t,defaults)
@@ -265,10 +274,41 @@ function D.Initialize(db)
 
     if db.look==nil then db.look={} end
     assert(type(db.look)=="table","Invalid Buff Reminders look")
-    Defaults(db.look,LOOK)
+    -- Earlier test builds had one square icon size and an "inside" timer.
+    local square=db.look.iconSize
+    if D.Number(square,16,96) and square%1==0 then
+        if db.look.iconWidth==nil then db.look.iconWidth=square end
+        if db.look.iconHeight==nil then db.look.iconHeight=square end
+    end
+    if db.look.timer=="inside" then db.look.timer="bottom" end
+    for k,v in pairs(LOOK) do
+        if db.look[k]==nil then db.look[k]=type(v)=="table" and {v[1],v[2],v[3]} or v end
+    end
     Pick(db.look.grow,D.GROW,"look.grow");Pick(db.look.timer,D.TIMER,"look.timer")
-    assert(type(db.look.glow)=="boolean" and type(db.look.sound)=="boolean","Invalid Buff Reminders look")
+    Pick(db.look.timerOutline,D.OUTLINES,"look.timerOutline");Pick(db.look.timerColor,D.TIMER_COLORS,"look.timerColor")
+    Pick(db.look.labelStyle,D.LABEL_STYLES,"look.labelStyle");Pick(db.look.labelPosition,D.LABEL_POSITIONS,"look.labelPosition")
+    Pick(db.look.menuDirection,D.DIRECTIONS,"look.menuDirection")
+    for _,k in ipairs({"glow","sound","labels","fineBorder"}) do assert(type(db.look[k])=="boolean","Invalid Buff Reminders look: "..k) end
+    assert(type(db.look.timerFont)=="string" and #db.look.timerFont<=140 and (db.look.timerFont=="game" or db.look.timerFont=="chat" or db.look.timerFont:sub(1,6)=="media:"),"Invalid Buff Reminders look: timerFont")
+    for _,k in ipairs({"colorMissing","colorExpiring","colorFine"}) do
+        local c=db.look[k]
+        assert(type(c)=="table","Invalid Buff Reminders look: "..k)
+        for i=1,3 do assert(D.Number(c[i],0,1),"Invalid Buff Reminders look: "..k) end
+    end
     for key,range in pairs(D.lookRanges) do Whole(db.look[key],range,"look."..key) end
+
+    -- What each icon applied last, per character: poisons per hand, food, oils, stones.
+    if db.lastUsed==nil then db.lastUsed={} end
+    assert(type(db.lastUsed)=="table","Invalid Buff Reminders last used")
+    local characters=0
+    for guid,row in pairs(db.lastUsed) do
+        characters=characters+1
+        assert(characters<=200 and type(guid)=="string" and #guid<=100 and type(row)=="table","Invalid Buff Reminders last used")
+        for k,v in pairs(row) do
+            assert(type(k)=="string" and #k<=40,"Invalid Buff Reminders last used")
+            assert((type(v)=="string" and #v<=64) or (D.Number(v,1,2147483647) and v%1==0),"Invalid Buff Reminders last used")
+        end
+    end
 
     if db.watchLook==nil then db.watchLook={} end
     assert(type(db.watchLook)=="table","Invalid Buff Reminders group look")

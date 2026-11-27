@@ -85,7 +85,9 @@ function M:CreateConfigPage(parent)
                 if b.choice and not seen[b.choice] then
                     seen[b.choice]=true
                     local buff=b
-                    GroupPicker(CHOICE_LABELS[b.choice] or b.name,"choices",b.choice,D.choices[b.choice])
+                    local name,list=b.choice,D.choices[b.choice]
+                    local getter=Options(list)
+                    Select(CHOICE_LABELS[name] or b.name,list,function() return getter(self:ChoiceValue(name)) end,function(v) self:SetChoice(name,v) end)
                     Visible(function() return self.db.buffs[buff.key] end)
                 end
             end

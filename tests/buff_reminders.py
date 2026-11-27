@@ -152,12 +152,17 @@ assert(B.slots[1].entry.sample and not s:IsShown(),'samples while placing; no cl
 local card=addon.editWindow.styleCard
 assert(PM:SelectElement('buffReminders') and card:IsShown())
 local groups=card.extras.buffReminders
-assert(groups and groups[1].title=='Display' and #groups[1].rows==6 and groups[1].toggle:IsShown(),'Display group on the card')
+local titles={};for _,g in ipairs(groups or {}) do titles[#titles+1]=g.title end
+assert(table.concat(titles,'|')=='Display|Icons|Timer text|Hand labels','card groups: '..table.concat(titles,'|'))
+assert(groups[1].toggle:IsShown() and groups[1].rows[1].label:IsShown() and not groups[2].rows[1].label:IsShown(),'only the first group starts open')
 assert(card.sliders.scale.label:GetText()=='Scale','shared rows still first')
-local spec=PM.elements.buffReminders.styleGroups[1].rows
-spec[1].set('down');spec[2].set(52)
-assert(B.db.look.grow=='down' and B.db.look.iconSize==52 and B.frame.icons[1].width==52,'card changes the look')
-assert(PM:ResetLayout('buffReminders') and B.db.look.grow=='right' and B.db.look.iconSize==40,'Reset restores the look')
+assert(card.backgroundRow.switch.selected==false or not PM:GetStyle('buffReminders').background,'no background by default')
+local spec=PM.elements.buffReminders.styleGroups
+spec[1].rows[1].set('down');spec[2].rows[1].set(52);spec[2].rows[2].set(30)
+assert(B.db.look.grow=='down' and B.db.look.iconWidth==52 and B.db.look.iconHeight==30 and B.frame.icons[1].width==52 and B.frame.icons[1].height==30,'card changes the look')
+spec[2].rows[4].set({0.1,0.2,0.3})
+assert(B.db.look.colorMissing[1]==0.1,'colour swatch saves')
+assert(PM:ResetLayout('buffReminders') and B.db.look.grow=='right' and B.db.look.iconWidth==40 and B.db.look.colorMissing[1]==0.87,'Reset restores the look')
 assert(PM:SelectElement('buffRemindersGroup') and card.extras.buffRemindersGroup[1].title=='Group watcher')
 assert(not groups[1].toggle:IsShown(),'other display groups hidden')
 addon:SetEditMode(false)
@@ -178,7 +183,7 @@ assert(found,'search finds Buff Reminders')
 local V=addon.ProfileValidation
 local encoded=addon.ProfileCodec.Encode(PTGToolsDB)
 assert(addon.ProfileCodec.Decode(encoded),'round trip')
-local bad=addon.ProfileCodec.Copy(addon.db);bad.modules.buffReminders.look.iconSize=500
+local bad=addon.ProfileCodec.Copy(addon.db);bad.modules.buffReminders.look.iconWidth=500
 assert(V:Validate(bad)==nil,'bad look refused')
 bad=addon.ProfileCodec.Copy(addon.db);bad.modules.buffReminders.totems.air='notATotem'
 assert(V:Validate(bad)==nil,'bad totem refused')
@@ -350,10 +355,10 @@ function IsMounted() return true end;B:Update()
 function IsMounted() return false end;B:Update()
 assert(sounds==1,'no replay after dismount')
 -- Unclickable reminder (nothing to apply with) keeps its mouse for tooltip and dismiss.
-B.db.buffs.food=true;B:Update(true)
-local foodSlot;for _,s in ipairs(B.slots) do if s.entry.key=='food' then foodSlot=s end end
-assert(foodSlot and not foodSlot.covered and foodSlot.region.mouse==true,'no button over food: icon takes the mouse')
-B.db.buffs.food=false;B:Update(true)
+B.db.buffs.elixir=true;B:Update(true)
+local elixirSlot;for _,s in ipairs(B.slots) do if s.entry.key=='elixir' then elixirSlot=s end end
+assert(elixirSlot and not elixirSlot.covered and elixirSlot.region.mouse==true,'no button over elixirs: icon takes the mouse')
+B.db.buffs.elixir=false;B:Update(true)
 -- Combat: frame size held while a late reminder appears in text mode.
 assert(B:SetOption('mode','text'))
 Combat(true)
@@ -390,5 +395,137 @@ dead.party1=true;Advance(1)
 assert(B.groupFrame.width==gw and B.groupFrame.height==gh,'watcher size held in combat')
 dead.party1=nil
 Combat(false)
+""")
+REV = r'''
+items[4536]={name='Shiny Red Apple',icon=210,effect=433};items[4540]={name='Tough Hunk of Bread',icon=211,effect=433}
+spells[433]={name='Food',iconID=308}
+table.insert(bags[1],{itemID=4536,stackCount=5,isLocked=false});table.insert(bags[1],{itemID=4540,stackCount=3,isLocked=false})
+local instant=C_Item.GetItemInfoInstant
+function C_Item.GetItemInfoInstant(id)
+ if id==4536 or id==4540 then return id,'Consumable','Food & Drink','',items[id].icon,0,5 end
+ return instant(id)
+end
+function Count(id) for _,bag in pairs(bags) do for _,p in ipairs(bag) do if p.itemID==id then return p end end end end
+function Tab(key) for _,t in ipairs(addon.BuffReminders.tabs or {}) do if t:IsShown() and t.slot and t.slot.entry.key==key then return t end end end
+function Row(label) for _,r in ipairs(addon.BuffReminders.menu.rows) do if r:IsShown() and r.option and r.option.label==label then return r end end end
+function Icon(key) for _,i in ipairs(addon.BuffReminders.frame.icons) do if i:IsShown() and i.entry and i.entry.key==key then return i end end end
+function Pick(r) r.scripts.PreClick(r,'LeftButton',false);r.scripts.PostClick(r,'LeftButton',false) end
+'''
+
+# Revision 1: choice menus with last used per character, corner tabs, menus outside the
+# display, food menu and self-use learning, hand labels, even rows, 1px borders, no
+# background, timer font outline.
+lua, _ = load(before=SETUP + BR + REV + "testClass='ROGUE'")
+lua.execute(r"""
+local B,PM=addon.BuffReminders,addon.PositionManager
+addon:SetModuleEnabled('buffReminders',true)
+local shown=Keys(B.shown)
+assert(shown.poisonMain and shown.poisonOff and shown.food,'poisons and food due')
+-- Even rows: every icon sits on the same line, labels or not; 1px borders; no background.
+local y
+for _,icon in ipairs(B.frame.icons) do if icon:IsShown() then y=y or icon.points[1][5];assert(icon.points[1][5]==y,'icons aligned') end end
+assert(Icon('poisonMain').edges[1].height==1,'1px border by default')
+assert(PM:GetStyle('buffReminders').background==false and not B.frame.background:IsShown(),'no background by default')
+assert(Icon('poisonMain').label:GetText()=='MH' and Icon('poisonOff').label:GetText()=='OH','hand labels')
+assert(not Icon('food').label:IsShown(),'food has no hand label')
+assert(select(3,Icon('poisonMain').timer:GetFont())=='OUTLINE','outlined timer')
+-- Click applies the last used poison family; the corner tab opens the menu outside the display.
+assert(Button('poisonMain'):GetAttribute('item1')=='item:6949','last used family (Instant), best rank carried')
+local tab=Tab('poisonMain')
+assert(tab,'corner tab on the poison icon')
+tab.scripts.OnClick(tab)
+local menu=B.menu
+assert(menu:IsShown() and Row('Instant Poison') and Row('Deadly Poison'),'poison menu open')
+assert(Row('Instant Poison').name:GetText():find('last used',1,true),'last used marked')
+local _,fy,_,fh=B:ScreenRect(B.frame)
+assert(B.menuPlacement.direction=='up' and B.menuPlacement.y>=fy+fh+8,'menu starts above the whole display')
+Pick(Row('Deadly Poison'))
+assert(not menu:IsShown() and B:GetLastUsed('poisonMain')=='deadly','pick becomes the default')
+assert(Button('poisonMain'):GetAttribute('item1')=='item:2892','click now applies Deadly Poison')
+-- Food: nothing eaten yet, so the click opens the menu with a note.
+local food=Button('food')
+assert(food:GetAttribute('type1')==nil and food.openMenu,'no default food: click opens the menu')
+food.scripts.PostClick(food,'LeftButton',false)
+assert(menu:IsShown() and menu.message:GetText():find('Nothing used yet',1,true),'menu explains why')
+assert(Row('Shiny Red Apple') and Row('Tough Hunk of Bread'),'every food in your bags')
+Pick(Row('Shiny Red Apple'))
+assert(B:GetLastUsed('food')==4536 and Button('food'):GetAttribute('item1')=='item:4536','apple is the default food')
+-- Eating bread from your bags yourself teaches the default.
+FireEvent('UNIT_SPELLCAST_SUCCEEDED','player','eat',433)
+Count(4540).stackCount=2;FireEvent('BAG_UPDATE_DELAYED')
+assert(B:GetLastUsed('food')==4540,'learned the food you ate yourself')
+-- Labels follow the text choice; text mode too.
+assert(B:SetGroupOption('look','labelStyle','long') and Icon('poisonMain').label:GetText()=='Main Hand')
+assert(B:SetGroupOption('look','timerOutline','thick') and select(3,Icon('poisonMain').timer:GetFont())=='THICKOUTLINE')
+assert(B:SetOption('mode','text') and B.frame.rows[1].label:GetText()=='Poison Missing (Main Hand/Off Hand)')
+assert(not Tab('poisonMain'),'no corner tabs in text mode')
+assert(B:SetOption('mode','icons'))
+-- Combat: tabs hide and menus can't open.
+Combat(true)
+assert(not Tab('poisonMain') and not B:OpenMenu(B.slots[1]),'no menus in combat')
+Combat(false)
+assert(Tab('poisonMain'),'tabs back after combat')
+""")
+state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
+lua, _ = load(state, before=SETUP + BR + REV + "testClass='ROGUE'")
+lua.execute(r"""
+local B=addon.BuffReminders
+addon:SetModuleEnabled('buffReminders',true)
+assert(B:GetLastUsed('poisonMain')=='deadly' and B:GetLastUsed('food')==4540,'last used survives a reload')
+assert(Button('poisonMain'):GetAttribute('item1')=='item:2892' and Button('food'):GetAttribute('item1')=='item:4540')
+playerGUID='Rogue-B';B:Update(true)
+assert(B:GetLastUsed('poisonMain')==nil,'another character has its own memory')
+""")
+# Revision 1 review regressions: menu combat snippet, text-mode menus stay open, label
+# bands held in combat, settings pickers and menu picks share one value, food learned in
+# either event order, GUID cached when hidden.
+lua, _ = load(before=SETUP + BR + REV + "testClass='ROGUE'")
+lua.execute(r"""
+local B=addon.BuffReminders
+local menuAttrs={}
+local create=CreateFrame
+function CreateFrame(kind,name,parent,template)
+ local f=create(kind,name,parent,template)
+ if template=='SecureHandlerStateTemplate' then function f:SetAttribute(k,v) menuAttrs[k]=v end end
+ return f
+end
+function RegisterStateDriver(frame,state,values) menuAttrs['driver:'..state]=values end
+B.db.buffs.food=false
+addon:SetModuleEnabled('buffReminders',true)
+Tab('poisonMain').scripts.OnClick(Tab('poisonMain'))
+assert(menuAttrs['_onstate-combat']:find('newstate == 1',1,true) and menuAttrs['driver:combat']=='[combat] 1; 0','combat snippet compares the number the driver sends')
+B:CloseMenu()
+-- Text mode: a click with nothing to apply opens the menu, and it stays open.
+for _,bag in pairs(bags) do for _,p in ipairs(bag) do if p.itemID==6947 or p.itemID==6949 then p.stackCount=0 end end end
+FireEvent('BAG_UPDATE_DELAYED')
+assert(B:SetOption('mode','text'))
+local s=Button('poisonMain,poisonOff') or Button('poisonMain')
+assert(s and s.openMenu,'no Instant left: click opens the menu')
+s.scripts.PostClick(s,'LeftButton',false)
+Advance(1)
+assert(B.menu:IsShown(),'menu stays open in text mode')
+assert(B.menu.message:GetText():find('No Instant Poison',1,true),'menu says why')
+B:CloseMenu();assert(B:SetOption('mode','icons'))
+-- Settings picker and menu pick are one value.
+addon:ToggleConfig();addon:SelectConfigPage('buffReminders');local page=addon:EnsureConfigPage('buffReminders')
+assert(B:SetChoice('poisonMain','wound') and B:GetLastUsed('poisonMain')=='wound' and B:ChoiceValue('poisonMain')=='wound','settings picker sets the click default')
+Tab('poisonMain').scripts.OnClick(Tab('poisonMain'));Pick(Row('Deadly Poison'))
+page:Refresh()
+assert(B:ChoiceValue('poisonMain')=='deadly' and page.buffControls['Main-hand poison'].label:GetText()=='Deadly Poison','menu pick shows on the settings page')
+-- Label bands held in combat: a late poison label must not shift the icons.
+B.db.buffs.poisonMain=false;B.db.buffs.poisonOff=false;B.db.buffs.food=true;B:Update(true)
+local foodIcon=Icon('food');local y=foodIcon.points[1][5]
+Combat(true)
+B.db.buffs.poisonMain=true;B:Update()
+assert(Icon('food').points[1][5]==y,'icons stay under their buttons in combat')
+Combat(false)
+-- Food learning when the bag update arrives before the eating cast.
+Count(4536).stackCount=4;FireEvent('BAG_UPDATE_DELAYED')
+FireEvent('UNIT_SPELLCAST_SUCCEEDED','player','eat2',433)
+assert(B:GetLastUsed('food')==4536,'learned in either order')
+-- GUID hidden later: last used still works from the cached value.
+local guid=UnitGUID;function UnitGUID() return {secret=true} end
+assert(B:GetLastUsed('food')==4536,'cached GUID keeps last used')
+UnitGUID=guid
 """)
 print('PASS Buff Reminders: classes, read-and-count timing, combat estimates/frozen slots, own casts, deaths, resources, dismissal, icons/text/single, totems and Totems Missing, imbues/charges, group watcher with names and clicks, Soulstone target-or-self, secure layer never touched in combat, Layout card groups and Reset, page, search, validation, Rogue adoption and handover')

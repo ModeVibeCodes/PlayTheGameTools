@@ -43,6 +43,10 @@ function M:PrepareSecure(b)
     b:SetScript("PreClick",function(btn,button)
         if button=="RightButton" and btn.dismissKey then self:Dismiss(btn.dismissKey) end
     end)
+    -- No default to apply yet (nothing used, or none left): the click opens the menu.
+    b:SetScript("PostClick",function(btn,button)
+        if button=="LeftButton" and btn.openMenu and not self:InCombat() and self.OpenMenu then self:OpenMenu(btn.openMenu,btn.menuMessage) end
+    end)
     b:SetScript("OnEnter",function(btn) if btn.region then self:ShowTooltip(btn.region) end end)
     b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
 end
@@ -73,12 +77,20 @@ function M:ActionFor(e)
         if #names==0 then return end
         return {type="macro",text="/castsequence reset=15 "..table.concat(names,", ")}
     end
-    if b.kind=="food" then return self.bestFood and {type="item",item="item:"..self.bestFood} or nil end
+    -- Items apply what you used last; with none, the click opens the menu instead.
+    if b.kind=="food" then
+        local food=self:LastFood(true)
+        return food and {type="item",item="item:"..food} or nil
+    end
     if b.kind=="weapon" then
-        if b.poison or b.key=="weaponStone" or b.key=="weaponOil" then
-            local list=b.key=="weaponOil" and D.items.weaponOil or D.items[self.db.choices[b.choice]]
-            local item=self:BestItem(list)
-            return item and {type="item",item="item:"..item,slot=b.hand==1 and 16 or 17} or nil
+        local slot=b.hand==1 and 16 or 17
+        if b.poison or b.key=="weaponStone" then
+            local item=self:BestItem(D.items[self:ItemFamily(b)])
+            return item and {type="item",item="item:"..item,slot=slot} or nil
+        end
+        if b.key=="weaponOil" then
+            local item=self:LastItem(b)
+            return item and self:ItemCount(item)>0 and {type="item",item="item:"..item,slot=slot} or nil
         end
         local spell=self:Best(self:ChainFor(b))
         return spell and {type="spell",spell=spell} or nil
@@ -136,7 +148,8 @@ function M:BindSecure(b,action)
 end
 
 -- Screen rectangle of a region, in UIParent units.
-local function Rect(region)
+function M:ScreenRect(region)
+    if not region then return end
     local left,bottom,width,height=region:GetLeft(),region:GetBottom(),region:GetWidth(),region:GetHeight()
     local scale=region:GetEffectiveScale()
     local parent=UIParent:GetEffectiveScale()
@@ -145,6 +158,7 @@ local function Rect(region)
     local ratio=scale/parent
     return left*ratio,bottom*ratio,width*ratio,height*ratio
 end
+local function Rect(region) return M:ScreenRect(region) end
 
 function M:SecureActive()
     return self.secureAvailable and self.active and self.db.click and not self.editing and not self.previewing
@@ -191,7 +205,10 @@ function M:LayoutSecure()
                 slot.covered=false
                 local action=not slot.late and actionOf(slot)
                 local region=slot.region
-                if action and region and region:IsShown() then
+                -- A reminder with a menu keeps its button even with nothing to apply: the click opens the menu.
+                local menu=not action and not slot.late and slot.entry and not slot.entry.sample and not slot.entry.totems
+                    and self.HasMenu and self:HasMenu(slot.entry.buff)
+                if (action or menu) and region and region:IsShown() then
                     local x,y,w,h=Rect(region)
                     if x then
                         used=used+1
@@ -200,6 +217,8 @@ function M:LayoutSecure()
                         self:BindSecure(b,action)
                         b:ClearAllPoints();b:SetPoint("BOTTOMLEFT",UIParent,"BOTTOMLEFT",x,y);b:SetSize(w,h)
                         b.region,b.dismissKey=region,slot.keys
+                        b.openMenu=menu and slot or nil
+                        b.menuMessage=menu and self:MenuMessage(slot.entry) or nil
                         slot.covered=true
                         b:Show()
                     end
@@ -208,7 +227,7 @@ function M:LayoutSecure()
         end
         for i=used+1,#self.securePool[pool] do
             local b=self.securePool[pool][i]
-            b:Hide();b.region,b.dismissKey=nil,nil
+            b:Hide();b.region,b.dismissKey,b.openMenu=nil,nil,nil
         end
     end
     Place("main",self.slots,function(slot) return self:ActionFor(slot.entry) end)
@@ -226,9 +245,24 @@ function M:FreezeSecure()
     local keys={}
     for _,slot in ipairs(self.slots or {}) do keys[#keys+1]=slot.keys end
     self.frozen=keys
+    self.frozenBands=self.lastBands
     self.groupFrozen=true
 end
 function M:ThawSecure()
-    self.frozen,self.groupFrozen=nil,nil
+    self.frozen,self.groupFrozen,self.frozenBands=nil,nil,nil
     if self.securePending then self:LayoutSecure() end
+end
+
+-- Why a click opened the menu instead of applying something.
+function M:MenuMessage(e)
+    local b=e.buff
+    local last
+    if b.kind=="food" then last=self:LastFood(false)
+    elseif b.key=="weaponOil" then last=self:LastItem(b) end
+    if last then return "None left of "..self:ItemName(last)..". Pick another; it becomes the default." end
+    if b.poison or b.key=="weaponStone" then
+        local label=D.ChoiceLabel(b.choice,self:ItemFamily(b))
+        return label and ("No "..label.." in your bags. Pick another; it becomes the default.") or nil
+    end
+    return "Nothing used yet. Pick one; it becomes the default for the next click."
 end

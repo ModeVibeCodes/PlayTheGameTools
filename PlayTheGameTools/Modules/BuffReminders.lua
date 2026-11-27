@@ -39,13 +39,15 @@ local function Valid(self,mutate)
 end
 function M:SetOption(key,value)
     if not self:CanConfigure() or key=="buffs" or key=="totems" or key=="choices" or key=="where" or key=="look" or key=="watchLook" then return false end
-    if self.db[key]==nil then return false end
+    if self.db[key]==nil or value==nil then return false end
     if not Valid(self,function(db) db[key]=value end) then return false end
     self:Changed();return true
 end
 function M:SetGroupOption(group,key,value)
     local valid={buffs=true,totems=true,choices=true,where=true,look=true,watchLook=true}
-    if not self:CanConfigure() or not valid[group] or type(self.db[group])~="table" or self.db[group][key]==nil then return false end
+    if not self:CanConfigure() or not valid[group] or type(self.db[group])~="table" or self.db[group][key]==nil or value==nil then return false end
+    -- Colours are copied, so a caller's table never becomes the saved one.
+    if type(value)=="table" then value={value[1],value[2],value[3]} end
     if not Valid(self,function(db) db[group][key]=value end) then return false end
     -- Look changes come from Layout sliders: redraw only, no new read.
     if group=="look" or group=="watchLook" then self:Update();if addon.RefreshConfig then addon:RefreshConfig() end;return true end
@@ -100,6 +102,13 @@ function M:SpellIcon(id)
     if Number(icon,1) then return icon end
 end
 function M:ItemCount(id)
+    local cache=self.countCache
+    if cache and cache[id] then return cache[id] end
+    local n=self:ReadItemCount(id)
+    if cache then cache[id]=n end
+    return n
+end
+function M:ReadItemCount(id)
     local n=Call(C_Item and C_Item.GetItemCount,id)
     if not Number(n,0) then n=Call(GetItemCount,id) end
     return Number(n,0) and n or 0
@@ -118,6 +127,11 @@ function M:ChainFor(b)
     local db=self.db
     if b.choice then
         local pick=db.choices[b.choice]
+        -- Imbues are chosen per hand (last used on this character).
+        if (b.key=="imbueMain" or b.key=="imbueOff") and self.GetLastUsed then
+            local hand=self:GetLastUsed(b.key)
+            if type(hand)=="string" and D.chains[hand] and D.ChoiceLabel("imbue",hand) then pick=hand end
+        end
         if b.choice=="blessing" then
             for _,c in ipairs(D.choices.blessing) do if c.id==pick then return D.chains[c.cast] end end
         elseif b.choice=="armor" and pick=="auto" then
@@ -156,11 +170,13 @@ end
 -- What applying a buff costs, and whether you can pay now.
 --   "ok", "mana" (temporary: always dims) or "none" (no item or reagent)
 function M:Resource(b)
-    if b.kind=="food" then return self.bestFood and "ok" or "none" end
+    -- Item reminders can apply as long as anything in their menu is in your bags.
+    if b.kind=="food" then return (self.bagFoods and #self.bagFoods>0) and "ok" or "none" end
     if b.kind=="weapon" then
-        if b.poison or b.key=="weaponStone" or b.key=="weaponOil" then
-            local list=b.key=="weaponOil" and D.items.weaponOil or D.items[self.db.choices[b.choice]]
-            return self:BestItem(list) and "ok" or "none"
+        if b.key=="weaponOil" then return self:BestItem(D.items.weaponOil) and "ok" or "none" end
+        if b.poison or b.key=="weaponStone" then
+            for _,c in ipairs(D.choices[b.choice] or {}) do if self:BestItem(D.items[c.id]) then return "ok" end end
+            return "none"
         end
     end
     if b.key=="soulstone" then
@@ -287,32 +303,142 @@ function M:ReadTotem(b)
     return {expires=expires,icon=Public(icon) and icon or nil}
 end
 
--- Food in your bags (consumable food with a Food item spell), for the click and
--- the resource check. Bags are read out of combat only.
-function M:ScanBags()
-    if self:InCombat() then return end
-    self.bestFood=nil
+-- Foods in your bags (consumable food with a Food item spell) for the food menu,
+-- plus counts of every tracked item so the addon can tell what you just used.
+-- Bags are read out of combat only.
+function M:FoodSpellNames()
+    if self.foodSpellNames then return self.foodSpellNames end
     local names={}
     for _,id in ipairs(D.foodSpells) do local n=self:SpellName(id);if n then names[n]=true end end
+    self.foodSpellNames=names
+    return names
+end
+
+-- Whether a food gives Well Fed, from its tooltip; nil when the tooltip can't be read.
+function M:FoodGivesBuff(id)
+    self.foodBuffCache=self.foodBuffCache or {}
+    if self.foodBuffCache[id]~=nil then return self.foodBuffCache[id] end
+    -- Not loaded yet ("Retrieving item information"): ask again on the next scan.
+    local cached=Call(C_Item and C_Item.IsItemDataCachedByID,id)
+    if Public(cached) and cached==false then return nil end
+    local data=Call(C_TooltipInfo and C_TooltipInfo.GetItemByID,id)
+    local lines=Field(data,"lines")
+    if not Public(lines) or type(lines)~="table" or Field(lines,2)==nil then return nil end
+    local wellFed=self:SpellName(19705)
+    local result=false
+    for i=1,40 do
+        local line=Field(lines,i)
+        if line==nil then break end
+        local text=Field(line,"leftText")
+        if Public(text) and type(text)=="string" then
+            local lower=text:lower()
+            if (wellFed and text:find(wellFed,1,true)) or lower:find("well fed",1,true) or lower:find("experience",1,true) then result=true end
+        end
+    end
+    self.foodBuffCache[id]=result
+    return result
+end
+
+local tracked
+local function Tracked()
+    if tracked then return tracked end
+    tracked={}
+    for family,list in pairs(D.items) do for _,id in ipairs(list) do tracked[id]=family end end
+    return tracked
+end
+
+function M:ScanBags()
+    if self:InCombat() then return end
+    local names=self:FoodSpellNames()
     local c=Constants and Constants.InventoryConstants
     local bags=Field(c,"NumBagSlots")
     if not Number(bags,0,8) or not C_Container then return end
+    local foods,byId,counts={},{},{}
+    local known=Tracked()
     for bag=0,bags do
         local slots=Call(C_Container.GetContainerNumSlots,bag)
         if Number(slots,0,200) then
             for slot=1,slots do
                 local info=Call(C_Container.GetContainerItemInfo,bag,slot)
-                local id=Field(info,"itemID")
+                local id,n=Field(info,"itemID"),Field(info,"stackCount")
                 if Number(id,1,2147483647) then
-                    local _,_,_,_,_,class,subclass=Call(C_Item and C_Item.GetItemInfoInstant,id)
+                    n=Number(n,1,100000) and n or 1
+                    if known[id] then counts[id]=(counts[id] or 0)+n end
+                    local _,_,_,_,icon,class,subclass=Call(C_Item and C_Item.GetItemInfoInstant,id)
                     if class==0 and subclass==5 then
                         local effect=Call(C_Item.GetItemSpell,id)
-                        if Public(effect) and effect and names[effect] then self.bestFood=id;return end
+                        if Public(effect) and effect and names[effect] then
+                            if byId[id] then byId[id].count=byId[id].count+n
+                            else
+                                local f={id=id,count=n,name=self:ItemName(id),icon=Public(icon) and icon or nil,buff=self:FoodGivesBuff(id)}
+                                byId[id]=f;foods[#foods+1]=f
+                            end
+                        end
                     end
                 end
             end
         end
     end
+    for _,f in ipairs(foods) do counts[f.id]=f.count end
+    -- Well Fed foods first, then by name.
+    table.sort(foods,function(x,y)
+        local rx,ry=x.buff==true and 0 or 1,y.buff==true and 0 or 1
+        if rx~=ry then return rx<ry end
+        return x.name<y.name
+    end)
+    self.bagFoods=foods
+    self.bestFood=self.LastFood and self:LastFood(true) or nil
+    self:LearnFromBags(counts)
+end
+
+-- What you used yourself: a food whose count dropped right after you started
+-- eating, or a poison whose count dropped as a hand gained a new poison.
+-- Best effort; a menu pick is always exact.
+function M:LearnFromBags(counts)
+    local previous=self.bagCounts
+    self.bagCounts=counts
+    if not previous or not self.SetLastUsed then return end
+    local now=self:Now()
+    -- Either order: the eating cast may arrive before or after the bag update.
+    for id,n in pairs(previous) do
+        if (counts[id] or 0)<n and not Tracked()[id] then
+            if self.ateAt and now-self.ateAt<=8 then self:SetLastUsed("food",id);self.ateAt=nil
+            else self.foodDrop={id=id,at=now} end
+            break
+        end
+    end
+    for _,c in ipairs(D.choices.poisonMain) do
+        local before,after=0,0
+        for _,id in ipairs(D.items[c.id]) do before=before+(previous[id] or 0);after=after+(counts[id] or 0) end
+        if after<before then self.poisonDrop={family=c.id,at=now};self:LearnPoison() end
+    end
+end
+function M:LearnPoison()
+    local drop=self.poisonDrop
+    local now=self:Now()
+    if not drop or now-drop.at>8 or not self.handChanged then return end
+    for hand,key in ipairs({"poisonMain","poisonOff"}) do
+        local at=self.handChanged[hand]
+        if at and now-at<=8 then
+            self:SetLastUsed(key,drop.family)
+            self.handChanged[hand]=nil;self.poisonDrop=nil
+            return
+        end
+    end
+end
+
+-- One weapon read applied to its state; notes a hand that just gained a new poison.
+function M:ApplyWeapon(b,s,w)
+    s.empty=w.empty
+    if w.unknown then return end
+    if w.empty then s.present=nil;return end
+    if w.missing then s.present=false;s.expires=nil;s.charges=nil;return end
+    if b.poison and s.present~=nil and (not s.present or not s.expires or w.expires>s.expires+60) then
+        self.handChanged=self.handChanged or {}
+        self.handChanged[b.hand]=self:Now()
+        self:LearnPoison()
+    end
+    s.present=true;s.expires=w.expires;s.charges=w.charges;s.icon=w.icon
 end
 
 function M:RefreshKnowledge()
@@ -347,12 +473,8 @@ function M:Scan(full)
                     if rec and rec.duration then s.duration=rec.duration end
                 end
             elseif b.kind=="weapon" then
-                local w=self:ReadWeapon(b.hand,b.enchant)
-                s.empty=w.empty;s.estimated=false
-                if w.unknown then s.present=s.present
-                elseif w.empty then s.present=nil
-                elseif w.missing then s.present=false;s.expires=nil;s.charges=nil
-                else s.present=true;s.expires=w.expires;s.charges=w.charges;s.icon=w.icon end
+                s.estimated=false
+                self:ApplyWeapon(b,s,self:ReadWeapon(b.hand,b.enchant))
             elseif b.kind=="totem" then
                 local t=self:ReadTotem(b)
                 if t.unknown then s.estimated=s.present~=nil
@@ -485,6 +607,7 @@ function M:RestoreDismissed() self.dismissed={};self:Update();if addon.RefreshCo
 
 function M:Update(rescan)
     if not self.active then return end
+    self.countCache={}
     if not self:InCombat() and self.RegisterPositions and not addon.PositionManager.elements[self.MAIN_ID] and (self.registerTries or 0)<3 then
         self.registerTries=(self.registerTries or 0)+1
         self:RegisterPositions()
@@ -504,10 +627,7 @@ function M:Update(rescan)
                     if t.missing then s.present=false;s.expires=nil;s.estimated=false
                     elseif not t.unknown then s.present=true;s.expires=t.expires;s.estimated=false end
                 elseif b.kind=="weapon" then
-                    local w=self:ReadWeapon(b.hand,b.enchant)
-                    s.empty=w.empty
-                    if w.empty then s.present=nil elseif w.missing then s.present=false;s.expires=nil
-                    elseif not w.unknown then s.present=true;s.expires=w.expires;s.charges=w.charges;s.icon=w.icon end
+                    self:ApplyWeapon(b,s,self:ReadWeapon(b.hand,b.enchant))
                 else
                     local exists=Call(UnitExists,"pet");if Public(exists) and exists==true then s.present=true end
                 end
@@ -524,6 +644,7 @@ function M:Update(rescan)
     if self.Render then self:Render(shown) end
     if self.RenderGroup then self:RenderGroup() end
     if self.LayoutSecure then self:LayoutSecure() end
+    if self.LayoutTabs then self:LayoutTabs() end
 end
 
 -- One sound when a reminder first appears; never for the reminders already up at login.
@@ -549,6 +670,13 @@ function M:OnSpellCast(unit,guid,spell)
     self.castTarget=sent and Public(guid) and sent.guid==guid and sent.target or nil
     if not Number(spell,1,2147483647) then return end
     local now=self:Now()
+    -- Starting to eat: the next bag read learns which food it was.
+    local name=self:SpellName(spell)
+    if name and self:FoodSpellNames()[name] then
+        self.ateAt=now
+        local drop=self.foodDrop
+        if drop and now-drop.at<=8 then self:SetLastUsed("food",drop.id);self.foodDrop=nil;self.ateAt=nil end
+    end
     for _,b in ipairs(D.buffs) do
         if b.class==self.class or b.class=="ALL" then
             local s=self.states[b.key]
@@ -675,6 +803,8 @@ function M:OnDisable()
     if self.ticker then self.ticker:Cancel();self.ticker=nil end
     if self.events then self.events:UnregisterAllEvents();self.events:SetScript("OnEvent",nil) end
     if self.HideAll then self:HideAll() end
+    if self.LayoutTabs then self:LayoutTabs() end
+    if self.CloseMenu then self:CloseMenu() end
     -- Turned off mid-fight: click buttons can only be cleared once combat ends.
     if self.secureAvailable and self:InCombat() and self.events then
         pcall(self.events.RegisterEvent,self.events,"PLAYER_REGEN_ENABLED")

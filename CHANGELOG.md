@@ -15,6 +15,14 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   lives on two Layout Style cards with their own Display and Group watcher
   groups. While it tracks poisons, Rogue Tools' Poison Reminder steps aside;
   its time and charge settings are adopted once. See docs/BUFF_REMINDERS.md.
+- Buff Reminders revision: click applies what you used last; a gold corner
+  tab opens a menu of every choice (poisons per hand, food, imbues, oils,
+  stones, blessing, aura, aspect, armor, demon, totems), opening outside the
+  display. Item picks are remembered per character across reloads and
+  logouts. New Style card groups: Icons (width, height, 1 px default border,
+  colours), Timer text (font, size, outline, position, colour) and Hand
+  labels (MH / OH or Main Hand / Off Hand). No background by default; icons
+  always share one line.
 - Layout's Style card can carry extra groups for a display; Reset restores
   them too.
 

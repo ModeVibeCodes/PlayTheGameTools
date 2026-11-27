@@ -148,11 +148,13 @@ local function CreateStyleCard(owner, window)
     local function BuildExtras(element)
         if card.extras[element.id] or type(element.styleGroups) ~= "table" then return card.extras[element.id] end
         local built = {}
-        for _, spec in ipairs(element.styleGroups) do
+        for index, spec in ipairs(element.styleGroups) do
             local group = { title = spec.title, rows = {} }
+            -- Only the first group starts open, so a long card still fits the screen.
+            if card.extraOpen[spec.title] == nil then card.extraOpen[spec.title] = index == 1 end
             group.toggle = W.Button(card, spec.title, CARD_WIDTH - PAD * 2, 28, "secondary")
             group.toggle:SetScript("OnClick", function()
-                card.extraOpen[spec.title] = not (card.extraOpen[spec.title] ~= false)
+                card.extraOpen[spec.title] = not card.extraOpen[spec.title]
                 owner:RefreshEditWindow()
             end)
             for _, rowSpec in ipairs(spec.rows or {}) do
@@ -166,13 +168,33 @@ local function CreateStyleCard(owner, window)
                     row.refresh = W.Slider(row.host, rowSpec.min, rowSpec.max, rowSpec.step or 1, rowSpec.get, Set, rowSpec.suffix or "")
                     Hold(row.host.slider)
                 elseif rowSpec.kind == "select" then
-                    local select = W.Select(row.host, CONTROL, function() return rowSpec.choices end, function()
+                    -- choices: a list, or a function returning one (fonts known at open time).
+                    local function Choices()
+                        if type(rowSpec.choices) == "function" then return rowSpec.choices() end
+                        return rowSpec.choices
+                    end
+                    local select = W.Select(row.host, CONTROL, Choices, function()
                         local value = rowSpec.get()
-                        for _, choice in ipairs(rowSpec.choices) do if choice.id == value then return choice.id, choice.label end end
+                        for _, choice in ipairs(Choices()) do if choice.id == value then return choice.id, choice.label end end
                         return value, tostring(value)
                     end, Set)
                     select:ClearAllPoints(); select:SetPoint("TOPLEFT")
                     row.dropdown, row.refresh = select, function() select:Refresh() end
+                elseif rowSpec.kind == "color" then
+                    -- Swatch that opens the game's colour picker; cancel restores the old colour.
+                    local swatch = CreateFrame("Button", nil, row.host)
+                    swatch:SetSize(34, 22); swatch:SetPoint("LEFT", 0, 0)
+                    swatch.edge = swatch:CreateTexture(nil, "BORDER"); swatch.edge:SetAllPoints(); swatch.edge:SetColorTexture(0, 0, 0, 1)
+                    swatch.fill = swatch:CreateTexture(nil, "ARTWORK"); swatch.fill:SetPoint("TOPLEFT", 1, -1); swatch.fill:SetPoint("BOTTOMRIGHT", -1, 1)
+                    swatch:SetScript("OnClick", function()
+                        if InCombat() or not ColorPickerFrame then return end
+                        local old = rowSpec.get()
+                        local function Apply(color) Set({ color[1], color[2], color[3] }) end
+                        ColorPickerFrame:SetupColorPickerAndShow({ r = old[1], g = old[2], b = old[3], hasOpacity = false,
+                            swatchFunc = function() local r, g, b = ColorPickerFrame:GetColorRGB(); Apply({ r, g, b }) end,
+                            cancelFunc = function() Apply(old) end })
+                    end)
+                    row.swatch, row.refresh = swatch, function() local c = rowSpec.get(); swatch.fill:SetColorTexture(c[1], c[2], c[3], 1) end
                 else
                     local toggle = W.Button(row.host, "", 34, 30, "toggle")
                     toggle:SetPoint("LEFT")
@@ -303,7 +325,7 @@ local function CreateStyleCard(owner, window)
         for id, groups in pairs(card.extras) do
             local current = element and element.id == id
             for _, group in ipairs(groups) do
-                local open = card.extraOpen[group.title] ~= false
+                local open = card.extraOpen[group.title] == true
                 if current then
                     group.toggle:ClearAllPoints(); group.toggle:SetPoint("TOPLEFT", PAD, -y - 2)
                     group.toggle.label:SetText(group.title .. (open and "  -" or "  +"))

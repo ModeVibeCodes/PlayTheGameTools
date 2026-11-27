@@ -459,4 +459,4 @@ Run `python tests/buff_reminders.py` with the full suite. New TOC files
 (`Modules/BuffReminders*.lua`, `Config/BuffReminders.lua`): restart the client
 once, then `/reload` OOC. The module is off by default; turn it on from sidebar
 **Buff Reminders**. Mock checks only; use the
-[in-game checklist](docs/BUFF_REMINDERS.md#in-game-checks) (B1–B15).
+[in-game checklist](docs/BUFF_REMINDERS.md#in-game-checks) (B1–B21).

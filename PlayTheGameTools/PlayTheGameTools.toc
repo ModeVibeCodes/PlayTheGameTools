@@ -103,6 +103,7 @@ Modules\BuffReminders.lua
 Modules\BuffRemindersGroup.lua
 Modules\BuffRemindersDisplay.lua
 Modules\BuffRemindersSecure.lua
+Modules\BuffRemindersMenu.lua
 Core\StyleReset.lua
 Core\ProfileValidation.lua
 Core\ProfileManager.lua

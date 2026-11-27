@@ -92,6 +92,37 @@ combat. Watcher buttons target unit tokens (party1, raid5): if the roster is
 reordered mid-fight a button may point at a different player until combat
 ends. Elixirs have no click.
 
+## Choice menus and last used
+
+`Modules/BuffRemindersMenu.lua`. Every reminder with a choice (poison per hand,
+food, Shaman imbue per hand, weapon oil, Firestone/Spellstone, blessing,
+Paladin aura, aspect, Mage armor, demon, totem per element):
+
+- **Click** applies what you used last for that icon: the poison family last put
+  on that hand (best rank carried), the food you last ate, the last oil.
+- **Corner tab**: a small gold fold at the icon's bottom-right (a plain button
+  above the click layer). It opens a menu of everything you could apply, with
+  counts, the last used marked. Picking a row casts or uses it through a secure
+  button and makes it the new default.
+- **Nothing used yet, or none left**: the click opens the menu instead, with a
+  note saying why.
+- **Placement**: the menu starts from the display's outer edge (never the icon)
+  in the direction set by **Menus open**, flipping when there's no room, so it
+  never covers a reminder.
+- **Memory**: item picks (poisons, food, oils, stones, imbues per hand) are saved
+  per character in `lastUsed[characterGUID]`, so they survive `/reload`, loading
+  screens and logouts. Spell picks are the saved choices. Eating food or
+  applying a poison yourself also updates it (best effort: a food whose count
+  dropped right after you started eating, or a poison whose count dropped as a
+  hand gained a new poison).
+- **Food groups**: Well Fed foods first, from the item tooltip ("Well Fed" or
+  "experience"); when the tooltip can't be read, all food is one list.
+- **Combat**: the menu is a `SecureHandlerStateTemplate` frame that a
+  `[combat]` state driver hides the moment combat starts; tabs hide too, and no
+  menu opens until combat ends. Escape closes it out of combat.
+- Not in text mode (no tabs there; a click with nothing to apply still opens
+  the menu).
+
 ## Settings and Layout
 
 Settings page (one scroll): **Reminder** (Show reminder, Time reminder, Charge
@@ -104,14 +135,29 @@ totems missing**), **Group** (watch my buffs, icons or list), **General**,
 hide while mounted or flying, hide while dead) and **Look** (Customize Display,
 Customize Group Watcher, Restore Dismissed).
 
-Layout: two displays, **Buff Reminders** and **Buff Reminders: Group**. Besides
-the shared Scale, Opacity, Text size and Background, each Style card has its own
-group (an approved exception to the v2 rule, kept off settings pages):
-**Display** (Grow, Icon size, Spacing, Timer, Glow, Sound) and **Group watcher**
-(Icon size, Spacing, Names, Name place, Name colour, Name size, Letters,
-Timers). **Reset** restores these too. The card extension is generic:
-`element.styleGroups` and `element.onLayoutReset` (Config/EditMode.lua,
-Core/PositionManager.lua).
+Layout: two displays, **Buff Reminders** and **Buff Reminders: Group**. Both
+start with no background (`element.backgroundDefault=false`; other displays keep
+theirs). Besides the shared Scale, Opacity, Text size and Background, each Style
+card has its own groups (an approved exception to the v2 rule, kept off settings
+pages); only the first group starts open:
+
+- **Display**: Grow, Spacing, Menus open (Up, Down, Left, Right), Glow, Sound.
+- **Icons**: Width, Height, Border size (default 1 px, drawn inside the icon),
+  Missing, Expiring and Fine colour swatches (game colour picker), Fine border.
+- **Timer text**: Font (game, chat and every SharedMedia font), Size, Outline
+  (None, Outline, Thick), Position (below, above, inside bottom, centre or top,
+  hidden), Colour (by state or white). Text mode uses the same font.
+- **Hand labels** (poisons, imbues, oils, stones): Show, Text (MH / OH or Main
+  Hand / Off Hand, also used in text mode), Size, Position (above the icon,
+  inside at the top, below the timer).
+- **Group watcher** (its own card): Icon size, Spacing, Names, Name place, Name
+  colour, Name size, Letters, Timers.
+
+Every icon reserves the same label and timer rows, so icons stay on one line
+whether or not each shows a label or has a menu. **Reset** restores the look too.
+The card extension is generic: `element.styleGroups` (rows: slider, select with a
+list or a function, toggle, colour) and `element.onLayoutReset`
+(Config/EditMode.lua, Core/PositionManager.lua).
 
 ## Rogue Tools
 
@@ -168,4 +214,10 @@ and `python tools/build_release.py`.
 | B12 Soulstone | (display on screen) | As a Warlock in a party, target a healer and click **Soulstone**; then clear your target and click again (with a new stone) | Out of combat, Soulstone in bags | The stone goes on your target; with no target, on you. The icon shows who has it |
 | B13 Layout card | Window header **Layout** → click **Buff Reminders** | Open **Display**, set **Grow** to **Down** and **Icon size** to 52; click **Reset** | Out of combat | Icons stack downward at the larger size; Reset returns them to the default row |
 | B14 Rogue handover | `/ptg` → sidebar **Rogue Tools** | With Rogue Tools on, turn Buff Reminders on; then turn off **Main-hand poison** and **Off-hand poison** in **Rogue Buffs** | Rogue, out of combat | Rogue Tools' Poison Reminder hides and its page shows the Buff Reminders note; after turning the chips off it returns. Quick Poisons works throughout |
+| B16 Poison menu | (display on screen) | As a Rogue with two poison families in your bags, click the gold corner tab on the **MH** icon; pick a different poison | Out of combat | A menu opens above the whole display (not over any icon) listing each poison with counts and **last used**; the pick is applied and the next plain click on **MH** applies the same poison |
+| B17 Remembered | (display on screen) | After B16, type `/reload`; log out and back in; check another character | Out of combat | The **MH** click still applies your pick after each; another character keeps its own |
+| B18 Food menu | (display on screen) | With no food eaten yet, click the food icon; pick a food; later click the icon again | Out of combat, food in bags | First click opens the food menu with a note; the pick is eaten; the next click eats the same food |
+| B19 Learn food | (display on screen) | Eat a different food straight from your bags, then let the food buff run out | Out of combat | The food icon now shows and eats that food |
+| B20 Icon and text options | Window header **Layout** → click **Buff Reminders** | Open **Icons**: set Width 52, Height 30, Border size 2, change **Missing**; open **Timer text**: pick a font, **Thick** outline, **Inside, centre**; open **Hand labels**: **Main Hand / Off Hand** | Out of combat | Icons resize (art stays square), borders thicken and recolour, timers change font and position, labels read Main Hand / Off Hand; icons stay on one line; **Reset** restores everything |
+| B21 Menus in combat | (display on screen) | Open a menu, then pull a mob | Enter combat | The menu and the corner tabs disappear at once; tabs return when combat ends |
 | B15 Food aura | (display on screen) | Eat a Forever food; if the Food buff reminder stays, run `/run for i=1,40 do local a=C_UnitAuras.GetAuraDataByIndex("player",i,"HELPFUL") if not a then break end print(a.name,a.spellId) end` | Out of combat | The reminder clears once fed; otherwise report the printed food aura name and ID |

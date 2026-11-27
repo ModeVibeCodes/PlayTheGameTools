@@ -634,6 +634,12 @@ end
 
 -- Always a complete, valid copy. A malformed saved field reads as its default
 -- and stays in place, untouched, until the card writes a valid value.
+-- Background starts on, unless a display opts out (element.backgroundDefault = false).
+function PM:BackgroundDefault(id)
+    local element = Lookup(self, id)
+    return not (element and element.backgroundDefault == false)
+end
+
 function PM:GetStyle(id)
     local record = SavedRecord(self, id)
     local saved = Plain(record) and type(record) == "table" and Plain(record.style) and type(record.style) == "table" and record.style or {}
@@ -641,13 +647,14 @@ function PM:GetStyle(id)
     for _, key in ipairs(STYLE_KEYS) do
         style[key] = StyleNumber(key, saved[key]) and saved[key] or self.STYLE[key].default
     end
-    style.background = not (Plain(saved.background) and saved.background == false)
+    if Plain(saved.background) and type(saved.background) == "boolean" then style.background = saved.background
+    else style.background = self:BackgroundDefault(id) end
     return style
 end
 
-function PM:IsDefaultStyle(style)
+function PM:IsDefaultStyle(style, id)
     for _, key in ipairs(STYLE_KEYS) do if style[key] ~= self.STYLE[key].default then return false end end
-    return style.background ~= false
+    return style.background == self:BackgroundDefault(id)
 end
 
 -- Scale and Opacity apply to the display frame itself. A display that sets its
@@ -740,7 +747,7 @@ function PM:SetStyle(id, key, value)
     if current[key] == value then return true, "unchanged" end
     current[key] = value
     -- A default style leaves the saved record exactly as it was before styling.
-    if self:IsDefaultStyle(current) then element.position.style = nil
+    if self:IsDefaultStyle(current, id) then element.position.style = nil
     else element.position.style = current end
     self:ApplyStyle(id, true)
     self:NotifyPosition()
@@ -777,7 +784,7 @@ end
 -- Writes through the view still reach the settings table.
 function PM:StyleView(id, settings, keys)
     local style = self:GetStyle(id)
-    if self:IsDefaultStyle(style) then return settings end
+    if self:IsDefaultStyle(style, id) then return settings end
     local view = {}
     for _, key in ipairs(keys.text or {}) do
         local size = settings[key]
