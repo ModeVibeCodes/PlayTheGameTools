@@ -1,5 +1,13 @@
 # Rogue class tools
 
+> **Retired (2026-11-27, branch `feature/buff-reminder`):** Rogue Tools was
+> folded into [Buff Reminders](BUFF_REMINDERS.md), which covers the poison
+> reminder per hand, time and charge thresholds, right-click dismissal and
+> choosing a poison (corner-tab menu, last used per hand). The module, its
+> page and its two displays are gone; its saved `foreverRogue` table is kept,
+> unread. The rest of this page is history; its weapon-enchant and item API
+> notes still describe what Buff Reminders reads.
+
 > **v2 (current page):** sidebar **Rogue Tools** is one scroll of three groups.
 > **Poison Reminder:** **Show reminder**, **When** (When Needed / When Needed
 > (OOC) / Always Outside Combat / Always, Including Combat), **Use Time
@@ -304,7 +312,7 @@ dismissal works as expected and authorized merging PR #28 into main. This closes
 the focused dismissal correction; prior broader poison/combat coverage limits
 remain unchanged. No release publication or SavedVariables reset.
 
-## Buff Reminders handover
+## Buff Reminders handover (superseded by the retirement above)
 
 While the Buff Reminders module is on and tracks a poison, the Poison Reminder
 steps aside at runtime and the Poison Reminder section shows a note; the saved

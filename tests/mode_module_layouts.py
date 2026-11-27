@@ -3,7 +3,7 @@
 Mock UI geometry/callback checks are not in-game visual or API acceptance.
 """
 from smoke import load
-from rogue_poisons import SETUP
+from weapon_fixture import SETUP
 
 inventory = r'''
 function Inventory()
@@ -118,9 +118,6 @@ local found=false
 for _,cells in ipairs(spark.toggleGrids) do for _,cell in ipairs(cells) do found=found or cell.label:GetText()=='Enable Loot Sparkles' end end
 for _,chip in pairs(spark.sparkleControls) do found=found or chip.label:GetText()=='Enable Loot Sparkles' end
 assert(not found and #spark.chipRows==1,'own module since the split: the module switch is the only switch')
-local Ro=addon.ForeverRogue;local rogue=addon:EnsureConfigPage('foreverRogue');local was=Ro.active
-Ro.active=false;rogue:Refresh();assert(not rogue.poisonStatus:GetParent().row:IsShown(),'no disabled echo')
-Ro.active=was;rogue:Refresh()
 local CM=addon.CampfireMonitor;local camp=addon:EnsureConfigPage('campfireMonitor');local campOn=CM.module.active
 CM.module.active=false;camp:Refresh();camp:Layout();assert(not camp.campfireStatus:GetParent().row:IsShown(),'no Campfire disabled echo')
 CM.module.active=campOn;camp:Refresh()
@@ -189,24 +186,17 @@ training:ShowSection(3);assert(training.selectedSection.title=='Shortcut Icon & 
 addon:SetModuleEnabled('foreverClassTraining',false);training:RenderSettings()
 assert(not training.sections[3].header:IsShown(),'shortcut settings hide with the module')
 addon:SetModuleEnabled('foreverClassTraining',true);CT.db.showShortcut=nil;training:ShowSection(1)
--- Rogue: styling lives in Layout; the page's own sliders and switches keep
--- their callbacks, and toggles stay in their own rows at every width.
-local R=addon.ForeverRogue
-addon:SetModuleEnabled('foreverRogue',true);R:SetOption('flyout',true)
-local p=addon:EnsureConfigPage('foreverRogue')
-assert(not p.poisonStyles and not p.poisonSliders['watchStyle:fontSize'],'no Rogue styling rows')
-local slider=p.poisonSliders['root:threshold'].slider
-slider:SetValue(9);assert(R.db.threshold==9,'original slider callback retained')
-local charges=p.poisonControls.showPoisonCharges
-local old=R.db.showPoisonCharges;charges.button.scripts.OnClick();assert(R.db.showPoisonCharges~=old,'original checkbox callback retained')
--- Searching rogue never offers an unlabelled row.
-for _,result in ipairs(addon:SearchSettings('rogue')) do
+-- Buff Reminders (which replaced Rogue Tools): toggles stay in their own rows
+-- at every width, and searching poisons never offers an unlabelled row.
+addon:SetModuleEnabled('buffReminders',true)
+local p=addon:EnsureConfigPage('buffReminders')
+for _,result in ipairs(addon:SearchSettings('poison')) do
  assert(not result.entry or (result.entry.label and result.entry.label~=''),'empty search label: '..result.label)
  assert(not result.label:find('> $'),'result ends in an empty label: '..result.label)
 end
 for _,width in ipairs({1000,560}) do
  p.scroll:SetWidth(width);p:Layout()
- for _,cells in ipairs(p.toggleGrids) do for _,cell in ipairs(cells) do assert(cell.frame:GetParent().row,'toggle stays in its row') end end
+ for _,cells in ipairs(p.toggleGrids or {}) do for _,cell in ipairs(cells) do assert(cell.frame:GetParent().row,'toggle stays in its row') end end
 end
 assert(p.sections[1].header:IsShown() and p.sections[2].header:IsShown() and p.sections[2].header.offset>p.sections[1].header.offset)
 -- Dungeon Loot: the settings page holds the former General content; the

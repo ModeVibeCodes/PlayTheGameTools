@@ -4,7 +4,6 @@ Opacity, each display's Text size/Background hook, Reset, combat deferral,
 persistence and profile export (mock only; not native rendering acceptance)."""
 from camp_contributions import EXTRA
 from campfire_monitor import FIXTURE
-from rogue_poisons import SETUP
 from smoke import load
 
 COMMON = r'''
@@ -28,7 +27,7 @@ local removed={['Font']=true,['Font Size']=true,['Text outline']=true,['Text Col
  ['Background opacity']=true,['Frame scale']=true,['Bar Texture']=true,['Bar Width']=true,['Bar Font']=true,
  ['Name Font']=true,['Icon Size']=true,['Food Font']=true,['Status Text Size']=true,['Contribution Font']=true,
  ['Title Color']=true,['Normal XP Fill Color']=true,['Session Font']=true,['Food Icon Size']=true}
-for _,id in ipairs({'combatTimer','enhancedExperienceBar','foreverQuickAccess','campfireMonitor','foreverRogue'}) do
+for _,id in ipairs({'combatTimer','enhancedExperienceBar','foreverQuickAccess','campfireMonitor'}) do
  local page=addon:EnsureConfigPage(id)
  for _,row in ipairs(page.rows) do
   assert(row.editAppearance==nil and not removed[row.settingsTitle or ''],'styling row left on '..id..': '..tostring(row.settingsTitle))
@@ -196,25 +195,4 @@ assert(C.db.contributionBackgroundOpacity>0)
 assert(PM:SetStyle('campfireContributions','scale',50) and f:GetScale()==C.db.contributionScale/100)
 ''')
 
-rogue, _ = load(before=SETUP)
-rogue.execute(COMMON + r'''
-local M=addon.ForeverRogue
-addon:SetModuleEnabled('foreverRogue',true);M:SetOption('flyout',true)
-addon:ToggleConfig()
-assert(addon:SetEditMode(true))
-local card=addon.editWindow.styleCard
-for _,id in ipairs({'roguePoisonReminder','rogueQuickPoisons'}) do
- assert(PM.elements[id].editMode and PM:SelectElement(id) and card:IsShown() and card.sliders.text.slider:IsEnabled())
-end
-local s=M.db.watchStyle
-assert(PM:SetStyle('roguePoisonReminder','text',200) and Size(M.watchButtons[1].caption)==s.fontSize*2)
-assert(Size(M.watchButtons[1].timer)==s.timerSize*2)
-assert(PM:SetStyle('roguePoisonReminder','background',false) and M.watcher.backdropColor[4]==0)
-assert(M.db.watchStyle.backgroundOpacity==s.backgroundOpacity,'saved settings untouched')
--- Quick Access Poisons: the launcher is styled, and its separate menu follows it.
-local launcher,menu=M.db.launcherStyle,M.db.flyoutStyle
-assert(PM:SetStyle('rogueQuickPoisons','scale',150))
-assert(Near(M.launcher.scale,launcher.scale/100*1.5) and Near(M.menu.scale,menu.scale/100*1.5))
-assert(PM:SetStyle('rogueQuickPoisons','opacity',50) and Near(M.menu.alpha,menu.opacity/100*0.5))
-''')
-print('PASS Layout Style card: one card for every display, validation, generic Scale/Opacity, Text size and Background on Combat Timer, Threat Meter, XP bar, Profession/Food bars, Campfire, Contributions, Rogue and Quick Actions, Reset, combat deferral, reload and profile export (mock only)')
+print('PASS Layout Style card: one card for every display, validation, generic Scale/Opacity, Text size and Background on Combat Timer, Threat Meter, XP bar, Profession/Food bars, Campfire, Contributions and Quick Actions, Reset, combat deferral, reload and profile export (mock only)')

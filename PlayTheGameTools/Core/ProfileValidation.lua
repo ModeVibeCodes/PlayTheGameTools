@@ -48,7 +48,6 @@ function V:Normalize(source)
             end
         end
     end
-    if addon.ForeverRogue then addon.ForeverRogue.Initialize(profile.modules.foreverRogue) end
     if addon.ForeverRecruitment then
         addon.ForeverRecruitment.AdoptRoster(profile.modules.foreverRecruitment,profile.modules)
         addon.ForeverRecruitment.Initialize(profile.modules.foreverRecruitment)

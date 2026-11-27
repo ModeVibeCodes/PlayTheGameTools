@@ -126,7 +126,7 @@ local function PageHeader(parent)
     title:SetWordWrap(false)
     local description = W.Label(header, "", nil, 0, -30, 520, T.muted)
     description:SetPoint("TOPRIGHT", -64, -30)
-    -- Long descriptions (Rogue Tools) wrap; the fixed height holds two lines.
+    -- Long descriptions wrap; the fixed height holds two lines.
     description:SetHeight(W.PAGE_DESCRIPTION_HEIGHT)
     description:SetJustifyV("TOP")
     description:SetWordWrap(true)

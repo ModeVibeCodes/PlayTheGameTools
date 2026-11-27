@@ -94,10 +94,6 @@ Modules\CampContributionsDisplay.lua
 Modules\EnhancedExperienceBar.lua
 Modules\EnhancedExperienceBarDisplay.lua
 Modules\EnhancedExperienceBarVisibility.lua
-Modules\ForeverRogueData.lua
-Modules\ForeverRogue.lua
-Modules\ForeverRogueInventory.lua
-Modules\ForeverRogueDisplay.lua
 Modules\BuffRemindersData.lua
 Modules\BuffReminders.lua
 Modules\BuffRemindersGroup.lua
@@ -140,7 +136,6 @@ Config\DungeonLoot.lua
 Config\CampfireMonitor.lua
 Config\LootSparkles.lua
 Config\EnhancedExperienceBar.lua
-Config\ForeverRogue.lua
 Config\BuffReminders.lua
 Core\Init.lua
 Core\ReleaseMetadata.lua

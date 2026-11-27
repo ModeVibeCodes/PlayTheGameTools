@@ -1,8 +1,8 @@
 """Buff Reminders: class filtering, read-and-count timing, combat estimates,
 deaths, resources, totems, text mode, group watcher, secure click layer,
-Layout Style card groups, Rogue handover and profile validation.
+Layout Style card groups, retired Rogue Tools adoption and profile validation.
 Mock only: native aura secrecy, secure casting and rendering need in-game checks."""
-from rogue_poisons import SETUP
+from weapon_fixture import SETUP
 from smoke import load
 
 BR = r'''
@@ -163,7 +163,9 @@ assert(B.db.look.grow=='down' and B.db.look.iconWidth==52 and B.db.look.iconHeig
 spec[2].rows[4].set({0.1,0.2,0.3})
 assert(B.db.look.colorMissing[1]==0.1,'colour swatch saves')
 assert(PM:ResetLayout('buffReminders') and B.db.look.grow=='right' and B.db.look.iconWidth==40 and B.db.look.colorMissing[1]==0.87,'Reset restores the look')
-assert(PM:SelectElement('buffRemindersGroup') and card.extras.buffRemindersGroup[1].title=='Group watcher')
+assert(PM:SelectElement('buffRemindersGroup'))
+local gx=card.extras.buffRemindersGroup
+assert(gx[1].title=='Icons' and gx[2].title=='Timer text' and gx[3].title=='Names','group card matches the main card plus Names')
 assert(not groups[1].toggle:IsShown(),'other display groups hidden')
 addon:SetEditMode(false)
 assert(not B:SetGroupOption('look','grow','up') or true)
@@ -261,6 +263,36 @@ Combat(false)
 assert(B:SetGroupOption('watchLook','namePosition','top') and B:SetGroupOption('watchLook','nameColor','white'))
 assert(B.groupFrame.tiles[2].name.color[1]==1,'white names')
 assert(B:SetOption('watchMode','list') and B.groupFrame.rows[1]:IsShown(),'list view')
+assert(B.groupFrame.rows[1].label.font[2]==B.db.watchLook.timerSize+2,'list rows use the watcher font')
+assert(B:SetOption('watchMode','icons'))
+-- Group watcher look: its own icon size, borders, timer text and names.
+assert(B:SetGroupOption('watchLook','namePosition','bottom') and B:SetGroupOption('watchLook','nameColor','class'))
+local t1,t2=B.groupFrame.tiles[1],B.groupFrame.tiles[2]
+assert(t1.timer:IsShown() and t1.timer.points[#t1.timer.points][1]=='TOP' and t1.timer.points[#t1.timer.points][3]=='TOP','timer inside at the top by default')
+assert(t2.edges[1].height==1 and t2.edges[1].color[1]==0.87,'1px missing border from the watcher look')
+assert(B:SetGroupOption('watchLook','iconWidth',44) and B:SetGroupOption('watchLook','iconHeight',24))
+t1=B.groupFrame.tiles[1]
+assert(t1.width==44 and t1.height==24 and t1.icon.texCoord[2]>t1.icon.texCoord[1],'own size, square art')
+assert(B:SetGroupOption('watchLook','colorMissing',{0.1,0.2,0.3}) and B:SetGroupOption('watchLook','borderSize',3))
+assert(B.groupFrame.tiles[2].edges[1].color[1]==0.1 and B.groupFrame.tiles[2].edges[1].height==3,'own border colour and size')
+assert(B.db.look.colorMissing[1]==0.87,'main look unchanged')
+assert(B:SetGroupOption('watchLook','timerOutline','thick') and B:SetGroupOption('watchLook','timerSize',14))
+assert(t1.timer.font[2]==14 and t1.timer.font[3]=='THICKOUTLINE','own timer font')
+assert(t1.name.font[3]=='THICKOUTLINE','names share the watcher font')
+-- A name inside at the top moves the timer to the bottom; both below stack.
+assert(B:SetGroupOption('watchLook','namePosition','top'))
+assert(t1.timer.points[#t1.timer.points][1]=='BOTTOM','timer moves off the name')
+local y1=B.groupFrame.tiles[1].points[#B.groupFrame.tiles[1].points][5]
+assert(B:SetGroupOption('watchLook','timer','below') and B:SetGroupOption('watchLook','namePosition','below'))
+local np=t1.name.points[#t1.name.points]
+assert(np[3]=='BOTTOM' and np[5]<-2,'name sits under the timer')
+assert(B:SetGroupOption('watchLook','timer','above'))
+assert(B.groupFrame.tiles[1].points[#B.groupFrame.tiles[1].points][5]<y1,'room kept above for the timer')
+assert(B:SetGroupOption('watchLook','timer','hidden') and not t1.timer:IsShown(),'timer hidden')
+-- Reset on the group card restores the watcher look only.
+assert(B:SetGroupOption('look','borderSize',4))
+B:ResetLook('buffRemindersGroup')
+assert(B.db.watchLook.iconWidth==30 and B.db.watchLook.colorMissing[1]==0.87 and B.db.watchLook.timer=='top' and B.db.look.borderSize==4,'group reset')
 ''')
 
 # Warlock: Soulstone only in a group, needs a stone or a shard, target-or-self click.
@@ -287,20 +319,20 @@ B:Update(true)
 assert(not Keys(B.shown).soulstone and B.states.soulstone.who=='Mendra','your stone on Mendra')
 ''')
 
-# Rogue: one-time adoption of Poison Reminder settings, handover, text mode, item click.
+# Rogue: Rogue Tools is retired into Buff Reminders. Its switch and Poison Reminder
+# settings are adopted once, its table is left as it was; text mode, item click.
 lua, _ = load(before=SETUP)
-lua.execute("addon.db.modules.foreverRogue.threshold=7;addon.db.modules.foreverRogue.chargeThreshold=12;addon.db.modules.buffReminders={enabled=false}")
+lua.execute("addon.db.modules.foreverRogue={enabled=true,threshold=7,chargeThreshold=12,watchStyle={iconSize=60}};addon.db.modules.buffReminders={enabled=false}")
 state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
 lua, _ = load(state, before=SETUP + BR + "testClass='ROGUE'")
 lua.execute(r'''
-local B,R=addon.BuffReminders,addon.ForeverRogue
+local B=addon.BuffReminders
+assert(addon.modules.foreverRogue==nil and addon.ForeverRogue==nil,'Rogue Tools is gone')
 assert(B.db.poisonWarn==7 and B.db.poisonCharges==12 and B.db.rogueAdopted,'Poison Reminder settings adopted once')
-assert(addon.db.modules.foreverRogue.threshold==7,'Rogue settings untouched')
+assert(B.enabled and B.db.enabled,'Rogue Tools on turns Buff Reminders on')
+local old=addon.db.modules.foreverRogue
+assert(old.enabled==true and old.threshold==7 and old.watchStyle.iconSize==60,'old table kept, unread')
 NoFood()
-addon:SetModuleEnabled('foreverRogue',true)
-assert(not R:HandedOver(),'Rogue Tools keeps its reminder while Buff Reminders is off')
-addon:SetModuleEnabled('buffReminders',true)
-assert(R:HandedOver() and not R.watcher:IsShown(),'Buff Reminders takes over the poison reminder')
 local shown=Keys(B.shown)
 assert(shown.poisonMain.status=='missing' and shown.poisonOff.status=='missing')
 local s=Button('poisonMain')
@@ -309,10 +341,27 @@ assert(B:SetOption('mode','text') and B.frame.rows[1].label:GetText()=='Poison M
 Poison(0,300,301,700)
 FireEvent('WEAPON_ENCHANT_CHANGED')
 assert(Keys(B.shown).poisonMain.status=='expiring' and B.frame.rows[2].label:GetText()=='Poison (MH)','7 min warning adopted')
-assert(B:SetBuff('poisonMain',false) and B:SetBuff('poisonOff',false) and not R:HandedOver(),'turning poisons off hands back')
-addon:ToggleConfig()
-local page=addon:EnsureConfigPage('foreverRogue');page:Refresh()
-assert(not page.handoverNote:GetParent().row.visibleWhen(),'no handover note once handed back')
+-- Turning Buff Reminders off later sticks: the adoption runs once.
+addon:SetModuleEnabled('buffReminders',false)
+''')
+state = lua.eval('addon.ProfileCodec.Encode(PTGToolsDB)')
+lua, _ = load(state, before=SETUP + BR + "testClass='ROGUE'")
+lua.execute(r'''
+local B,C,P=addon.BuffReminders,addon.ProfileCodec,addon.ProfileManager
+assert(not B.enabled and B.db.rogueAdopted,'off stays off after a reload')
+-- Profiles exported with Rogue Tools still import, and adopt during validation.
+local text=C.Encode({version=1,name='Before Buff Reminders',profile={schemaVersion=1,
+    modules={foreverRogue={enabled=true,threshold=9,chargeThreshold=15}}}})
+local ok,reason,name=P:Import(text)
+assert(ok,reason)
+local imported=P.root.profiles[name].modules
+assert(imported.foreverRogue.threshold==9,'old table kept on import')
+assert(imported.buffReminders.enabled==true and imported.buffReminders.poisonWarn==9 and imported.buffReminders.poisonCharges==15,'adopted on import')
+local off=C.Encode({version=1,name='Rogue Off',profile={schemaVersion=1,modules={foreverRogue={enabled=false}}}})
+ok,reason,name=P:Import(off)
+assert(ok,reason)
+assert(P.root.profiles[name].modules.buffReminders.enabled==false,'Rogue Tools off leaves Buff Reminders off')
+assert(C.Decode(P:Export(P.activeName)).profile.modules.foreverRogue==nil,'exports leave the retired table out')
 ''')
 # Review regressions: bounded Layout registration, held geometry in combat, charges only
 # for stacked auras, fixed warning fallback, mouse on unclickable reminders, sound not
@@ -528,4 +577,17 @@ local guid=UnitGUID;function UnitGUID() return {secret=true} end
 assert(B:GetLastUsed('food')==4536,'cached GUID keeps last used')
 UnitGUID=guid
 """)
-print('PASS Buff Reminders: classes, read-and-count timing, combat estimates/frozen slots, own casts, deaths, resources, dismissal, icons/text/single, totems and Totems Missing, imbues/charges, group watcher with names and clicks, Soulstone target-or-self, secure layer never touched in combat, Layout card groups and Reset, page, search, validation, Rogue adoption and handover')
+# Old group watcher settings: one square icon size and a Timers switch.
+lua, _ = load(before=SETUP + BR + "testClass='PALADIN'")
+lua.execute(r'''
+local D=addon.BuffRemindersData
+local db={watchLook={iconSize=40,timers=false,spacing=5}}
+D.Initialize(db)
+assert(db.watchLook.iconWidth==40 and db.watchLook.iconHeight==40 and db.watchLook.timer=='hidden' and db.watchLook.spacing==5,'old watcher look migrates')
+local fresh={};D.Initialize(fresh)
+assert(fresh.watchLook.colorFine~=fresh.look.colorFine,'colour tables are separate copies')
+assert(not pcall(D.Initialize,{watchLook={timer='sideways'}}),'bad watcher timer refused')
+assert(not pcall(D.Initialize,{watchLook={colorMissing={2,0,0}}}),'bad watcher colour refused')
+''')
+
+print('PASS Buff Reminders: classes, read-and-count timing, combat estimates/frozen slots, own casts, deaths, resources, dismissal, icons/text/single, totems and Totems Missing, imbues/charges, group watcher with names and clicks, Soulstone target-or-self, secure layer never touched in combat, Layout card groups and Reset, page, search, validation, group watcher look, retired Rogue Tools adoption and import')

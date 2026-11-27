@@ -56,7 +56,7 @@ long explanatory blocks move to the bottom; minor text keeps its location.
 | Questing & Leveling → Experience Bar | XP Bar, Session Text | XP Bar: Options, Text, Appearance, Position; Session Text: Options, Text |
 | Guild Tools → Recruitment | Recruiter, History | Original actions in compact Options pages; Recruiter gameplay window unchanged |
 | Guild Tools → Roster | Class Summary, Members by Class | Existing class/member data layouts under the new pills and heading |
-| Class Tools → Rogue Tools | General, Poison Reminder, Quick Icon, Expanded Menu, Quick Apply | Options, Text, Appearance, Position where available; feature enablement remains in General |
+| Class Tools → Rogue Tools | Retired 2026-11-27 (folded into Buff Reminders) | No page |
 | Developer Mode | Existing diagnostic groups and expansion gates | Heading styling only; no diagnostic controls moved |
 
 Mode color rows show **Pick**, with their original wheel, live swatch and cancel
@@ -145,14 +145,7 @@ client build, resolution/UI scale, and the page/panel for any screenshot or erro
    keybinding, position and data actions; catalog search, details and maps still
    work and General tabs stay hidden in the browser. No keybinding changes are
    necessary for this layout check.
-8. **Navigation:** PTG Tools → Class Tools → Rogue Tools → **General**, then **Poison
-   Reminder / Quick Icon / Expanded Menu** → **Text / Appearance / Position**
-   where shown. **Action:** review each feature, temporarily adjust Text Size
-   and restore it; return to **Quick Apply**. **Required state:** OOC, Rogue
-   character, Poison Reminder and Quick Access Poisons enabled in General.
-   **Confirmation:** independent styles remain independent, controls operate
-   on the selected feature, and the poison selection grid/actions still work.
-   These checks do not require applying poison or changing a keybinding.
+8. Retired with Rogue Tools (2026-11-27): no check.
 9. **Navigation:** PTG Tools → Guild Tools → **Recruitment / Roster**.
    **Action:** visit **Recruiter / History** and **Class Summary / Members by
    Class**. **Required state:** OOC; guild membership for populated roster data.

@@ -35,7 +35,4 @@ W.ModeLayoutPlans={
     -- with its page (the retired foreverGuildRoster ID).
     foreverRecruitment={},
     foundation={},
-    foreverRogue={route=function(row)
-        return row.section and row.section.title=="Settings" and "apply" or "general"
-    end},
 }

@@ -38,10 +38,10 @@ assert(q.food.iconSize==36 and q.food.backgroundOpacity==65 and q.food.columns==
 local x=db.modules.enhancedExperienceBar
 assert(x.width==600 and x.barTexture=='default' and x.normalColor[1]==0.58 and x.nativeColors==true)
 assert(x.showValues and x.sessionX==40 and x.textOffset==3 and x.questFormat=='both','behaviour and offsets kept')
+-- Rogue Tools is retired: its saved table is left exactly as it was.
 local r=db.modules.foreverRogue
-assert(r.watchStyle.iconSize==40 and r.watchStyle.timerColor[1]==1 and r.launcherStyle.borderSize==0 and r.launcherStyle.cropIcons==true)
-assert(r.flyoutStyle.cellWidth==210,'per-part defaults')
-assert(r.direction=='DOWN' and r.visibleRows==3 and r.watchStyle.showHands==false and r.launcherStyle.labelText=='Kit' and r.flyoutStyle.columns==2)
+assert(r.watchStyle.iconSize==60 and r.watchStyle.timerColor[2]==1 and r.launcherStyle.borderSize==4 and r.launcherStyle.cropIcons==false)
+assert(r.flyoutStyle.cellWidth==300 and r.direction=='DOWN' and r.visibleRows==3 and r.launcherStyle.labelText=='Kit','retired table untouched')
 local c=db.modules.lootSparkles.campfire
 assert(c.contributionTitleSize==14 and c.headerColor[3]==0.12 and c.benefitsScale==100)
 assert(c.compactBenefits==false and c.contributionVisibleRows==3 and c.contributionX==30 and c.showIcon==false,'kept keys')

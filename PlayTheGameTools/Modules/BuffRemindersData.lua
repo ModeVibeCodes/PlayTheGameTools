@@ -216,11 +216,16 @@ local LOOK={grow="right",iconWidth=40,iconHeight=40,spacing=6,borderSize=1,fineB
     colorMissing={0.87,0.23,0.2},colorExpiring={0.9,0.74,0.26},colorFine={0,0,0},menuDirection="up",
     timer="below",timerFont="game",timerSize=12,timerOutline="outline",timerColor="state",
     labels=true,labelStyle="short",labelSize=10,labelPosition="above",glow=true,sound=false}
-local WATCH_LOOK={iconSize=30,spacing=3,names=true,namePosition="bottom",nameColor="class",nameSize=9,nameLetters=5,timers=true}
+-- The group watcher has the same icon and text options as the main display,
+-- plus its own name options.
+local WATCH_LOOK={iconWidth=30,iconHeight=30,spacing=3,borderSize=1,fineBorder=true,
+    colorMissing={0.87,0.23,0.2},colorExpiring={0.9,0.74,0.26},colorFine={0,0,0},
+    timer="top",timerFont="game",timerSize=9,timerOutline="outline",timerColor="state",
+    names=true,namePosition="bottom",nameColor="class",nameSize=9,nameLetters=5}
 D.LOOK,D.WATCH_LOOK=LOOK,WATCH_LOOK
 D.ranges={warnMinutes={0,15},poisonWarn={5,20},poisonCharges={5,25},x={-10000,10000},y={-10000,10000},groupX={-10000,10000},groupY={-10000,10000}}
 D.lookRanges={iconWidth={16,96},iconHeight={16,96},spacing={0,30},borderSize={0,6},timerSize={8,24},labelSize={7,16}}
-D.watchRanges={iconSize={16,64},spacing={0,20},nameSize={6,18},nameLetters={2,12}}
+D.watchRanges={iconWidth={16,64},iconHeight={16,64},spacing={0,20},borderSize={0,6},timerSize={6,18},nameSize={6,18},nameLetters={2,12}}
 
 local function Defaults(t,defaults)
     for k,v in pairs(defaults) do if t[k]==nil then t[k]=v end end
@@ -228,6 +233,31 @@ end
 local function Whole(v,range,label) assert(D.Number(v,range[1],range[2]) and v%1==0,"Invalid Buff Reminders setting: "..label) end
 local function Pick(v,set,label) assert(type(v)=="string" and set[v],"Invalid Buff Reminders setting: "..label) end
 local function ChoiceSet(list) local set={};for _,c in ipairs(list) do set[c.id]=true end;return set end
+-- Shared by the main look and the group watcher look.
+local function Fill(look,defaults)
+    for k,v in pairs(defaults) do
+        if look[k]==nil then look[k]=type(v)=="table" and {v[1],v[2],v[3]} or v end
+    end
+end
+local function CheckTextAndBorders(look,label)
+    Pick(look.timer,D.TIMER,label..".timer")
+    Pick(look.timerOutline,D.OUTLINES,label..".timerOutline");Pick(look.timerColor,D.TIMER_COLORS,label..".timerColor")
+    assert(type(look.fineBorder)=="boolean","Invalid Buff Reminders "..label..": fineBorder")
+    assert(type(look.timerFont)=="string" and #look.timerFont<=140 and (look.timerFont=="game" or look.timerFont=="chat" or look.timerFont:sub(1,6)=="media:"),"Invalid Buff Reminders "..label..": timerFont")
+    for _,k in ipairs({"colorMissing","colorExpiring","colorFine"}) do
+        local c=look[k]
+        assert(type(c)=="table","Invalid Buff Reminders "..label..": "..k)
+        for i=1,3 do assert(D.Number(c[i],0,1),"Invalid Buff Reminders "..label..": "..k) end
+    end
+end
+-- Earlier test builds had one square icon size.
+local function SquareSize(look,range)
+    local square=look.iconSize
+    if D.Number(square,range[1],range[2]) and square%1==0 then
+        if look.iconWidth==nil then look.iconWidth=square end
+        if look.iconHeight==nil then look.iconHeight=square end
+    end
+end
 
 -- Pure defaults and validation. Profile validation runs this on detached copies.
 function D.Initialize(db)
@@ -275,26 +305,14 @@ function D.Initialize(db)
     if db.look==nil then db.look={} end
     assert(type(db.look)=="table","Invalid Buff Reminders look")
     -- Earlier test builds had one square icon size and an "inside" timer.
-    local square=db.look.iconSize
-    if D.Number(square,16,96) and square%1==0 then
-        if db.look.iconWidth==nil then db.look.iconWidth=square end
-        if db.look.iconHeight==nil then db.look.iconHeight=square end
-    end
+    SquareSize(db.look,{16,96})
     if db.look.timer=="inside" then db.look.timer="bottom" end
-    for k,v in pairs(LOOK) do
-        if db.look[k]==nil then db.look[k]=type(v)=="table" and {v[1],v[2],v[3]} or v end
-    end
-    Pick(db.look.grow,D.GROW,"look.grow");Pick(db.look.timer,D.TIMER,"look.timer")
-    Pick(db.look.timerOutline,D.OUTLINES,"look.timerOutline");Pick(db.look.timerColor,D.TIMER_COLORS,"look.timerColor")
+    Fill(db.look,LOOK)
+    Pick(db.look.grow,D.GROW,"look.grow")
     Pick(db.look.labelStyle,D.LABEL_STYLES,"look.labelStyle");Pick(db.look.labelPosition,D.LABEL_POSITIONS,"look.labelPosition")
     Pick(db.look.menuDirection,D.DIRECTIONS,"look.menuDirection")
-    for _,k in ipairs({"glow","sound","labels","fineBorder"}) do assert(type(db.look[k])=="boolean","Invalid Buff Reminders look: "..k) end
-    assert(type(db.look.timerFont)=="string" and #db.look.timerFont<=140 and (db.look.timerFont=="game" or db.look.timerFont=="chat" or db.look.timerFont:sub(1,6)=="media:"),"Invalid Buff Reminders look: timerFont")
-    for _,k in ipairs({"colorMissing","colorExpiring","colorFine"}) do
-        local c=db.look[k]
-        assert(type(c)=="table","Invalid Buff Reminders look: "..k)
-        for i=1,3 do assert(D.Number(c[i],0,1),"Invalid Buff Reminders look: "..k) end
-    end
+    for _,k in ipairs({"glow","sound","labels"}) do assert(type(db.look[k])=="boolean","Invalid Buff Reminders look: "..k) end
+    CheckTextAndBorders(db.look,"look")
     for key,range in pairs(D.lookRanges) do Whole(db.look[key],range,"look."..key) end
 
     -- What each icon applied last, per character: poisons per hand, food, oils, stones.
@@ -312,20 +330,27 @@ function D.Initialize(db)
 
     if db.watchLook==nil then db.watchLook={} end
     assert(type(db.watchLook)=="table","Invalid Buff Reminders group look")
-    Defaults(db.watchLook,WATCH_LOOK)
+    -- Earlier test builds: one square icon size and a Timers switch.
+    SquareSize(db.watchLook,{16,64})
+    if db.watchLook.timer==nil and db.watchLook.timers==false then db.watchLook.timer="hidden" end
+    Fill(db.watchLook,WATCH_LOOK)
     Pick(db.watchLook.namePosition,D.NAME_POSITIONS,"watchLook.namePosition");Pick(db.watchLook.nameColor,D.NAME_COLORS,"watchLook.nameColor")
-    assert(type(db.watchLook.names)=="boolean" and type(db.watchLook.timers)=="boolean","Invalid Buff Reminders group look")
+    assert(type(db.watchLook.names)=="boolean","Invalid Buff Reminders group look")
+    CheckTextAndBorders(db.watchLook,"watchLook")
     for key,range in pairs(D.watchRanges) do Whole(db.watchLook[key],range,"watchLook."..key) end
 end
 
--- One-time adoption of the Rogue Tools Poison Reminder settings, for a
--- Buff Reminders table that has never been set up. Rogue settings stay as they are.
+-- One-time adoption of the retired Rogue Tools settings, for a Buff Reminders
+-- table that has never been set up: its switch (Rogue Tools on turns Buff
+-- Reminders on) and its Poison Reminder settings. The old table is only read.
+-- Runs before the module's saved switch is applied, and on detached profile copies.
 function D.AdoptRogue(db,modules)
     if type(db)~="table" or db.rogueAdopted~=nil then return end
     local fresh=db.when==nil and db.poisonWarn==nil
     db.rogueAdopted=true
     local rogue=type(modules)=="table" and modules.foreverRogue
     if not fresh or type(rogue)~="table" then return end
+    if rogue.enabled==true then db.enabled=true end
     local function Copy(from,to,check) if check(rogue[from]) then db[to]=rogue[from] end end
     local function Bool(v) return type(v)=="boolean" end
     local function Range(lo,hi) return function(v) return D.Number(v,lo,hi) and v%1==0 end end

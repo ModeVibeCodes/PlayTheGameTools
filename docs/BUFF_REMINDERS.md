@@ -150,8 +150,15 @@ pages); only the first group starts open:
 - **Hand labels** (poisons, imbues, oils, stones): Show, Text (MH / OH or Main
   Hand / Off Hand, also used in text mode), Size, Position (above the icon,
   inside at the top, below the timer).
-- **Group watcher** (its own card): Icon size, Spacing, Names, Name place, Name
-  colour, Name size, Letters, Timers.
+- **Group watcher** (its own card): the same **Icons** group (Width, Height,
+  Spacing, Border size, colours, Fine border) and **Timer text** group (Font,
+  Size, Outline, Position, Colour) as the main card, saved separately in
+  `watchLook`, plus its own **Names** group: Show, Position (inside bottom,
+  inside top, below the icon), Colour (class or white), Size, Letters. Names
+  and list rows use the watcher's font and outline. A name inside at the top
+  or bottom moves an inside timer to the other edge; a name below sits under
+  a timer below. Raids keep their smaller tiles and no timers. Older test
+  settings (one square **Icon size**, **Timers** off) carry over.
 
 Every icon reserves the same label and timer rows, so icons stay on one line
 whether or not each shows a label or has a menu. **Reset** restores the look too.
@@ -159,15 +166,21 @@ The card extension is generic: `element.styleGroups` (rows: slider, select with 
 list or a function, toggle, colour) and `element.onLayoutReset`
 (Config/EditMode.lua, Core/PositionManager.lua).
 
-## Rogue Tools
+## Rogue Tools (retired)
 
-While Buff Reminders is on and tracks a poison, Rogue Tools' Poison Reminder
-steps aside at runtime (`ForeverRogue:HandedOver()`); its saved **Show
-reminder** setting is not changed, and Quick Poisons is unaffected. Turn the
-poison chips off (or the module) and the Rogue reminder returns. A profile whose
-Buff Reminders settings were never set up adopts the Poison Reminder's time and
-charge thresholds, Use Time/Charge Threshold, When and right-click dismissal
-once (`D.AdoptRogue`, marker `rogueAdopted`); Rogue settings are never edited.
+Rogue Tools (`foreverRogue`) is retired: Buff Reminders covers its Poison
+Reminder (per hand, time and charge thresholds, When, right-click dismissal)
+and its Quick Poisons (the poison corner-tab menu; click applies the last
+poison used on that hand). Its module files, page, two Layout displays and
+tests are removed; `addon.retiredModules.foreverRogue="buffReminders"` lets
+old exported profiles import. Its saved table is never written or removed.
+
+A profile whose Buff Reminders settings were never set up adopts, once
+(`D.AdoptRogue`, marker `rogueAdopted`): Rogue Tools' switch (on turns Buff
+Reminders on), time and charge thresholds, Use Time/Charge Threshold, When
+and right-click dismissal. It runs in `OnInitialize` before the saved switch
+is applied, and in profile validation, so imports adopt too. Turning Buff
+Reminders off later sticks.
 
 ## Data and open questions
 
@@ -193,7 +206,8 @@ Spell ranks come from the Forever trainer catalogs
 
 `python tests/buff_reminders.py` (Mage timing/combat/resources/modes/Layout/
 page/validation, Shaman totems and imbues, Paladin watcher and deaths, Warlock
-Soulstone, Rogue adoption and handover), `python tests/smoke.py`, the full suite
+Soulstone, group watcher look, retired Rogue Tools adoption and import),
+`python tests/smoke.py`, the full suite
 and `python tools/build_release.py`.
 
 ## In-game checks
@@ -213,11 +227,12 @@ and `python tools/build_release.py`.
 | B11 Group watcher | Layout display **Buff Reminders: Group** | Join a party as a Paladin (or Priest, Mage, Druid); click a member's icon | Out of combat | One icon per member with their name in class colour; the click blesses/buffs that player and the icon clears |
 | B12 Soulstone | (display on screen) | As a Warlock in a party, target a healer and click **Soulstone**; then clear your target and click again (with a new stone) | Out of combat, Soulstone in bags | The stone goes on your target; with no target, on you. The icon shows who has it |
 | B13 Layout card | Window header **Layout** → click **Buff Reminders** | Open **Display**, set **Grow** to **Down** and **Icon size** to 52; click **Reset** | Out of combat | Icons stack downward at the larger size; Reset returns them to the default row |
-| B14 Rogue handover | `/ptg` → sidebar **Rogue Tools** | With Rogue Tools on, turn Buff Reminders on; then turn off **Main-hand poison** and **Off-hand poison** in **Rogue Buffs** | Rogue, out of combat | Rogue Tools' Poison Reminder hides and its page shows the Buff Reminders note; after turning the chips off it returns. Quick Poisons works throughout |
+| B14 Rogue Tools retired | `/ptg` → sidebar | Look for **Rogue Tools**; open **Buff Reminders** → **Rogue Buffs** | Rogue, out of combat | No Rogue Tools page or Layout displays remain; Buff Reminders is on with your poison reminders and the same time and charge warnings Rogue Tools had |
 | B16 Poison menu | (display on screen) | As a Rogue with two poison families in your bags, click the gold corner tab on the **MH** icon; pick a different poison | Out of combat | A menu opens above the whole display (not over any icon) listing each poison with counts and **last used**; the pick is applied and the next plain click on **MH** applies the same poison |
 | B17 Remembered | (display on screen) | After B16, type `/reload`; log out and back in; check another character | Out of combat | The **MH** click still applies your pick after each; another character keeps its own |
 | B18 Food menu | (display on screen) | With no food eaten yet, click the food icon; pick a food; later click the icon again | Out of combat, food in bags | First click opens the food menu with a note; the pick is eaten; the next click eats the same food |
 | B19 Learn food | (display on screen) | Eat a different food straight from your bags, then let the food buff run out | Out of combat | The food icon now shows and eats that food |
 | B20 Icon and text options | Window header **Layout** → click **Buff Reminders** | Open **Icons**: set Width 52, Height 30, Border size 2, change **Missing**; open **Timer text**: pick a font, **Thick** outline, **Inside, centre**; open **Hand labels**: **Main Hand / Off Hand** | Out of combat | Icons resize (art stays square), borders thicken and recolour, timers change font and position, labels read Main Hand / Off Hand; icons stay on one line; **Reset** restores everything |
 | B21 Menus in combat | (display on screen) | Open a menu, then pull a mob | Enter combat | The menu and the corner tabs disappear at once; tabs return when combat ends |
+| B22 Group watcher look | Window header **Layout** → click **Buff Reminders: Group** | In a party as a Paladin (or Priest, Mage, Druid): open **Icons**, set Width 40, Height 26, change **Missing**; open **Timer text**, set **Below icon** and **Thick**; open **Names**, set **Below icon** | Out of combat | Tiles resize (art stays square) and recolour; timers sit under each tile with the name under the timer; the main display is unchanged; **Reset** restores the group look |
 | B15 Food aura | (display on screen) | Eat a Forever food; if the Food buff reminder stays, run `/run for i=1,40 do local a=C_UnitAuras.GetAuraDataByIndex("player",i,"HELPFUL") if not a then break end print(a.name,a.spellId) end` | Out of combat | The reminder clears once fed; otherwise report the printed food aura name and ID |

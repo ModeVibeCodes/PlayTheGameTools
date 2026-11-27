@@ -14,6 +14,10 @@ local M={title="Buff Reminders",category="qualityOfLife",defaultEnabled=false,Da
     searchAliases={"buff reminder","buffs","blessings","totems","poisons","imbues","soulstone","food buff","well fed","reminders"}}
 addon.BuffReminders=M
 addon:RegisterModule("buffReminders",M)
+-- Rogue Tools (foreverRogue) was retired into Buff Reminders. Its saved table
+-- stays in profiles, unread after the one-time adoption, and old exports import.
+addon.retiredModules=addon.retiredModules or {}
+addon.retiredModules.foreverRogue="buffReminders"
 
 M.TICK=0.5
 local Public,Number,Call,Field,Truthy=D.Public,D.Number,D.Call,D.Field,D.Truthy
@@ -59,7 +63,6 @@ function M:Changed()
     self:Update(true)
     if self.ApplyStyle then self:ApplyStyle() end
     if self.SyncEditElements then self:SyncEditElements() end
-    self:NotifyRogue()
     if addon.RefreshConfig then addon:RefreshConfig() end
 end
 
@@ -795,7 +798,6 @@ function M:OnEnable()
     if self.RefreshRoster then self:RefreshRoster() end
     self:Update(true)
     if self.RegisterPositions then self:RegisterPositions() end
-    self:NotifyRogue()
 end
 
 function M:OnDisable()
@@ -813,7 +815,6 @@ function M:OnDisable()
             if not self.active and self.LayoutSecure then self:LayoutSecure() end
         end)
     end
-    self:NotifyRogue()
 end
 
 function M:SetEditMode(enabled)
@@ -823,11 +824,3 @@ function M:SetEditMode(enabled)
 end
 function M:SetPreviewMode(enabled) self.previewing=enabled and self.active or false;self:Update() end
 
--- Rogue Tools: while this module tracks your poisons, its Poison Reminder steps aside.
-function M:HandlesPoisons()
-    return self.active==true and self.class=="ROGUE" and self.db and (self.db.buffs.poisonMain or self.db.buffs.poisonOff) or false
-end
-function M:NotifyRogue()
-    local R=addon.ForeverRogue
-    if R and R.active and R.Refresh and not self:InCombat() then pcall(R.Refresh,R) end
-end

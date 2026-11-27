@@ -8,6 +8,10 @@
   sidebar **Buff Reminders**; style it in **Layout**.
   Click an icon to apply what you used last, or use its corner tab to pick
   another poison, food or spell; your picks are remembered per character.
+  The group display has the same icon and timer options, plus name options.
+- **Rogue Tools** is retired: Buff Reminders now shows your poison reminders
+  and lets you pick poisons. If Rogue Tools was on, Buff Reminders turns on
+  with the same poison warning settings.
 - Loot Sparkles: a greyed node that is only too far away now reads **Out of
   reach** instead of "Can't gather". A node you stand next to and still can't
   gather reads **Skill too low**; quest objects still read **Can't use**.

@@ -2,7 +2,15 @@
 search and /ptg dev (mock only, not native WoW)."""
 from smoke import load
 
-lua, _ = load()
+# No shipped module is class-only since Rogue Tools retired; a stand-in keeps
+# the class filter, class icon and long-description wrap covered.
+CLASS_TOOL = r'''
+addon:RegisterModule('testClassTool',{title='Rogue Test Tools',category='qualityOfLife',defaultEnabled=false,
+ classIcon='Interface\\Icons\\ClassIcon_Rogue',searchAliases={'poison'},
+ configDescription='A class-only stand-in module whose description is long enough to need a second line in the page header of the settings window.'})
+'''
+
+lua, _ = load(before=CLASS_TOOL)
 lua.execute(r'''
 local function Click(button) button:GetScript('OnClick')(button) end
 local function Encode() return addon.ProfileCodec.Encode(PTGToolsDB) end
@@ -52,7 +60,7 @@ for i,row in ipairs(w.navigation.rows) do
 end
 assert(#w.navigation.rows==#listed)
 for _,cid in ipairs(addon.categoryOrder) do assert(w.navigationButtons[cid]==nil,'no category heading '..cid) end
-assert(#addon.categoryOrder==5 and addon.categories.timers.modules[1]=='combatTimer','category data kept for other code')
+assert(#addon.categoryOrder==4 and addon.categories.timers.modules[1]=='combatTimer','category data kept for other code')
 assert(w.navigationButtons.foundation==nil and w.navigationButtons.dashboard==nil)
 assert(w.navigationButtons.globalSettings==w.settingsButton and w.settingsButton.label:GetText()=='Settings')
 assert(w.settingsButton.points[1][1]=='BOTTOMLEFT' and w.settingsButton:GetParent()==w.sidebar,'Settings pinned at the bottom')
@@ -86,12 +94,12 @@ for _,id in ipairs(addon.moduleOrder) do
         assert(text~='Enabled' and text~='Disabled',id..' echoes the switch')
     end
 end
-addon:SelectConfigPage('foreverRogue')
-assert(h.title:IsShown() and h.title:GetText()=='Rogue Tools','class tools show their title')
+addon:SelectConfigPage('testClassTool')
+assert(h.title:IsShown() and h.title:GetText()=='Rogue Test Tools','class tools show their title')
 local W=addon.ConfigWidgets
-assert(h.description:GetText()==addon.modules.foreverRogue.configDescription and h.description.wordWrap and h.description.justifyV=='TOP','long descriptions wrap')
+assert(h.description:GetText()==addon.modules.testClassTool.configDescription and h.description.wordWrap and h.description.justifyV=='TOP','long descriptions wrap')
 assert(h.description.height==W.PAGE_DESCRIPTION_HEIGHT and h:GetHeight()==W.PAGE_HEADER_HEIGHT and 30+W.PAGE_DESCRIPTION_HEIGHT<=W.PAGE_HEADER_HEIGHT-12,'two description lines clear the divider')
-assert(w.navigationButtons.foreverRogue.classIcon.texture==addon.modules.foreverRogue.classIcon,'class icon in the sidebar row')
+assert(w.navigationButtons.testClassTool.classIcon.texture==addon.modules.testClassTool.classIcon,'class icon in the sidebar row')
 Click(w.settingsButton)
 assert(w.selectedPage=='globalSettings' and h.title:GetText()=='Settings')
 assert(h.description:GetText()=='Look, game options and profiles for the whole addon.')
@@ -174,19 +182,19 @@ SlashCmdList.PLAYTHEGAMETOOLS('resetwindow');assert(w:IsShown() and addon.db.win
 ''')
 
 # A class-only module is listed, and searchable, only for its class.
-warrior, _ = load(before="function UnitClass() return 'Warrior','WARRIOR',1 end")
+warrior, _ = load(before=CLASS_TOOL + "function UnitClass() return 'Warrior','WARRIOR',1 end")
 warrior.execute(r'''
 SlashCmdList.PLAYTHEGAMETOOLS()
 local w=addon.configWindow
-assert(not addon:IsConfigPageListed('foreverRogue') and w.navigationButtons.foreverRogue==nil,'no Rogue row for a Warrior')
-for _,row in ipairs(w.navigation.rows) do assert(row.label:GetText()~='Rogue Tools') end
-for _,result in ipairs(addon:SearchSettings('rogue')) do assert(result.module.id~='foreverRogue') end
-for _,result in ipairs(addon:SearchSettings('poison')) do assert(result.module.id~='foreverRogue') end
+assert(not addon:IsConfigPageListed('testClassTool') and w.navigationButtons.testClassTool==nil,'no Rogue row for a Warrior')
+for _,row in ipairs(w.navigation.rows) do assert(row.label:GetText()~='Rogue Test Tools') end
+for _,result in ipairs(addon:SearchSettings('rogue')) do assert(result.module.id~='testClassTool') end
+for _,result in ipairs(addon:SearchSettings('poison')) do assert(result.module.id~='testClassTool') end
 assert(#w.navigation.rows==#addon.moduleOrder-2)
 ''')
-secret, _ = load(before="function UnitClass() return {secret=true},{secret=true},{secret=true} end")
+secret, _ = load(before=CLASS_TOOL + "function UnitClass() return {secret=true},{secret=true},{secret=true} end")
 secret.execute(r'''
-assert(addon:IsConfigPageListed('foreverRogue'),'an unreadable class keeps the page listed')
+assert(addon:IsConfigPageListed('testClassTool'),'an unreadable class keeps the page listed')
 ''')
 
 # Opening during combat builds the shell; search defers page building.

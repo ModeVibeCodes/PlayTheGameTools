@@ -1,5 +1,21 @@
 # Standalone Forever development
 
+Rogue Tools retired (branch `feature/buff-reminder`, 2026-11-27, user
+approved): Buff Reminders covers the Poison Reminder and Quick Poisons, so
+`foreverRogue` follows the Guild Roster precedent. Removed: the four
+`Modules/ForeverRogue*.lua` files, `Config/ForeverRogue.lua` (five TOC
+entries, 128 Lua chunks), the Class Tools category (only Rogue used it), its
+ModePlans route, its three StyleReset lists (a module that is no longer
+registered has no template, so the list was skipped anyway), the Buff
+Reminders handover (`HandlesPoisons`/`NotifyRogue`) and the five
+`tests/rogue_*.py` suites; their shared mocks moved to
+`tests/weapon_fixture.py`, and `tests/window_shell.py` registers a stand-in
+class-only module to keep the class filter covered. Kept: the saved
+`foreverRogue` table (never written or removed), its Layout position
+records, and `addon.retiredModules.foreverRogue` so old exports import.
+`D.AdoptRogue` now also adopts the switch (on turns Buff Reminders on) for a
+never-set-up Buff Reminders table. Native confirmation is pending.
+
 v2 styling reset (branch `t3/v2-styling-clear`, 2026-11-24): the user approved
 one exception to "never reset SavedVariables": each display's old per-display
 styling is reset once per profile, with a one-time notice. `Core/StyleReset.lua`

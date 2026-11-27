@@ -12,9 +12,11 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   left-click (buffs for others go on your friendly target, else you). The
   group watcher shows your buff on every party or raid member with their name
   in class colour. Shamans pick which totems to be reminded about. Styling
-  lives on two Layout Style cards with their own Display and Group watcher
-  groups. While it tracks poisons, Rogue Tools' Poison Reminder steps aside;
-  its time and charge settings are adopted once. See docs/BUFF_REMINDERS.md.
+  lives on two Layout Style cards. See docs/BUFF_REMINDERS.md.
+- **Rogue Tools is retired**: Buff Reminders covers its Poison Reminder and
+  Quick Poisons. A profile with Rogue Tools on turns Buff Reminders on once,
+  with the same time, charge, When and right-click settings; Rogue Tools'
+  saved settings are kept, unread, and old exported profiles still import.
 - Buff Reminders revision: click applies what you used last; a gold corner
   tab opens a menu of every choice (poisons per hand, food, imbues, oils,
   stones, blessing, aura, aspect, armor, demon, totems), opening outside the
@@ -23,6 +25,9 @@ Global Settings now groups Appearance, account-wide Profiles, Optimizations and 
   colours), Timer text (font, size, outline, position, colour) and Hand
   labels (MH / OH or Main Hand / Off Hand). No background by default; icons
   always share one line.
+- Buff Reminders group watcher card now matches the main card: Icons (width,
+  height, spacing, border size and colours) and Timer text (font, size,
+  outline, position, colour), plus its own Names group.
 - Layout's Style card can carry extra groups for a display; Reset restores
   them too.
 

@@ -77,7 +77,7 @@ mode.execute(r'''
         assert(found[1] and found[1].module.id==id,'old module name still finds '..id)
     end
     assert(addon.modules.cityLabels.title=='Map Labels' and addon.modules.enhancedExperienceBar.title=='Experience Bar')
-    assert(addon.modules.foreverQuickAccess.title=='Profession & Food Bars' and addon.modules.foreverRogue.title=='Rogue Tools')
+    assert(addon.modules.foreverQuickAccess.title=='Profession & Food Bars')
     addon:SelectConfigPage(results[1].module.id)
     assert(w.sidebarModuleButtons.combatTimer:IsShown() and w.sidebarModuleButtons.combatTimer.selected,'search routing selects the row')
     local b=w.sidebarModuleButtons.combatTimer

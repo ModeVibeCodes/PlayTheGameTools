@@ -227,9 +227,9 @@ local function SetFont(text,id,size,scope)
     addon.Media:BindInterfaceFont(text,GameFontHighlight,applied,scope or id)
 end
 
--- The timer and label font chosen on the Style card (game, chat or a SharedMedia font).
-function M:TextFont()
-    local key=self.db.look.timerFont
+-- The timer and label font chosen on a Style card (game, chat or a SharedMedia font).
+function M:TextFont(key)
+    key=key or self.db.look.timerFont
     local media=addon.Media
     if key=="chat" then return media.chatFont or GameFontHighlight:GetFont() end
     if key:sub(1,6)=="media:" then
@@ -239,9 +239,11 @@ function M:TextFont()
     return media.gameFont or GameFontHighlight:GetFont()
 end
 -- Display text in the chosen font, size and outline; reapplied only when one changes.
-local function SetLookFont(self,text,size)
-    local look=self.db.look
-    local path,applied,flags=self.renderFont or self:TextFont(),StyleSize(MAIN,size),OUTLINE_FLAGS[look.timerOutline]
+-- group: use the group watcher's own look and Style card.
+local function SetLookFont(self,text,size,group)
+    local look=group and self.db.watchLook or self.db.look
+    local path=(group and self.groupFont or not group and self.renderFont) or self:TextFont(look.timerFont)
+    local applied,flags=StyleSize(group and GROUP or MAIN,size),OUTLINE_FLAGS[look.timerOutline]
     local key=tostring(path).."|"..applied.."|"..flags
     if text.customFont==key then return end
     addon.Media:UnbindInterfaceFont(text)
@@ -256,11 +258,36 @@ function M:ClassColor(class)
     return c and {c.r,c.g,c.b} or WHITE
 end
 
-function M:StateColor(status)
-    if self.db.look.timerColor=="white" then return WHITE end
+function M:StateColor(status,group)
+    local look=group and self.db.watchLook or self.db.look
+    if look.timerColor=="white" then return WHITE end
     if status=="missing" then return {1,0.42,0.38} end
-    if status=="expiring" then return self.db.look.colorExpiring end
+    if status=="expiring" then return look.colorExpiring end
     return {0.9,0.9,0.9}
+end
+
+-- Keep the art square on non-square icons by trimming the long side.
+local function SquareArt(texture,w,h)
+    local cx,cy=0.07,0.07
+    if w>h then cy=0.07+0.43*(1-h/w) elseif h>w then cx=0.07+0.43*(1-w/h) end
+    texture:SetTexCoord(cx,1-cx,cy,1-cy)
+end
+-- State border from a look table (main display or group watcher).
+local function StateBorder(button,look,status,dim)
+    local size=look.borderSize
+    if status=="missing" then EdgeColor(button,dim and {0.4,0.4,0.4} or look.colorMissing,1,size)
+    elseif status=="expiring" then EdgeColor(button,look.colorExpiring,1,size)
+    elseif look.fineBorder then EdgeColor(button,look.colorFine,1,size)
+    else EdgeColor(button,nil) end
+end
+-- Timer around or inside an icon: below, above, inside (top, centre, bottom).
+local function PlaceTimer(text,button,position)
+    text:ClearAllPoints()
+    if position=="below" then text:SetPoint("TOP",button,"BOTTOM",0,-2)
+    elseif position=="above" then text:SetPoint("BOTTOM",button,"TOP",0,2)
+    elseif position=="top" then text:SetPoint("TOP",button,"TOP",0,-2)
+    elseif position=="center" then text:SetPoint("CENTER",button,"CENTER",0,0)
+    else text:SetPoint("BOTTOM",button,"BOTTOM",0,2) end
 end
 
 -- Main display ----------------------------------------------------------------
@@ -432,22 +459,15 @@ function M:PaintIcon(index,e,withText)
     b.entry,b.dismissKey=e,e.slotKeys or e.dismissKeys or e.key
     local icon=self:IconFor(e)
     b.icon:SetTexture(icon or FALLBACK_ICON)
-    -- Keep the art square on non-square icons by trimming the long side.
-    local w,h=look.iconWidth,look.iconHeight
-    local cx,cy=0.07,0.07
-    if w>h then cy=0.07+0.43*(1-h/w) elseif h>w then cx=0.07+0.43*(1-w/h) end
-    b.icon:SetTexCoord(cx,1-cx,cy,1-cy)
+    SquareArt(b.icon,look.iconWidth,look.iconHeight)
     local dim=e.resource~="ok" and not e.sample
     b.icon:SetDesaturated(dim or e.status=="missing" or e.frozen==true)
     local shade=dim and 0.45 or (e.status=="missing" and 0.75 or 1)
     b.icon:SetVertexColor(shade,shade,shade)
     b:SetAlpha(dim and 0.6 or (e.frozen and 0.5 or 1))
     b.glowing=false
-    local size=look.borderSize
-    if e.status=="missing" then EdgeColor(b,dim and {0.4,0.4,0.4} or look.colorMissing,1,size)
-    elseif e.status=="expiring" then EdgeColor(b,look.colorExpiring,1,size);b.glowing=not dim and look.glow
-    elseif look.fineBorder then EdgeColor(b,look.colorFine,1,size)
-    else EdgeColor(b,nil) end
+    StateBorder(b,look,e.status,dim)
+    b.glowing=e.status=="expiring" and not dim and look.glow
     -- Timer: below, above, inside (top, centre, bottom) or hidden.
     SetLookFont(self,b.timer,look.timerSize);SetFont(b.count,MAIN,10)
     local label=look.labels and self:HandLabel(e.buff)
@@ -456,12 +476,7 @@ function M:PaintIcon(index,e,withText)
     if not withText and (timerPos=="below" or timerPos=="above") then timerPos="hidden" end
     local text=e.sample and (e.status=="missing" and "Missing" or Clock(e.left or 60)) or self:TimerText(e)
     local timerH=StyleSize(MAIN,look.timerSize)+3
-    b.timer:ClearAllPoints()
-    if timerPos=="below" then b.timer:SetPoint("TOP",b,"BOTTOM",0,-2)
-    elseif timerPos=="above" then b.timer:SetPoint("BOTTOM",b,"TOP",0,2)
-    elseif timerPos=="top" then b.timer:SetPoint("TOP",b,"TOP",0,-2)
-    elseif timerPos=="center" then b.timer:SetPoint("CENTER",b,"CENTER",0,0)
-    else b.timer:SetPoint("BOTTOM",b,"BOTTOM",0,2) end
+    PlaceTimer(b.timer,b,timerPos)
     b.timer:SetText(text);b.timer:SetShown(timerPos~="hidden" and text~="")
     local c=self:StateColor(e.status)
     b.timer:SetTextColor(c[1],c[2],c[3])
@@ -486,16 +501,17 @@ function M:PaintIcon(index,e,withText)
     return b
 end
 
-function M:PaintName(text,name,class,position,id)
+-- below: extra drop when a timer already sits below the icon.
+function M:PaintName(text,name,class,position,id,below)
     local w=self.db.watchLook
-    SetFont(text,id,w.nameSize)
+    SetLookFont(self,text,w.nameSize,id==GROUP)
     local color=w.nameColor=="class" and self:ClassColor(class) or WHITE
     text:SetTextColor(color[1],color[2],color[3])
     text:SetText(name:sub(1,w.nameLetters))
     text:ClearAllPoints()
     local parent=text:GetParent()
     if position=="top" then text:SetPoint("TOP",parent,"TOP",0,-1)
-    elseif position=="below" then text:SetPoint("TOP",parent,"BOTTOM",0,-2)
+    elseif position=="below" then text:SetPoint("TOP",parent,"BOTTOM",0,-2-(below or 0))
     else text:SetPoint("BOTTOM",parent,"BOTTOM",0,1) end
     text:Show()
 end
@@ -544,10 +560,16 @@ function M:RenderGroup()
     end
     g.background:SetShown(addon.PositionManager:StyleBackground(GROUP))
     local w=self.db.watchLook
+    self.groupFont=self:TextFont(w.timerFont)
     local raid=Public(IsInRaid) and D.Truthy(IsInRaid) and not placing
-    local size=raid and math.max(16,math.floor(w.iconSize*0.75+0.5)) or w.iconSize
+    -- Raids use smaller tiles and no timers, so a full raid stays compact.
+    local function Raid(n) return raid and math.max(16,math.floor(n*0.75+0.5)) or n end
+    local tileW,tileH=Raid(w.iconWidth),Raid(w.iconHeight)
     local gap=w.spacing
-    local nameBelow=w.names and w.namePosition=="below" and StyleSize(GROUP,w.nameSize)+3 or 0
+    local timerPos=self:TileTimer(raid)
+    local timerH=StyleSize(GROUP,w.timerSize)+3
+    local bandTop=timerPos=="above" and timerH or 0
+    local bandBottom=(timerPos=="below" and timerH or 0)+(w.names and w.namePosition=="below" and StyleSize(GROUP,w.nameSize)+3 or 0)
     local y,width,tileIndex,headerIndex,rowIndex=-6,0,0,0,0
     for _,row in ipairs(rows) do
         headerIndex=headerIndex+1
@@ -573,15 +595,16 @@ function M:RenderGroup()
                     r:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
                     g.rows[rowIndex]=r
                 end
-                SetFont(r.label,GROUP,11);SetFont(r.value,GROUP,11)
+                SetLookFont(self,r.label,w.timerSize+2,true);SetLookFont(self,r.value,w.timerSize+2,true)
                 local c=self:ClassColor(m.class)
                 r.label:SetText(m.name..(m.family and ("  ·  "..(D.ChoiceLabel("blessing",m.family) or "")) or ""));r.label:SetTextColor(c[1],c[2],c[3])
                 r.value:SetText(self:MemberText(m));local vc=self:MemberColor(m);r.value:SetTextColor(vc[1],vc[2],vc[3])
                 r.member,r.row=m,row
-                r:SetSize(220,16)
+                local lineH=StyleSize(GROUP,w.timerSize+2)+5
+                r:SetSize(220,lineH)
                 local placed=Place(r,row.buff.key..":"..m.name,6,y)
                 width=math.max(width,232)
-                y=y-18
+                y=y-lineH-2
                 if placed then self.groupSlots[#self.groupSlots+1]={region=r,member=m,buff=row.buff} end
             end
         else
@@ -594,7 +617,7 @@ function M:RenderGroup()
                     groups[c][#groups[c]+1]=m
                 end
             else groups.all=row.members;order={"all"} end
-            local x,perRow,lineHeight=6,raid and 10 or 8,size+nameBelow+gap
+            local x,perRow,lineHeight=6,raid and 10 or 8,bandTop+tileH+bandBottom+gap
             local col=0
             for gi,c in ipairs(order) do
                 if gi>1 then x=x+gap+6;col=col+0.5 end
@@ -603,9 +626,9 @@ function M:RenderGroup()
                     tileIndex=tileIndex+1
                     local t=g.tiles[tileIndex]
                     if not t then t=Icon(self,g,GROUP);g.tiles[tileIndex]=t end
-                    self:PaintTile(t,m,row,size,raid)
-                    local placed=Place(t,row.buff.key..":"..m.name,x,y)
-                    x=x+size+gap;col=col+1
+                    self:PaintTile(t,m,row,tileW,tileH,timerPos)
+                    local placed=Place(t,row.buff.key..":"..m.name,x,y-bandTop)
+                    x=x+tileW+gap;col=col+1
                     width=math.max(width,x+4)
                     if placed then self.groupSlots[#self.groupSlots+1]={region=t,member=m,buff=row.buff} end
                 end
@@ -625,14 +648,24 @@ function M:MemberText(m)
 end
 function M:MemberColor(m)
     if m.status=="missing" then return {1,0.42,0.38} end
-    if m.status=="expiring" then return self.db.look.colorExpiring end
+    if m.status=="expiring" then return self.db.watchLook.colorExpiring end
     if m.status=="dead" or m.status=="unknown" then return {0.55,0.55,0.55} end
     return {0.85,0.83,0.77}
 end
 
-function M:PaintTile(t,m,row,size,raid)
+-- Where the tile timer goes: a name inside at the top or bottom pushes the
+-- timer to the other inside edge; raids show no timers.
+function M:TileTimer(raid)
     local w=self.db.watchLook
-    t:SetSize(size,size)
+    local timer=raid and "hidden" or w.timer
+    if w.names and w.namePosition==timer and (timer=="top" or timer=="bottom") then timer=timer=="top" and "bottom" or "top" end
+    return timer
+end
+
+function M:PaintTile(t,m,row,width,height,timerPos)
+    local w=self.db.watchLook
+    t:SetSize(width,height)
+    SquareArt(t.icon,width,height)
     t.entry=nil;t.member=m
     local b=row.buff
     local chain=m.family and D.chains[m.family] or self:ChainFor(b)
@@ -643,16 +676,21 @@ function M:PaintTile(t,m,row,size,raid)
     local shade=m.status=="dead" and 0.35 or (gone and 0.7 or 1)
     t.icon:SetVertexColor(shade,shade,shade)
     t:SetAlpha(1);t.glowing=false
-    local look=self.db.look
-    if m.status=="missing" then EdgeColor(t,look.colorMissing,1,look.borderSize)
-    elseif m.status=="expiring" then EdgeColor(t,look.colorExpiring,1,look.borderSize)
-    elseif look.fineBorder then EdgeColor(t,look.colorFine,1,look.borderSize) else EdgeColor(t,nil) end
-    SetFont(t.count,GROUP,math.max(8,math.floor(size*0.28)))
-    local timer=w.timers and not raid and m.left and m.status~="missing" and m.status~="dead"
-    t.count:SetText(timer and ((m.estimated and "~" or "")..Clock(m.left)) or (m.status=="dead" and "X" or ""))
-    t.count:SetShown(timer or m.status=="dead")
-    t.timer:Hide()
-    if w.names then self:PaintName(t.name,m.name,m.class,w.namePosition,GROUP) else t.name:Hide() end
+    StateBorder(t,w,m.status=="dead" and "missing" or m.status)
+    -- Dead players get an X in the corner.
+    SetFont(t.count,GROUP,math.max(8,math.floor(math.min(width,height)*0.28)))
+    t.count:SetText(m.status=="dead" and "X" or "");t.count:SetShown(m.status=="dead")
+    local timer=timerPos~="hidden" and m.left and m.status~="missing" and m.status~="dead"
+    if timer then
+        SetLookFont(self,t.timer,w.timerSize,true)
+        PlaceTimer(t.timer,t,timerPos)
+        t.timer:SetText((m.estimated and "~" or "")..Clock(m.left))
+        local c=self:StateColor(m.status,true);t.timer:SetTextColor(c[1],c[2],c[3])
+        t.timer:Show()
+    else t.timer:Hide() end
+    -- A name below the icon sits under a timer that is also below it.
+    local drop=timerPos=="below" and StyleSize(GROUP,w.timerSize)+3 or 0
+    if w.names then self:PaintName(t.name,m.name,m.class,w.namePosition,GROUP,drop) else t.name:Hide() end
 end
 
 -- Tooltips ------------------------------------------------------------------------
@@ -684,68 +722,88 @@ end
 -- Text size on the Style card rescales every custom-font text on the next draw.
 function M:ApplyStyle()
     if not self.frame then return end
-    for _,b in ipairs(self.frame.icons) do b.timer.customFont=nil;b.label.customFont=nil end
+    for _,b in ipairs(self.frame.icons) do b.timer.customFont=nil;b.label.customFont=nil;b.name.customFont=nil end
     for _,r in ipairs(self.frame.rows) do r.label.customFont=nil;r.value.customFont=nil end
+    local g=self.groupFrame
+    if g then
+        for _,t in ipairs(g.tiles) do t.timer.customFont=nil;t.name.customFont=nil end
+        for _,r in ipairs(g.rows) do r.label.customFont=nil;r.value.customFont=nil end
+    end
     self.frame.label.customFont=nil;self.frame.sub.customFont=nil
     self:Update()
 end
 
-local function Look(self,key) return function() return self.db.look[key] end end
-local function SetLook(self,key) return function(v) if addon.editMode then self:SetGroupOption("look",key,v) end end end
-local function Watch(self,key) return function() return self.db.watchLook[key] end end
-local function SetWatch(self,key) return function(v) if addon.editMode then self:SetGroupOption("watchLook",key,v) end end end
+-- Style card rows read and write one look table: "look" (main display) or
+-- "watchLook" (group watcher). Both cards are built from the same rows.
+local function Getter(self,group,key) return function() return self.db[group][key] end end
+local function Setter(self,group,key) return function(v) if addon.editMode then self:SetGroupOption(group,key,v) end end end
+local function Rows(self,group,ranges)
+    local R={}
+    function R.Range(key,label) return {kind="slider",label=label,min=ranges[key][1],max=ranges[key][2],step=1,get=Getter(self,group,key),set=Setter(self,group,key)} end
+    function R.Color(key,label) return {kind="color",label=label,get=Getter(self,group,key),set=Setter(self,group,key)} end
+    function R.Toggle(key,label) return {kind="toggle",label=label,get=Getter(self,group,key),set=Setter(self,group,key)} end
+    function R.Select(key,label,choices) return {kind="select",label=label,choices=choices,get=Getter(self,group,key),set=Setter(self,group,key)} end
+    return R
+end
+local function Fonts()
+    local out={}
+    for _,font in ipairs(addon.Media:GetFonts()) do out[#out+1]={id=font.media and ("media:"..font.media) or font.key,label=font.label} end
+    return out
+end
+-- Shared groups: icon borders and the timer text.
+local function IconRows(R,first)
+    local rows={R.Range("iconWidth","Width"),R.Range("iconHeight","Height")}
+    for _,row in ipairs(first or {}) do rows[#rows+1]=row end
+    for _,row in ipairs({R.Range("borderSize","Border size"),R.Color("colorMissing","Missing"),R.Color("colorExpiring","Expiring"),
+        R.Toggle("fineBorder","Fine border"),R.Color("colorFine","Fine colour")}) do rows[#rows+1]=row end
+    return {title="Icons",rows=rows}
+end
+local function TimerRows(R)
+    return {title="Timer text",rows={
+        R.Select("timerFont","Font",Fonts),
+        R.Range("timerSize","Size"),
+        R.Select("timerOutline","Outline",{{id="none",label="None"},{id="outline",label="Outline"},{id="thick",label="Thick"}}),
+        R.Select("timer","Position",{{id="below",label="Below icon"},{id="above",label="Above icon"},{id="bottom",label="Inside, bottom"},{id="center",label="Inside, centre"},{id="top",label="Inside, top"},{id="hidden",label="Hidden"}}),
+        R.Select("timerColor","Colour",{{id="state",label="By state"},{id="white",label="White"}}),
+    }}
+end
 
 -- Extra rows this display adds to its Layout Style card. Only the first group
 -- starts open; the rest fold so the card fits the screen.
 function M:StyleGroups(id)
     if id==MAIN then
-        local L=D.lookRanges
-        local function Range(key,label) return {kind="slider",label=label,min=L[key][1],max=L[key][2],step=1,get=Look(self,key),set=SetLook(self,key)} end
-        local function Color(key,label) return {kind="color",label=label,get=Look(self,key),set=SetLook(self,key)} end
-        local function Fonts()
-            local out={}
-            for _,font in ipairs(addon.Media:GetFonts()) do out[#out+1]={id=font.media and ("media:"..font.media) or font.key,label=font.label} end
-            return out
-        end
+        local R=Rows(self,"look",D.lookRanges)
         return {
             {title="Display",rows={
-                {kind="select",label="Grow",choices={{id="right",label="Right"},{id="left",label="Left"},{id="center",label="Center"},{id="down",label="Down"},{id="up",label="Up"}},get=Look(self,"grow"),set=SetLook(self,"grow")},
-                Range("spacing","Spacing"),
-                {kind="select",label="Menus open",choices={{id="up",label="Up"},{id="down",label="Down"},{id="left",label="Left"},{id="right",label="Right"}},get=Look(self,"menuDirection"),set=SetLook(self,"menuDirection")},
-                {kind="toggle",label="Glow",get=Look(self,"glow"),set=SetLook(self,"glow")},
-                {kind="toggle",label="Sound",get=Look(self,"sound"),set=SetLook(self,"sound")},
+                R.Select("grow","Grow",{{id="right",label="Right"},{id="left",label="Left"},{id="center",label="Center"},{id="down",label="Down"},{id="up",label="Up"}}),
+                R.Range("spacing","Spacing"),
+                R.Select("menuDirection","Menus open",{{id="up",label="Up"},{id="down",label="Down"},{id="left",label="Left"},{id="right",label="Right"}}),
+                R.Toggle("glow","Glow"),
+                R.Toggle("sound","Sound"),
             }},
-            {title="Icons",rows={
-                Range("iconWidth","Width"),Range("iconHeight","Height"),Range("borderSize","Border size"),
-                Color("colorMissing","Missing"),Color("colorExpiring","Expiring"),
-                {kind="toggle",label="Fine border",get=Look(self,"fineBorder"),set=SetLook(self,"fineBorder")},
-                Color("colorFine","Fine colour"),
-            }},
-            {title="Timer text",rows={
-                {kind="select",label="Font",choices=Fonts,get=Look(self,"timerFont"),set=SetLook(self,"timerFont")},
-                Range("timerSize","Size"),
-                {kind="select",label="Outline",choices={{id="none",label="None"},{id="outline",label="Outline"},{id="thick",label="Thick"}},get=Look(self,"timerOutline"),set=SetLook(self,"timerOutline")},
-                {kind="select",label="Position",choices={{id="below",label="Below icon"},{id="above",label="Above icon"},{id="bottom",label="Inside, bottom"},{id="center",label="Inside, centre"},{id="top",label="Inside, top"},{id="hidden",label="Hidden"}},get=Look(self,"timer"),set=SetLook(self,"timer")},
-                {kind="select",label="Colour",choices={{id="state",label="By state"},{id="white",label="White"}},get=Look(self,"timerColor"),set=SetLook(self,"timerColor")},
-            }},
+            IconRows(R),
+            TimerRows(R),
             {title="Hand labels",rows={
-                {kind="toggle",label="Show",get=Look(self,"labels"),set=SetLook(self,"labels")},
-                {kind="select",label="Text",choices={{id="short",label="MH / OH"},{id="long",label="Main Hand / Off Hand"}},get=Look(self,"labelStyle"),set=SetLook(self,"labelStyle")},
-                Range("labelSize","Size"),
-                {kind="select",label="Position",choices={{id="above",label="Above icon"},{id="top",label="Inside, top"},{id="under",label="Below the timer"}},get=Look(self,"labelPosition"),set=SetLook(self,"labelPosition")},
+                R.Toggle("labels","Show"),
+                R.Select("labelStyle","Text",{{id="short",label="MH / OH"},{id="long",label="Main Hand / Off Hand"}}),
+                R.Range("labelSize","Size"),
+                R.Select("labelPosition","Position",{{id="above",label="Above icon"},{id="top",label="Inside, top"},{id="under",label="Below the timer"}}),
             }},
         }
     end
-    return {{title="Group watcher",rows={
-        {kind="slider",label="Icon size",min=D.watchRanges.iconSize[1],max=D.watchRanges.iconSize[2],step=1,get=Watch(self,"iconSize"),set=SetWatch(self,"iconSize")},
-        {kind="slider",label="Spacing",min=D.watchRanges.spacing[1],max=D.watchRanges.spacing[2],step=1,get=Watch(self,"spacing"),set=SetWatch(self,"spacing")},
-        {kind="toggle",label="Names",get=Watch(self,"names"),set=SetWatch(self,"names")},
-        {kind="select",label="Name place",choices={{id="bottom",label="Bottom"},{id="top",label="Top"},{id="below",label="Below icon"}},get=Watch(self,"namePosition"),set=SetWatch(self,"namePosition")},
-        {kind="select",label="Name colour",choices={{id="class",label="Class colour"},{id="white",label="White"}},get=Watch(self,"nameColor"),set=SetWatch(self,"nameColor")},
-        {kind="slider",label="Name size",min=D.watchRanges.nameSize[1],max=D.watchRanges.nameSize[2],step=1,get=Watch(self,"nameSize"),set=SetWatch(self,"nameSize")},
-        {kind="slider",label="Letters",min=D.watchRanges.nameLetters[1],max=D.watchRanges.nameLetters[2],step=1,get=Watch(self,"nameLetters"),set=SetWatch(self,"nameLetters")},
-        {kind="toggle",label="Timers",get=Watch(self,"timers"),set=SetWatch(self,"timers")},
-    }}}
+    -- Group watcher: the same Icons and Timer text groups, plus its player names.
+    local R=Rows(self,"watchLook",D.watchRanges)
+    return {
+        IconRows(R,{R.Range("spacing","Spacing")}),
+        TimerRows(R),
+        {title="Names",rows={
+            R.Toggle("names","Show"),
+            R.Select("namePosition","Position",{{id="bottom",label="Inside, bottom"},{id="top",label="Inside, top"},{id="below",label="Below icon"}}),
+            R.Select("nameColor","Colour",{{id="class",label="Class colour"},{id="white",label="White"}}),
+            R.Range("nameSize","Size"),
+            R.Range("nameLetters","Letters"),
+        }},
+    }
 end
 
 -- Reset on the Style card also returns this display's own look to its defaults.

@@ -19,18 +19,8 @@ R.HINT="Use Layout to restyle displays."
 -- Marker saved in each profile: { cleared = boolean }. Present = done.
 R.MARKER="v2StyleReset"
 
--- Rogue Tools: one style table per display part. Kept for all three:
--- showIcons, showHands, showNames, showCounts, showTimers, tooltips (switches
--- on the page), vertical, columns, labelText, labelPosition, timerPosition,
--- iconPadding (no control).
-local ROGUE_SHARED={"iconSize","iconBorderSize","iconBorderOpacity","iconBorderColor","scale","opacity","padding",
-    "iconBackgroundOpacity","iconBackgroundColor","fontSize","labelGap","outline","font","fontMedia","textColor",
-    "iconColor","backgroundOpacity","borderOpacity","borderSize","backgroundColor","borderColor"}
-local function Plus(list,extra)
-    local all={};for _,key in ipairs(list) do all[#all+1]=key end
-    for _,key in ipairs(extra) do all[#all+1]=key end
-    return all
-end
+-- Rogue Tools' lists left with the module (retired into Buff Reminders): a
+-- module that is no longer registered has no defaults, so its table is skipped.
 -- Profession & Food Bars share one key set (the food bar's lives in .food).
 -- Kept: columns (Icons Per Row), showNames, showTooltips, x/y, hidden, selected.
 local BAR={"scale","iconSize","spacing","padding","fontSize","font","fontMedia","outline",
@@ -51,10 +41,6 @@ R.lists={
         "sessionFontSize","sessionWidth","sessionOpacity","sessionOutline","sessionFont","sessionFontMedia",
         "sessionTextColor","sessionAlign","nativeColors","normalColor","restedColor","restedOverlayColor",
         "questColor","backgroundColor","borderColor"}},
-    -- Kept on the Rogue root: direction (Menu Direction), visibleRows.
-    {module="foreverRogue",path={"watchStyle"},keys=Plus(ROGUE_SHARED,{"iconGap","iconOpacity","timerSize","timerColor"})},
-    {module="foreverRogue",path={"launcherStyle"},keys=Plus(ROGUE_SHARED,{"iconOpacity","cropIcons"})},
-    {module="foreverRogue",path={"flyoutStyle"},keys=Plus(ROGUE_SHARED,{"iconOpacity","cellWidth","spacing"})},
     -- Campfire icon, Camp Buffs and Camp Contributions (saved under
     -- lootSparkles.campfire since the split). Kept: compactBenefits,
     -- contributionVisibleRows, every show*/tooltip switch and x/y.
