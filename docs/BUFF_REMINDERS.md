@@ -84,7 +84,9 @@ Thorns use `[@target,help,nodead][@player]` (your friendly target, else you);
 watcher icons cast on that player's unit. Right-click only dismisses (until the
 next loading screen). In combat nothing in this layer is shown, hidden, moved
 or rebound: icons keep their combat-start places (a buff reapplied mid-fight
-stays as a faded icon), and a reminder that first appears mid-fight is visual
+stays as a faded icon; one right-clicked mid-fight hides and leaves its place
+empty, though its button there still reapplies on left-click until combat
+ends), and a reminder that first appears mid-fight is visual
 only until combat ends. Displays hold their size in combat, and "Most urgent only"
 does not re-sort, so icons stay under their buttons. With **When Needed (OOC)** or
 **Always Outside Combat** a secure state driver hides the whole click layer in
@@ -235,4 +237,5 @@ and `python tools/build_release.py`.
 | B20 Icon and text options | Window header **Layout** → click **Buff Reminders** | Open **Icons**: set Width 52, Height 30, Border size 2, change **Missing**; open **Timer text**: pick a font, **Thick** outline, **Inside, centre**; open **Hand labels**: **Main Hand / Off Hand** | Out of combat | Icons resize (art stays square), borders thicken and recolour, timers change font and position, labels read Main Hand / Off Hand; icons stay on one line; **Reset** restores everything |
 | B21 Menus in combat | (display on screen) | Open a menu, then pull a mob | Enter combat | The menu and the corner tabs disappear at once; tabs return when combat ends |
 | B22 Group watcher look | Window header **Layout** → click **Buff Reminders: Group** | In a party as a Paladin (or Priest, Mage, Druid): open **Icons**, set Width 40, Height 26, change **Missing**; open **Timer text**, set **Below icon** and **Thick**; open **Names**, set **Below icon** | Out of combat | Tiles resize (art stays square) and recolour; timers sit under each tile with the name under the timer; the main display is unchanged; **Reset** restores the group look |
+| B23 Dismiss in combat | (display on screen, two or more reminders up) | Enter combat, then right-click the first reminder | In combat, **When Needed** (not OOC) | The icon hides at once; the others stay where they were; after combat it stays hidden until the next loading screen |
 | B15 Food aura | (display on screen) | Eat a Forever food; if the Food buff reminder stays, run `/run for i=1,40 do local a=C_UnitAuras.GetAuraDataByIndex("player",i,"HELPFUL") if not a then break end print(a.name,a.spellId) end` | Out of combat | The reminder clears once fed; otherwise report the printed food aura name and ID |

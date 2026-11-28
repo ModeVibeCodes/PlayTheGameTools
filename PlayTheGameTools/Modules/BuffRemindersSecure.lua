@@ -47,7 +47,8 @@ function M:PrepareSecure(b)
     b:SetScript("PostClick",function(btn,button)
         if button=="LeftButton" and btn.openMenu and not self:InCombat() and self.OpenMenu then self:OpenMenu(btn.openMenu,btn.menuMessage) end
     end)
-    b:SetScript("OnEnter",function(btn) if btn.region then self:ShowTooltip(btn.region) end end)
+    -- No tooltip over a reminder dismissed mid-fight (its icon is hidden, the button can't be).
+    b:SetScript("OnEnter",function(btn) if btn.region and btn.region:IsShown() then self:ShowTooltip(btn.region) end end)
     b:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
 end
 

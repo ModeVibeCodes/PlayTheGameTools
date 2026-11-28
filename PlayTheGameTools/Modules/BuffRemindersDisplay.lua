@@ -179,7 +179,8 @@ function M:TextLines(shown,keepSlots)
         end
     end
     for _,e in ipairs(shown) do
-        if not used[e.key] then
+        if e.gap then lines[#lines+1]={gap=true,keys=e.key}
+        elseif not used[e.key] then
             local name=self:EntryName(e)
             local label,value
             if e.buff.poison or e.key=="imbueMain" or e.key=="imbueOff" then name=(e.buff.poison and "Poison" or "Imbue").." ("..self:HandLabel(e.buff)..")" end
@@ -330,6 +331,9 @@ function M:Render(shown)
         for _,keys in ipairs(self.frozen) do
             local e
             for k in tostring(keys):gmatch("[^,]+") do if not e and byKey[k] and not used[byKey[k]] then e=byKey[k] end end
+            -- Dismissed mid-fight: the slot stays as an empty gap so the icons
+            -- after it keep their places over their click buttons.
+            if not e and self:AllDismissed(keys) then e={key=tostring(keys),gap=true} end
             e=e or self:FrozenEntry(tostring(keys):match("^[^,]+"))
             if e then used[e]=true;e.slotKeys=keys;ordered[#ordered+1]=e end
         end
@@ -337,6 +341,10 @@ function M:Render(shown)
         list=ordered
     end
     self.frozenCount=frozenView and #self.frozen or nil
+    -- Nothing left but dismissed gaps: hide the display until combat ends.
+    local anyShown=false
+    for _,e in ipairs(list) do if not e.gap then anyShown=true end end
+    if not anyShown then list={} end
     self.slots={}
     local look=self.db.look
     local mode=self.db.mode
@@ -368,19 +376,24 @@ function M:Render(shown)
                 r:SetScript("OnClick",function(_,button) if button=="RightButton" and r.entry and not r.entry.sample then self:Dismiss(r.dismissKey) end end)
                 f.rows[i]=r
             end
-            SetLookFont(self,r.label,look.timerSize);SetLookFont(self,r.value,look.timerSize)
-            r.entry,r.dismissKey=line.entry,line.keys
-            r.label:SetText(line.label);r.value:SetText(line.value)
-            local c=line.dim and {0.55,0.55,0.55} or self:StateColor(line.status)
-            r.label:SetTextColor(c[1],c[2],c[3]);r.value:SetTextColor(c[1],c[2],c[3])
-            local w=(r.label:GetStringWidth() or 0)+(r.value:GetStringWidth() or 0)+28
-            if Number(w,0,4000) then textW=math.max(textW,w) end
-            r.line=line;r.index=i
-            self.slots[#self.slots+1]={region=r,entry=line.entry,keys=line.keys,late=line.entry.late}
+            -- A line dismissed mid-fight stays hidden; the lines after it keep their places.
+            r.gap=line.gap
+            if line.gap then r.entry,r.dismissKey,r.line=nil,nil,nil
+            else
+                SetLookFont(self,r.label,look.timerSize);SetLookFont(self,r.value,look.timerSize)
+                r.entry,r.dismissKey=line.entry,line.keys
+                r.label:SetText(line.label);r.value:SetText(line.value)
+                local c=line.dim and {0.55,0.55,0.55} or self:StateColor(line.status)
+                r.label:SetTextColor(c[1],c[2],c[3]);r.value:SetTextColor(c[1],c[2],c[3])
+                local w=(r.label:GetStringWidth() or 0)+(r.value:GetStringWidth() or 0)+28
+                if Number(w,0,4000) then textW=math.max(textW,w) end
+                r.line=line;r.index=i
+                self.slots[#self.slots+1]={region=r,entry=line.entry,keys=line.keys,late=line.entry.late}
+            end
         end
         textW=math.max(160,textW)
         for i,r in ipairs(f.rows) do
-            if i<=#lines then
+            if i<=#lines and not r.gap then
                 r:ClearAllPoints();r:SetPoint("TOPLEFT",4,-4-(i-1)*lineHeight);r:SetSize(textW,lineHeight);r:Show()
             end
         end
@@ -392,6 +405,8 @@ function M:Render(shown)
             return (a.left or 0)<(b.left or 0)
         end) end
         local e=list[1]
+        -- The one reminder was dismissed mid-fight: nothing shows until combat ends.
+        if e.gap then f:Hide();self:SetPulse(false);return end
         local top=self:Bands({e},false)
         local b=self:PaintIcon(1,e,false)
         b:ClearAllPoints();b:SetPoint("TOPLEFT",6,-6-top)
@@ -418,19 +433,22 @@ function M:Render(shown)
         local frameW=vertical and width or count*width+(count-1)*gap
         local frameH=vertical and (count*(top+height+bottom)+(count-1)*gap) or top+height+bottom
         Size(frameW+8,frameH+8)
+        -- An icon dismissed mid-fight leaves its place empty; the rest stay put.
         for i,e in ipairs(list) do
-            local b=self:PaintIcon(i,e,true)
-            anyGlow=anyGlow or b.glowing
-            b:ClearAllPoints()
-            local n=self.frozenCount or #list
-            if look.grow=="right" then b:SetPoint("TOPLEFT",4+(i-1)*cellW,-4-top)
-            elseif look.grow=="left" then b:SetPoint("TOPRIGHT",-4-(i-1)*cellW,-4-top)
-            elseif look.grow=="center" then
-                local used=n*width+(n-1)*gap
-                b:SetPoint("TOPLEFT",4+(frameW-used)/2+(i-1)*cellW,-4-top)
-            elseif look.grow=="down" then b:SetPoint("TOPLEFT",4,-4-top-(i-1)*cellH)
-            else b:SetPoint("BOTTOMLEFT",4,4+bottom+(i-1)*cellH) end
-            self.slots[#self.slots+1]={region=b,entry=e,keys=e.slotKeys or e.dismissKeys or e.key,late=e.late}
+            if not e.gap then
+                local b=self:PaintIcon(i,e,true)
+                anyGlow=anyGlow or b.glowing
+                b:ClearAllPoints()
+                local n=self.frozenCount or #list
+                if look.grow=="right" then b:SetPoint("TOPLEFT",4+(i-1)*cellW,-4-top)
+                elseif look.grow=="left" then b:SetPoint("TOPRIGHT",-4-(i-1)*cellW,-4-top)
+                elseif look.grow=="center" then
+                    local used=n*width+(n-1)*gap
+                    b:SetPoint("TOPLEFT",4+(frameW-used)/2+(i-1)*cellW,-4-top)
+                elseif look.grow=="down" then b:SetPoint("TOPLEFT",4,-4-top-(i-1)*cellH)
+                else b:SetPoint("BOTTOMLEFT",4,4+bottom+(i-1)*cellH) end
+                self.slots[#self.slots+1]={region=b,entry=e,keys=e.slotKeys or e.dismissKeys or e.key,late=e.late}
+            end
         end
     end
     f:Show()

@@ -134,6 +134,34 @@ testNoMana=false;B:SetOption('cant','dim')
 assert(B:Dismiss('arcaneIntellect') and not Keys(B.shown).arcaneIntellect,'right-click dismisses')
 FireEvent('PLAYER_ENTERING_WORLD')
 assert(Keys(B.shown).arcaneIntellect,'back after a loading screen')
+-- Right-click in combat (on the click button laid over the icon): the icon hides
+-- and its place stays empty, so the icons after it stay over their buttons.
+auras.player={};FireEvent('UNIT_AURA','player')
+assert(#B.slots==2,'two reminders up')
+local first,second=B.slots[1].keys,B.slots[2].keys
+Combat(true)
+assert(#B.frozen==2)
+local b1=Button(first);b1.scripts.PreClick(b1,'RightButton')
+assert(B.dismissed[first] and not B.frame.icons[1]:IsShown(),'right-click dismisses in combat')
+assert(B.frame.icons[2]:IsShown() and #B.slots==1 and B.slots[1].region==B.frame.icons[2] and B.slots[1].keys==second,'the next icon keeps its place')
+local b2=Button(second);b2.scripts.PreClick(b2,'RightButton')
+assert(not B.frame:IsShown(),'all dismissed: nothing left on screen in combat')
+Combat(false)
+assert(#B.shown==0 and not b1:IsShown() and not b2:IsShown(),'still dismissed after combat')
+FireEvent('PLAYER_ENTERING_WORLD')
+auras.player={};Aura('player',168,1800);FireEvent('UNIT_AURA','player')
+assert(Keys(B.shown).arcaneIntellect and not Keys(B.shown).armor,'back after a loading screen')
+-- Text mode: a line dismissed in combat hides; the line after it stays put.
+assert(B:SetOption('mode','text'))
+auras.player={};FireEvent('UNIT_AURA','player')
+first,second=B.slots[1].keys,B.slots[2].keys
+Combat(true)
+b1=Button(first);b1.scripts.PreClick(b1,'RightButton')
+assert(not B.frame.rows[1]:IsShown() and B.frame.rows[2]:IsShown() and B.slots[1].region==B.frame.rows[2],'text line dismissed in combat')
+Combat(false)
+FireEvent('PLAYER_ENTERING_WORLD')
+auras.player={};Aura('player',168,1800);FireEvent('UNIT_AURA','player')
+assert(B:SetOption('mode','icons'))
 
 -- Display modes: text reads like the game; most urgent shows one.
 assert(B:SetOption('mode','text'))

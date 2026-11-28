@@ -605,6 +605,15 @@ function M:Dismiss(key)
     return true
 end
 function M:RestoreDismissed() self.dismissed={};self:Update();if addon.RefreshConfig then addon:RefreshConfig() end end
+-- True when every key of a slot ("a" or "a,b,c") is dismissed.
+function M:AllDismissed(keys)
+    local any=false
+    for k in tostring(keys or ""):gmatch("[^,]+") do
+        if not self.dismissed[k] then return false end
+        any=true
+    end
+    return any
+end
 
 -- Main update ------------------------------------------------------------------
 
